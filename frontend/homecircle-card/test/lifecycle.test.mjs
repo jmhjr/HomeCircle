@@ -126,3 +126,17 @@ test("supplied display names are text, never markup", async () => {
   assert.equal(value.shadowRoot.querySelector("img"), null);
   value.remove();
 });
+
+test("tile failure survives rerender and clears on map disposal", () => {
+  const value = document.createElement("homecircle-card");
+  value.setConfig({ type: "custom:homecircle-card", map_tiles: "osm" });
+  value._mapNote = document.createElement("div");
+  value._points = [{ id: "person.example_member" }];
+  value._tileUnavailable = true;
+  value._updateMapNote();
+  assert.match(value._mapNote.textContent, /Street tiles unavailable/);
+  value._updateMapNote();
+  assert.match(value._mapNote.textContent, /Street tiles unavailable/);
+  value._destroyMap();
+  assert.equal(value._tileUnavailable, false);
+});

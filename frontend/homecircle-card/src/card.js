@@ -293,9 +293,16 @@ class HomeCircleCard extends HTMLElement {
             referrerPolicy: "strict-origin-when-cross-origin",
           },
         ).addTo(this._map);
+        this._tiles.on("loading", () => {
+          this._tileCycleFailed = false;
+        });
         this._tiles.on("tileerror", () => {
-          this._mapNote.textContent =
-            "Street tiles unavailable. Presence and markers still work.";
+          this._tileCycleFailed = this._tileUnavailable = true;
+          this._updateMapNote();
+        });
+        this._tiles.on("load", () => {
+          this._tileUnavailable = Boolean(this._tileCycleFailed);
+          this._updateMapNote();
         });
       }
     }
@@ -305,11 +312,7 @@ class HomeCircleCard extends HTMLElement {
     if (pointKey !== this._pointKey) this._fit = true;
     this._pointKey = pointKey;
     this._points = points;
-    this._mapNote.textContent = points.length
-      ? this._config.map_tiles === "osm"
-        ? "Street map · select a marker or member"
-        : "Private map · street tiles off · enable in card settings"
-      : "No usable map position for this selection. Presence counts are unchanged.";
+    this._updateMapNote();
     if (this._fit) {
       if (points.length)
         this._map.fitBounds(
@@ -320,6 +323,16 @@ class HomeCircleCard extends HTMLElement {
       this._fit = false;
     }
     this._markers();
+  }
+  _updateMapNote() {
+    if (!this._mapNote) return;
+    this._mapNote.textContent = !this._points?.length
+      ? "No usable map position for this selection. Presence counts are unchanged."
+      : this._tileUnavailable
+        ? "Street tiles unavailable. Presence and markers still work."
+        : this._config.map_tiles === "osm"
+          ? "Street map · select a marker or member"
+          : "Private map · street tiles off · enable in card settings";
   }
   _markers() {
     if (!this._map || !this._layer) return;
@@ -378,6 +391,7 @@ class HomeCircleCard extends HTMLElement {
     this._map = null;
     this._layer = null;
     this._tiles = null;
+    this._tileCycleFailed = this._tileUnavailable = false;
     this._points = [];
     this._pointKey = null;
     this._expandedIds = null;

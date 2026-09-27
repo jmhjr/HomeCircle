@@ -4,7 +4,7 @@ Family location and presence for Home Assistant, independent of the tracking pro
 
 **Experimental development software — not a stable release.**
 
-Use a disposable or test Home Assistant instance. Real tracking-provider acceptance and HACS install/update testing remain incomplete. No stable release or production migration is approved.
+Use a disposable or test Home Assistant instance. Initial real-provider and HACS install checks pass; broader field acceptance and release lifecycle checks are recorded below. No stable release or production migration is approved.
 
 **Status: milestones 1–3 development integration; development prerelease; not production-ready.** HomeCircle is a working name; public naming remains a release decision. The existing V2 dashboard remains the reference system. Development does not replace, install over, or change it.
 
@@ -25,7 +25,7 @@ HomeCircle consumes standard HA `person` and `device_tracker` entities, with opt
 
 ## Release preparation
 
-Maintainer: [@jmhjr](https://github.com/jmhjr). The repository is published for development review and HACS validation. A local ZIP and package lifecycle checks are available; HACS download acceptance and public release remain pending. See [release preparation and validation](docs/RELEASE-VALIDATION.md).
+Maintainer: [@jmhjr](https://github.com/jmhjr). The repository is published for development review and HACS validation. Experimental prerelease assets and successful HACS download/install checks are available. See [release preparation and validation](docs/RELEASE-VALIDATION.md).
 
 ## Repository
 
@@ -47,10 +47,10 @@ HomeCircle/
 
 ## V0.1 outcome
 
-Install through HACS; add HomeCircle in HA; select people and their associated trackers; choose Home and additional places; add a card through a visual editor. No manual YAML is required in the target onboarding flow. Entity/place selection is implemented for disposable development testing. Presence normalization and household rules are implemented. The card/editor and resource registration are implemented and browser-tested. HACS/release acceptance remains pending.
+Install through HACS; add HomeCircle in HA; select people and their associated trackers; choose Home and additional places; add a card through a visual editor. No manual YAML is required in the target onboarding flow. Entity/place selection is implemented for disposable development testing. Presence normalization and household rules are implemented. The card/editor and resource registration are implemented and browser-tested. Remaining release gates are tracked in the validation report.
 
 The reference is **HomeCircle Reference Implementation v1**, frozen from available local V2 artifacts and later extracted-card source. Raw household files are held outside this Git repository in a restricted local snapshot. Public reference files contain generic examples only. See [reference provenance](reference/dashboard/README.md) for the distinction between production V2 and later clone work.
 
 MIT licensed. No upstream implementation is copied into the new runtime. Any future code reuse must retain its original license and third-party notices.
 
-The initial card and authenticated snapshot interface are implemented in development prerelease `0.1.0-beta.1`. See [frontend setup](docs/FRONTEND.md) and [milestone 3 validation](docs/MILESTONE-3-VALIDATION.md). No production rollout is included.
+The initial card and authenticated snapshot interface are implemented in development prerelease `0.1.0-beta.2`. See [frontend setup](docs/FRONTEND.md) and [milestone 3 validation](docs/MILESTONE-3-VALIDATION.md). No production rollout is included.
