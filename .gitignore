@@ -36,3 +36,6 @@ custom_components/homecircle/frontend/
 .pytest_cache/
 .coverage
 htmlcov/
+
+# Original brand icon: exact bytes approved by the privacy guard
+!custom_components/homecircle/brand/icon.png

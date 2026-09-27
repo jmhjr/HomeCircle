@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Conservative content guard. Reports paths/rules only, never matching values."""
 import argparse
+import hashlib
 import os
 from pathlib import Path
 import re
@@ -26,7 +27,15 @@ RULES = [
 ENTITIES = re.compile(r'\b(?:person|device_tracker|zone|sensor|button)\.[a-z][a-z0-9_]*')
 BLOCKED_EXT = {'.png', '.jpg', '.jpeg', '.webp', '.heic', '.zip', '.gz', '.tar', '.db', '.key', '.pem', '.mp4'}
 
+REVIEWED_BINARY_FILES = {
+    # Original geometric icon, rendered by build_brand.py and visually reviewed.
+    'custom_components/homecircle/brand/icon.png':
+        'bf85530d7362dbfbe796c1f1b944483ccdc8c0693d0c39411b1156b1860d28a5',
+}
+
 def violations(name, data):
+    if name in REVIEWED_BINARY_FILES:
+        return [] if hashlib.sha256(data).hexdigest() == REVIEWED_BINARY_FILES[name] else ['reviewed asset changed; review required']
     issues = []
     if any(part in {'.private', 'private', '.storage', 'node_modules'} for part in Path(name).parts):
         issues.append('private/runtime path')

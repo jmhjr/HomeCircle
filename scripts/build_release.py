@@ -27,6 +27,7 @@ def main():
             *source.glob("translations/*.json"),
             source / "frontend/homecircle-card.js",
             source / "frontend/LEAFLET-LICENSE.txt",
+            source / "brand/icon.png",
         ]
     )
     payload = {path.relative_to(source).as_posix(): path.read_bytes() for path in files}

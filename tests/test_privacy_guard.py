@@ -30,5 +30,12 @@ class PrivacyGuardTests(unittest.TestCase):
         self.assertIn('unreviewed binary file', guard.violations('asset.dat', bytes([255, 254])))
         self.assertIn('unreviewed media/archive/secret artifact', guard.violations('asset.png', b'example'))
 
+    def test_reviewed_brand_requires_exact_bytes_and_path(self):
+        name = 'custom_components/homecircle/brand/icon.png'
+        data = (Path(__file__).resolve().parents[1] / name).read_bytes()
+        self.assertEqual(guard.violations(name, data), [])
+        self.assertTrue(guard.violations(name, data + b'changed'))
+        self.assertTrue(guard.violations('another.png', data))
+
 if __name__ == '__main__':
     unittest.main()
