@@ -252,11 +252,23 @@ class HomeCircleCard extends HTMLElement {
             : "Driving report time unknown",
         );
       if (extra.length) details.append(el("span", "detail", extra.join(" · ")));
-      details.append(el("span", "detail", reportLabel(member)));
+      const stale = member.location?.evidence?.freshness === "stale";
+      node.classList.toggle("stale", stale);
+      details.append(
+        el(
+          "span",
+          stale ? "detail report stale-report" : "detail report",
+          reportLabel(member),
+        ),
+      );
       node.append(
         el("span", "avatar", initials(member.name)),
         details,
-        el("span", `badge ${member.presence}`, labels[member.presence]),
+        el(
+          "span",
+          `badge ${member.presence}`,
+          `${member.kind === "pet" ? "Pet · " : ""}${labels[member.presence]}`,
+        ),
       );
       this._members.append(node);
     }

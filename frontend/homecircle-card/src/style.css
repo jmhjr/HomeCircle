@@ -302,3 +302,11 @@ button[aria-pressed="true"] {
   outline: 3px solid #80e5cb;
   outline-offset: -3px;
 }
+
+.member.stale {
+  border-left: 4px solid #f2c66d;
+}
+.stale-report {
+  color: #f2c66d;
+  font-weight: 650;
+}

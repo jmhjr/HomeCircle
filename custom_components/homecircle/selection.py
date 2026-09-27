@@ -88,6 +88,17 @@ def member_errors(
 ) -> dict[str, str]:
     """An ordinary place may be a residence for one member only."""
     errors = {}
+    if values.get("kind", "person") not in ("person", "pet"):
+        errors["kind"] = "invalid_kind"
+    for key, default in (("pet_home_minutes", 1440), ("pet_away_minutes", 5)):
+        value = values.get(key, default)
+        if (
+            isinstance(value, bool)
+            or not isinstance(value, (int, float))
+            or not 1 <= value <= 10080
+        ):
+            errors[key] = "invalid_freshness"
+
     for key, domain in ((CONF_TRACKERS, "device_tracker"), (CONF_RESIDENCES, "zone")):
         items = values.get(key, [])
         if len(items) != len(set(items)):

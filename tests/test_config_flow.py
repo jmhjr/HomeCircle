@@ -163,7 +163,13 @@ async def test_options_reconfigure_and_listener_replacement(hass, household):
     assert result["type"] == FlowResultType.CREATE_ENTRY
     await hass.async_block_till_done()
     assert entry.options["members"] == {
-        "person.example_second": {"trackers": [], "additional_residences": []}
+        "person.example_second": {
+            "trackers": [],
+            "additional_residences": [],
+            "kind": "person",
+            "pet_home_minutes": 1440,
+            "pet_away_minutes": 5,
+        }
     }
     assert not old_runtime.states
     assert "person.example_member" not in entry.runtime_data.states
@@ -342,3 +348,29 @@ async def test_runtime_report_aging_source_changes_and_unload(hass, household, f
     await hass.async_block_till_done()
     assert runtime.household is None
     assert runtime.states == {}
+
+
+async def test_pet_thresholds_persist_in_options(hass, household):
+    entry = await create(hass, household)
+    manager = hass.config_entries.options
+    flow = await manager.async_init(entry.entry_id)
+    flow = await manager.async_configure(
+        flow["flow_id"], {**household, "people": ["person.example_member"]}
+    )
+    flow = await manager.async_configure(
+        flow["flow_id"],
+        {
+            "trackers": ["device_tracker.example_phone"],
+            "kind": "pet",
+            "pet_home_minutes": 720,
+            "pet_away_minutes": 10,
+        },
+    )
+    flow = await manager.async_configure(flow["flow_id"], {})
+    await hass.async_block_till_done()
+    assert flow["type"] == FlowResultType.CREATE_ENTRY
+    member = entry.options["members"]["person.example_member"]
+    assert member["kind"] == "pet"
+    assert member["pet_home_minutes"] == 720
+    assert member["pet_away_minutes"] == 10
+    assert entry.runtime_data.config["members"]["person.example_member"] == member

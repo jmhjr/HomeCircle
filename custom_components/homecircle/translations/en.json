@@ -13,11 +13,14 @@
       },
       "member": {
         "title": "Sources and residences",
-        "description": "Member: {person}\n\nConfigured trackers reported by Home Assistant: {associated}\n\nCurrently active source: {active}\n\nConfirm the suggested trackers or choose explicitly. Leave empty for person-only presence. No GPS is required. Additional residences count as Home for this member; primary-house map focus remains separate.",
+        "description": "Member: {person}\n\nConfigured trackers reported by Home Assistant: {associated}\n\nCurrently active source: {active}\n\nConfirm the suggested trackers or choose explicitly. Leave empty for person-only presence. No GPS is required. Additional residences count as Home for this member; primary-house map focus remains separate. Pet thresholds apply only to location reports for members explicitly marked Pet, at any assigned residence or away. Report age always remains visible. These are display thresholds, not proof of safety or a new GPS fix. People keep the five-minute threshold.",
         "data": {
           "trackers": "Associated trackers (optional)",
           "additional_residences": "Additional residences for this member (optional)",
-          "configure_sensors": "Configure optional sensor mappings"
+          "configure_sensors": "Configure optional sensor mappings",
+          "kind": "Member type",
+          "pet_home_minutes": "Pet: mark location stale after minutes at Home",
+          "pet_away_minutes": "Pet: mark location stale after minutes away"
         }
       },
       "confirm": {
@@ -47,7 +50,9 @@
       "entities_changed": "A selected entity was removed or disabled. Review your household and member selections again.",
       "report_source_required": "Select both the location timestamp sensor and the source it describes.",
       "invalid_report_source": "Select this person or one of their explicitly selected trackers.",
-      "driving_required": "Select a driving binary sensor for this report timestamp."
+      "driving_required": "Select a driving binary sensor for this report timestamp.",
+      "invalid_kind": "Choose person or pet.",
+      "invalid_freshness": "Enter a number between 1 and 10080 minutes."
     },
     "abort": {
       "already_configured": "HomeCircle is already configured. Use Options to edit the household.",
@@ -69,11 +74,14 @@
       },
       "member": {
         "title": "Sources and residences",
-        "description": "Member: {person}\n\nConfigured trackers reported by Home Assistant: {associated}\n\nCurrently active source: {active}\n\nConfirm the suggested trackers or choose explicitly. Leave empty for person-only presence. No GPS is required. Additional residences count as Home for this member; primary-house map focus remains separate.",
+        "description": "Member: {person}\n\nConfigured trackers reported by Home Assistant: {associated}\n\nCurrently active source: {active}\n\nConfirm the suggested trackers or choose explicitly. Leave empty for person-only presence. No GPS is required. Additional residences count as Home for this member; primary-house map focus remains separate. Pet thresholds apply only to location reports for members explicitly marked Pet, at any assigned residence or away. Report age always remains visible. These are display thresholds, not proof of safety or a new GPS fix. People keep the five-minute threshold.",
         "data": {
           "trackers": "Associated trackers (optional)",
           "additional_residences": "Additional residences for this member (optional)",
-          "configure_sensors": "Configure optional sensor mappings"
+          "configure_sensors": "Configure optional sensor mappings",
+          "kind": "Member type",
+          "pet_home_minutes": "Pet: mark location stale after minutes at Home",
+          "pet_away_minutes": "Pet: mark location stale after minutes away"
         }
       },
       "confirm": {
@@ -103,7 +111,9 @@
       "entities_changed": "A selected entity was removed or disabled. Review your household and member selections again.",
       "report_source_required": "Select both the location timestamp sensor and the source it describes.",
       "invalid_report_source": "Select this person or one of their explicitly selected trackers.",
-      "driving_required": "Select a driving binary sensor for this report timestamp."
+      "driving_required": "Select a driving binary sensor for this report timestamp.",
+      "invalid_kind": "Choose person or pet.",
+      "invalid_freshness": "Enter a number between 1 and 10080 minutes."
     }
   },
   "issues": {

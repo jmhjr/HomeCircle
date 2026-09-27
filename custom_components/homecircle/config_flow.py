@@ -83,6 +83,11 @@ class SelectionFlow:
             values = {
                 key: user_input.get(key, []) for key in (CONF_TRACKERS, CONF_RESIDENCES)
             }
+            values.update(
+                kind=user_input.get("kind", "person"),
+                pet_home_minutes=user_input.get("pet_home_minutes", 1440),
+                pet_away_minutes=user_input.get("pet_away_minutes", 5),
+            )
             previous_supporting = (
                 self.draft[CONF_MEMBERS].get(person_id, {}).get("supporting")
             )
@@ -115,6 +120,19 @@ class SelectionFlow:
             {
                 vol.Optional(CONF_TRACKERS): entity_selector("device_tracker"),
                 vol.Optional(CONF_RESIDENCES): entity_selector("zone"),
+                vol.Optional("kind", default="person"): selector.SelectSelector(
+                    selector.SelectSelectorConfig(options=["person", "pet"])
+                ),
+                vol.Optional("pet_home_minutes", default=1440): selector.NumberSelector(
+                    selector.NumberSelectorConfig(
+                        min=1, max=10080, step=1, mode="box", unit_of_measurement="min"
+                    )
+                ),
+                vol.Optional("pet_away_minutes", default=5): selector.NumberSelector(
+                    selector.NumberSelectorConfig(
+                        min=1, max=10080, step=1, mode="box", unit_of_measurement="min"
+                    )
+                ),
                 vol.Optional(
                     "configure_sensors", default=False
                 ): selector.BooleanSelector(),

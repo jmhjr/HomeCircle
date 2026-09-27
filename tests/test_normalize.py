@@ -360,3 +360,39 @@ def test_non_default_primary_home_and_input_immutability(snapshot):
         member(snapshot).presence == "away"
     )  # HA Home is not a different selected primary.
     assert config == before
+
+
+def test_pet_location_threshold_changes_with_residence_without_faking_report(snapshot):
+    config, states = snapshot
+    cfg = config["members"][PERSON]
+    cfg.update(kind="pet", pet_home_minutes=1440, pet_away_minutes=5)
+    cfg["supporting"] = {
+        "location_reported_at": "sensor.example_report",
+        "location_report_source": GPS,
+    }
+    stamp = NOW - timedelta(hours=22)
+    states["sensor.example_report"] = state("sensor.example_report", stamp.isoformat())
+    result = member(snapshot)
+    assert result.kind == "pet"
+    assert result.location.evidence.freshness == "fresh"
+    assert result.location.evidence.reported_at == stamp
+    assert (
+        member(snapshot, NOW + timedelta(hours=3)).location.evidence.freshness
+        == "stale"
+    )
+    states[PERSON] = state(PERSON, "not_home", source=GPS, in_zones=[])
+    states[GPS] = state(
+        GPS,
+        "not_home",
+        source_type="gps",
+        in_zones=[],
+        **{ATTR_LATITUDE: 2.0, ATTR_LONGITUDE: 0.0},
+    )
+    assert member(snapshot).location.evidence.freshness == "stale"
+    cfg["kind"] = "person"
+    states[PERSON] = state(PERSON, "home", source=GPS, in_zones=["zone.home"])
+    states[GPS] = gps()
+    assert member(snapshot).location.evidence.freshness == "stale"
+    states.pop("sensor.example_report")
+    cfg["kind"] = "pet"
+    assert member(snapshot).location.evidence.freshness == "unknown"

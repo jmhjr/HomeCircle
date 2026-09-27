@@ -22,11 +22,19 @@ export function reportLabel(member, now = Date.now()) {
   if (!member.location) return "No usable map position";
   const proof = member.location.evidence;
   if (!proof?.reported_at) return "Location report time unknown";
-  const age = Math.max(
-    0,
-    Math.floor((now - Date.parse(proof.reported_at)) / 60000),
-  );
-  return `${proof.freshness === "stale" ? "Stale · " : ""}Reported ${age < 1 ? "less than a minute" : `${age} min`} ago`;
+  const stamp = Date.parse(proof.reported_at);
+  if (!Number.isFinite(stamp) || stamp > now + 60000)
+    return "Location report time unknown";
+  const minutes = Math.max(0, Math.floor((now - stamp) / 60000));
+  const age =
+    minutes < 1
+      ? "less than a minute"
+      : minutes < 60
+        ? `${minutes} min`
+        : minutes < 1440
+          ? `${Math.floor(minutes / 60)} hour${minutes < 120 ? "" : "s"}`
+          : `${Math.floor(minutes / 1440)} day${minutes < 2880 ? "" : "s"}`;
+  return `${proof.freshness === "stale" ? "Stale · " : ""}Reported ${age} ago`;
 }
 // Group screen-overlapping markers, independently for each map and zoom level.
 export function markerGroups(members, project, distance = 42) {

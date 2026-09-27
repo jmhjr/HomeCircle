@@ -140,3 +140,49 @@ test("tile failure survives rerender and clears on map disposal", () => {
   value._destroyMap();
   assert.equal(value._tileUnavailable, false);
 });
+
+test("stale member styling clears on fresh evidence and keeps pet identity", async () => {
+  let freshness = "stale";
+  const fictionalOrigin = 0;
+  const snapshot = () => ({
+    ...response(),
+    members: [
+      {
+        id: "person.example_member",
+        name: "Example Pet",
+        kind: "pet",
+        presence: "home",
+        focusable: true,
+        location: {
+          latitude: fictionalOrigin,
+          longitude: fictionalOrigin,
+          evidence: {
+            reported_at: new Date(Date.now() - 22 * 3600000).toISOString(),
+            freshness,
+          },
+        },
+        battery: 28,
+        charging: null,
+        driving: { value: null, status: "unknown" },
+      },
+    ],
+    focus_ids: {
+      overview: ["person.example_member"],
+      home: ["person.example_member"],
+    },
+  });
+  const value = card({
+    connection: {},
+    connected: true,
+    callWS: async () => snapshot(),
+  });
+  await tick();
+  assert.ok(value.shadowRoot.querySelector(".member.stale .stale-report"));
+  assert.match(value.shadowRoot.textContent, /22 hours/);
+  assert.match(value.shadowRoot.textContent, /Pet · Home/);
+  freshness = "fresh";
+  await value._load();
+  assert.equal(value.shadowRoot.querySelector(".member.stale"), null);
+  assert.match(value.shadowRoot.textContent, /22 hours/);
+  value.remove();
+});

@@ -28,6 +28,7 @@ def snapshot(runtime):
             {
                 "id": member.id,
                 "name": member.display_name,
+                "kind": member.kind,
                 "presence": member.presence,
                 "primary_home": member.primary_home,
                 "place": place.name if place else None,

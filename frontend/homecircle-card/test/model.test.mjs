@@ -84,3 +84,27 @@ test("tiles are opt-in and invalid provider choices are rejected", () => {
     validateConfig({ type: "custom:homecircle-card", map_tiles: "unapproved" }),
   );
 });
+
+test("report ages use readable units without disguising stale or invalid evidence", () => {
+  const value = member("one");
+  const stamp = Date.parse("2026-01-01T00:00:00Z");
+  value.location.evidence = {
+    reported_at: new Date(stamp).toISOString(),
+    freshness: "stale",
+  };
+  for (const [minutes, label] of [
+    [0, "less than a minute"],
+    [59, "59 min"],
+    [60, "1 hour"],
+    [1336, "22 hours"],
+    [1440, "1 day"],
+    [2880, "2 days"],
+  ]) {
+    assert.equal(
+      reportLabel(value, stamp + minutes * 60000),
+      `Stale · Reported ${label} ago`,
+    );
+  }
+  value.location.evidence.reported_at = "invalid";
+  assert.match(reportLabel(value), /unknown/);
+});

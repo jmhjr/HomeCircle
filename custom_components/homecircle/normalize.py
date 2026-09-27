@@ -125,6 +125,7 @@ def evidence(
     report: State | None,
     now: datetime,
     report_id: str | None = None,
+    stale_after_seconds: float = STALE_AFTER_SECONDS,
 ) -> Evidence:
     base = dict(
         source_entity=source.entity_id if source else None,
@@ -146,7 +147,7 @@ def evidence(
         **base,
         reported_at=parsed,
         report_status="explicit_sensor",
-        freshness="fresh" if age <= STALE_AFTER_SECONDS else "stale",
+        freshness="fresh" if age <= stale_after_seconds else "stale",
     )
 
 
@@ -317,14 +318,22 @@ def normalize_member(
                 if report_id:
                     issues.append("location_report_source_mismatch")
                 report_id = None
-            proof = evidence(location_source, states.get(report_id), now, report_id)
+            stale_after = STALE_AFTER_SECONDS
+            if member_config.get("kind") == "pet":
+                key, default = (
+                    ("pet_home_minutes", 1440) if residence else ("pet_away_minutes", 5)
+                )
+                stale_after = member_config.get(key, default) * 60
+            proof = evidence(
+                location_source, states.get(report_id), now, report_id, stale_after
+            )
             location = Location(*point, origin=origin, evidence=proof)
     else:
         issues.append("person_unavailable")
     return Member(
         id=person_id,
         display_name=person_state.name if person_state else person_id,
-        kind="person",
+        kind=member_config.get("kind", "person"),
         person_entity=person_id,
         source_entity=person_id,
         active_source_entity=active,

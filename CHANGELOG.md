@@ -8,6 +8,8 @@
 
 ## Unreleased
 
+- Readable report ages, visible stale-state accents, and explicit configurable pet Home/Away freshness thresholds (development preview).
+
 ### Added
 - HomeCircle project scaffold and provider-independent product definition.
 - ADR-001: standard Home Assistant entities are the location-provider boundary.
