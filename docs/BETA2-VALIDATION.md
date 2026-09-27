@@ -19,4 +19,12 @@ Fixed a discovered bug: normal rendering previously overwrote the tile-error war
 - All installed package files matched the beta 2 ZIP. Household data/options survived restart unchanged; all three test records remained map-focusable.
 - Exactly one owned resource referenced beta 2, and its served JavaScript matched the ZIP. The dashboard was switched to the published card and the temporary preview resource removed.
 
-Production HA and original touch-test instance unchanged. No stable release approved. Physical departure/return remains deferred, physical touch acceptance of the new layout remains pending, and removal through HACS has not been tested.
+Production HA and original touch-test instance unchanged. No stable release approved. Physical departure/return remains deferred, physical touch acceptance of the new layout remains pending, and HACS removal/reinstall results are recorded below.
+
+## Actual HACS uninstall/reinstall
+
+A separate loopback-only disposable Core 2026.9.4 instance used HACS 2.0.5 with fictional sources. Only the existing authorized HACS entry and local test login were reused; real provider entries, household locations and dashboards were not copied.
+
+Passed: download beta 2 through HACS, restart, configure a fictional household, remove the HomeCircle entry, uninstall through HACS, then restart. The component directory and owned dashboard resource were gone, and the old static URL returned 404. An unrelated resource and HA person remained intact. The custom repository was re-added as needed, beta versions enabled, and beta 2 downloaded again through HACS. After restart and fresh HomeCircle setup, the two fictional members appeared, exactly one owned resource existed, and installed/served bytes matched the release ZIP. Removal deliberately deletes HomeCircle setup; reinstall requires configuration again.
+
+The working real-source instance and original touch-test instance were unchanged. Beta 2 physical DAKboard checks were handed to the user and remain pending confirmation.
