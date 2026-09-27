@@ -1,0 +1,19 @@
+# Beta 5 real-source test validation — 2026-09-27
+
+This check used the existing disposable, real-source Home Assistant Core 2026.9.4 instance. Production HA and the existing V2 dashboard were unchanged. The HomeCircle package and selected entry settings were backed up privately in ignored local work storage before the upgrade; no account credentials, entity IDs, coordinates or screenshots are included here.
+
+## HACS upgrade
+
+- Preflight showed HACS and the installed manifest on beta 4, three focusable test members, one Pet member, two displayed report timestamps and one owned beta 4 Lovelace resource.
+- HACS downloaded the published beta 5 release. Every installed package file matched the release ZIP. After the test HA restarted, HACS reported beta 5 and the saved HomeCircle data and options were unchanged, including per-source report mappings and Pet settings.
+- All three members remained focusable, including the Pet member; two report timestamps remained displayed. Exactly one owned resource used `?v=0.1.0-beta.5`, and the JavaScript served by HA matched the release ZIP byte for byte.
+
+These checks confirm the current snapshot and saved mapping state. They do not simulate real departure/return, background updates away from the LAN, or within-person provider switching.
+
+## Installed-card browser retry check
+
+The beta 5 card bytes served by this HA instance were copied into a loopback-only browser harness and checked against the published ZIP. In real Chrome, a fictional rejected snapshot made one request; five ordinary HA `hass` updates made zero extra requests. The captured 15-second refresh callback made one retry, and a replacement connection recovered with a valid fictional snapshot. The harness contained no real household data. Its local server was stopped after the check.
+
+## Physical display
+
+The DAKboard HomeCircle Test button was previously configured for this disposable real-source page. After refreshing it, the user confirmed that beta 5 showed all three members and street tiles on the physical display. The user tapped the Pet member and Everyone, confirming that the map focused the member and returned to all three positions. This is physical touch acceptance for that flow. The distinct additional-residence count versus primary-house focus check remains open.

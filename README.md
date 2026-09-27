@@ -4,7 +4,7 @@ Family location and presence for Home Assistant, independent of the tracking pro
 
 **Experimental development software — not a stable release.**
 
-Use a disposable or test Home Assistant instance. Published beta 5 addresses snapshot retries and unloaded-entry resource cleanup; its HACS upgrade and removal passed in a disposable instance. Initial real-provider and touch-display checks were performed on beta 4. Broader field acceptance remains open. No stable release or production migration is approved.
+Use a disposable or test Home Assistant instance. Published beta 5 addresses snapshot retries and unloaded-entry resource cleanup; its HACS upgrade and removal passed in a disposable instance. The real-source test instance was upgraded to beta 5, and the three-member map and Pet member → Everyone touch flow passed on the DAKboard. Broader field acceptance remains open. No stable release or production migration is approved.
 
 **Status: milestones 1–3 development integration; development prerelease; not production-ready.** HomeCircle is a working name; public naming remains a release decision. The existing V2 dashboard remains the reference system. Development does not replace, install over, or change it.
 
@@ -13,7 +13,7 @@ HomeCircle consumes standard HA `person` and `device_tracker` entities, with opt
 ## Start here
 
 - [Per-source report times](docs/PER-SOURCE-REPORTS.md)
-- [Beta 5 validation](docs/BETA5-VALIDATION.md) and [beta 4 release-readiness audit](docs/BETA4-RELEASE-AUDIT.md)
+- [Beta 5 validation](docs/BETA5-VALIDATION.md), [real-source follow-up](docs/BETA5-REAL-SOURCE-VALIDATION.md), and [beta 4 release-readiness audit](docs/BETA4-RELEASE-AUDIT.md)
 
 - [Step-by-step setup: iPhone, Life360, pets and supporting sensors](docs/SETUP.md)
 
