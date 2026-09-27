@@ -17,3 +17,11 @@ The beta 5 card bytes served by this HA instance were copied into a loopback-onl
 ## Physical display
 
 The DAKboard HomeCircle Test button was previously configured for this disposable real-source page. After refreshing it, the user confirmed that beta 5 showed all three members and street tiles on the physical display. The user tapped the Pet member and Everyone, confirming that the map focused the member and returned to all three positions. This is physical touch acceptance for that flow. The distinct additional-residence count versus primary-house focus check remains open.
+
+## Live Life360 away-state check
+
+While a real Life360 member was away, the disposable HA instance showed the official Life360 tracker as `not_home` with coordinates and a recently updated state. A temporary HA person and fourth HomeCircle test member selected that tracker. HomeCircle's authenticated snapshot classified the member as Away, kept the member map-focusable, and used the selected tracker's coordinates. The other three test members stayed selected.
+
+On the physical DAKboard, the user refreshed the HomeCircle Test page and confirmed four members with the temporary member marked Away. Tapping that member focused the map; Everyone returned to all four positions. The temporary person was then deleted and the exact original three-member HomeCircle options and snapshot were verified restored. Production HA was unchanged. No coordinates, tracker identifiers, or screenshots are published here.
+
+This confirms a live Away snapshot and physical focus/reset behavior with a real Life360 source. It does not establish a departure transition, return transition, background iPhone update, or sustained provider availability.
