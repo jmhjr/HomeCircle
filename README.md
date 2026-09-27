@@ -21,6 +21,7 @@ HomeCircle consumes standard HA `person` and `device_tracker` entities, with opt
 - [Development and Git workflow](docs/DEVELOPMENT.md)
 - [Privacy and security](docs/PRIVACY.md)
 - [Normalization contract](docs/NORMALIZATION.md)
+- [Multiple-tracker switching validation](docs/MULTI-SOURCE-VALIDATION.md)
 - [Milestone 2 validation](docs/MILESTONE-2-VALIDATION.md)
 - [Milestone 1 validation and limitations](docs/MILESTONE-1-VALIDATION.md)
 - [Historical bootstrap validation](docs/BOOTSTRAP-VALIDATION.md)

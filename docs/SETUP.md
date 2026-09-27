@@ -66,6 +66,8 @@ These fields select existing HA entities. An attribute on a tracker is not itsel
 | Location report timestamp sensor | Actual timestamp when the location source reported its fix |
 | Source described by the location timestamp | The exact selected tracker (or person) described by that timestamp |
 
+Beta 3 stores one location timestamp/source pair per member, not one pair per tracker. See the [multiple-source checks](MULTI-SOURCE-VALIDATION.md) for switching and fallback behavior.
+
 Select the location timestamp **and** its source together. Do not bind a pet timestamp to a phone tracker. If the active source changes, a timestamp for another source cannot establish the age of the active location.
 
 If the provider only exposes battery or report time as attributes, a separately configured HA template sensor may be needed. Verify the attribute's meaning in that provider's documentation before building a helper; there is no universal Life360/pet attribute recipe. Preserve unavailable values rather than replacing them with zero or the current time. If no genuine report timestamp is available, leave it unmapped: **Location report time unknown** is the correct result. HA's `last_changed` and `last_updated` are not GPS fix times.
