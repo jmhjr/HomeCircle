@@ -1,5 +1,6 @@
 :host {
   display: block;
+  container-type: inline-size;
   color: #e9f0f6;
   font:
     15px/1.5 system-ui,
@@ -102,6 +103,9 @@ button[aria-pressed="true"] {
   font-size: 10px !important;
 }
 .leaflet-control-zoom a {
+  width: 44px !important;
+  height: 44px !important;
+  line-height: 44px !important;
   background: #eff6f9 !important;
   color: #172530 !important;
 }
@@ -154,7 +158,7 @@ button[aria-pressed="true"] {
 .member {
   width: 100%;
   display: grid;
-  grid-template-columns: 42px 1fr auto;
+  grid-template-columns: 42px minmax(0, 1fr) auto;
   align-items: center;
   text-align: left;
   gap: 12px;
@@ -254,7 +258,7 @@ button[aria-pressed="true"] {
 .editor a {
   color: var(--primary-color, #167681);
 }
-@media (max-width: 400px) {
+@container (max-width: 400px) {
   header {
     padding: 16px 16px 12px;
   }
@@ -274,7 +278,7 @@ button[aria-pressed="true"] {
   .member {
     gap: 8px;
     padding: 10px;
-    grid-template-columns: 36px 1fr auto;
+    grid-template-columns: 36px minmax(0, 1fr) auto;
   }
   .avatar {
     width: 34px;
@@ -284,4 +288,17 @@ button[aria-pressed="true"] {
     padding: 3px 6px;
     font-size: 10px;
   }
+}
+
+@container (min-width: 800px) {
+  .members {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .map {
+    height: 380px;
+  }
+}
+.leaflet-control-zoom a:focus-visible {
+  outline: 3px solid #80e5cb;
+  outline-offset: -3px;
 }
