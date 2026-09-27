@@ -16,3 +16,7 @@ Version: 0.1.0-beta.3.dev1. Installed only in the disposable real-source instanc
 Existing supporting mappings survived preview installation and Options save. Ruby was explicitly marked Pet with the default thresholds. Live UI showed Pet · Home and Reported 22 hours ago without a stale flag; a human Life360 report updated to two minutes old. iPhone location-report time remained unknown. No source reports or locations were fabricated.
 
 Rollback: restore the saved beta 2 component directory from ignored work/beta2-before-freshness, restore saved household options from work/pre-freshness-options.json if needed, and restart this disposable instance. The local backup contains component code only; household options remain private. No new release was published. Physical departure/return remains deferred.
+
+## Superseded
+
+The preview was superseded by published beta 3 through a verified HACS upgrade. See [beta 3 validation](BETA3-VALIDATION.md).
