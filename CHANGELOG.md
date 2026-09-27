@@ -40,3 +40,9 @@ Development integration only. Card and authenticated frontend access are impleme
 
 - Pass unmodified Core 2026.9.4 hassfest with no invalid integrations or warnings.
 - Declare HTTP dependency, UI-only config schema and required manifest ordering.
+
+### Public development review
+
+- Label the repository experimental and publish it for development review.
+- Pass all nine official HACS remote validation checks after privacy review.
+- Use the maintainer GitHub no-reply address in published branch history.

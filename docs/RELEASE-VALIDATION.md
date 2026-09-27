@@ -2,12 +2,12 @@
 
 ## Identity and distribution
 
-Maintainer: `@jmhjr`. Development repository: https://github.com/jmhjr/HomeCircle (private).
+Maintainer: `@jmhjr`. Development repository: https://github.com/jmhjr/HomeCircle (public experimental development repository).
 Manifest documentation and issue URLs target this repository. Version remains `0.0.3-dev1`; no release tag or public release is approved by this preparation.
 
 HACS distribution is configured for `homecircle.zip`, with default-branch downloads hidden because generated frontend files are deliberately untracked. The ZIP contains integration files at its root, including the compiled frontend, Leaflet license and project MIT license. `scripts/build_release.py` rebuilds from the npm lockfile and writes a deterministic archive plus per-file SHA256 inventory under ignored `release/`.
 
-HACS requires a public GitHub repository and a real GitHub release for release assets. Private repository creation does not fulfill that gate. See [HACS general requirements](https://www.hacs.dev/docs/publish/start/) and [integration requirements](https://www.hacs.dev/docs/publish/integration/).
+HACS requires a public GitHub repository and a real GitHub release for release assets. Public visibility is now approved; release assets and actual HACS installation acceptance are still pending. See [HACS general requirements](https://www.hacs.dev/docs/publish/start/) and [integration requirements](https://www.hacs.dev/docs/publish/integration/).
 
 ## Passed locally
 
@@ -36,7 +36,7 @@ User-operated DAKboard OS 4.14 display, using the LAN-accessible disposable HA i
 ## Still required before V0.1
 
 - Actual HACS custom-repository download/install/update/removal after a separately approved public release.
-- Official HACS validation, including any brands requirements. Home Assistant hassfest passed separately as recorded below.
+- Actual HACS installation and release-asset acceptance. Official HACS remote validation and Home Assistant hassfest now pass as recorded below.
 - Two independently configured real tracking sources, including a non-Life360 source; fictional GPS/router fixtures do not satisfy this gate.
 - Optional external tile failure acceptance.
 - Separate production rollout approval.
@@ -70,3 +70,9 @@ Initial result: 4 of 9 failed. Added repository topics and an original local `br
 Final private-repository result: **7 of 9 passed**, exit status 1. Both remaining failures are public raw-file fetches returning no content for `hacs.json` and the integration manifest. Direct validation of both local files with the official HACS schema objects passed. This is not a full HACS pass or proof of public download/install behavior. Home Assistant 2026.9.4 hassfest still passes after the brand addition. Six privacy guard tests passed, including rejection of altered or relocated brand bytes.
 
 A separate decision to make the development repository public is needed to finish remote validation and then package distribution testing. Repository source, commit history, maintainer identity and MIT license would become publicly visible. The release remains a development build; real-provider and optional tile-failure acceptance remain open. No stable V0.1 release or production rollout is implied.
+
+## Public development checkpoint — 2026-09-27
+
+Following user approval and a history review, the repository is public and explicitly labeled experimental. Reviewed 76 historical path/blob combinations and all 67 current source files. Original commit identities were rewritten to the maintainer's GitHub no-reply address before changing visibility; the current branch history was verified through GitHub. A recovery bundle remains only in ignored local work storage. Rewriting a branch does not guarantee deletion of old commit objects retained by GitHub.
+
+The same unmodified official HACS action was rerun against public main with no ignored checks: **all 9 checks passed**, exit status 0. No release/tag was created. This verifies repository eligibility, not installation, upgrade or removal through HACS. Those tests and the real-provider and optional tile-failure gates remain open.
