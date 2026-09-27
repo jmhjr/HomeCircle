@@ -12,9 +12,11 @@
 - Preserve tile-failure notice during member/category selection and clear it after a successful tile-loading cycle.
 - Initial real-source acceptance with iPhone, Life360 and existing separate Pet GPS integration.
 
-## Unreleased
+## 0.1.0-beta.4
 
-- Development preview: per-source location report timestamp mappings, preserving legacy single-source settings.
+- Per-source location report timestamp mappings, preserving legacy single-source settings.
+
+## Unreleased
 
 
 ### Added

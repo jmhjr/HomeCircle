@@ -1,6 +1,6 @@
-# Per-source report times — development preview
+# Per-source report times — beta 4
 
-Version: 0.1.0-beta.4.dev1. This feature is in the source tree and local development package; it is not a published HACS release. The working beta 3 real-source dashboard is unchanged.
+Version: 0.1.0-beta.4. See [beta 4 validation](BETA4-VALIDATION.md) for release and HACS upgrade results.
 
 ## Configure
 
@@ -29,4 +29,4 @@ All mapped sources and sensors participate in state subscriptions, missing-entit
 - Ruff and pinned Core 2026.9.4 hassfest passed.
 - Packaged lifecycle validation passed with install, upgrade fixture, separate-process restart and removal.
 
-The source-switching inputs were fictional. No provider accounts, production configuration or real-source test settings were changed. The new configuration screens passed an [isolated browser walkthrough](PER-SOURCE-BROWSER-VALIDATION.md): selection, save, reopen and addition of a second source. Physical-display acceptance and published HACS upgrade remain pending. No beta 4 release was published.
+The source-switching inputs were fictional. No provider accounts, production configuration or real-source test settings were changed. The new configuration screens passed an [isolated browser walkthrough](PER-SOURCE-BROWSER-VALIDATION.md): selection, save, reopen and addition of a second source. Physical-display acceptance and published HACS upgrade are tracked in the beta 4 validation report.

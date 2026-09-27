@@ -12,7 +12,7 @@ HomeCircle consumes standard HA `person` and `device_tracker` entities, with opt
 
 ## Start here
 
-- [Per-source report times (development preview)](docs/PER-SOURCE-REPORTS.md)
+- [Per-source report times](docs/PER-SOURCE-REPORTS.md)
 
 - [Step-by-step setup: iPhone, Life360, pets and supporting sensors](docs/SETUP.md)
 
@@ -58,4 +58,4 @@ The reference is **HomeCircle Reference Implementation v1**, frozen from availab
 
 MIT licensed. No upstream implementation is copied into the new runtime. Any future code reuse must retain its original license and third-party notices.
 
-The initial card and authenticated snapshot interface are implemented in development prerelease `0.1.0-beta.3`. See [frontend setup](docs/FRONTEND.md) and [milestone 3 validation](docs/MILESTONE-3-VALIDATION.md). No production rollout is included.
+The initial card and authenticated snapshot interface are implemented in development prerelease `0.1.0-beta.4`. See [frontend setup](docs/FRONTEND.md) and [milestone 3 validation](docs/MILESTONE-3-VALIDATION.md). No production rollout is included.
