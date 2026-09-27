@@ -10,11 +10,11 @@
 - Preserve existing V2 as HomeCircle Reference Implementation v1. Freeze raw local artifacts outside Git; publish only generic descriptions/examples.
 - MIT for newly authored HomeCircle files. Retain upstream licenses/notices before importing any existing code.
 - Main plus short-lived feature branches; semantic version release tags.
-- A single Integration package with bundled frontend is the intended V0.1 delivery shape; runtime bundling is implemented; release packaging remains to validate.
+- A single Integration package with bundled frontend is the intended V0.1 delivery shape; published beta 4 packaging and HACS lifecycle have passed disposable-instance validation.
 
 ## Open decisions
 
-Broader HA compatibility beyond the tested 2026.9.4 baseline; configurable freshness defaults across sources; public repository identity and name; HACS release packaging. Do not quietly convert these to implemented guarantees.
+Broader HA compatibility beyond the tested 2026.9.4 baseline, configurable freshness defaults across sources, the stable public product name, and production replacement remain open. Public repository identity and HACS release packaging are established for the experimental beta; do not extend those results into untested compatibility or production guarantees.
 
 ## Milestone 1 decisions
 
@@ -22,7 +22,7 @@ Broader HA compatibility beyond the tested 2026.9.4 baseline; configurable fresh
 - Use HA's public `entities_in_person` helper and distinguish it from active `source`.
 - Persist complete options snapshots and use HA automatic reload; cancel leaves the saved entry unchanged.
 - Retain missing selections with a repair notice; require explicit reselection after renames.
-- Development manifest may load locally while public URL/codeowner metadata is pending; this does not satisfy release validation.
+- The early development manifest was local-only; public URL and codeowner metadata have since been validated for the experimental HACS release.
 
 ## Milestone 2 decisions
 

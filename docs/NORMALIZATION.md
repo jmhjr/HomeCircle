@@ -29,7 +29,7 @@ If person coordinates are absent/unusable, an available selected active GPS trac
 
 ## Explicit evidence and optional fields
 
-The optional `supporting` map is added per member without changing config-entry version 1. Existing milestone 1 entries need no migration.
+The optional `supporting` map is added per member without changing config-entry version 1. Existing milestone 1 entries need no migration. Beta 4 also adds an optional `location_reports` map from each selected person/tracker source ID to that source's report-timestamp sensor ID. The older `location_reported_at` and `location_report_source` pair remains supported for one source; an explicit per-source mapping takes precedence for its source. Opening the per-source Options screen can convert the legacy pair when saved. See [per-source report times](PER-SOURCE-REPORTS.md).
 
 | Key | Selected HA entity | Interpretation |
 |---|---|---|

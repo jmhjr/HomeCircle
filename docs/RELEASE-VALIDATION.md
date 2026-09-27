@@ -3,7 +3,7 @@
 ## Identity and distribution
 
 Maintainer: `@jmhjr`. Development repository: https://github.com/jmhjr/HomeCircle (public experimental development repository).
-Manifest documentation and issue URLs target this repository. The approved experimental prerelease is now `0.1.0-beta.1`; no stable release or production rollout is approved.
+Manifest documentation and issue URLs target this repository. The current experimental prerelease is `0.1.0-beta.4`; no stable release or production rollout is approved. This document retains dated earlier checkpoints; see the [current release-readiness audit](BETA4-RELEASE-AUDIT.md) and [beta 4 validation](BETA4-VALIDATION.md) for the latest package, HACS, map and touch results.
 
 HACS distribution is configured for `homecircle.zip`, with default-branch downloads hidden because generated frontend files are deliberately untracked. The ZIP contains integration files at its root, including the compiled frontend, Leaflet license and project MIT license. `scripts/build_release.py` rebuilds from the npm lockfile and writes a deterministic archive plus per-file SHA256 inventory under ignored `release/`.
 
@@ -36,6 +36,9 @@ User-operated DAKboard OS 4.14 display, using the LAN-accessible disposable HA i
 ## Still required before V0.1
 
 - Broader real-source acceptance: actual Home/Away transitions, background updates away from the local network, source switching and sustained availability. Initial two-source functionality passed as recorded below.
+- Fix and verify the reproducible extra snapshot retries after a failed request. Cover the not-loaded entry removal and uninstall-first resource cleanup paths; assess the brief resource replacement on options reload.
+- Exercise allowed and denied access with a real non-admin dashboard account, and confirm the additional-residence count versus primary-house map focus on the physical display.
+- Validate compatibility against the Home Assistant release selected for V0.1; the current automated checks cover Core 2026.9.4.
 - Separate production rollout approval.
 
 No production rollout or V0.1 readiness is claimed.

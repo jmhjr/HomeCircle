@@ -1,4 +1,4 @@
-# Set up HomeCircle beta 3
+# Set up HomeCircle beta 4
 
 Use a test Home Assistant instance running Core 2026.9.4 or later. HomeCircle is an experimental prerelease. It displays existing Home Assistant entities; tracking accounts and devices are set up separately.
 
@@ -21,7 +21,7 @@ HomeCircle does not install or authenticate Life360 or pet integrations. Human L
 
 In Settings → People, create or edit a person and assign their tracker. Follow HA's [Person setup](https://www.home-assistant.io/integrations/person/). Use one person per household member; multiple sources for one individual belong to that person's record rather than separate duplicate members.
 
-Beta 3 also requires an HA person record for a pet. Create a record for the pet without creating a login account, and assign the pet tracker. You will label it Pet inside HomeCircle later.
+The current beta requires an HA person record for a pet. Create a record for the pet without creating a login account, and assign the pet tracker. You will label it Pet inside HomeCircle later.
 
 Check your Home zone in Settings → Areas, labels & zones → Zones. Create additional zones you need. HomeCircle distinguishes:
 
@@ -111,8 +111,8 @@ Check these results:
 - **Missing-source repair notice:** allow sources to finish starting, then use Options to replace removed or renamed entities if necessary.
 - **Card missing after install:** restart HA, refresh the browser, and confirm the integration completed setup. UI-only resource registration was tested with storage-mode dashboards; YAML-managed resources need separate handling.
 
-HACS upgrades require a restart. Removing the HomeCircle integration deletes its household selections; reinstalling requires setup again. Keep a Home Assistant backup before testing removal. Source integrations and their entities are managed separately.
+HACS upgrades require a restart. To uninstall from a test instance, first remove the HomeCircle integration entry in Settings → Devices & services, then uninstall HomeCircle in HACS and restart HA. Removing the entry deletes its saved HomeCircle selections; reinstall requires setup again. Keep a Home Assistant backup before testing removal. Source integrations and their entities are managed separately. The normal removal/reinstall sequence passed in [beta 4 validation](BETA4-VALIDATION.md); other removal orders have not been accepted yet.
 
 ## Validation scope
 
-See [the clean setup check](SETUP-VALIDATION.md) and [beta 3 acceptance](BETA3-VALIDATION.md). Synthetic setup checks do not establish provider compatibility or physical touch acceptance. Real departure/return testing remains deferred.
+See [the clean setup check](SETUP-VALIDATION.md) and [beta 4 acceptance](BETA4-VALIDATION.md). Synthetic setup checks do not establish provider compatibility or physical touch acceptance. Real departure/return testing remains deferred.

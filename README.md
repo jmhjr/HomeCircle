@@ -4,7 +4,7 @@ Family location and presence for Home Assistant, independent of the tracking pro
 
 **Experimental development software — not a stable release.**
 
-Use a disposable or test Home Assistant instance. Initial real-provider and HACS install checks pass; broader field acceptance and release lifecycle checks are recorded below. No stable release or production migration is approved.
+Use a disposable or test Home Assistant instance. Published beta 4 has passed HACS install, upgrade, removal and reinstall checks, plus initial real-provider and touch-display checks. Broader field acceptance remains open. No stable release or production migration is approved.
 
 **Status: milestones 1–3 development integration; development prerelease; not production-ready.** HomeCircle is a working name; public naming remains a release decision. The existing V2 dashboard remains the reference system. Development does not replace, install over, or change it.
 
@@ -13,6 +13,7 @@ HomeCircle consumes standard HA `person` and `device_tracker` entities, with opt
 ## Start here
 
 - [Per-source report times](docs/PER-SOURCE-REPORTS.md)
+- [Current beta 4 release-readiness audit](docs/BETA4-RELEASE-AUDIT.md)
 
 - [Step-by-step setup: iPhone, Life360, pets and supporting sensors](docs/SETUP.md)
 
@@ -30,7 +31,7 @@ HomeCircle consumes standard HA `person` and `device_tracker` entities, with opt
 
 ## Release preparation
 
-Maintainer: [@jmhjr](https://github.com/jmhjr). The repository is published for development review and HACS validation. Experimental prerelease assets and successful HACS download/install checks are available. See [release preparation and validation](docs/RELEASE-VALIDATION.md).
+Maintainer: [@jmhjr](https://github.com/jmhjr). The repository is public for development review and HACS custom-repository testing. The current experimental prerelease is [v0.1.0-beta.4](https://github.com/jmhjr/HomeCircle/releases/tag/v0.1.0-beta.4). See [beta 4 validation](docs/BETA4-VALIDATION.md), the [current release-readiness audit](docs/BETA4-RELEASE-AUDIT.md), and the [historical release preparation record](docs/RELEASE-VALIDATION.md).
 
 ## Repository
 

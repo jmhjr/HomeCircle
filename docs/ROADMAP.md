@@ -4,13 +4,13 @@
 
 Project structure, reference inventory, private local snapshot, privacy rules, ADR-001, and Git workflow. Runtime directories are explicit placeholders. No deployment or release tag.
 
-## 1 — HA integration and configuration (implemented; release metadata pending)
+## 1 — HA integration and configuration (implemented and validated in disposable HA)
 
 Implement manifest using the real public repository identity; pin development HA version; add config/options flows, translations, selection persistence and unload/reload. Discover people and source trackers using supported HA interfaces. Select primary Home and per-member additional residences plus ordinary places. Prevent duplicate entries and invalid selections. Do not write to source trackers or existing zones.
 
 Acceptance: setup, cancel, reconfigure, restart, entity deletion and unload work in a disposable HA instance; no Life360 installation or credentials required. Exercise both a GPS-backed person and a locationless presence source.
 
-Implementation and HA Core validation are recorded in [milestone 1 validation](MILESTONE-1-VALIDATION.md). Public repository identity, complete release manifest validation and HACS acceptance remain open. Provider sources in these checks are synthetic; real independent provider acceptance remains a V0.1 release gate.
+Implementation and HA Core validation are recorded in [milestone 1 validation](MILESTONE-1-VALIDATION.md). Public repository identity, release manifest validation and actual HACS installation have since passed. Initial acceptance with independent iPhone and Life360 sources passed in a disposable instance; broader real-world behavior remains a V0.1 release gate. See [release validation](RELEASE-VALIDATION.md) and [beta 4 validation](BETA4-VALIDATION.md).
 
 ## 2 — Normalization and household rules (implemented)
 
@@ -39,6 +39,8 @@ Implementation and precise validation scope are in [frontend setup](FRONTEND.md)
 - Confirm privacy/network disclosure and optional feature failure behavior.
 - User accepts replacement separately; no automatic production V2 migration.
 - Tag `v0.1.0` and create corresponding GitHub release only after these gates pass.
+
+As of beta 4, package integrity, manifest and HACS validation, actual HACS install/upgrade/removal/reinstall, initial independent real-provider acceptance, privacy checks, and optional tile failure behavior have passed within their documented scopes. A rejected-snapshot retry defect and removal edge cases need follow-up. Real movement, background updates outside the LAN, within-person source switching, sustained availability, real non-admin permission behavior, and a distinct physical additional-residence check remain open. See the [current release-readiness audit](BETA4-RELEASE-AUDIT.md). No stable tag or production migration is approved.
 
 ## Later milestones
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.0-beta.4
+
+- Per-source location report timestamp mappings, preserving legacy single-source settings.
+
 ## 0.1.0-beta.3
 
 - Show report ages in minutes, hours and days with visible stale indicators.
@@ -12,11 +16,11 @@
 - Preserve tile-failure notice during member/category selection and clear it after a successful tile-loading cycle.
 - Initial real-source acceptance with iPhone, Life360 and existing separate Pet GPS integration.
 
-## 0.1.0-beta.4
+## 0.1.0-beta.1 — development prerelease
 
-- Per-source location report timestamp mappings, preserving legacy single-source settings.
+First experimental packaged prerelease for disposable HACS acceptance. Includes the integration, bundled card, visual editor and original brand icon. Official HA and HACS repository validation passed before packaging. Real-provider acceptance and production rollout remained pending at that checkpoint.
 
-## Unreleased
+## Development history before beta 1
 
 
 ### Added
@@ -36,8 +40,8 @@
 - Synthetic regression coverage for residence counts, locationless presence, stale driving, source switching, unknown timestamps, overlapping zones and optional values.
 - Reproducible disposable browser launcher; frontend missing-dependency and custom-component import-root issues resolved.
 
-### Status
-Development integration only. Card and authenticated frontend access are implemented. Packaged Core lifecycle validation passes; actual HACS acceptance and public release remain pending. Production V2 is unchanged.
+### Status at that checkpoint
+The card and authenticated frontend access were implemented. Packaged Core lifecycle validation passed; actual HACS acceptance and public release were still pending. Production V2 was unchanged.
 
 ### Milestone 3 development — 0.0.3-dev1
 
@@ -63,7 +67,3 @@ Development integration only. Card and authenticated frontend access are impleme
 - Label the repository experimental and publish it for development review.
 - Pass all nine official HACS remote validation checks after privacy review.
 - Use the maintainer GitHub no-reply address in published branch history.
-
-## 0.1.0-beta.1 — development prerelease
-
-First experimental packaged prerelease for disposable HACS acceptance. Includes the integration, bundled card, visual editor and original brand icon. Official HA and HACS repository validation passed before packaging. Real-provider acceptance and production rollout remain pending.
