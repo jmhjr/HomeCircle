@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- When a location source has no genuine report-time sensor, show when Home Assistant last updated that source state while keeping the location report time explicitly unknown. HA observation time does not determine GPS freshness.
+
 ## 0.1.0-beta.5
 
 - Limit failed household snapshot retries to the regular refresh timer; reconnecting still refreshes immediately.

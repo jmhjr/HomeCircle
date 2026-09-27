@@ -18,23 +18,26 @@ export function selection(members, mode, focusIds) {
     (member) => member.focusable && member.location && listed.has(member.id),
   );
 }
+function ageLabel(stamp, now) {
+  const minutes = Math.max(0, Math.floor((now - stamp) / 60000));
+  return minutes < 1
+    ? "less than a minute"
+    : minutes < 60
+      ? `${minutes} min`
+      : minutes < 1440
+        ? `${Math.floor(minutes / 60)} hour${minutes < 120 ? "" : "s"}`
+        : `${Math.floor(minutes / 1440)} day${minutes < 2880 ? "" : "s"}`;
+}
 export function reportLabel(member, now = Date.now()) {
   if (!member.location) return "No usable map position";
   const proof = member.location.evidence;
-  if (!proof?.reported_at) return "Location report time unknown";
-  const stamp = Date.parse(proof.reported_at);
-  if (!Number.isFinite(stamp) || stamp > now + 60000)
-    return "Location report time unknown";
-  const minutes = Math.max(0, Math.floor((now - stamp) / 60000));
-  const age =
-    minutes < 1
-      ? "less than a minute"
-      : minutes < 60
-        ? `${minutes} min`
-        : minutes < 1440
-          ? `${Math.floor(minutes / 60)} hour${minutes < 120 ? "" : "s"}`
-          : `${Math.floor(minutes / 1440)} day${minutes < 2880 ? "" : "s"}`;
-  return `${proof.freshness === "stale" ? "Stale · " : ""}Reported ${age} ago`;
+  const reported = proof?.reported_at ? Date.parse(proof.reported_at) : NaN;
+  if (Number.isFinite(reported) && reported <= now + 60000)
+    return `${proof.freshness === "stale" ? "Stale · " : ""}Reported ${ageLabel(reported, now)} ago`;
+  const observed = proof?.observed_at ? Date.parse(proof.observed_at) : NaN;
+  if (Number.isFinite(observed) && observed <= now + 60000)
+    return `HA state updated ${ageLabel(observed, now)} ago · Location report time unknown`;
+  return "Location report time unknown";
 }
 // Group screen-overlapping markers, independently for each map and zoom level.
 export function markerGroups(members, project, distance = 42) {

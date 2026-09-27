@@ -25,3 +25,11 @@ While a real Life360 member was away, the disposable HA instance showed the offi
 On the physical DAKboard, the user refreshed the HomeCircle Test page and confirmed four members with the temporary member marked Away. Tapping that member focused the map; Everyone returned to all four positions. The temporary person was then deleted and the exact original three-member HomeCircle options and snapshot were verified restored. Production HA was unchanged. No coordinates, tracker identifiers, or screenshots are published here.
 
 This confirms a live Away snapshot and physical focus/reset behavior with a real Life360 source. It does not establish a departure transition, return transition, background iPhone update, or sustained provider availability.
+
+## Within-person real-source switch
+
+A temporary HA person in the disposable instance selected the existing iPhone and Life360 GPS trackers for the same individual. Both feeds had coordinates, and their current positions differed. The test selected the iPhone source, switched the HA person's associated tracker to Life360, then switched back to iPhone. Each phase used live provider state, not a substituted fictional tracker state.
+
+HomeCircle's location matched the active tracker's coordinates in all three phases. The iPhone phase had no configured location-report sensor and its report time remained unknown. The Life360 phase used its own configured timestamp sensor; HomeCircle's reported time matched that sensor. Switching back restored the iPhone position and unknown report time, without borrowing Life360's timestamp. The original three-member HomeCircle options and snapshot were verified restored, and the temporary HA person was removed. This checks a controlled within-person source switch, not unattended provider failover or a physical-display source-switch interaction.
+
+The iPhone `mobile_app` tracker exposed no location-report timestamp attribute or same-device timestamp sensor in this test instance. Its HA state update time is available, but that records when HA last updated the source state rather than proving when iOS obtained the GPS fix. Current iOS Companion App [location documentation](https://companion.home-assistant.io/docs/core/location/) describes event and background-triggered updates; this check does not establish a continuous real-time iPhone feed.

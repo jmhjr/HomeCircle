@@ -75,6 +75,21 @@ test("unknown report time is never a live claim; stale remains explicit", () => 
   );
   assert.match(reportLabel(member("none", "home", false)), /No usable/);
 });
+test("HA observation time is labeled separately when report time is unknown", () => {
+  const value = member("phone");
+  const now = Date.parse("2026-01-01T01:00:00Z");
+  value.location.evidence.observed_at = "2026-01-01T00:26:00Z";
+  assert.equal(
+    reportLabel(value, now),
+    "HA state updated 34 min ago · Location report time unknown",
+  );
+  value.location.evidence.reported_at = "2026-01-01T00:50:00Z";
+  value.location.evidence.freshness = "fresh";
+  assert.equal(reportLabel(value, now), "Reported 10 min ago");
+  value.location.evidence.reported_at = null;
+  value.location.evidence.observed_at = "2026-01-01T01:10:00Z";
+  assert.equal(reportLabel(value, now), "Location report time unknown");
+});
 test("tiles are opt-in and invalid provider choices are rejected", () => {
   assert.equal(
     validateConfig({ type: "custom:homecircle-card" }).map_tiles,
