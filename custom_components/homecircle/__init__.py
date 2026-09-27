@@ -138,3 +138,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: HomeCircleEntry) -> boo
     entry.runtime_data.missing.clear()
     entry.runtime_data.unavailable.clear()
     return True
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: HomeCircleEntry) -> None:
+    """Clean up an owned resource even when the entry was not loaded."""
+    await frontend.async_unregister(hass)

@@ -69,6 +69,8 @@ class HomeCircleCard extends HTMLElement {
   }
   set hass(hass) {
     const changed = this._hass?.connection !== hass.connection;
+    const reconnected =
+      this._hass?.connected === false && hass.connected !== false;
     this._hass = hass;
     if (changed) {
       clearTimeout(this._timeout);
@@ -83,7 +85,7 @@ class HomeCircleCard extends HTMLElement {
       this._clear("Home Assistant is disconnected.");
       return;
     }
-    if (this.isConnected && (!this._data || changed)) this._load();
+    if (this.isConnected && (changed || reconnected)) this._load();
   }
   connectedCallback() {
     this._layout();

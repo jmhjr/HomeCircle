@@ -56,6 +56,48 @@ test("authorization rejection clears displayed snapshot and retained signatures"
   assert.match(value.shadowRoot.textContent, /cannot view all selected/);
   value.remove();
 });
+test("snapshot rejection waits for the timer or a new connection before retrying", async () => {
+  let calls = 0;
+  const connection = {};
+  const failing = async () => {
+    calls++;
+    throw { code: "unauthorized" };
+  };
+  const value = card({ connection, connected: true, callWS: failing });
+  await tick();
+  assert.equal(calls, 1);
+  for (let i = 0; i < 5; i++) {
+    value.hass = { connection, connected: true, callWS: failing };
+    await tick();
+  }
+  assert.equal(calls, 1);
+  await value._load(); // The regular 15-second timer calls this method.
+  assert.equal(calls, 2);
+  value.hass = {
+    connection: {},
+    connected: true,
+    callWS: async () => response(),
+  };
+  await tick();
+  assert.ok(value._data);
+  value.remove();
+});
+test("same-connection reconnect requests a fresh snapshot", async () => {
+  let calls = 0;
+  const connection = {};
+  const callWS = async () => {
+    calls++;
+    return response();
+  };
+  const value = card({ connection, connected: true, callWS });
+  await tick();
+  value.hass = { connection, connected: false, callWS };
+  value.hass = { connection, connected: true, callWS };
+  await tick();
+  assert.equal(calls, 2);
+  assert.ok(value._data);
+  value.remove();
+});
 test("late responses cannot restore data after disconnect; reconnect recovers", async () => {
   let resolve;
   const connection = {};

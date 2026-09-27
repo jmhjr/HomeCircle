@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased after 0.1.0-beta.4
+
+- Limit failed household snapshot retries to the regular refresh timer; reconnecting still refreshes immediately.
+- Clean up an owned dashboard resource when a HomeCircle entry is removed while not loaded, using its persisted ownership ID. Removal remains safe for unrelated and manually registered resources.
+- Add focused regressions for failed-request retries, reconnects and unloaded-entry cleanup. These changes are not in the published beta 4 ZIP.
+
 ## 0.1.0-beta.4
 
 - Per-source location report timestamp mappings, preserving legacy single-source settings.

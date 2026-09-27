@@ -54,13 +54,19 @@ async def async_register(hass):
 
 
 async def async_unregister(hass):
-    owned_id = hass.data.get(KEY, {}).pop("owned_id", None)
+    state = hass.data.get(KEY, {})
+    owned_id = state.pop("owned_id", None)
     resources = hass.data[LOVELACE_DATA].resources
-    if owned_id and isinstance(resources, ResourceStorageCollection):
+    if not isinstance(resources, ResourceStorageCollection):
+        return  # Leave storage ownership intact if resources are YAML-managed.
+    store = Store(hass, 1, KEY)
+    if not owned_id:
+        owned_id = (await store.async_load() or {}).get("id")
+    if owned_id:
         await resources.async_get_info()
         item = next(
             (item for item in resources.async_items() if item["id"] == owned_id), None
         )
         if item and item["url"].split("?")[0] == URL:
             await resources.async_delete_item(owned_id)
-        await Store(hass, 1, KEY).async_remove()
+        await store.async_remove()

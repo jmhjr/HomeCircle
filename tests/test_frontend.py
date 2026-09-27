@@ -76,6 +76,26 @@ async def test_owned_resources_reload_unload_and_preserve_others(hass, household
     assert manual in resources.async_items()
 
 
+async def test_remove_unloaded_entry_cleans_persisted_resource(hass, household):
+    entry = await setup(hass, household)
+    resources = hass.data[LOVELACE_DATA].resources
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    # Simulate an owned registration left by a failed setup or interrupted unload.
+    await frontend.async_register(hass)
+    owned = next(
+        item for item in resources.async_items() if item["url"].startswith(frontend.URL)
+    )
+    hass.data[frontend.KEY].pop("owned_id")  # Force persisted-ID recovery.
+    unrelated = await resources.async_create_item(
+        {"url": "/local/example-card.js", "res_type": "module"}
+    )
+    assert (await hass.config_entries.async_remove(entry.entry_id))[
+        "require_restart"
+    ] is False
+    assert owned not in resources.async_items()
+    assert resources.async_items() == [unrelated]
+
+
 async def test_yaml_resources_are_never_rewritten(hass, household):
     entry = await setup(hass, household)
     await hass.config_entries.async_unload(entry.entry_id)
