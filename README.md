@@ -2,6 +2,10 @@
 
 Family location and presence for Home Assistant, independent of the tracking provider.
 
+**Experimental development software — not a stable release.**
+
+Use a disposable or test Home Assistant instance. Real tracking-provider acceptance and HACS install/update testing remain incomplete. No stable release or production migration is approved.
+
 **Status: milestones 1–3 development integration; no HomeCircle release yet.** HomeCircle is a working name; public naming remains a release decision. The existing V2 dashboard remains the reference system. Development does not replace, install over, or change it.
 
 HomeCircle consumes standard HA `person` and `device_tracker` entities, with optional explicitly selected supporting sensors. Life360, the Companion app, and other tracking integrations remain independently managed sources. HomeCircle will never require a Life360 account or token.
@@ -21,7 +25,7 @@ HomeCircle consumes standard HA `person` and `device_tracker` entities, with opt
 
 ## Release preparation
 
-Maintainer: [@jmhjr](https://github.com/jmhjr). The development repository is private. A local ZIP and package lifecycle checks are available; HACS download acceptance and public release remain pending. See [release preparation and validation](docs/RELEASE-VALIDATION.md).
+Maintainer: [@jmhjr](https://github.com/jmhjr). The repository is published for development review and HACS validation. A local ZIP and package lifecycle checks are available; HACS download acceptance and public release remain pending. See [release preparation and validation](docs/RELEASE-VALIDATION.md).
 
 ## Repository
 
