@@ -29,4 +29,4 @@ All mapped sources and sensors participate in state subscriptions, missing-entit
 - Ruff and pinned Core 2026.9.4 hassfest passed.
 - Packaged lifecycle validation passed with install, upgrade fixture, separate-process restart and removal.
 
-The source-switching inputs were fictional. No provider accounts, production configuration or real-source test settings were changed. The new configuration screens passed an [isolated browser walkthrough](PER-SOURCE-BROWSER-VALIDATION.md): selection, save, reopen and addition of a second source. Physical-display acceptance and published HACS upgrade are tracked in the beta 4 validation report.
+The source-switching inputs were fictional. No provider accounts, production configuration or real-source test settings were changed. The new configuration screens passed an [isolated browser walkthrough](PER-SOURCE-BROWSER-VALIDATION.md): selection, save, reopen and addition of a second source. The published HACS upgrade passed; physical-display acceptance is tracked in the beta 4 validation report.
