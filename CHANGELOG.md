@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0-beta.3
+
+- Show report ages in minutes, hours and days with visible stale indicators.
+- Add explicit Person/Pet settings and separate pet Home/Away freshness thresholds.
+- Preserve supporting sensor mappings when editing member settings.
+
 ## 0.1.0-beta.2
 
 - Responsive member layout and larger map zoom touch targets.
@@ -8,7 +14,6 @@
 
 ## Unreleased
 
-- Readable report ages, visible stale-state accents, and explicit configurable pet Home/Away freshness thresholds (development preview).
 
 ### Added
 - HomeCircle project scaffold and provider-independent product definition.
