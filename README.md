@@ -6,7 +6,7 @@ Family location and presence for Home Assistant, independent of the tracking pro
 
 Use a disposable or test Home Assistant instance. Real tracking-provider acceptance and HACS install/update testing remain incomplete. No stable release or production migration is approved.
 
-**Status: milestones 1–3 development integration; no HomeCircle release yet.** HomeCircle is a working name; public naming remains a release decision. The existing V2 dashboard remains the reference system. Development does not replace, install over, or change it.
+**Status: milestones 1–3 development integration; development prerelease; not production-ready.** HomeCircle is a working name; public naming remains a release decision. The existing V2 dashboard remains the reference system. Development does not replace, install over, or change it.
 
 HomeCircle consumes standard HA `person` and `device_tracker` entities, with optional explicitly selected supporting sensors. Life360, the Companion app, and other tracking integrations remain independently managed sources. HomeCircle will never require a Life360 account or token.
 
@@ -53,4 +53,4 @@ The reference is **HomeCircle Reference Implementation v1**, frozen from availab
 
 MIT licensed. No upstream implementation is copied into the new runtime. Any future code reuse must retain its original license and third-party notices.
 
-The initial card and authenticated snapshot interface are implemented in development version `0.0.3-dev1`. See [frontend setup](docs/FRONTEND.md) and [milestone 3 validation](docs/MILESTONE-3-VALIDATION.md). No production rollout is included.
+The initial card and authenticated snapshot interface are implemented in development prerelease `0.1.0-beta.1`. See [frontend setup](docs/FRONTEND.md) and [milestone 3 validation](docs/MILESTONE-3-VALIDATION.md). No production rollout is included.

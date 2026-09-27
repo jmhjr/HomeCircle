@@ -46,3 +46,7 @@ Development integration only. Card and authenticated frontend access are impleme
 - Label the repository experimental and publish it for development review.
 - Pass all nine official HACS remote validation checks after privacy review.
 - Use the maintainer GitHub no-reply address in published branch history.
+
+## 0.1.0-beta.1 — development prerelease
+
+First experimental packaged prerelease for disposable HACS acceptance. Includes the integration, bundled card, visual editor and original brand icon. Official HA and HACS repository validation passed before packaging. Real-provider acceptance and production rollout remain pending.
