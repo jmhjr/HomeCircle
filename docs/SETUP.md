@@ -1,4 +1,4 @@
-# Set up HomeCircle beta 4
+# Set up HomeCircle beta 5
 
 Use a test Home Assistant instance running Core 2026.9.4 or later. HomeCircle is an experimental prerelease. It displays existing Home Assistant entities; tracking accounts and devices are set up separately.
 

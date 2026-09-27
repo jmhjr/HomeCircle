@@ -82,6 +82,34 @@ test("snapshot rejection waits for the timer or a new connection before retrying
   assert.ok(value._data);
   value.remove();
 });
+test("scheduled refresh retries a rejected snapshot", async () => {
+  let calls = 0;
+  let refresh;
+  const original = globalThis.setInterval;
+  globalThis.setInterval = (callback, delay) => {
+    assert.equal(delay, 15000);
+    refresh = callback;
+    return undefined;
+  };
+  try {
+    const value = card({
+      connection: {},
+      connected: true,
+      callWS: async () => {
+        calls++;
+        throw { code: "unauthorized" };
+      },
+    });
+    await tick();
+    assert.equal(calls, 1);
+    refresh();
+    await tick();
+    assert.equal(calls, 2);
+    value.remove();
+  } finally {
+    globalThis.setInterval = original;
+  }
+});
 test("same-connection reconnect requests a fresh snapshot", async () => {
   let calls = 0;
   const connection = {};

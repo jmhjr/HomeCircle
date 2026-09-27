@@ -74,6 +74,8 @@ async def test_owned_resources_reload_unload_and_preserve_others(hass, household
     assert await hass.config_entries.async_setup(entry.entry_id)
     assert await hass.config_entries.async_unload(entry.entry_id)
     assert manual in resources.async_items()
+    await hass.config_entries.async_remove(entry.entry_id)
+    assert manual in resources.async_items()
 
 
 async def test_remove_unloaded_entry_cleans_persisted_resource(hass, household):
