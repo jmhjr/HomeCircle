@@ -115,4 +115,4 @@ HACS upgrades require a restart. To uninstall from a test instance, first remove
 
 ## Validation scope
 
-See [the clean setup check](SETUP-VALIDATION.md) and [beta 4 acceptance](BETA4-VALIDATION.md). Synthetic setup checks do not establish provider compatibility or physical touch acceptance. Real departure/return testing remains deferred.
+See [the clean setup check](SETUP-VALIDATION.md), [beta 5 HACS validation](BETA5-VALIDATION.md), and [beta 4 real-source/touch acceptance](BETA4-VALIDATION.md). Synthetic setup checks do not establish provider compatibility or physical touch acceptance for beta 5. Real departure/return testing remains deferred.
