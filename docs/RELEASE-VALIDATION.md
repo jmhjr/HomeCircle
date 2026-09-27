@@ -37,7 +37,6 @@ User-operated DAKboard OS 4.14 display, using the LAN-accessible disposable HA i
 
 - Actual HACS upgrade between two published versions and removal through HACS. Download/install and release-asset acceptance passed; the earlier packaged lifecycle test separately covers a version-only update rehearsal and removal.
 - Broader real-source acceptance: actual Home/Away transitions, background updates away from the local network, source switching and sustained availability. Initial two-source functionality passed as recorded below.
-- Optional external tile failure acceptance.
 - Separate production rollout approval.
 
 No production rollout or V0.1 readiness is claimed.
@@ -105,3 +104,7 @@ Initial real-source acceptance passed on the HACS-installed HomeCircle 0.1.0-bet
 Remaining checks: actual Home/Away transitions, background iPhone updates outside the local network, real-source switching within one person, and sustained provider availability. The test Home zone is still fictional; Away does not indicate the user's actual relationship to home. The initial two-provider functionality gate is satisfied; these broader checks and other release gates remain open.
 
 Production HA and the original physical touch-test instance were unchanged. No stable release or production rollout is approved.
+
+## Beta 4 external tile checkpoint — 2026-09-27
+
+The optional external tile failure gate passed in an isolated browser using the published beta 4 card with only its tile URL redirected to a local HTTP 503/recovery endpoint. With fictional member data, the warning appeared during tile failure while map markers and member/category/Everyone interactions continued to work. Valid local image responses then loaded and cleared the warning. The real-source disposable dashboard still loaded OpenStreetMap tiles afterward. See [beta 4 validation](BETA4-VALIDATION.md) for the checkpoints. This does not complete the deferred real departure/return or production rollout gates.
