@@ -10,6 +10,6 @@ Published experimental prerelease: https://github.com/jmhjr/HomeCircle/releases/
 - All saved HomeCircle data/options remained identical, including the pet settings entered during the prior preview and supporting sensor mappings. Three test records remained focusable. Pet thresholds remained 1440 minutes at home and 5 minutes away.
 - Live browser showed unknown iPhone report time, a stale human report with an amber accent, and a pet report age in hours with Pet / Home status.
 
-Physical DAKboard confirmation of the new display is pending. Refresh the real-source test dashboard on the touch display, check readable report ages and the amber stale indicator, then tap Ruby and Everyone. Prior beta 2 touch acceptance does not substitute for this check.
+Physical DAKboard acceptance passed by user confirmation: readable report ages, amber stale indicators, and member selection followed by Everyone. The browser check separately verified one selected map position and restoration of all three positions.
 
 Real departure/return remains deferred. Production HA was unchanged. Private component and settings backups remain available locally for rollback. No household configuration or screenshots were published to GitHub.
