@@ -35,7 +35,6 @@ User-operated DAKboard OS 4.14 display, using the LAN-accessible disposable HA i
 
 ## Still required before V0.1
 
-- Actual HACS upgrade between two published versions and removal through HACS. Download/install and release-asset acceptance passed; the earlier packaged lifecycle test separately covers a version-only update rehearsal and removal.
 - Broader real-source acceptance: actual Home/Away transitions, background updates away from the local network, source switching and sustained availability. Initial two-source functionality passed as recorded below.
 - Separate production rollout approval.
 
@@ -108,3 +107,7 @@ Production HA and the original physical touch-test instance were unchanged. No s
 ## Beta 4 external tile checkpoint — 2026-09-27
 
 The optional external tile failure gate passed in an isolated browser using the published beta 4 card with only its tile URL redirected to a local HTTP 503/recovery endpoint. With fictional member data, the warning appeared during tile failure while map markers and member/category/Everyone interactions continued to work. Valid local image responses then loaded and cleared the warning. The real-source disposable dashboard still loaded OpenStreetMap tiles afterward. See [beta 4 validation](BETA4-VALIDATION.md) for the checkpoints. This does not complete the deferred real departure/return or production rollout gates.
+
+## Beta 4 HACS lifecycle checkpoint — 2026-09-27
+
+Actual HACS upgrade between published versions passed earlier in the real-source disposable instance. Beta 2 HACS removal/reinstall had also passed in a separate fictional-source instance. The same full HACS install → remove → reinstall sequence now passed for published beta 4 in a new loopback-only disposable Core instance. Removal cleared the integration package, its owned frontend resource and old static route after restart, while preserving unrelated HA data. Reinstallation restored the exact beta 4 ZIP, one owned resource and a working fictional household. HACS reported beta 4 installed. The disposable instance was stopped and its configuration removed. See [beta 4 validation](BETA4-VALIDATION.md).
