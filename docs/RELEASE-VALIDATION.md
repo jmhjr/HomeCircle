@@ -60,3 +60,13 @@ work/ha-venv/bin/python -m script.hassfest \
 ```
 
 Official references: [hassfest for custom integrations](https://developers.home-assistant.io/blog/2020/04/16/hassfest/) and [Core 2026.9.4 validator source](https://github.com/home-assistant/core/tree/2026.9.4/script/hassfest). No production HA or DAKboard configuration was changed by this validation.
+
+## HACS validation checkpoint
+
+Ran the unmodified official HACS action entrypoint from integration revision `adb7d83e33d24325535fb43b8226572405143757` against the private GitHub repository on main. Used its pinned action dependencies (HA 2026.8.3, aiogithubapi 26.0.0) and official frontend package in a separate local environment. No checks were ignored and commenting was disabled.
+
+Initial result: 4 of 9 failed. Added repository topics and an original local `brand/icon.png`, generated from geometric drawing code and visually reviewed. The privacy guard allows only that exact path and SHA256; changed bytes and other PNGs still fail. The package includes this asset (14 total files).
+
+Final private-repository result: **7 of 9 passed**, exit status 1. Both remaining failures are public raw-file fetches returning no content for `hacs.json` and the integration manifest. Direct validation of both local files with the official HACS schema objects passed. This is not a full HACS pass or proof of public download/install behavior. Home Assistant 2026.9.4 hassfest still passes after the brand addition. Six privacy guard tests passed, including rejection of altered or relocated brand bytes.
+
+A separate decision to make the development repository public is needed to finish remote validation and then package distribution testing. Repository source, commit history, maintainer identity and MIT license would become publicly visible. The release remains a development build; real-provider and optional tile-failure acceptance remain open. No stable V0.1 release or production rollout is implied.
