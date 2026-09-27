@@ -36,9 +36,27 @@ User-operated DAKboard OS 4.14 display, using the LAN-accessible disposable HA i
 ## Still required before V0.1
 
 - Actual HACS custom-repository download/install/update/removal after a separately approved public release.
-- Current official HACS validation and Home Assistant hassfest acceptance, including any brands requirements. Local field checks do not substitute for these validators.
+- Official HACS validation, including any brands requirements. Home Assistant hassfest passed separately as recorded below.
 - Two independently configured real tracking sources, including a non-Life360 source; fictional GPS/router fixtures do not satisfy this gate.
 - Optional external tile failure acceptance.
 - Separate production rollout approval.
 
 No production rollout or V0.1 readiness is claimed.
+
+## Official Home Assistant validator
+
+Home Assistant Core **2026.9.4** official `script.hassfest` was run unmodified from the upstream release archive, matching the supported/tested HA version. All applicable integration plugins ran with no skipped plugins: **1 integration, 0 invalid integrations**, exit status 0, no warnings. This is the pinned Core validator, not a claim about a later beta/latest container.
+
+Fixed the findings by explicitly declaring `http` in dependencies, adding `cv.config_entry_only_config_schema(DOMAIN)`, and ordering manifest keys as required. The 54 Python tests pass after these fixes. The package lifecycle checks were repeated against the rebuilt archive.
+
+Reproduction from the repository root after unpacking the official Core release under ignored `work/official-validator/`:
+
+```sh
+PATH="$PWD/work/ha-venv/bin:$PATH" \
+PYTHONPATH="$PWD/work/official-validator/core-2026.9.4" \
+work/ha-venv/bin/python -m script.hassfest \
+  --integration-path "$PWD/custom_components/homecircle" \
+  --core-path "$PWD/work/official-validator/core-2026.9.4"
+```
+
+Official references: [hassfest for custom integrations](https://developers.home-assistant.io/blog/2020/04/16/hassfest/) and [Core 2026.9.4 validator source](https://github.com/home-assistant/core/tree/2026.9.4/script/hassfest). No production HA or DAKboard configuration was changed by this validation.

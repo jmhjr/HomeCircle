@@ -7,6 +7,7 @@ from typing import Any
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, EVENT_STATE_CHANGED
 from homeassistant.core import HomeAssistant, State, callback
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.event import (
     async_track_state_change_event,
@@ -20,6 +21,9 @@ from .const import DOMAIN
 from .selection import selected_entities
 from . import api, frontend
 from homeassistant.components import websocket_api
+
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 @dataclass

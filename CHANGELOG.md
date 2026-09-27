@@ -35,3 +35,8 @@ Development integration only. Card and authenticated frontend access are impleme
 - Add deterministic package builder, archive inventory and isolated package lifecycle validation.
 - Record user-confirmed physical DAKboard touch, unavailable-state and recovery checks.
 - Support explicit private LAN binding for disposable physical-display QA, keeping loopback as the default.
+
+### Official HA validation
+
+- Pass unmodified Core 2026.9.4 hassfest with no invalid integrations or warnings.
+- Declare HTTP dependency, UI-only config schema and required manifest ordering.

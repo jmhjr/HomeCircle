@@ -6,17 +6,18 @@
   ],
   "config_flow": true,
   "dependencies": [
-    "person",
-    "zone",
     "frontend",
+    "http",
     "lovelace",
-    "websocket_api"
+    "person",
+    "websocket_api",
+    "zone"
   ],
+  "documentation": "https://github.com/jmhjr/HomeCircle",
   "integration_type": "service",
   "iot_class": "calculated",
+  "issue_tracker": "https://github.com/jmhjr/HomeCircle/issues",
   "requirements": [],
   "single_config_entry": true,
-  "version": "0.0.3-dev1",
-  "documentation": "https://github.com/jmhjr/HomeCircle",
-  "issue_tracker": "https://github.com/jmhjr/HomeCircle/issues"
+  "version": "0.0.3-dev1"
 }
