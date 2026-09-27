@@ -374,3 +374,69 @@ async def test_pet_thresholds_persist_in_options(hass, household):
     assert member["pet_home_minutes"] == 720
     assert member["pet_away_minutes"] == 10
     assert entry.runtime_data.config["members"]["person.example_member"] == member
+
+
+async def test_per_source_flow_migrates_preserves_and_clears(hass, household):
+    from custom_components.homecircle.selection import selected_entities
+
+    hass.states.async_set("sensor.example_report", "2026-01-01T00:00:00+00:00")
+    entry = await create(hass, household)
+    original = deepcopy(dict(entry.data))
+    # Use the actual fixture's first member, preserving the original household.
+    person = household["people"][0]
+    original["members"][person]["supporting"] = {
+        "location_report_source": "device_tracker.example_phone",
+        "location_reported_at": "sensor.example_report",
+    }
+    hass.config_entries.async_update_entry(entry, data=original)
+    options = hass.config_entries.options
+    result = await options.async_init(entry.entry_id)
+    result = await options.async_configure(result["flow_id"], household)
+    result = await options.async_configure(
+        result["flow_id"],
+        {"trackers": ["device_tracker.example_phone"], "configure_reports": True},
+    )
+    assert result["step_id"] == "source_report"
+    result = await options.async_configure(result["flow_id"], {})
+    result = await options.async_configure(
+        result["flow_id"], {"timestamp": "sensor.example_missing"}
+    )
+    assert result["errors"]["timestamp"] == "invalid_entity"
+    result = await options.async_configure(
+        result["flow_id"], {"timestamp": "sensor.example_report"}
+    )
+    result = await options.async_configure(
+        result["flow_id"], {"trackers": ["device_tracker.example_router"]}
+    )
+    await options.async_configure(result["flow_id"], {})
+    await hass.async_block_till_done()
+    saved = entry.options["members"][person]
+    assert saved["location_reports"] == {
+        "device_tracker.example_phone": "sensor.example_report"
+    }
+    assert "location_reported_at" not in saved.get("supporting", {})
+    assert "sensor.example_report" in selected_entities(entry.options)
+    assert "sensor.example_report" in entry.runtime_data.states
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    assert (
+        entry.runtime_data.config["members"][person]["location_reports"]
+        == saved["location_reports"]
+    )
+    # Removing a tracker requires explicitly clearing its prior report mapping.
+    result = await options.async_init(entry.entry_id)
+    result = await options.async_configure(result["flow_id"], household)
+    result = await options.async_configure(result["flow_id"], {"trackers": []})
+    assert result["step_id"] == "source_report"
+    result = await options.async_configure(result["flow_id"], {})
+    result = await options.async_configure(
+        result["flow_id"], {"timestamp": "sensor.example_report"}
+    )
+    assert result["errors"]["timestamp"] == "invalid_report_source"
+    result = await options.async_configure(result["flow_id"], {})
+    result = await options.async_configure(
+        result["flow_id"], {"trackers": ["device_tracker.example_router"]}
+    )
+    await options.async_configure(result["flow_id"], {})
+    await hass.async_block_till_done()
+    assert entry.options["members"][person]["location_reports"] == {}
+    assert "sensor.example_report" not in selected_entities(entry.options)

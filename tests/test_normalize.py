@@ -396,3 +396,29 @@ def test_pet_location_threshold_changes_with_residence_without_faking_report(sna
     states.pop("sensor.example_report")
     cfg["kind"] = "pet"
     assert member(snapshot).location.evidence.freshness == "unknown"
+
+
+def test_per_source_report_times_switch_and_missing_evidence(snapshot):
+    config, states = snapshot
+    settings = config["members"][PERSON]
+    settings["trackers"].append(OTHER_GPS)
+    settings["location_reports"] = {
+        GPS: "sensor.example_report",
+        OTHER_GPS: "sensor.example_other_report",
+    }
+    states["sensor.example_report"] = state(
+        "sensor.example_report", (NOW - timedelta(hours=2)).isoformat()
+    )
+    states["sensor.example_other_report"] = state(
+        "sensor.example_other_report", (NOW - timedelta(seconds=20)).isoformat()
+    )
+    assert member(snapshot).location.evidence.freshness == "stale"
+    states[OTHER_GPS] = gps(OTHER_GPS)
+    states[PERSON] = state(
+        PERSON, "home", source=OTHER_GPS, **{ATTR_LATITUDE: 0.0, ATTR_LONGITUDE: 0.0}
+    )
+    assert member(snapshot).location.evidence.reported_at == NOW - timedelta(seconds=20)
+    assert member(snapshot).location.evidence.freshness == "fresh"
+    states.pop("sensor.example_other_report")
+    assert member(snapshot).location.evidence.reported_at is None
+    assert member(snapshot).location.evidence.freshness == "unknown"

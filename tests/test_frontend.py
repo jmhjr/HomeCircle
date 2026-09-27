@@ -86,3 +86,28 @@ async def test_yaml_resources_are_never_rewritten(hass, household):
     await frontend.async_register(hass)
     await frontend.async_unregister(hass)
     assert collection.async_items() == [{"url": "/local/example.js", "type": "module"}]
+
+
+async def test_per_source_report_sensor_requires_read_permission(
+    hass, household, hass_ws_client, hass_admin_user
+):
+    from copy import deepcopy
+
+    entry = await setup(hass, household)
+    hass.states.async_set("sensor.example_report", "2026-01-01T00:00:00+00:00")
+    config = deepcopy(dict(entry.data))
+    config["members"][household["people"][0]]["location_reports"] = {
+        "device_tracker.example_phone": "sensor.example_report"
+    }
+    hass.config_entries.async_update_entry(entry, data=config)
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    client = await hass_ws_client(hass)
+    with patch.object(
+        type(hass_admin_user.permissions),
+        "check_entity",
+        side_effect=lambda entity, policy: entity != "sensor.example_report",
+    ):
+        await client.send_json({"id": 1, "type": "homecircle/snapshot"})
+        result = await client.receive_json()
+        assert result["error"]["code"] == "unauthorized"
+        assert "result" not in result

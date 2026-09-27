@@ -313,8 +313,15 @@ def normalize_member(
             elif len(candidates) > 1:
                 issues.append("ambiguous_gps_sources")
         if point is not None and presence != "unavailable":
-            report_id = supporting.get("location_reported_at")
-            if supporting.get("location_report_source") != location_source.entity_id:
+            reports = member_config.get("location_reports", {})
+            report_id = reports.get(location_source.entity_id) or supporting.get(
+                "location_reported_at"
+            )
+            if (
+                location_source.entity_id not in reports
+                and supporting.get("location_report_source")
+                != location_source.entity_id
+            ):
                 if report_id:
                     issues.append("location_report_source_mismatch")
                 report_id = None

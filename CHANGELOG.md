@@ -14,6 +14,8 @@
 
 ## Unreleased
 
+- Development preview: per-source location report timestamp mappings, preserving legacy single-source settings.
+
 
 ### Added
 - HomeCircle project scaffold and provider-independent product definition.

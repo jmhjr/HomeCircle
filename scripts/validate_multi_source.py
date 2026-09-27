@@ -11,7 +11,7 @@ import zipfile
 ROOT = Path(__file__).resolve().parents[1]
 
 
-async def run(directory):
+async def run(directory, per_source=False):
     from homeassistant import bootstrap, loader
     from homeassistant.config_entries import SOURCE_USER
     from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
@@ -74,14 +74,30 @@ async def run(directory):
         hass.states.async_set(
             report, old_report.isoformat(), {"device_class": "timestamp"}
         )
+        hass.states.async_set(
+            "sensor.example_cloud_report",
+            dt.utcnow().isoformat(),
+            {"device_class": "timestamp"},
+        )
         flow = hass.config_entries.flow
         result = await flow.async_init("homecircle", context={"source": SOURCE_USER})
-        for data in [
+        inputs = [
             {"people": [person], "primary_home": "zone.home", "places": []},
             {"trackers": trackers, "configure_sensors": True},
             {"location_reported_at": report, "location_report_source": phone},
             {},
-        ]:
+        ]
+        if per_source:
+            inputs = [
+                inputs[0],
+                {"trackers": trackers, "configure_reports": True},
+                {},
+                {"timestamp": report},
+                {"timestamp": "sensor.example_cloud_report"},
+                {},
+                {},
+            ]
+        for data in inputs:
             result = await flow.async_configure(result["flow_id"], data)
             assert not result.get("errors"), result.get("errors")
         assert result["type"] == "create_entry"
@@ -118,11 +134,11 @@ async def run(directory):
         check("Phone GPS takes over after router leaves", phone, "away", True, "stale")
         await gps(cloud, "not_home", 4.0)
         check(
-            "Newer cloud GPS takes over without borrowing phone timestamp",
+            "Newer cloud GPS uses its own evidence",
             cloud,
             "away",
             True,
-            "unknown",
+            "fresh" if per_source else "unknown",
         )
         hass.states.async_set(cloud, "unavailable")
         await hass.async_block_till_done()
@@ -167,8 +183,8 @@ async def run(directory):
 
 
 def main():
-    if len(sys.argv) == 2:
-        asyncio.run(run(sys.argv[1]))
+    if len(sys.argv) == 3:
+        asyncio.run(run(sys.argv[1], sys.argv[2] == "per-source"))
         return
     with tempfile.TemporaryDirectory(prefix="homecircle-sources-") as directory:
         target = Path(directory) / "custom_components/homecircle"
@@ -178,7 +194,7 @@ def main():
                 assert not Path(name).is_absolute() and ".." not in Path(name).parts
             archive.extractall(target)
         subprocess.run(
-            [sys.executable, str(Path(__file__).resolve()), directory],
+            [sys.executable, str(Path(__file__).resolve()), directory, "per-source"],
             cwd=directory,
             check=True,
             timeout=120,

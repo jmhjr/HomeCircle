@@ -20,7 +20,8 @@
           "configure_sensors": "Configure optional sensor mappings",
           "kind": "Member type",
           "pet_home_minutes": "Pet: mark location stale after minutes at Home",
-          "pet_away_minutes": "Pet: mark location stale after minutes away"
+          "pet_away_minutes": "Pet: mark location stale after minutes away",
+          "configure_reports": "Configure report times for each source"
         }
       },
       "confirm": {
@@ -38,6 +39,13 @@
           "driving_reported_at": "Driving report timestamp sensor",
           "location_reported_at": "Location report timestamp sensor",
           "location_report_source": "Source described by the location timestamp"
+        }
+      },
+      "source_report": {
+        "title": "Location report time for this source",
+        "description": "Source: {source}\n\nSelect a sensor containing the actual location report timestamp for this exact source. Leave empty for unknown report time. Clear the field to remove a mapping. If this source was removed from the member, clear its mapping to continue. HA update times are not GPS report times.",
+        "data": {
+          "timestamp": "Location report timestamp sensor"
         }
       }
     },
@@ -81,7 +89,8 @@
           "configure_sensors": "Configure optional sensor mappings",
           "kind": "Member type",
           "pet_home_minutes": "Pet: mark location stale after minutes at Home",
-          "pet_away_minutes": "Pet: mark location stale after minutes away"
+          "pet_away_minutes": "Pet: mark location stale after minutes away",
+          "configure_reports": "Configure report times for each source"
         }
       },
       "confirm": {
@@ -99,6 +108,13 @@
           "driving_reported_at": "Driving report timestamp sensor",
           "location_reported_at": "Location report timestamp sensor",
           "location_report_source": "Source described by the location timestamp"
+        }
+      },
+      "source_report": {
+        "title": "Location report time for this source",
+        "description": "Source: {source}\n\nSelect a sensor containing the actual location report timestamp for this exact source. Leave empty for unknown report time. Clear the field to remove a mapping. If this source was removed from the member, clear its mapping to continue. HA update times are not GPS report times.",
+        "data": {
+          "timestamp": "Location report timestamp sensor"
         }
       }
     },

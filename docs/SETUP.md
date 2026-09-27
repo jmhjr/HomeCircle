@@ -66,7 +66,7 @@ These fields select existing HA entities. An attribute on a tracker is not itsel
 | Location report timestamp sensor | Actual timestamp when the location source reported its fix |
 | Source described by the location timestamp | The exact selected tracker (or person) described by that timestamp |
 
-Beta 3 stores one location timestamp/source pair per member, not one pair per tracker. See the [multiple-source checks](MULTI-SOURCE-VALIDATION.md) for switching and fallback behavior.
+Beta 3 stores one location timestamp/source pair per member, not one pair per tracker. The unpublished [development preview](PER-SOURCE-REPORTS.md) adds per-source mappings. See the [multiple-source checks](MULTI-SOURCE-VALIDATION.md) for switching and fallback behavior.
 
 Select the location timestamp **and** its source together. Do not bind a pet timestamp to a phone tracker. If the active source changes, a timestamp for another source cannot establish the age of the active location.
 

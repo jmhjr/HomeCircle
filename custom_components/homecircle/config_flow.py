@@ -23,6 +23,7 @@ from .selection import (
     member_errors,
     supporting_errors,
     tracker_suggestions,
+    selectable,
 )
 
 
@@ -88,6 +89,14 @@ class SelectionFlow:
                 pet_home_minutes=user_input.get("pet_home_minutes", 1440),
                 pet_away_minutes=user_input.get("pet_away_minutes", 5),
             )
+            previous_reports = (
+                self.draft[CONF_MEMBERS].get(person_id, {}).get("location_reports", {})
+            )
+            if previous_reports:
+                values["location_reports"] = deepcopy(previous_reports)
+            self.edit_reports = user_input.get("configure_reports", False) or bool(
+                set(previous_reports) - {person_id, *values[CONF_TRACKERS]}
+            )
             previous_supporting = (
                 self.draft[CONF_MEMBERS].get(person_id, {}).get("supporting")
             )
@@ -96,7 +105,11 @@ class SelectionFlow:
             # The supporting step can repair mappings after tracker changes.
             errors = member_errors(
                 self.hass,
-                {k: v for k, v in values.items() if k != "supporting"},
+                {
+                    k: v
+                    for k, v in values.items()
+                    if k not in ("supporting", "location_reports")
+                },
                 self.draft[CONF_PRIMARY_HOME],
             )
             if not errors:
@@ -134,6 +147,9 @@ class SelectionFlow:
                     )
                 ),
                 vol.Optional(
+                    "configure_reports", default=False
+                ): selector.BooleanSelector(),
+                vol.Optional(
                     "configure_sensors", default=False
                 ): selector.BooleanSelector(),
             }
@@ -153,10 +169,60 @@ class SelectionFlow:
         )
 
     async def next_member(self):
+        if getattr(self, "edit_reports", False):
+            self.edit_reports = False
+            person = self.draft[CONF_PEOPLE][self.member_index]
+            member = self.draft[CONF_MEMBERS][person]
+            reports = member.setdefault("location_reports", {})
+            supporting = member.get("supporting", {})
+            source = supporting.pop("location_report_source", None)
+            timestamp = supporting.pop("location_reported_at", None)
+            if source and timestamp:
+                reports.setdefault(source, timestamp)
+            self.report_sources = list(
+                dict.fromkeys([person, *member[CONF_TRACKERS], *reports])
+            )
+            self.report_index = 0
+            return await self.async_step_source_report()
         self.member_index += 1
         if self.member_index < len(self.draft[CONF_PEOPLE]):
             return await self.async_step_member()
         return await self.async_step_confirm()
+
+    async def async_step_source_report(self, user_input=None):
+        person = self.draft[CONF_PEOPLE][self.member_index]
+        member = self.draft[CONF_MEMBERS][person]
+        source = self.report_sources[self.report_index]
+        reports = member["location_reports"]
+        errors = {}
+        if user_input is not None:
+            timestamp = user_input.get("timestamp")
+            if timestamp and source not in [person, *member[CONF_TRACKERS]]:
+                errors["timestamp"] = "invalid_report_source"
+            elif timestamp and not selectable(self.hass, timestamp, "sensor"):
+                errors["timestamp"] = "invalid_entity"
+            else:
+                if timestamp:
+                    reports[source] = timestamp
+                else:
+                    reports.pop(source, None)
+                self.report_index += 1
+                if self.report_index == len(self.report_sources):
+                    return await self.next_member()
+                return await self.async_step_source_report()
+        return self.async_show_form(
+            step_id="source_report",
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(
+                    {vol.Optional("timestamp"): entity_selector("sensor", False)}
+                ),
+                user_input
+                if user_input is not None
+                else {"timestamp": reports.get(source)},
+            ),
+            errors=errors,
+            description_placeholders={"source": source},
+        )
 
     async def async_step_supporting(self, user_input=None):
         person_id = self.draft[CONF_PEOPLE][self.member_index]

@@ -52,6 +52,8 @@ def selected_entities(config: Mapping[str, Any]) -> set[str]:
         result.update(member[CONF_TRACKERS])
         result.update(member[CONF_RESIDENCES])
         result.update(member.get("supporting", {}).values())
+        result.update(member.get("location_reports", {}).values())
+        result.update(member.get("location_reports", {}))
     return result
 
 
@@ -113,6 +115,11 @@ def member_errors(
                 hass, values["supporting"], person_id, values.get(CONF_TRACKERS, [])
             )
         )
+    for source, sensor in values.get("location_reports", {}).items():
+        if source not in [person_id, *values.get(CONF_TRACKERS, [])]:
+            errors["base"] = "invalid_report_source"
+        elif not selectable(hass, sensor, "sensor"):
+            errors["base"] = "invalid_entity"
     return errors
 
 

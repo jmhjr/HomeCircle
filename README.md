@@ -12,6 +12,8 @@ HomeCircle consumes standard HA `person` and `device_tracker` entities, with opt
 
 ## Start here
 
+- [Per-source report times (development preview)](docs/PER-SOURCE-REPORTS.md)
+
 - [Step-by-step setup: iPhone, Life360, pets and supporting sensors](docs/SETUP.md)
 
 - [Product and V0.1 boundary](docs/PRODUCT.md)
