@@ -1,0 +1,8 @@
+{
+  "domain": "example_sources",
+  "name": "HomeCircle disposable test sources",
+  "version": "0.0.1",
+  "codeowners": [],
+  "dependencies": ["person", "zone"],
+  "requirements": []
+}

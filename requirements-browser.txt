@@ -1,0 +1,5 @@
+-r requirements-test.txt
+# Extra dependencies needed by the pinned HA frontend/service-list endpoint.
+home-assistant-frontend==20260826.7
+pymicro-vad==1.0.1
+pyspeex-noise==1.0.2

@@ -1,0 +1,22 @@
+{
+  "domain": "homecircle",
+  "name": "HomeCircle",
+  "codeowners": [
+    "@jmhjr"
+  ],
+  "config_flow": true,
+  "dependencies": [
+    "person",
+    "zone",
+    "frontend",
+    "lovelace",
+    "websocket_api"
+  ],
+  "integration_type": "service",
+  "iot_class": "calculated",
+  "requirements": [],
+  "single_config_entry": true,
+  "version": "0.0.3-dev1",
+  "documentation": "https://github.com/jmhjr/HomeCircle",
+  "issue_tracker": "https://github.com/jmhjr/HomeCircle/issues"
+}

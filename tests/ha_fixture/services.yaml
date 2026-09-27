@@ -1,0 +1,17 @@
+remove_residence:
+  name: Remove synthetic residence
+  description: Remove the disposable residence state for recovery testing.
+set_scenario:
+  name: Set synthetic household scenario
+  description: Change only fictional trackers in the disposable QA instance.
+  fields:
+    scenario:
+      required: true
+      selector:
+        select:
+          options:
+            - home
+            - residence
+            - away
+            - unavailable
+            - overlap

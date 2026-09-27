@@ -1,0 +1,8 @@
+{
+  "name": "HomeCircle",
+  "render_readme": true,
+  "homeassistant": "2026.9.4",
+  "zip_release": true,
+  "filename": "homecircle.zip",
+  "hide_default_branch": true
+}

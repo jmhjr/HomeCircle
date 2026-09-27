@@ -1,0 +1,11 @@
+{
+  "people": ["person.example_member"],
+  "primary_home": "zone.home",
+  "places": ["zone.example_work"],
+  "members": {
+    "person.example_member": {
+      "trackers": ["device_tracker.example_phone"],
+      "additional_residences": ["zone.example_residence"]
+    }
+  }
+}

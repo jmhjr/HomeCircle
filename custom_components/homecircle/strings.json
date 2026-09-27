@@ -1,0 +1,115 @@
+{
+  "title": "HomeCircle",
+  "config": {
+    "step": {
+      "household": {
+        "title": "Choose your household and places",
+        "description": "Select existing Home Assistant people and zones. Ordinary places do not count as Home unless assigned as a residence for a member.",
+        "data": {
+          "people": "People",
+          "primary_home": "Primary family home",
+          "places": "Ordinary places (optional)"
+        }
+      },
+      "member": {
+        "title": "Sources and residences",
+        "description": "Member: {person}\n\nConfigured trackers reported by Home Assistant: {associated}\n\nCurrently active source: {active}\n\nConfirm the suggested trackers or choose explicitly. Leave empty for person-only presence. No GPS is required. Additional residences count as Home for this member; primary-house map focus remains separate.",
+        "data": {
+          "trackers": "Associated trackers (optional)",
+          "additional_residences": "Additional residences for this member (optional)",
+          "configure_sensors": "Configure optional sensor mappings"
+        }
+      },
+      "confirm": {
+        "title": "Save household",
+        "description": "Save these selections? HomeCircle reads existing entities only. You can edit your selections in Options. Cancel to discard all changes."
+      },
+      "supporting": {
+        "title": "Optional evidence for this member",
+        "description": "Member: {person}\n\nSelect only sensors that describe this member. Battery must use %. Driving is current only with an explicit report timestamp no older than five minutes; otherwise it is last reported or unverified. HA observation times are never GPS report times. Bind the location report timestamp to the exact source it describes. Clear a field to remove a mapping.",
+        "data": {
+          "battery": "Battery percentage sensor",
+          "charging": "Charging binary sensor",
+          "speed": "Speed sensor (m/s, km/h or mph)",
+          "driving": "Driving binary sensor",
+          "driving_reported_at": "Driving report timestamp sensor",
+          "location_reported_at": "Location report timestamp sensor",
+          "location_report_source": "Source described by the location timestamp"
+        }
+      }
+    },
+    "error": {
+      "invalid_entity": "Select an existing, enabled entity of the correct type.",
+      "no_people": "Select at least one person.",
+      "duplicate_selection": "Select each entity only once.",
+      "primary_in_places": "Primary Home is already selected separately.",
+      "primary_in_residences": "Primary Home applies to every member already.",
+      "entities_changed": "A selected entity was removed or disabled. Review your household and member selections again.",
+      "report_source_required": "Select both the location timestamp sensor and the source it describes.",
+      "invalid_report_source": "Select this person or one of their explicitly selected trackers.",
+      "driving_required": "Select a driving binary sensor for this report timestamp."
+    },
+    "abort": {
+      "already_configured": "HomeCircle is already configured. Use Options to edit the household.",
+      "already_in_progress": "HomeCircle setup is already in progress.",
+      "reconfigure_successful": "HomeCircle configuration updated.",
+      "single_instance_allowed": "Only one HomeCircle household is supported. Use Options to edit it."
+    }
+  },
+  "options": {
+    "step": {
+      "household": {
+        "title": "Choose your household and places",
+        "description": "Select existing Home Assistant people and zones. Ordinary places do not count as Home unless assigned as a residence for a member.",
+        "data": {
+          "people": "People",
+          "primary_home": "Primary family home",
+          "places": "Ordinary places (optional)"
+        }
+      },
+      "member": {
+        "title": "Sources and residences",
+        "description": "Member: {person}\n\nConfigured trackers reported by Home Assistant: {associated}\n\nCurrently active source: {active}\n\nConfirm the suggested trackers or choose explicitly. Leave empty for person-only presence. No GPS is required. Additional residences count as Home for this member; primary-house map focus remains separate.",
+        "data": {
+          "trackers": "Associated trackers (optional)",
+          "additional_residences": "Additional residences for this member (optional)",
+          "configure_sensors": "Configure optional sensor mappings"
+        }
+      },
+      "confirm": {
+        "title": "Save household",
+        "description": "Save these selections? HomeCircle reads existing entities only. You can edit your selections in Options. Cancel to discard all changes."
+      },
+      "supporting": {
+        "title": "Optional evidence for this member",
+        "description": "Member: {person}\n\nSelect only sensors that describe this member. Battery must use %. Driving is current only with an explicit report timestamp no older than five minutes; otherwise it is last reported or unverified. HA observation times are never GPS report times. Bind the location report timestamp to the exact source it describes. Clear a field to remove a mapping.",
+        "data": {
+          "battery": "Battery percentage sensor",
+          "charging": "Charging binary sensor",
+          "speed": "Speed sensor (m/s, km/h or mph)",
+          "driving": "Driving binary sensor",
+          "driving_reported_at": "Driving report timestamp sensor",
+          "location_reported_at": "Location report timestamp sensor",
+          "location_report_source": "Source described by the location timestamp"
+        }
+      }
+    },
+    "error": {
+      "invalid_entity": "Select an existing, enabled entity of the correct type.",
+      "no_people": "Select at least one person.",
+      "duplicate_selection": "Select each entity only once.",
+      "primary_in_places": "Primary Home is already selected separately.",
+      "primary_in_residences": "Primary Home applies to every member already.",
+      "entities_changed": "A selected entity was removed or disabled. Review your household and member selections again.",
+      "report_source_required": "Select both the location timestamp sensor and the source it describes.",
+      "invalid_report_source": "Select this person or one of their explicitly selected trackers.",
+      "driving_required": "Select a driving binary sensor for this report timestamp."
+    }
+  },
+  "issues": {
+    "missing_entities": {
+      "title": "HomeCircle selections need attention",
+      "description": "{count} selected entities are missing or disabled. Sources may still be starting. If they do not return, open HomeCircle Options to remove or replace them. Renamed entities must be selected again. Saved selections are retained; missing sources are not treated as Away."
+    }
+  }
+}

@@ -1,0 +1,38 @@
+# Private sources, credentials and HA runtime
+.private/
+private/
+work/
+secrets*
+.env*
+!.env.example
+*.pem
+*.key
+*credentials*
+*tokens*
+.storage/
+home-assistant.log*
+*.db
+*.db-*
+# Photos, screenshots, archives and backups require explicit review
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.heic
+*.mp4
+*.zip
+*.tar*
+*.bak
+# Local build products
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+node_modules/
+dist/
+release/
+custom_components/homecircle/frontend/
+.DS_Store
+.pytest_cache/
+.coverage
+htmlcov/

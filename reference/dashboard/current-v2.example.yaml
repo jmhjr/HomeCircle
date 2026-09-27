@@ -1,0 +1,21 @@
+# Generic structural reference only; NOT an installable dashboard.
+# Runtime entities and coordinates must be configured privately through HA UI.
+reference_name: HomeCircle Reference Implementation v1
+primary_home: zone.home
+members:
+  - entity: person.example_member
+    display_name: Example Member
+    tracker: device_tracker.example_phone
+    additional_homes: [zone.example_residence]
+  - entity: device_tracker.example_pet
+    display_name: Example Pet
+    kind: pet
+layout:
+  orientation: portrait
+  sections: [member_cards, map, family_summary]
+behavior:
+  count_additional_residences_as_home: true
+  home_focus: primary_house_only
+  member_focus: satellite_with_labels
+  summary_focus: road_map
+  unavailable_is_separate_from_away: true

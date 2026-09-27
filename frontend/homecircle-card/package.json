@@ -1,0 +1,19 @@
+{
+  "name": "homecircle-card",
+  "version": "0.0.3-dev1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "npm run build && node --test test/*.test.mjs",
+    "format:check": "prettier --check src test build.mjs"
+  },
+  "dependencies": {
+    "leaflet": "1.9.4"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.10",
+    "jsdom": "26.1.0",
+    "prettier": "3.6.2"
+  }
+}
