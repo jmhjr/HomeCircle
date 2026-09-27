@@ -36,7 +36,7 @@ User-operated DAKboard OS 4.14 display, using the LAN-accessible disposable HA i
 ## Still required before V0.1
 
 - Actual HACS upgrade between two published versions and removal through HACS. Download/install and release-asset acceptance passed; the earlier packaged lifecycle test separately covers a version-only update rehearsal and removal.
-- Two independently configured real tracking sources, including a non-Life360 source; fictional GPS/router fixtures do not satisfy this gate.
+- Broader real-source acceptance: actual Home/Away transitions, background updates away from the local network, source switching and sustained availability. Initial two-source functionality passed as recorded below.
 - Optional external tile failure acceptance.
 - Separate production rollout approval.
 
@@ -90,3 +90,18 @@ A fresh loopback-only disposable HA Core 2026.9.4 instance began with HACS 2.0.5
 - Exactly one owned frontend resource used the beta version; the served JavaScript matched the release asset exactly.
 
 This validates actual HACS download, installation and startup. It does not establish upgrade between distinct published versions, HACS removal, or real-provider acceptance. Earlier physical DAKboard acceptance used the development instance; it was not repeated on this newly installed beta. Production HA and the existing physical-test instance were unchanged.
+
+## Two real tracking sources — 2026-09-27
+
+Initial real-source acceptance passed on the HACS-installed HomeCircle 0.1.0-beta.1 in disposable HA Core 2026.9.4.
+
+- iOS Companion app and Life360 0.10.3 were independently configured in the test instance.
+- HomeCircle first worked with the iPhone app while Life360 was not configured.
+- After Life360 account setup, a real Life360 GPS tracker was assigned to a separate generic test person.
+- Both test records returned usable GPS locations matching their respective HA tracker coordinates exactly, and both were valid map focus targets.
+- Test records represent two source checks, not a verified household headcount or an assertion that the feeds belong to the same individual.
+- External map tiles stayed off. Real coordinates, account credentials, names and tracker identifiers are excluded from this report and Git.
+
+Remaining checks: actual Home/Away transitions, background iPhone updates outside the local network, real-source switching within one person, and sustained provider availability. The test Home zone is still fictional; Away does not indicate the user's actual relationship to home. The initial two-provider functionality gate is satisfied; these broader checks and other release gates remain open.
+
+Production HA and the original physical touch-test instance were unchanged. No stable release or production rollout is approved.
