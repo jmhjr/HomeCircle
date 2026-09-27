@@ -1,6 +1,6 @@
 # Card and frontend interface
 
-Development version 0.0.3-dev1. See [ADR-002](adr/ADR-002-map-and-frontend.md) for library, licensing, network and authorization decisions.
+Experimental beta 3. Start with the [complete setup guide](SETUP.md). See [ADR-002](adr/ADR-002-map-and-frontend.md) for library, licensing, network and authorization decisions.
 
 ## UI-only setup
 
@@ -9,7 +9,7 @@ Development version 0.0.3-dev1. See [ADR-002](adr/ADR-002-map-and-frontend.md) f
 3. Open the dashboard, choose Edit dashboard → Add card → Browse all cards → HomeCircle.
 4. Use the visual editor for title, visible members and map background; save and choose Done. No provider account, map key, resource YAML or card YAML is required.
 
-The tested automatic resource path is HA's storage mode. Existing YAML resource collections are preserved and are not covered by UI-only onboarding. Build the card before launching the development integration.
+The tested automatic resource path is HA's storage mode. Existing YAML resource collections are preserved and are not covered by UI-only onboarding. Release ZIPs include the built card; source checkouts require a frontend build.
 
 ## Display and interaction
 
@@ -29,4 +29,4 @@ Each connected card requests a current snapshot every 15 seconds. Requests time 
 
 ## Resource ownership
 
-The backend serves a local versioned module and registers it with Lovelace's pinned storage collection API. A small HA storage record remembers the resource ID HomeCircle created. Reload keeps one owned registration; unload removes it. Unrelated/manual resources and YAML collections are preserved. The static code route stays until HA restart after unload, but the data API returns no household while unloaded. Upgrade/removal through HACS remains a release gate.
+The backend serves a local versioned module and registers it with Lovelace's pinned storage collection API. A small HA storage record remembers the resource ID HomeCircle created. Reload keeps one owned registration; unload removes it. Unrelated/manual resources and YAML collections are preserved. The static code route stays until HA restart after unload, but the data API returns no household while unloaded. Actual HACS upgrade and removal checks are recorded in the beta release validation reports.
