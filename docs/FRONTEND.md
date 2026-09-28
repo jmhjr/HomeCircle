@@ -1,6 +1,6 @@
 # Card and frontend interface
 
-Experimental beta 5. Start with the [complete setup guide](SETUP.md). See [ADR-002](adr/ADR-002-map-and-frontend.md) for library, licensing, network and authorization decisions.
+Published experimental beta 5; beta 6 is a local candidate. Start with the [complete setup guide](SETUP.md). See [ADR-002](adr/ADR-002-map-and-frontend.md) for library, licensing, network and authorization decisions.
 
 ## UI-only setup
 
@@ -27,7 +27,7 @@ Schema version 1 exposes normalized member ID/name/status/place label, primary-h
 
 Each connected card requests a current snapshot every 15 seconds. Requests time out after 10 seconds, clearing stale display data. Reconnection requests new data. Disconnect/unload clears retained current snapshots; late responses are discarded. No persistent browser storage is used. Unknown GPS report time is labelled explicitly, independently of HA observation times.
 
-On the unreleased development source after beta 5, the card also shows the HA source-state update age when no valid location-report timestamp is available. It labels that age as an HA state update and keeps the location report time unknown. Attribute-only state updates and delayed phone uploads mean the HA time cannot prove when a GPS fix was obtained.
+The beta 6 candidate also shows the HA source-state update age when no valid location-report timestamp is available. It labels that age as an HA state update and keeps the location report time unknown. Attribute-only state updates and delayed phone uploads mean the HA time cannot prove when a GPS fix was obtained.
 
 ## Resource ownership
 

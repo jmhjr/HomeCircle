@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.0-beta.6 — candidate
 
 - When a location source has no genuine report-time sensor, show when Home Assistant last updated that source state while keeping the location report time explicitly unknown. HA observation time does not determine GPS freshness.
 
