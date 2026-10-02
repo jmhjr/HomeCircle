@@ -247,12 +247,293 @@ test("stale member styling clears on fresh evidence and keeps pet identity", asy
     callWS: async () => snapshot(),
   });
   await tick();
-  assert.ok(value.shadowRoot.querySelector(".member.stale .stale-report"));
+  assert.ok(value.shadowRoot.querySelector(".member.stale .report-part.stale"));
   assert.match(value.shadowRoot.textContent, /22 hours/);
   assert.match(value.shadowRoot.textContent, /Pet · Home/);
+  assert.match(value.shadowRoot.textContent, /Battery 28%/);
   freshness = "fresh";
   await value._load();
   assert.equal(value.shadowRoot.querySelector(".member.stale"), null);
   assert.match(value.shadowRoot.textContent, /22 hours/);
+  value.remove();
+});
+
+test("unknown report time stays distinct from an HA observation on a member card", async () => {
+  const fictionalOrigin = 0;
+  const data = response();
+  data.members = [
+    {
+      id: "person.example_phone",
+      name: "Example Phone",
+      kind: "person",
+      presence: "home",
+      place: "Example Residence",
+      focusable: true,
+      location: {
+        latitude: fictionalOrigin,
+        longitude: fictionalOrigin,
+        evidence: {
+          reported_at: null,
+          observed_at: new Date(Date.now() - 10 * 60000).toISOString(),
+        },
+      },
+      battery: 44,
+      charging: false,
+      driving: { value: null, status: "unknown" },
+    },
+  ];
+  data.focus_ids.overview = ["person.example_phone"];
+  data.focus_ids.home = ["person.example_phone"];
+  const value = card({
+    connection: {},
+    connected: true,
+    callWS: async () => data,
+  });
+  await tick();
+  const member = value.shadowRoot.querySelector(".member");
+  assert.match(
+    member.querySelector(".place").textContent,
+    /At Example Residence/,
+  );
+  assert.equal(member.querySelector(".battery").textContent, "Battery 44%");
+  assert.match(
+    member.querySelector(".report-part.observed").textContent,
+    /HA state updated/,
+  );
+  assert.equal(
+    member.querySelector(".report-part.unknown").textContent,
+    "Location report time unknown",
+  );
+  value.remove();
+});
+
+test("unavailable member stays counted without a map point and recovers on refresh", async () => {
+  const fictionalOrigin = 0;
+  const availableId = "person.example_home";
+  const recoveringId = "person.example_recovering";
+  const point = {
+    latitude: fictionalOrigin,
+    longitude: fictionalOrigin,
+    evidence: { reported_at: null, observed_at: null, freshness: "unknown" },
+  };
+  const member = (id, name, presence, location) => ({
+    id,
+    name,
+    kind: "person",
+    presence,
+    place: null,
+    focusable: Boolean(location),
+    location,
+    battery: null,
+    charging: null,
+    driving: { value: null, status: "unknown" },
+  });
+  let recovered = false;
+  const snapshot = () => ({
+    ...response(),
+    members: [
+      member(availableId, "Example Home", "home", point),
+      member(
+        recoveringId,
+        "Example Recovering",
+        recovered ? "away" : "unavailable",
+        recovered ? { ...point, longitude: fictionalOrigin + 1 } : null,
+      ),
+    ],
+    focus_ids: {
+      overview: recovered ? [availableId, recoveringId] : [availableId],
+      home: [availableId],
+      away: recovered ? [recoveringId] : [],
+      driving: [],
+      unavailable: [],
+    },
+  });
+  const value = card({
+    connection: {},
+    connected: true,
+    callWS: async () => snapshot(),
+  });
+  let points;
+  value._updateMap = (selected) => {
+    points = selected;
+    value._points = selected;
+    value._updateMapNote();
+  };
+  await tick();
+  assert.equal(points.length, 1);
+  assert.equal(
+    value.shadowRoot.querySelector('[aria-label="Unavailable: 1"] .count')
+      .textContent,
+    "1",
+  );
+  assert.match(
+    value.shadowRoot.querySelector(".member .badge.unavailable").textContent,
+    /Unavailable/,
+  );
+  assert.match(value.shadowRoot.textContent, /No usable map position/);
+  value.shadowRoot.querySelector('[aria-label="Unavailable: 1"]').click();
+  assert.equal(points.length, 0);
+  assert.match(value._mapNote.textContent, /No usable map position/);
+  value.shadowRoot.querySelector(".overview").click();
+  assert.equal(points.length, 1);
+  recovered = true;
+  await value._load();
+  assert.equal(points.length, 2);
+  assert.ok(value.shadowRoot.querySelector('[aria-label="Unavailable: 0"]'));
+  assert.ok(value.shadowRoot.querySelector('[aria-label="Away: 1"]'));
+  value.remove();
+});
+
+test("wall kiosk control hides and restores HA navigation for this browser", async () => {
+  const events = [];
+  const onKiosk = (event) => events.push(event.detail.enable);
+  window.addEventListener("hass-kiosk-mode", onKiosk);
+  const originalFrame = globalThis.requestAnimationFrame;
+  globalThis.requestAnimationFrame = (callback) => callback();
+  try {
+    const value = document.createElement("homecircle-card");
+    value._updateMap = () => {};
+    value.setConfig({ type: "custom:homecircle-card", fill_screen: true });
+    value.hass = {
+      connection: {},
+      connected: true,
+      callWS: async () => response(),
+    };
+    document.body.append(value);
+    await tick();
+    const toggle = value.shadowRoot.querySelector(".kiosk-toggle");
+    assert.equal(toggle.textContent, "Kiosk view");
+    toggle.click();
+    assert.equal(
+      new URL(window.location.href).searchParams.get("homecircle_kiosk"),
+      "1",
+    );
+    assert.equal(toggle.textContent, "Exit kiosk");
+    assert.equal(toggle.getAttribute("aria-pressed"), "true");
+    toggle.click();
+    assert.equal(
+      new URL(window.location.href).searchParams.has("homecircle_kiosk"),
+      false,
+    );
+    assert.equal(toggle.textContent, "Kiosk view");
+    toggle.click();
+    value.remove();
+    assert.deepEqual(events, [true, false, true, false]);
+  } finally {
+    window.history.replaceState({}, "", "http://localhost/");
+    window.removeEventListener("hass-kiosk-mode", onKiosk);
+    globalThis.requestAnimationFrame = originalFrame;
+  }
+});
+
+test("overlapping-marker choice retains keyboard focus after a marker redraw", async () => {
+  const data = response();
+  const fictionalOrigin = 0;
+  data.members = ["person.example_one", "person.example_two"].map((id) => ({
+    id,
+    name: id,
+    kind: "person",
+    presence: "home",
+    focusable: true,
+    location: {
+      latitude: fictionalOrigin,
+      longitude: fictionalOrigin,
+      evidence: {},
+    },
+    battery: null,
+    charging: null,
+    driving: { value: null, status: "unknown" },
+  }));
+  data.focus_ids.overview = data.members.map((member) => member.id);
+  const value = card({
+    connection: {},
+    connected: true,
+    callWS: async () => data,
+  });
+  await tick();
+  let separated = false;
+  value._map = {
+    latLngToContainerPoint: ([, longitude]) => ({
+      x: separated && longitude > fictionalOrigin ? 100 : 0,
+      y: 0,
+    }),
+    remove() {},
+  };
+  value._layer = {
+    clearLayers() {
+      value._mapNode.replaceChildren();
+    },
+    addLayer(marker) {
+      value._mapNode.append(marker.options.icon.options.html);
+    },
+  };
+  value._points = data.members;
+  value._markers();
+  const cluster = value._mapNode.querySelector('[data-focus^="cluster:"]');
+  assert.ok(cluster);
+  cluster.focus();
+  value._markers();
+  assert.equal(
+    value.shadowRoot.activeElement.dataset.focus,
+    cluster.dataset.focus,
+  );
+  data.members[1].location.longitude = fictionalOrigin + 1;
+  separated = true;
+  value._markers();
+  assert.equal(
+    value.shadowRoot.activeElement.dataset.focus,
+    "marker:person.example_one",
+  );
+  separated = false;
+  value._markers();
+  assert.equal(
+    value.shadowRoot.activeElement.dataset.focus,
+    cluster.dataset.focus,
+  );
+  value._mapNode.querySelector('[data-focus^="cluster:"]').click();
+  assert.equal(
+    value._mapNode
+      .querySelector('[data-focus^="cluster:"]')
+      .getAttribute("aria-expanded"),
+    "true",
+  );
+  assert.equal(
+    value.shadowRoot.activeElement.dataset.focus,
+    "group:person.example_one",
+  );
+  value._markers();
+  assert.equal(
+    value.shadowRoot.activeElement.dataset.focus,
+    "group:person.example_one",
+  );
+  value.remove();
+});
+
+test("choosing a single map member focuses its card", async () => {
+  const data = response();
+  data.members = [
+    {
+      id: "person.example_one",
+      name: "Example One",
+      kind: "person",
+      presence: "home",
+      focusable: true,
+      location: { latitude: null, longitude: null, evidence: {} },
+      battery: null,
+      charging: null,
+      driving: { value: null, status: "unknown" },
+    },
+  ];
+  const value = card({
+    connection: {},
+    connected: true,
+    callWS: async () => data,
+  });
+  await tick();
+  value._chooseFromMap("person.example_one");
+  assert.equal(
+    value.shadowRoot.activeElement.dataset.focus,
+    "person.example_one",
+  );
   value.remove();
 });

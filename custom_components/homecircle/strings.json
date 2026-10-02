@@ -12,40 +12,62 @@
         }
       },
       "member": {
-        "title": "Sources and residences",
-        "description": "Member: {person}\n\nConfigured trackers reported by Home Assistant: {associated}\n\nCurrently active source: {active}\n\nConfirm the suggested trackers or choose explicitly. Leave empty for person-only presence. No GPS is required. Additional residences count as Home for this member; primary-house map focus remains separate. Pet thresholds apply only to location reports for members explicitly marked Pet, at any assigned residence or away. Report age always remains visible. These are display thresholds, not proof of safety or a new GPS fix. People keep the five-minute threshold.",
+        "title": "Choose trackers and places",
+        "description": "Member {number} of {total}: {person}.\n\nHome Assistant currently uses {active}. Review the trackers selected below, then choose this member’s other homes and type.",
         "data": {
-          "trackers": "Associated trackers (optional)",
-          "additional_residences": "Additional residences for this member (optional)",
-          "configure_sensors": "Configure optional sensor mappings",
+          "trackers": "Location and presence trackers",
+          "additional_residences": "Other homes for this member",
+          "configure_sensors": "Set up battery and motion sensors",
           "kind": "Member type",
-          "pet_home_minutes": "Pet: mark location stale after minutes at Home",
-          "pet_away_minutes": "Pet: mark location stale after minutes away",
-          "configure_reports": "Configure report times for each source"
+          "configure_reports": "Set up location report times"
+        },
+        "data_description": {
+          "trackers": "The selected trackers can provide location or presence for this member. Home Assistant person trackers are suggested automatically. If names repeat, compare entity IDs before choosing. Leave blank to use the person record alone.",
+          "additional_residences": "These zones also count as Home for this member. The Home map button still focuses the primary family home.",
+          "kind": "Choose Pet for a pet record. Pet location timing appears on the next screen; this does not create a tracker.",
+          "configure_reports": "Choose a genuine location report-time sensor separately for each selected source. Leave off if none is available.",
+          "configure_sensors": "Choose optional battery, charging, speed and driving sensors on the next screen."
         }
       },
       "confirm": {
-        "title": "Save household",
-        "description": "Save these selections? HomeCircle reads existing entities only. You can edit your selections in Options. Cancel to discard all changes."
+        "title": "Review and save household",
+        "description": "Review these selections before saving. HomeCircle reads existing Home Assistant entities only.\n\n**Primary home:** {primary_home}\n\n**Ordinary places:** {places}\n\n{members}\n\nSubmit to save, or close this window to discard the draft."
       },
       "supporting": {
-        "title": "Optional evidence for this member",
-        "description": "Member: {person}\n\nSelect only sensors that describe this member. Battery must use %. Driving is current only with an explicit report timestamp no older than five minutes; otherwise it is last reported or unverified. HA observation times are never GPS report times. Bind the location report timestamp to the exact source it describes. Clear a field to remove a mapping.",
+        "title": "Status sensors",
+        "description": "For {person}, choose only sensors that describe this member. Leave unavailable values empty. Location report times are configured separately for each source.",
         "data": {
-          "battery": "Battery percentage sensor",
-          "charging": "Charging binary sensor",
-          "speed": "Speed sensor (m/s, km/h or mph)",
-          "driving": "Driving binary sensor",
-          "driving_reported_at": "Driving report timestamp sensor",
-          "location_reported_at": "Location report timestamp sensor",
-          "location_report_source": "Source described by the location timestamp"
+          "battery": "Battery level",
+          "charging": "Charging",
+          "speed": "Speed",
+          "driving": "Driving",
+          "driving_reported_at": "Driving report time"
+        },
+        "data_description": {
+          "battery": "Select a sensor with a numeric percentage and % unit.",
+          "charging": "Select a binary sensor that says whether this member’s device is charging.",
+          "speed": "Select a speed sensor in m/s, km/h or mph.",
+          "driving": "Select a binary sensor that reports driving status.",
+          "driving_reported_at": "Select the actual time of the driving report. Without it, Driving is shown as last reported or unverified."
         }
       },
       "source_report": {
-        "title": "Location report time for this source",
-        "description": "Source: {source}\n\nSelect a sensor containing the actual location report timestamp for this exact source. Leave empty for unknown report time. Clear the field to remove a mapping. If this source was removed from the member, clear its mapping to continue. HA update times are not GPS report times.",
+        "title": "Location report time",
+        "description": "Source {number} of {total}: {source}. Choose a sensor with the actual time this source reported its location. Leave empty if unknown, or to clear an old mapping for a removed source. Home Assistant state updates are not GPS report times.",
         "data": {
-          "timestamp": "Location report timestamp sensor"
+          "timestamp": "Location report time sensor"
+        }
+      },
+      "pet_freshness": {
+        "title": "Pet location timing",
+        "description": "For {person}, choose when a pet location report should be labeled stale. These limits do not change Home/Away status or request a new location.",
+        "data": {
+          "pet_home_minutes": "At home: mark location stale after",
+          "pet_away_minutes": "Away: mark location stale after"
+        },
+        "data_description": {
+          "pet_home_minutes": "Default: 24 hours. Applies at the primary home and this pet’s other homes.",
+          "pet_away_minutes": "Default: 5 minutes. Applies when this pet is away from its homes."
         }
       }
     },
@@ -81,40 +103,62 @@
         }
       },
       "member": {
-        "title": "Sources and residences",
-        "description": "Member: {person}\n\nConfigured trackers reported by Home Assistant: {associated}\n\nCurrently active source: {active}\n\nConfirm the suggested trackers or choose explicitly. Leave empty for person-only presence. No GPS is required. Additional residences count as Home for this member; primary-house map focus remains separate. Pet thresholds apply only to location reports for members explicitly marked Pet, at any assigned residence or away. Report age always remains visible. These are display thresholds, not proof of safety or a new GPS fix. People keep the five-minute threshold.",
+        "title": "Choose trackers and places",
+        "description": "Member {number} of {total}: {person}.\n\nHome Assistant currently uses {active}. Review the trackers selected below, then choose this member’s other homes and type.",
         "data": {
-          "trackers": "Associated trackers (optional)",
-          "additional_residences": "Additional residences for this member (optional)",
-          "configure_sensors": "Configure optional sensor mappings",
+          "trackers": "Location and presence trackers",
+          "additional_residences": "Other homes for this member",
+          "configure_sensors": "Set up battery and motion sensors",
           "kind": "Member type",
-          "pet_home_minutes": "Pet: mark location stale after minutes at Home",
-          "pet_away_minutes": "Pet: mark location stale after minutes away",
-          "configure_reports": "Configure report times for each source"
+          "configure_reports": "Set up location report times"
+        },
+        "data_description": {
+          "trackers": "The selected trackers can provide location or presence for this member. Home Assistant person trackers are suggested automatically. If names repeat, compare entity IDs before choosing. Leave blank to use the person record alone.",
+          "additional_residences": "These zones also count as Home for this member. The Home map button still focuses the primary family home.",
+          "kind": "Choose Pet for a pet record. Pet location timing appears on the next screen; this does not create a tracker.",
+          "configure_reports": "Choose a genuine location report-time sensor separately for each selected source. Leave off if none is available.",
+          "configure_sensors": "Choose optional battery, charging, speed and driving sensors on the next screen."
         }
       },
       "confirm": {
-        "title": "Save household",
-        "description": "Save these selections? HomeCircle reads existing entities only. You can edit your selections in Options. Cancel to discard all changes."
+        "title": "Review and save household",
+        "description": "Review these selections before saving. HomeCircle reads existing Home Assistant entities only.\n\n**Primary home:** {primary_home}\n\n**Ordinary places:** {places}\n\n{members}\n\nSubmit to save, or close this window to discard the draft."
       },
       "supporting": {
-        "title": "Optional evidence for this member",
-        "description": "Member: {person}\n\nSelect only sensors that describe this member. Battery must use %. Driving is current only with an explicit report timestamp no older than five minutes; otherwise it is last reported or unverified. HA observation times are never GPS report times. Bind the location report timestamp to the exact source it describes. Clear a field to remove a mapping.",
+        "title": "Status sensors",
+        "description": "For {person}, choose only sensors that describe this member. Leave unavailable values empty. Location report times are configured separately for each source.",
         "data": {
-          "battery": "Battery percentage sensor",
-          "charging": "Charging binary sensor",
-          "speed": "Speed sensor (m/s, km/h or mph)",
-          "driving": "Driving binary sensor",
-          "driving_reported_at": "Driving report timestamp sensor",
-          "location_reported_at": "Location report timestamp sensor",
-          "location_report_source": "Source described by the location timestamp"
+          "battery": "Battery level",
+          "charging": "Charging",
+          "speed": "Speed",
+          "driving": "Driving",
+          "driving_reported_at": "Driving report time"
+        },
+        "data_description": {
+          "battery": "Select a sensor with a numeric percentage and % unit.",
+          "charging": "Select a binary sensor that says whether this member’s device is charging.",
+          "speed": "Select a speed sensor in m/s, km/h or mph.",
+          "driving": "Select a binary sensor that reports driving status.",
+          "driving_reported_at": "Select the actual time of the driving report. Without it, Driving is shown as last reported or unverified."
         }
       },
       "source_report": {
-        "title": "Location report time for this source",
-        "description": "Source: {source}\n\nSelect a sensor containing the actual location report timestamp for this exact source. Leave empty for unknown report time. Clear the field to remove a mapping. If this source was removed from the member, clear its mapping to continue. HA update times are not GPS report times.",
+        "title": "Location report time",
+        "description": "Source {number} of {total}: {source}. Choose a sensor with the actual time this source reported its location. Leave empty if unknown, or to clear an old mapping for a removed source. Home Assistant state updates are not GPS report times.",
         "data": {
-          "timestamp": "Location report timestamp sensor"
+          "timestamp": "Location report time sensor"
+        }
+      },
+      "pet_freshness": {
+        "title": "Pet location timing",
+        "description": "For {person}, choose when a pet location report should be labeled stale. These limits do not change Home/Away status or request a new location.",
+        "data": {
+          "pet_home_minutes": "At home: mark location stale after",
+          "pet_away_minutes": "Away: mark location stale after"
+        },
+        "data_description": {
+          "pet_home_minutes": "Default: 24 hours. Applies at the primary home and this pet’s other homes.",
+          "pet_away_minutes": "Default: 5 minutes. Applies when this pet is away from its homes."
         }
       }
     },

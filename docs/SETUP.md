@@ -1,4 +1,4 @@
-# Set up HomeCircle beta 5
+# Set up HomeCircle beta 6
 
 Use a test Home Assistant instance running Core 2026.9.4 or later. HomeCircle is an experimental prerelease. It displays existing Home Assistant entities; tracking accounts and devices are set up separately.
 
@@ -35,7 +35,7 @@ A member at an additional residence can count Home while being outside the Home 
 
 1. With HACS already configured on the test instance, open its custom repositories menu.
 2. Add `https://github.com/jmhjr/HomeCircle` with type **Integration**. See [HACS custom repositories](https://www.hacs.dev/docs/faq/custom_repositories/).
-3. Open HomeCircle in HACS, enable beta/prerelease versions, and download **v0.1.0-beta.4**.
+3. Open HomeCircle in HACS, enable beta/prerelease versions, and download **v0.1.0-beta.6**.
 4. Restart Home Assistant.
 5. Open Settings → Devices & services → Add integration → HomeCircle.
 
@@ -45,12 +45,12 @@ The release ZIP includes the card. There is no separate card download or manual 
 
 1. Under **People**, select the person records you prepared, including the pet record.
 2. Select **Primary family home** and any **Ordinary places**.
-3. On each member's **Sources and residences** screen, confirm the associated trackers. Select only trackers for that member. Leaving trackers empty permits person-only presence.
+3. On each member's **Choose trackers and places** screen, review the trackers suggested from Home Assistant and select only trackers for that member. If names repeat, compare their entity IDs. Leaving trackers empty permits person-only presence.
 4. Select any additional residences for that member.
 5. Set **Member type** to `person` or `pet`. Pet records are not detected automatically.
-6. For pets, review the freshness thresholds below.
-7. Enable **Configure optional sensor mappings** if you have supporting sensor entities; otherwise continue.
-8. Repeat for each member, then submit **Save household**. Changes remain a draft until this final save.
+6. For pets, set the location freshness thresholds on the next **Pet location timing** screen.
+7. Enable **Set up battery and motion sensors** if you have supporting sensors. Enable **Set up location report times** if a selected source exposes a genuine report-time sensor. Those choices open separate screens.
+8. Repeat for each member. The **Review and save household** screen lists the selected homes, trackers, sensors, report times and pet timing. Submit to save; closing the flow discards the draft.
 
 ## 5. Add optional battery and report-time sensors
 
@@ -63,16 +63,14 @@ These fields select existing HA entities. An attribute on a tracker is not itsel
 | Speed sensor | Numeric speed in m/s, km/h or mph |
 | Driving binary sensor | On/off driving evidence |
 | Driving report timestamp sensor | Actual timestamp for that driving report; needs a driving binary sensor |
-| Location report timestamp sensor | Actual timestamp when the location source reported its fix |
-| Source described by the location timestamp | The exact selected tracker (or person) described by that timestamp |
 
-Beta 4 supports a separate location-report timestamp sensor for each selected source. Existing beta 3 single-source mappings remain supported. See [per-source report times](PER-SOURCE-REPORTS.md). See the [multiple-source checks](MULTI-SOURCE-VALIDATION.md) for switching and fallback behavior.
+The **Status sensors** screen contains the five fields above. The separate **Location report time** screen visits each selected tracker and the person source; choose a genuine timestamp sensor for that source, or leave it empty. Older single-source mappings remain supported and are guided through the per-source screen when edited. See [per-source report times](PER-SOURCE-REPORTS.md) and [multiple-source checks](MULTI-SOURCE-VALIDATION.md).
 
-Select the location timestamp **and** its source together. Do not bind a pet timestamp to a phone tracker. If the active source changes, a timestamp for another source cannot establish the age of the active location.
+Match each timestamp to the source named on its screen. A timestamp for a different source cannot establish the age of the active location.
 
 If the provider only exposes battery or report time as attributes, a separately configured HA template sensor may be needed. Verify the attribute's meaning in that provider's documentation before building a helper; there is no universal Life360/pet attribute recipe. Preserve unavailable values rather than replacing them with zero or the current time. If no genuine report timestamp is available, leave it unmapped: **Location report time unknown** is the correct result. HA's `last_changed` and `last_updated` are not GPS fix times.
 
-To add mappings later, open HomeCircle's Options, continue to that member and enable **Configure optional sensor mappings**. Clearing a field on the sensor screen removes that mapping. Skipping that screen preserves existing mappings.
+To add mappings later, open HomeCircle's Options, continue to that member, and enable the appropriate status-sensor or report-time switch. Clearing a field on its screen removes that mapping. Skipping the screen preserves existing mappings.
 
 ## 6. Understand freshness
 
@@ -115,4 +113,4 @@ HACS upgrades require a restart. To uninstall from a test instance, first remove
 
 ## Validation scope
 
-See [the clean setup check](SETUP-VALIDATION.md), [beta 5 HACS validation](BETA5-VALIDATION.md), and [beta 4 real-source/touch acceptance](BETA4-VALIDATION.md). Synthetic setup checks do not establish provider compatibility or physical touch acceptance for beta 5. Real departure/return testing remains deferred.
+See [the beta 6 candidate validation](BETA6-CANDIDATE-VALIDATION.md), [beta 5 HACS validation](BETA5-VALIDATION.md), and [beta 4 real-source/touch acceptance](BETA4-VALIDATION.md). The beta 6 setup flow passed an isolated Core rehearsal and disposable browser check; its package also passed a temporary real-source install and physical DAKboard dashboard check. A published beta 6 HACS upgrade and a full real departure/return test remain open.

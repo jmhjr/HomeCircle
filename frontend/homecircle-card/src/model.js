@@ -28,16 +28,33 @@ function ageLabel(stamp, now) {
         ? `${Math.floor(minutes / 60)} hour${minutes < 120 ? "" : "s"}`
         : `${Math.floor(minutes / 1440)} day${minutes < 2880 ? "" : "s"}`;
 }
-export function reportLabel(member, now = Date.now()) {
-  if (!member.location) return "No usable map position";
+export function reportParts(member, now = Date.now()) {
+  if (!member.location)
+    return [{ kind: "missing", text: "No usable map position" }];
   const proof = member.location.evidence;
   const reported = proof?.reported_at ? Date.parse(proof.reported_at) : NaN;
   if (Number.isFinite(reported) && reported <= now + 60000)
-    return `${proof.freshness === "stale" ? "Stale · " : ""}Reported ${ageLabel(reported, now)} ago`;
+    return [
+      ...(proof.freshness === "stale"
+        ? [{ kind: "stale", text: "Stale" }]
+        : []),
+      { kind: "reported", text: `Reported ${ageLabel(reported, now)} ago` },
+    ];
   const observed = proof?.observed_at ? Date.parse(proof.observed_at) : NaN;
   if (Number.isFinite(observed) && observed <= now + 60000)
-    return `HA state updated ${ageLabel(observed, now)} ago · Location report time unknown`;
-  return "Location report time unknown";
+    return [
+      {
+        kind: "observed",
+        text: `HA state updated ${ageLabel(observed, now)} ago`,
+      },
+      { kind: "unknown", text: "Location report time unknown" },
+    ];
+  return [{ kind: "unknown", text: "Location report time unknown" }];
+}
+export function reportLabel(member, now = Date.now()) {
+  return reportParts(member, now)
+    .map((part) => part.text)
+    .join(" · ");
 }
 // Group screen-overlapping markers, independently for each map and zoom level.
 export function markerGroups(members, project, distance = 42) {
@@ -64,10 +81,16 @@ export function validateConfig(config) {
       config.hidden_members.some((id) => typeof id !== "string"))
   )
     throw new Error("Hidden members must be a list.");
+  if (
+    config.fill_screen !== undefined &&
+    typeof config.fill_screen !== "boolean"
+  )
+    throw new Error("Fill screen must be on or off.");
   return {
     ...config,
     title: String(config.title || "HomeCircle"),
     map_tiles: config.map_tiles || "none",
+    fill_screen: config.fill_screen || false,
     hidden_members: config.hidden_members || [],
   };
 }

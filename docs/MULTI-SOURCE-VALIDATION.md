@@ -36,3 +36,9 @@ Assign multiple trackers for an individual to one HA person, then explicitly sel
 Beta 3 supports one location-report timestamp/source mapping per member. If the displayed location changes to another source, its report age stays unknown unless the mapping describes that source. This is an existing limitation, not automatic per-tracker timestamp mapping.
 
 The checks validate the freshness evidence consumed by the card; they were not a new browser-label or physical-touch test. Prior card and DAKboard acceptance is in [beta 3 validation](BETA3-VALIDATION.md). The real-source test dashboard and production HA were unchanged. Real departure/return remains deferred.
+
+## Beta 6 candidate failure and recovery rehearsal — 2026-09-30
+
+The same validator was rerun against the freshly rebuilt local beta 6 ZIP in an isolated Core process. HA selected the phone automatically when the fictional cloud tracker became unavailable; HomeCircle showed the phone position with its stale phone report timestamp. When the cloud tracker reported again, HA selected it automatically; HomeCircle showed the cloud position with its own fresh cloud report timestamp. A second cloud outage returned selection and report evidence to the phone. No configuration change or manual Person source override was made between these events. All ten checkpoints passed, and the temporary Core configuration was removed.
+
+This proves the entity-level fallback and recovery path with fictional tracker events. It does not simulate a real provider's authentication, network outage, delayed updates, or recovery behavior. The real-provider unattended failure and recovery gate remains open.

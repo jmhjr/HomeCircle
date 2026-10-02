@@ -40,7 +40,7 @@ Implementation and precise validation scope are in [frontend setup](FRONTEND.md)
 - User accepts replacement separately; no automatic production V2 migration.
 - Tag `v0.1.0` and create corresponding GitHub release only after these gates pass.
 
-As of beta 4, package integrity, manifest and HACS validation, actual HACS install/upgrade/removal/reinstall, initial independent real-provider acceptance, privacy checks, and optional tile failure behavior have passed within their documented scopes. A rejected-snapshot retry defect and removal edge cases need follow-up. Real movement, background updates outside the LAN, within-person source switching, sustained availability, real non-admin permission behavior, and a distinct physical additional-residence check remain open. See the [current release-readiness audit](BETA4-RELEASE-AUDIT.md). No stable tag or production migration is approved.
+As of experimental beta 6, snapshot retry, the beta 5 HACS upgrade/removal path, controlled within-person real-source switching, allowed/denied non-admin access, and the physical additional-residence count/focus snapshot have passed in their documented scopes. A full real departure/return timeline, background iPhone updates to the disposable instance outside the LAN, sustained availability, unattended failover, and the published beta 6 HACS upgrade remain open. See [current release readiness](CURRENT-RELEASE-READINESS.md). No stable tag or production migration is approved.
 
 ## Later milestones
 

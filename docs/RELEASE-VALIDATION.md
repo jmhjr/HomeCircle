@@ -3,7 +3,7 @@
 ## Identity and distribution
 
 Maintainer: `@jmhjr`. Development repository: https://github.com/jmhjr/HomeCircle (public experimental development repository).
-Manifest documentation and issue URLs target this repository. The current experimental prerelease is `0.1.0-beta.5`; no stable release or production rollout is approved. This document retains dated earlier checkpoints; see [beta 5 validation](BETA5-VALIDATION.md), the [beta 4 release-readiness audit](BETA4-RELEASE-AUDIT.md), and [beta 4 real-source/touch validation](BETA4-VALIDATION.md) for the relevant results.
+Manifest documentation and issue URLs target this repository. The current experimental prerelease is `0.1.0-beta.6`. No stable release or production rollout is approved. This document retains dated earlier checkpoints; use [current release readiness](CURRENT-RELEASE-READINESS.md) for the current gate status and [beta 5 validation](BETA5-VALIDATION.md) for the published package.
 
 HACS distribution is configured for `homecircle.zip`, with default-branch downloads hidden because generated frontend files are deliberately untracked. The ZIP contains integration files at its root, including the compiled frontend, Leaflet license and project MIT license. `scripts/build_release.py` rebuilds from the npm lockfile and writes a deterministic archive plus per-file SHA256 inventory under ignored `release/`.
 
@@ -33,7 +33,9 @@ User-operated DAKboard OS 4.14 display, using the LAN-accessible disposable HA i
 - The explicit secondary-residence count/focus acceptance result was not separately confirmed; automated Core coverage passes.
 - Production HA was not modified. Temporary DAKboard launch block and dock entry remain for the ongoing test session. Test credentials, network addresses and screenshots are excluded from Git.
 
-## Still required before V0.1
+## Earlier V0.1 checklist (superseded by the current readiness audit)
+
+This list records what was open at this checkpoint. Several items have since passed; use [current release readiness](CURRENT-RELEASE-READINESS.md) to plan remaining work.
 
 - Broader real-source acceptance: actual Home/Away transitions, background updates away from the local network, source switching and sustained availability. Initial two-source functionality passed as recorded below.
 - Fix and verify the reproducible extra snapshot retries after a failed request. Cover the not-loaded entry removal and uninstall-first resource cleanup paths; assess the brief resource replacement on options reload.

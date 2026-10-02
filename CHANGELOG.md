@@ -1,8 +1,19 @@
 # Changelog
 
-## 0.1.0-beta.6 — candidate
+## 0.1.0-beta.6 — experimental prerelease
 
+- Make member setup easier to scan with household progress, readable Home Assistant entity names, clearer tracker and residence labels, and help beside each field. Show pet location timing on a separate pet-only step. Tracker suggestions and saved selections retain their existing behavior.
+- Keep battery, charging, speed and driving sensors on a short status screen. Configure location report times on a separate screen for each source; guide older single-source timestamp mappings through that screen without discarding them.
+- Show a readable draft summary before saving the household, including homes, trackers, optional sensors, source-specific report times and pet timing.
 - When a location source has no genuine report-time sensor, show when Home Assistant last updated that source state while keeping the location report time explicitly unknown. HA observation time does not determine GPS freshness.
+- Keep the owned dashboard card resource stable when saved HomeCircle settings trigger an automatic reload, while retaining cleanup on unload or failed setup.
+- Keep the same owned dashboard resource when an unchanged Reconfigure save triggers a Home Assistant reload.
+- Give member cards separate place, battery, and report-time labels; make stale reports easier to scan while keeping HA observation age distinct from an unknown location report time.
+- On narrow card widths, place member status beneath the name, use two readable rows of category buttons, and shorten the map so the member list starts sooner.
+- Keep keyboard focus on the selected member card after choosing a map marker or a member from an overlapping-marker group; keyboard activation scrolls the card into view without making touch activation jump the page.
+- Preserve keyboard focus on clustered markers and expanded member choices when the map redraws, and expose whether a cluster is expanded.
+- Offer an opt-in full-height wall-display layout so the map uses space below the card without hiding category controls or member cards.
+- Offer a reversible kiosk control on full-height cards, with an optional URL setting that opens the page with Home Assistant navigation hidden in that browser.
 
 ## 0.1.0-beta.5
 

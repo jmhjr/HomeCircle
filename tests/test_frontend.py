@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from homeassistant.components.lovelace.const import LOVELACE_DATA
 from homeassistant.components.lovelace.resources import ResourceYAMLCollection
+from homeassistant.config_entries import ConfigEntryState
 
 from custom_components.homecircle import frontend
 from test_config_flow import start, finish
@@ -96,6 +97,36 @@ async def test_remove_unloaded_entry_cleans_persisted_resource(hass, household):
     ] is False
     assert owned not in resources.async_items()
     assert resources.async_items() == [unrelated]
+
+
+async def test_reload_marker_cleans_resource_when_setup_does_not_follow(
+    hass, household
+):
+    entry = await setup(hass, household)
+    resources = hass.data[LOVELACE_DATA].resources
+    assert any(item["url"].startswith(frontend.URL) for item in resources.async_items())
+    frontend.preserve_for_reload(hass, entry.entry_id)
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert not any(
+        item["url"].startswith(frontend.URL) for item in resources.async_items()
+    )
+
+
+async def test_flagged_reload_failure_cleans_owned_resource(hass, household):
+    entry = await setup(hass, household)
+    resources = hass.data[LOVELACE_DATA].resources
+    assert any(item["url"].startswith(frontend.URL) for item in resources.async_items())
+    frontend.preserve_for_reload(hass, entry.entry_id)
+    with patch.object(
+        frontend, "async_register", side_effect=RuntimeError("test setup failure")
+    ):
+        assert not await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert not any(
+        item["url"].startswith(frontend.URL) for item in resources.async_items()
+    )
 
 
 async def test_yaml_resources_are_never_rewritten(hass, household):

@@ -6,7 +6,7 @@ import {
   labels,
   visibleMembers,
   selection,
-  reportLabel,
+  reportParts,
   markerGroups,
   validateConfig,
 } from "./model.js";
@@ -58,11 +58,14 @@ class HomeCircleCard extends HTMLElement {
   setConfig(config) {
     const old = this._config;
     this._config = validateConfig(config);
+    this.toggleAttribute("fill-screen", this._config.fill_screen);
+    if (!this._config.fill_screen) this._setKiosk(false);
     if (old?.map_tiles !== this._config.map_tiles) this._destroyMap();
     this._mode = "overview";
     this._fit = true;
     if (this.isConnected) {
       this._layout();
+      this._fitScreen();
       this._render();
       this._load();
     }
@@ -89,12 +92,23 @@ class HomeCircleCard extends HTMLElement {
   }
   connectedCallback() {
     this._layout();
+    if (
+      this._config?.fill_screen &&
+      new URLSearchParams(window.location.search).get("homecircle_kiosk") ===
+        "1"
+    )
+      this._setKiosk(true);
+    this._onWindowResize ||= () => this._fitScreen();
+    window.addEventListener("resize", this._onWindowResize);
+    this._fitScreen();
     this._render();
     this._load();
     clearInterval(this._timer);
     this._timer = setInterval(() => this._load(), 15000);
   }
   disconnectedCallback() {
+    this._setKiosk(false);
+    window.removeEventListener("resize", this._onWindowResize);
     clearInterval(this._timer);
     clearTimeout(this._timeout);
     this._generation++;
@@ -106,6 +120,35 @@ class HomeCircleCard extends HTMLElement {
     this.shadowRoot.replaceChildren();
     this._shell = null;
   }
+  _fitScreen() {
+    if (!this._config?.fill_screen || !this.isConnected) return;
+    const available = Math.max(
+      480,
+      Math.round(window.innerHeight - this.getBoundingClientRect().top - 8),
+    );
+    this.style.setProperty("--homecircle-screen-height", `${available}px`);
+    this._map?.invalidateSize({ pan: false });
+  }
+  _setKiosk(enabled) {
+    if (Boolean(this._kioskEnabled) === enabled) return;
+    this._kioskEnabled = enabled;
+    window.dispatchEvent(
+      new CustomEvent("hass-kiosk-mode", { detail: { enable: enabled } }),
+    );
+    if (this._kioskButton) {
+      this._kioskButton.textContent = enabled ? "Exit kiosk" : "Kiosk view";
+      this._kioskButton.setAttribute("aria-pressed", String(enabled));
+    }
+    requestAnimationFrame(() => requestAnimationFrame(() => this._fitScreen()));
+  }
+  _toggleKiosk() {
+    const enabled = !this._kioskEnabled;
+    const url = new URL(window.location.href);
+    if (enabled) url.searchParams.set("homecircle_kiosk", "1");
+    else url.searchParams.delete("homecircle_kiosk");
+    window.history.replaceState(window.history.state, "", url);
+    this._setKiosk(enabled);
+  }
   _layout() {
     if (this._shell || !this._config) return;
     const style = el("style");
@@ -116,10 +159,20 @@ class HomeCircleCard extends HTMLElement {
     brand.append(el("div", "eyebrow", "HOME · TOGETHER"));
     this._title = el("h2");
     brand.append(this._title);
-    header.append(
-      brand,
-      button("Everyone ↗", () => this._choose("overview"), "overview"),
+    this._overview = button(
+      "Everyone ↗",
+      () => this._choose("overview"),
+      "overview",
     );
+    const actions = el("div", "header-actions");
+    this._kioskButton = button(
+      "Kiosk view",
+      () => this._toggleKiosk(),
+      "kiosk-toggle",
+    );
+    this._kioskButton.setAttribute("aria-pressed", "false");
+    actions.append(this._kioskButton, this._overview);
+    header.append(brand, actions);
     this._status = el("div", "status");
     this._status.setAttribute("role", "status");
     this._status.setAttribute("aria-live", "polite");
@@ -200,10 +253,20 @@ class HomeCircleCard extends HTMLElement {
     this._fit = true;
     this._render();
   }
+  _chooseFromMap(id, event) {
+    this._choose(id);
+    [...this._members.querySelectorAll("[data-focus]")]
+      .find((node) => node.dataset.focus === id)
+      ?.focus(event?.detail ? { preventScroll: true } : undefined);
+  }
   _render() {
     if (!this._shell) return;
     const focused = this.shadowRoot.activeElement?.dataset?.focus;
     this._title.textContent = this._config.title;
+    this._overview.setAttribute(
+      "aria-pressed",
+      String(this._mode === "overview"),
+    );
     this._categories.replaceChildren();
     this._members.replaceChildren();
     if (!this._data) {
@@ -219,6 +282,10 @@ class HomeCircleCard extends HTMLElement {
       !members.some((m) => m.id === this._mode)
     )
       this._mode = "overview";
+    this._overview.setAttribute(
+      "aria-pressed",
+      String(this._mode === "overview"),
+    );
     const name =
       labels[this._mode] || members.find((m) => m.id === this._mode)?.name;
     const points = selection(members, this._mode, this._data.focus_ids);
@@ -240,38 +307,44 @@ class HomeCircleCard extends HTMLElement {
       node.dataset.focus = member.id;
       node.setAttribute("aria-pressed", String(this._mode === member.id));
       const details = el("div");
-      details.append(el("div", "name", member.name));
-      const extra = [];
-      if (member.place) extra.push(member.place);
-      if (member.battery !== null)
-        extra.push(
-          `${member.battery}%${member.charging === true ? " · charging" : ""}`,
-        );
-      if (member.driving.value === true && member.driving.status !== "current")
-        extra.push(
-          member.driving.status === "last_reported"
-            ? "Driving last reported (stale)"
-            : "Driving report time unknown",
-        );
-      if (extra.length) details.append(el("span", "detail", extra.join(" · ")));
-      const stale = member.location?.evidence?.freshness === "stale";
-      node.classList.toggle("stale", stale);
-      details.append(
-        el(
-          "span",
-          stale ? "detail report stale-report" : "detail report",
-          reportLabel(member),
-        ),
-      );
-      node.append(
-        el("span", "avatar", initials(member.name)),
-        details,
+      const heading = el("div", "member-heading");
+      heading.append(
+        el("div", "name", member.name),
         el(
           "span",
           `badge ${member.presence}`,
           `${member.kind === "pet" ? "Pet · " : ""}${labels[member.presence]}`,
         ),
       );
+      details.append(heading);
+      const facts = el("div", "member-facts");
+      if (member.place) facts.append(el("span", "place", `At ${member.place}`));
+      if (member.battery !== null)
+        facts.append(
+          el(
+            "span",
+            "battery",
+            `Battery ${member.battery}%${member.charging === true ? " · charging" : ""}`,
+          ),
+        );
+      if (facts.childElementCount) details.append(facts);
+      if (member.driving.value === true && member.driving.status !== "current")
+        details.append(
+          el(
+            "span",
+            "driving-note",
+            member.driving.status === "last_reported"
+              ? "Driving last reported (stale)"
+              : "Driving report time unknown",
+          ),
+        );
+      const stale = member.location?.evidence?.freshness === "stale";
+      node.classList.toggle("stale", stale);
+      const report = el("div", "report-lines");
+      for (const part of reportParts(member))
+        report.append(el("span", `report-part ${part.kind}`, part.text));
+      details.append(report);
+      node.append(el("span", "avatar", initials(member.name)), details);
       this._members.append(node);
     }
     if (!members.length)
@@ -350,6 +423,7 @@ class HomeCircleCard extends HTMLElement {
   }
   _markers() {
     if (!this._map || !this._layer) return;
+    const focused = this.shadowRoot.activeElement?.dataset?.focus;
     this._layer.clearLayers();
     this._expanded.replaceChildren();
     for (const group of markerGroups(this._points || [], (loc) =>
@@ -359,18 +433,32 @@ class HomeCircleCard extends HTMLElement {
         first = list[0];
       const node = button(
         list.length > 1 ? String(list.length) : initials(first.name),
-        () => {
-          if (list.length === 1) this._choose(first.id);
+        (event) => {
+          if (list.length === 1) this._chooseFromMap(first.id, event);
           else {
             this._expandedIds = list.map((m) => m.id);
+            for (const cluster of this._mapNode.querySelectorAll(
+              '[data-focus^="cluster:"]',
+            ))
+              cluster.setAttribute("aria-expanded", String(cluster === node));
             this._showGroup(list);
             this._expanded.querySelector("button")?.focus();
           }
         },
         list.length > 1 ? "group" : "",
       );
-      if (this._expandedIds?.join("|") === list.map((m) => m.id).join("|"))
-        this._showGroup(list);
+      const groupKey = list.map((member) => member.id).join("|");
+      if (list.length > 1) {
+        node.dataset.focus = `cluster:${groupKey}`;
+        node.setAttribute(
+          "aria-expanded",
+          String(this._expandedIds?.join("|") === groupKey),
+        );
+      } else {
+        node.dataset.focus = `marker:${first.id}`;
+        node.setAttribute("aria-pressed", String(this._mode === first.id));
+      }
+      if (this._expandedIds?.join("|") === groupKey) this._showGroup(list);
       node.setAttribute(
         "aria-label",
         list.length > 1
@@ -388,13 +476,41 @@ class HomeCircleCard extends HTMLElement {
         keyboard: false,
       }).addTo(this._layer);
     }
+    if (
+      focused?.startsWith("marker:") ||
+      focused?.startsWith("group:") ||
+      focused?.startsWith("cluster:")
+    ) {
+      const controls = [
+        ...this._mapNode.querySelectorAll("[data-focus]"),
+        ...this._expanded.querySelectorAll("[data-focus]"),
+        ...this._members.querySelectorAll("[data-focus]"),
+      ];
+      const memberIds = focused.slice(focused.indexOf(":") + 1).split("|");
+      const target =
+        controls.find((node) => node.dataset.focus === focused) ||
+        controls.find(
+          (node) =>
+            node.dataset.focus?.startsWith("cluster:") &&
+            memberIds.some((id) =>
+              node.dataset.focus.slice(8).split("|").includes(id),
+            ),
+        ) ||
+        controls.find((node) =>
+          memberIds.some((id) => node.dataset.focus === `marker:${id}`),
+        ) ||
+        controls.find((node) => memberIds.includes(node.dataset.focus));
+      target?.focus({ preventScroll: true });
+    }
   }
   _showGroup(list) {
     this._expanded.replaceChildren(
       el("span", "subtle", "Choose a member at this location:"),
     );
     for (const member of list) {
-      const node = button(member.name, () => this._choose(member.id));
+      const node = button(member.name, (event) =>
+        this._chooseFromMap(member.id, event),
+      );
       node.dataset.focus = "group:" + member.id;
       this._expanded.append(node);
     }
@@ -511,6 +627,22 @@ class HomeCircleEditor extends HTMLElement {
     link.target = "_blank";
     link.rel = "noopener";
     root.append(link);
+    const fill = el("label", "check");
+    const fillCheck = el("input");
+    fillCheck.type = "checkbox";
+    fillCheck.checked = this._config.fill_screen;
+    fillCheck.addEventListener("change", () =>
+      this._change({ fill_screen: fillCheck.checked }),
+    );
+    fill.append(fillCheck, el("span", "", "Fill wall display height"));
+    root.append(fill);
+    root.append(
+      el(
+        "p",
+        "",
+        "Use with a dedicated full-width dashboard view. The map expands to use the space below this card's top edge.",
+      ),
+    );
     const field = el("fieldset");
     field.append(el("legend", "", "Visible members"));
     for (const member of this._members || []) {

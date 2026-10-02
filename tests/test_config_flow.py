@@ -4,6 +4,7 @@ from copy import deepcopy
 from unittest.mock import patch
 
 import pytest
+from homeassistant.components.lovelace.const import LOVELACE_DATA
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
     SOURCE_USER,
@@ -13,6 +14,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 
 from custom_components.homecircle.const import DOMAIN
+from custom_components.homecircle import frontend
 from custom_components.homecircle.selection import tracker_suggestions
 
 
@@ -147,6 +149,10 @@ async def test_invalid_members_and_deleted_during_flow(hass, household):
 
 async def test_options_reconfigure_and_listener_replacement(hass, household):
     entry = await create(hass, household)
+    resources = hass.data[LOVELACE_DATA].resources
+    owned_before = next(
+        item for item in resources.async_items() if item["url"].startswith(frontend.URL)
+    )
     old_runtime = entry.runtime_data
     manager = hass.config_entries.options
     result = await manager.async_init(entry.entry_id)
@@ -162,6 +168,10 @@ async def test_options_reconfigure_and_listener_replacement(hass, household):
     result = await manager.async_configure(result["flow_id"], {})
     assert result["type"] == FlowResultType.CREATE_ENTRY
     await hass.async_block_till_done()
+    owned_after_options = next(
+        item for item in resources.async_items() if item["url"].startswith(frontend.URL)
+    )
+    assert owned_after_options["id"] == owned_before["id"]
     assert entry.options["members"] == {
         "person.example_second": {
             "trackers": [],
@@ -185,9 +195,45 @@ async def test_options_reconfigure_and_listener_replacement(hass, household):
     )
     result = await finish(hass, result)
     await hass.async_block_till_done()
+    owned_after_reconfigure = next(
+        item for item in resources.async_items() if item["url"].startswith(frontend.URL)
+    )
+    assert owned_after_reconfigure["id"] == owned_before["id"]
     assert result["reason"] == "reconfigure_successful"
     assert not entry.options
     assert entry.runtime_data.config["people"] == household["people"]
+
+
+async def test_unchanged_reconfigure_keeps_owned_resource(hass, household):
+    entry = await create(hass, household)
+    resources = hass.data[LOVELACE_DATA].resources
+    owned_before = next(
+        item for item in resources.async_items() if item["url"].startswith(frontend.URL)
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_RECONFIGURE, "entry_id": entry.entry_id},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], household
+    )
+    result = await finish(hass, result)
+    await hass.async_block_till_done()
+    owned_after = next(
+        item for item in resources.async_items() if item["url"].startswith(frontend.URL)
+    )
+    assert result["reason"] == "reconfigure_successful"
+    assert owned_after["id"] == owned_before["id"]
+    assert (
+        len(
+            [
+                item
+                for item in resources.async_items()
+                if item["url"].startswith(frontend.URL)
+            ]
+        )
+        == 1
+    )
 
 
 async def test_missing_unavailable_recovery_and_repair(hass, household):
@@ -251,39 +297,167 @@ async def test_discovery_does_not_guess_from_names(hass, household):
     assert tracker_suggestions(hass, "person.example_member") == ([], None)
 
 
+async def test_member_setup_explains_suggestions_without_changing_them(hass, household):
+    hass.states.async_set(
+        "person.example_member",
+        "home",
+        {
+            "friendly_name": "Example Member",
+            "source": "device_tracker.example_phone",
+        },
+    )
+    hass.states.async_set(
+        "device_tracker.example_phone", "home", {"friendly_name": "Example Phone"}
+    )
+    with patch(
+        "custom_components.homecircle.selection.entities_in_person",
+        return_value=["device_tracker.example_phone"],
+    ):
+        result = await start(hass, household)
+    assert result["step_id"] == "member"
+    assert result["description_placeholders"] == {
+        "person": "Example Member",
+        "number": "1",
+        "total": "2",
+        "active": "Example Phone",
+    }
+    tracker_field = next(
+        field for field in result["data_schema"].schema if str(field) == "trackers"
+    )
+    assert tracker_field.description["suggested_value"] == [
+        "device_tracker.example_phone"
+    ]
+
+
+async def test_duplicate_tracker_names_are_distinct_in_hint_and_review(hass, household):
+    current = "device_tracker.example_phone"
+    stale = "device_tracker.example_phone_old"
+    hass.states.async_set(current, "home", {"friendly_name": "Example Phone"})
+    hass.states.async_set(stale, "home", {"friendly_name": "Example Phone"})
+    hass.states.async_set(
+        "person.example_member",
+        "home",
+        {"friendly_name": "Example Member", "source": current},
+    )
+    with patch(
+        "custom_components.homecircle.selection.entities_in_person",
+        return_value=[current],
+    ):
+        result = await start(hass, household)
+    assert result["description_placeholders"]["active"] == (
+        "Example Phone (device_tracker.example_phone)"
+    )
+    tracker_field = next(
+        field for field in result["data_schema"].schema if str(field) == "trackers"
+    )
+    picker = result["data_schema"].schema[tracker_field]
+    assert {option["value"]: option["label"] for option in picker.config["options"]}[
+        stale
+    ] == "Example Phone (device_tracker.example_phone_old)"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"trackers": [stale]}
+    )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["step_id"] == "confirm"
+    assert (
+        "- Trackers: Example Phone (device\\_tracker.example\\_phone\\_old)"
+        in result["description_placeholders"]["members"]
+    )
+    hass.config_entries.flow.async_abort(result["flow_id"])
+
+
+async def test_final_review_shows_draft_and_cancel_keeps_it_unsaved(hass, household):
+    hass.states.async_set(
+        "person.example_member", "home", {"friendly_name": "Example *Member*"}
+    )
+    hass.states.async_set(
+        "device_tracker.example_phone", "home", {"friendly_name": "Example Phone"}
+    )
+    hass.states.async_set(
+        "zone.example_residence", "0", {"friendly_name": "Other Home"}
+    )
+    result = await start(hass, household)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "trackers": ["device_tracker.example_phone"],
+            "additional_residences": ["zone.example_residence"],
+        },
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"trackers": ["device_tracker.example_router"]}
+    )
+    assert result["step_id"] == "confirm"
+    review = result["description_placeholders"]
+    assert review["primary_home"]
+    assert review["places"]
+    assert "**Example \\*Member\\***" in review["members"]
+    assert "- Trackers: Example Phone" in review["members"]
+    assert "- Other homes: Other Home" in review["members"]
+    assert review["members"].count("- Status sensors: None mapped") == 2
+    assert review["members"].count("- Location report times: None mapped") == 2
+    hass.config_entries.flow.async_abort(result["flow_id"])
+    assert not hass.config_entries.async_entries(DOMAIN)
+
+
 async def test_supporting_flow_validation_persistence_and_clear(hass, household):
-    hass.states.async_set("sensor.example_battery", "0", {"unit_of_measurement": "%"})
-    hass.states.async_set("sensor.example_report", "2026-01-01T00:00:00+00:00")
+    hass.states.async_set(
+        "sensor.example_battery",
+        "0",
+        {"friendly_name": "Example Battery", "unit_of_measurement": "%"},
+    )
+    hass.states.async_set(
+        "sensor.example_report",
+        "2026-01-01T00:00:00+00:00",
+        {"friendly_name": "Example Report"},
+    )
     result = await start(hass, household)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
             "trackers": ["device_tracker.example_phone"],
             "configure_sensors": True,
+            "configure_reports": True,
         },
     )
     assert result["step_id"] == "supporting"
+    assert {str(field) for field in result["data_schema"].schema} == {
+        "battery",
+        "charging",
+        "speed",
+        "driving",
+        "driving_reported_at",
+    }
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {
-            "location_reported_at": "sensor.example_report",
-        },
+        {"battery": "sensor.example_missing"},
     )
-    assert result["errors"]["base"] == "report_source_required"
+    assert result["errors"]["battery"] == "invalid_entity"
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {
-            "battery": "sensor.example_battery",
-            "location_reported_at": "sensor.example_report",
-            "location_report_source": "device_tracker.example_phone",
-        },
+        {"battery": "sensor.example_battery"},
+    )
+    assert result["step_id"] == "source_report"
+    assert result["description_placeholders"]["number"] == "1"
+    assert result["description_placeholders"]["total"] == "2"
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["description_placeholders"]["number"] == "2"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"timestamp": "sensor.example_report"}
     )
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["step_id"] == "confirm"
+    review = result["description_placeholders"]["members"]
+    assert "Battery: Example Battery" in review
+    assert "Example Report" in review
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     entry = result["result"]
     await hass.async_block_till_done()
     assert entry.runtime_data.household.members[0].battery.value == 0
     assert "sensor.example_battery" in entry.runtime_data.states
+    assert entry.data["members"]["person.example_member"]["location_reports"] == {
+        "device_tracker.example_phone": "sensor.example_report"
+    }
     options = hass.config_entries.options
     result = await options.async_init(entry.entry_id)
     result = await options.async_configure(result["flow_id"], household)
@@ -300,6 +474,9 @@ async def test_supporting_flow_validation_persistence_and_clear(hass, household)
     await hass.async_block_till_done()
     assert entry.runtime_data.household.members[0].battery.value is None
     assert "sensor.example_battery" not in entry.runtime_data.states
+    assert entry.options["members"]["person.example_member"]["location_reports"] == {
+        "device_tracker.example_phone": "sensor.example_report"
+    }
 
 
 async def test_runtime_report_aging_source_changes_and_unload(hass, household, freezer):
@@ -357,14 +534,25 @@ async def test_pet_thresholds_persist_in_options(hass, household):
     flow = await manager.async_configure(
         flow["flow_id"], {**household, "people": ["person.example_member"]}
     )
+    assert flow["step_id"] == "member"
+    assert "pet_home_minutes" not in {
+        str(field) for field in flow["data_schema"].schema
+    }
     flow = await manager.async_configure(
         flow["flow_id"],
         {
             "trackers": ["device_tracker.example_phone"],
             "kind": "pet",
-            "pet_home_minutes": 720,
-            "pet_away_minutes": 10,
         },
+    )
+    assert flow["step_id"] == "pet_freshness"
+    flow = await manager.async_configure(
+        flow["flow_id"], {"pet_home_minutes": 720, "pet_away_minutes": 10}
+    )
+    assert flow["step_id"] == "confirm"
+    assert (
+        "Pet timing: home 12 hours, away 10 min"
+        in flow["description_placeholders"]["members"]
     )
     flow = await manager.async_configure(flow["flow_id"], {})
     await hass.async_block_till_done()
@@ -374,6 +562,29 @@ async def test_pet_thresholds_persist_in_options(hass, household):
     assert member["pet_home_minutes"] == 720
     assert member["pet_away_minutes"] == 10
     assert entry.runtime_data.config["members"]["person.example_member"] == member
+
+    flow = await manager.async_init(entry.entry_id)
+    flow = await manager.async_configure(
+        flow["flow_id"], {**household, "people": ["person.example_member"]}
+    )
+    flow = await manager.async_configure(
+        flow["flow_id"],
+        {
+            "trackers": ["device_tracker.example_phone"],
+            "kind": "pet",
+            "configure_sensors": True,
+        },
+    )
+    assert flow["step_id"] == "pet_freshness"
+    suggested = {
+        str(field): field.description.get("suggested_value")
+        for field in flow["data_schema"].schema
+    }
+    assert suggested == {"pet_home_minutes": 720, "pet_away_minutes": 10}
+    flow = await manager.async_configure(flow["flow_id"], {})
+    assert flow["step_id"] == "supporting"
+    manager.async_abort(flow["flow_id"])
+    assert entry.options["members"]["person.example_member"] == member
 
 
 async def test_per_source_flow_migrates_preserves_and_clears(hass, household):
@@ -394,7 +605,7 @@ async def test_per_source_flow_migrates_preserves_and_clears(hass, household):
     result = await options.async_configure(result["flow_id"], household)
     result = await options.async_configure(
         result["flow_id"],
-        {"trackers": ["device_tracker.example_phone"], "configure_reports": True},
+        {"trackers": ["device_tracker.example_phone"]},
     )
     assert result["step_id"] == "source_report"
     result = await options.async_configure(result["flow_id"], {})

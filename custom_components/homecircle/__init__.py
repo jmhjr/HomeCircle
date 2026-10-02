@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from datetime import timedelta
 from typing import Any
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, EVENT_STATE_CHANGED
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv
@@ -132,7 +132,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeCircleEntry) -> bool
 
 async def async_unload_entry(hass: HomeAssistant, entry: HomeCircleEntry) -> bool:
     """HA removes registered listeners after this successful unload."""
-    await frontend.async_unregister(hass)
+    if frontend.consume_reload_preservation(hass, entry.entry_id):
+
+        async def cleanup_failed_reload():
+            # The reload holds setup_lock through both unload and setup. If
+            # setup fails, remove the resource after the lock is released.
+            async with entry.setup_lock:
+                if entry.state is not ConfigEntryState.LOADED:
+                    await frontend.async_unregister(hass)
+
+        hass.async_create_task(
+            cleanup_failed_reload(),
+            f"HomeCircle resource cleanup after reload {entry.entry_id}",
+            eager_start=False,
+        )
+    else:
+        await frontend.async_unregister(hass)
     entry.runtime_data.household = None
     entry.runtime_data.states.clear()
     entry.runtime_data.missing.clear()

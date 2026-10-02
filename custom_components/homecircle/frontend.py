@@ -10,6 +10,21 @@ from homeassistant.helpers.storage import Store
 URL = "/homecircle_static/homecircle-card.js"
 VERSION = "0.1.0-beta.6"
 KEY = "homecircle_frontend"
+RELOAD_ENTRY = "reload_entry"
+
+
+def preserve_for_reload(hass, entry_id):
+    """Keep the owned resource while a saved selection reloads its entry."""
+    hass.data.setdefault(KEY, {})[RELOAD_ENTRY] = entry_id
+
+
+def consume_reload_preservation(hass, entry_id):
+    """Consume the one-shot marker set by the HomeCircle selection flow."""
+    state = hass.data.get(KEY, {})
+    if state.get(RELOAD_ENTRY) != entry_id:
+        return False
+    state.pop(RELOAD_ENTRY)
+    return True
 
 
 async def async_register(hass):

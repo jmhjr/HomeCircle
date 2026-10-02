@@ -16,7 +16,7 @@ The beta 5 card bytes served by this HA instance were copied into a loopback-onl
 
 ## Physical display
 
-The DAKboard HomeCircle Test button was previously configured for this disposable real-source page. After refreshing it, the user confirmed that beta 5 showed all three members and street tiles on the physical display. The user tapped the Pet member and Everyone, confirming that the map focused the member and returned to all three positions. This is physical touch acceptance for that flow. The distinct additional-residence count versus primary-house focus check remains open.
+The DAKboard HomeCircle Test button was previously configured for this disposable real-source page. After refreshing it, the user confirmed that beta 5 showed all three members and street tiles on the physical display. The user tapped the Pet member and Everyone, confirming that the map focused the member and returned to all three positions. This is physical touch acceptance for that flow. A later additional-residence count versus primary-house focus check passed with the local beta 6 card preview; see [candidate validation](BETA6-CANDIDATE-VALIDATION.md).
 
 ## Live Life360 away-state check
 

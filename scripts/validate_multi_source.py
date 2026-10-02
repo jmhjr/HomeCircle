@@ -74,9 +74,10 @@ async def run(directory, per_source=False):
         hass.states.async_set(
             report, old_report.isoformat(), {"device_class": "timestamp"}
         )
+        cloud_report = dt.utcnow()
         hass.states.async_set(
             "sensor.example_cloud_report",
-            dt.utcnow().isoformat(),
+            cloud_report.isoformat(),
             {"device_class": "timestamp"},
         )
         flow = hass.config_entries.flow
@@ -128,6 +129,12 @@ async def run(directory, per_source=False):
                 flush=True,
             )
 
+        def check_report_source(source, sensor, timestamp):
+            proof = entry.runtime_data.household.members[0].location.evidence
+            assert proof.source_entity == source
+            assert proof.report_entity == sensor
+            assert proof.reported_at == timestamp
+
         check("Router Home with two conflicting GPS candidates", router, "home", False)
         await network("not_home")
         await gps(phone, "not_home", 3.0)
@@ -140,9 +147,28 @@ async def run(directory, per_source=False):
             True,
             "fresh" if per_source else "unknown",
         )
+        if per_source:
+            check_report_source(cloud, "sensor.example_cloud_report", cloud_report)
         hass.states.async_set(cloud, "unavailable")
         await hass.async_block_till_done()
         check("Cloud unavailable falls back to phone", phone, "away", True, "stale")
+        if per_source:
+            check_report_source(phone, report, old_report)
+        await gps(cloud, "not_home", 5.0)
+        check(
+            "Cloud recovery reselects its own location and report",
+            cloud,
+            "away",
+            True,
+            "fresh" if per_source else "unknown",
+        )
+        if per_source:
+            check_report_source(cloud, "sensor.example_cloud_report", cloud_report)
+        hass.states.async_set(cloud, "unavailable")
+        await hass.async_block_till_done()
+        check("Second cloud outage falls back to phone", phone, "away", True, "stale")
+        if per_source:
+            check_report_source(phone, report, old_report)
         await network("home")
         check(
             "Router Home with conflicting away GPS excludes map focus",
