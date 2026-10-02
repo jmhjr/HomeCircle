@@ -127,4 +127,10 @@ The focused unchanged-Reconfigure test passed, followed by all 67 Python tests, 
 
 ## Published prerelease asset check — 2026-10-01
 
-The GitHub release `v0.1.0-beta.6` was published as a prerelease with `homecircle.zip` and `inventory.json`. Both assets were downloaded from the release and matched the validated local files byte for byte. The published ZIP SHA-256 is `064684bf866f100b378b16d5f9dcacc05b527c11601ed75752f9aa17c5e51eba`; all 14 archive entries match the downloaded inventory. A beta 5-to-beta 6 HACS upgrade on disposable HA remains open. Production HA and V2 were not changed.
+The GitHub release `v0.1.0-beta.6` was published as a prerelease with `homecircle.zip` and `inventory.json`. Both assets were downloaded from the release and matched the validated local files byte for byte. The published ZIP SHA-256 is `064684bf866f100b378b16d5f9dcacc05b527c11601ed75752f9aa17c5e51eba`; all 14 archive entries match the downloaded inventory. At publication, a beta 5-to-beta 6 HACS upgrade on disposable HA remained open. Production HA and V2 were not changed.
+
+## Published HACS upgrade on disposable HA — 2026-10-01
+
+The real-source disposable HA instance began with HACS reporting beta 5, three focusable HomeCircle members, and one owned dashboard resource. Its backend files matched the published beta 5 ZIP; the card JavaScript was the separately staged beta 6 preview from earlier touch checks. A private rollback copy of the package and saved HA storage was made before the upgrade.
+
+HACS downloaded `v0.1.0-beta.6`. Every installed file matched the published beta 6 ZIP. After HA restart, HACS reported beta 6, the saved HomeCircle data and options were unchanged, and all three original members were focusable with one pet and two mapped location report times. The owned dashboard resource kept its ID and changed to the beta 6 URL; the JavaScript served by HA matched the published ZIP. The authenticated dashboard rendered three members and street tiles. The user refreshed the physical DAKboard and confirmed those loaded and that pet member → Everyone focus/reset passed. Production HA and V2 were not changed.

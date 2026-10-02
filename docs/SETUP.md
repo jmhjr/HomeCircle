@@ -113,4 +113,4 @@ HACS upgrades require a restart. To uninstall from a test instance, first remove
 
 ## Validation scope
 
-See [the beta 6 candidate validation](BETA6-CANDIDATE-VALIDATION.md), [beta 5 HACS validation](BETA5-VALIDATION.md), and [beta 4 real-source/touch acceptance](BETA4-VALIDATION.md). The beta 6 setup flow passed an isolated Core rehearsal and disposable browser check; its package also passed a temporary real-source install and physical DAKboard dashboard check. A published beta 6 HACS upgrade and a full real departure/return test remain open.
+See [the beta 6 candidate validation](BETA6-CANDIDATE-VALIDATION.md), [beta 5 HACS validation](BETA5-VALIDATION.md), and [beta 4 real-source/touch acceptance](BETA4-VALIDATION.md). The beta 6 setup flow passed an isolated Core rehearsal and disposable browser check; its published ZIP passed a beta 5-to-beta 6 HACS upgrade on real-source disposable HA, followed by a physical DAKboard map check. A full real departure/return test remains open.

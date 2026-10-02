@@ -4,7 +4,7 @@ Family location and presence for Home Assistant, independent of the tracking pro
 
 **Experimental development software — not a stable release.**
 
-Use a disposable or test Home Assistant instance. Beta 6 improves setup, member cards, report-time labels and wall-display controls. Its package passed a temporary real-source install and three-member DAKboard touch check; a published beta 6 HACS upgrade remains to be checked. Broader field acceptance remains open. No stable release or production migration is approved.
+Use a disposable or test Home Assistant instance. Beta 6 improves setup, member cards, report-time labels and wall-display controls. Its published ZIP passed a beta 5-to-beta 6 HACS upgrade on real-source disposable HA, and the three-member DAKboard map check passed after the upgrade. Broader field acceptance remains open. No stable release or production migration is approved.
 
 **Status: milestones 1–3 development integration; development prerelease; not production-ready.** HomeCircle is a working name; public naming remains a release decision. The existing V2 dashboard remains the reference system. Development does not replace, install over, or change it.
 
