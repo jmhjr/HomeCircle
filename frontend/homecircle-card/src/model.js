@@ -70,6 +70,17 @@ export function markerGroups(members, project, distance = 42) {
   }
   return groups;
 }
+// Keep positive space for Leaflet's fit calculation even in a narrow card.
+export function pinFitPadding(size) {
+  const scale = Math.max(
+    0,
+    Math.min(1, (size.x - 24) / 160, (size.y - 24) / 168),
+  );
+  return {
+    paddingTopLeft: [Math.floor(112 * scale), Math.floor(120 * scale)],
+    paddingBottomRight: [Math.floor(48 * scale), Math.floor(48 * scale)],
+  };
+}
 export function validateConfig(config) {
   if (!config || config.type !== "custom:homecircle-card")
     throw new Error("Use the HomeCircle card type.");

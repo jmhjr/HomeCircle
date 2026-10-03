@@ -4,6 +4,7 @@ import {
   selection,
   visibleMembers,
   markerGroups,
+  pinFitPadding,
   reportLabel,
   validateConfig,
 } from "../src/model.js";
@@ -61,6 +62,21 @@ test("screen overlap groups remain individually selectable", () => {
     groups.map((g) => g.members.map((m) => m.id)),
     [["one", "two"], ["three"]],
   );
+});
+test("pin fit padding leaves positive map area on narrow cards", () => {
+  for (const size of [
+    { x: 140, y: 220 },
+    { x: 314, y: 220 },
+    { x: 25, y: 25 },
+  ]) {
+    const { paddingTopLeft, paddingBottomRight } = pinFitPadding(size);
+    assert.ok(paddingTopLeft[0] + paddingBottomRight[0] < size.x);
+    assert.ok(paddingTopLeft[1] + paddingBottomRight[1] < size.y);
+  }
+  assert.deepEqual(pinFitPadding({ x: 314, y: 220 }), {
+    paddingTopLeft: [112, 120],
+    paddingBottomRight: [48, 48],
+  });
 });
 test("unknown report time is never a live claim; stale remains explicit", () => {
   const value = member("one");

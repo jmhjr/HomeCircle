@@ -460,6 +460,7 @@ test("overlapping-marker choice retains keyboard focus after a marker redraw", a
   assert.equal(memberPicture?.getAttribute("src"), data.members[1].picture);
   assert.equal(memberPicture?.referrerPolicy, "no-referrer");
   let separated = false;
+  const markerIcons = [];
   value._map = {
     latLngToContainerPoint: ([, longitude]) => ({
       x: separated && longitude > fictionalOrigin ? 100 : 0,
@@ -472,6 +473,7 @@ test("overlapping-marker choice retains keyboard focus after a marker redraw", a
       value._mapNode.replaceChildren();
     },
     addLayer(marker) {
+      markerIcons.push(marker.options.icon.options);
       value._mapNode.append(marker.options.icon.options.html);
     },
   };
@@ -479,6 +481,8 @@ test("overlapping-marker choice retains keyboard focus after a marker redraw", a
   value._markers();
   const cluster = value._mapNode.querySelector('[data-focus^="cluster:"]');
   assert.ok(cluster);
+  assert.deepEqual(markerIcons.at(-1).iconSize, [90, 108]);
+  assert.deepEqual(markerIcons.at(-1).iconAnchor, [45, 108]);
   assert.equal(cluster.querySelectorAll(".marker-avatar").length, 2);
   assert.equal(
     cluster.querySelector("img")?.getAttribute("src"),
@@ -508,6 +512,8 @@ test("overlapping-marker choice retains keyboard focus after a marker redraw", a
     value.shadowRoot.activeElement.dataset.focus,
     "marker:person.example_one",
   );
+  assert.deepEqual(markerIcons.at(-1).iconSize, [54, 68]);
+  assert.deepEqual(markerIcons.at(-1).iconAnchor, [27, 68]);
   separated = false;
   value._markers();
   assert.equal(

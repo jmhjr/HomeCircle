@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.0-beta.9 — release candidate
+
+- Draw single and grouped member markers as pins whose tips identify the map location, leaving the avatars above the point.
+- Fit the map with enough space for the taller pins and keep grouped avatars clear of zoom controls on narrow displays.
+
 ## 0.1.0-beta.8 — experimental prerelease
 
 - Show HA person portraits or selected Life360 person and pet tracker portraits on member cards and map markers, with initials when an image is absent or fails to load. Limit external portrait requests to Life360 image hosts and omit the HA page referrer.

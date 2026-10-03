@@ -8,6 +8,7 @@ import {
   selection,
   reportParts,
   markerGroups,
+  pinFitPadding,
   validateConfig,
 } from "./model.js";
 
@@ -399,9 +400,10 @@ class HomeCircleCard extends HTMLElement {
       }).setView([0, 0], 2);
       this._layer = L.layerGroup().addTo(this._map);
       this._map.on("zoomend moveend", () => this._markers());
-      this._resize = new ResizeObserver(() =>
-        this._map?.invalidateSize({ pan: false }),
-      );
+      this._resize = new ResizeObserver(() => {
+        this._map?.invalidateSize({ pan: false });
+        if (this._fit && this._points?.length) this._updateMap(this._points);
+      });
       this._resize.observe(this._mapNode);
       if (this._config.map_tiles === "osm") {
         this._tiles = L.tileLayer(
@@ -434,19 +436,16 @@ class HomeCircleCard extends HTMLElement {
     this._points = points;
     this._updateMapNote();
     if (this._fit) {
-      if (points.length)
-        this._map.fitBounds(
-          points.map((m) => [m.location.latitude, m.location.longitude]),
-          {
-            // Leave room for a full group marker beside Leaflet's zoom controls.
-            paddingTopLeft: [112, 48],
-            paddingBottomRight: [48, 48],
-            maxZoom: 14,
-            animate: false,
-          },
-        );
-      else this._map.setView([0, 0], 2, { animate: false });
-      this._fit = false;
+      const size = this._map.getSize();
+      if (size.x > 24 && size.y > 24) {
+        if (points.length)
+          this._map.fitBounds(
+            points.map((m) => [m.location.latitude, m.location.longitude]),
+            { ...pinFitPadding(size), maxZoom: 14, animate: false },
+          );
+        else this._map.setView([0, 0], 2, { animate: false });
+        this._fit = false;
+      }
     }
     this._markers();
   }
@@ -517,12 +516,12 @@ class HomeCircleCard extends HTMLElement {
           ? `${list.map((member) => member.name).join(", ")} at this location. Expand to choose.`
           : first.name,
       );
-      const size = list.length > 1 ? 86 : 46;
+      const size = list.length > 1 ? [90, 108] : [54, 68];
       const icon = L.divIcon({
         html: node,
         className: "marker",
-        iconSize: [size, size],
-        iconAnchor: [size / 2, size / 2],
+        iconSize: size,
+        iconAnchor: [size[0] / 2, size[1]],
       });
       L.marker([first.location.latitude, first.location.longitude], {
         icon,
