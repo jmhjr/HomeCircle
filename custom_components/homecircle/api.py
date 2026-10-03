@@ -1,5 +1,7 @@
 """Authenticated, permission-checked snapshot API; no raw states or history."""
 
+from urllib.parse import urlsplit
+
 from homeassistant.auth.permissions.const import POLICY_READ
 from homeassistant.components import websocket_api
 from homeassistant.core import callback
@@ -17,15 +19,26 @@ def proof(value):
     }
 
 
-def local_picture(value):
-    """Use only HA-served portraits; never make the card fetch a third-party URL."""
-    return (
-        value
-        if isinstance(value, str)
-        and value.startswith(("/api/image/serve/", "/local/"))
-        and not any(char in value for char in ("\n", "\r", "\\"))
-        else None
+def allowed_picture(value):
+    """Expose HA portraits and Life360's user-image endpoint only."""
+    if not isinstance(value, str) or any(ord(char) < 32 or char == "\\" for char in value):
+        return None
+    if value.startswith(("/api/image/serve/", "/local/")):
+        return value
+    try:
+        url = urlsplit(value)
+    except ValueError:
+        return None
+    life360_image = (
+        url.netloc == "www.life360.com"
+        and url.path.startswith("/img/user_images/")
+    ) or (
+        url.netloc == "life360-images-pub.life360.com"
+        and url.path.endswith((".jpeg", ".jpg", ".png", ".webp"))
     )
+    if url.scheme == "https" and life360_image and not url.fragment:
+        return value
+    return None
 
 
 def snapshot(runtime):
@@ -37,7 +50,7 @@ def snapshot(runtime):
         place = runtime.states.get(member.place)
         person_state = runtime.states.get(member.id)
         picture = (
-            local_picture(person_state.attributes.get("entity_picture"))
+            allowed_picture(person_state.attributes.get("entity_picture"))
             if person_state
             else None
         )
@@ -45,7 +58,7 @@ def snapshot(runtime):
             for tracker_id in runtime.config[CONF_MEMBERS][member.id][CONF_TRACKERS]:
                 tracker_state = runtime.states.get(tracker_id)
                 picture = (
-                    local_picture(tracker_state.attributes.get("entity_picture"))
+                    allowed_picture(tracker_state.attributes.get("entity_picture"))
                     if tracker_state
                     else None
                 )

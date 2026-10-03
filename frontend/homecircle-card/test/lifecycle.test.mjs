@@ -445,6 +445,8 @@ test("overlapping-marker choice retains keyboard focus after a marker redraw", a
     driving: { value: null, status: "unknown" },
   }));
   data.members[0].picture = "/api/image/serve/example/512x512";
+  data.members[1].picture =
+    "https://life360-images-pub.life360.com/example/pet.jpeg";
   data.focus_ids.overview = data.members.map((member) => member.id);
   const value = card({
     connection: {},
@@ -452,6 +454,11 @@ test("overlapping-marker choice retains keyboard focus after a marker redraw", a
     callWS: async () => data,
   });
   await tick();
+  const memberPicture = value.shadowRoot.querySelectorAll(
+    ".member .avatar img",
+  )[1];
+  assert.equal(memberPicture?.getAttribute("src"), data.members[1].picture);
+  assert.equal(memberPicture?.referrerPolicy, "no-referrer");
   let separated = false;
   value._map = {
     latLngToContainerPoint: ([, longitude]) => ({
@@ -476,6 +483,12 @@ test("overlapping-marker choice retains keyboard focus after a marker redraw", a
   assert.equal(
     cluster.querySelector("img")?.getAttribute("src"),
     data.members[0].picture,
+  );
+  assert.equal(cluster.querySelectorAll("img").length, 2);
+  memberPicture.dispatchEvent(new window.Event("error"));
+  assert.equal(
+    value.shadowRoot.querySelectorAll(".member .avatar img").length,
+    1,
   );
   assert.match(
     cluster.getAttribute("aria-label"),

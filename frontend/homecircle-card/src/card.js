@@ -31,15 +31,29 @@ function initials(name) {
     .join("")
     .toUpperCase();
 }
-function markerAvatar(member) {
-  const avatar = el("span", "marker-avatar", initials(member.name));
+function allowedPicture(value) {
+  if (typeof value !== "string" || /[\x00-\x1f\\]/.test(value)) return false;
+  if (value.startsWith("/api/image/serve/") || value.startsWith("/local/"))
+    return true;
+  try {
+    const url = new URL(value);
+    const life360Image =
+      (url.host === "www.life360.com" &&
+        url.pathname.startsWith("/img/user_images/")) ||
+      (url.host === "life360-images-pub.life360.com" &&
+        /\.(jpeg|jpg|png|webp)$/.test(url.pathname));
+    return url.protocol === "https:" && life360Image && !url.hash;
+  } catch {
+    return false;
+  }
+}
+function memberAvatar(member, className = "marker-avatar") {
+  const avatar = el("span", className, initials(member.name));
   avatar.setAttribute("aria-hidden", "true");
-  if (
-    member.picture?.startsWith("/api/image/serve/") ||
-    member.picture?.startsWith("/local/")
-  ) {
+  if (allowedPicture(member.picture)) {
     const picture = el("img");
     picture.alt = "";
+    picture.referrerPolicy = "no-referrer";
     picture.src = member.picture;
     picture.addEventListener("error", () => picture.remove(), { once: true });
     avatar.append(picture);
@@ -359,7 +373,7 @@ class HomeCircleCard extends HTMLElement {
       for (const part of reportParts(member))
         report.append(el("span", `report-part ${part.kind}`, part.text));
       details.append(report);
-      node.append(el("span", "avatar", initials(member.name)), details);
+      node.append(memberAvatar(member, "avatar"), details);
       this._members.append(node);
     }
     if (!members.length)
@@ -468,13 +482,13 @@ class HomeCircleCard extends HTMLElement {
           `marker-portraits count-${Math.min(list.length, 4)}`,
         );
         for (const member of list.slice(0, 4))
-          portraits.append(markerAvatar(member));
+          portraits.append(memberAvatar(member));
         if (list.length > 4)
           portraits.append(
             el("span", "marker-overflow", `+${list.length - 4}`),
           );
         node.append(portraits);
-      } else node.append(markerAvatar(first));
+      } else node.append(memberAvatar(first));
       const groupKey = list.map((member) => member.id).join("|");
       if (list.length > 1) {
         node.dataset.focus = `cluster:${groupKey}`;

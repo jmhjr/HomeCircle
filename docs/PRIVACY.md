@@ -20,6 +20,8 @@ Show last-reported age honestly and distinguish unknown freshness. Location disp
 
 External map tiles reveal viewed areas and client network metadata; geocoding/routing can transmit exact coordinates; radar providers receive tile requests. Explain each enabled service before opt-in. Restrict browser keys by origin and API, apply quotas, and never send server-only secrets to a browser. Optional provider failures must not erase basic HA presence.
 
+When an HA person or selected tracker supplies a Life360 user or pet image, the card loads that portrait directly from `www.life360.com` or `life360-images-pub.life360.com`; Life360 receives the display's image request and network metadata. The card sends no HA page referrer. Other external image hosts are rejected, and initials remain visible if an image fails to load. HA-served portraits stay on the HA origin.
+
 ## Review and safeguards
 
 `.gitignore` excludes private snapshots, secrets, credentials, images, archives and build products. The local pre-commit hook checks staged contents for common key/coordinate/address/entity patterns and unexpected binary files. Run `python3 scripts/check_public_files.py --all` before sharing. It is a conservative guard, not proof that a file is safe: inspect the diff and all generated release files manually. Do not bypass it to publish household data.

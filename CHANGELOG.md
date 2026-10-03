@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Show HA person portraits or selected Life360 tracker portraits on member cards and map markers, with initials when an image is absent or fails to load. Limit external portrait requests to Life360's user-image endpoint and omit the HA page referrer.
+
 ## 0.1.0-beta.7 — experimental prerelease
 
 - Guide each member toward one linked tracker by showing current GPS/presence capability and the HA active source; leave equally suitable choices for the user. Existing saved selections remain intact during edits.
