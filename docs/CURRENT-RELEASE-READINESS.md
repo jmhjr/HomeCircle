@@ -1,8 +1,8 @@
 # Current release readiness — through 2026-10-02
 
-The current experimental prerelease is [v0.1.0-beta.8](https://github.com/jmhjr/HomeCircle/releases/tag/v0.1.0-beta.8). Its [validation record](BETA8-VALIDATION.md) supports testing on disposable HA. Production now has beta 8 in a separate HomeCircle test dashboard alongside the existing V2 dashboard. The dated checkpoints below describe the state at the time of each check and may name older installed versions.
+The current experimental prerelease is [v0.1.0-beta.9](https://github.com/jmhjr/HomeCircle/releases/tag/v0.1.0-beta.9). Its [validation record](BETA9-VALIDATION.md) covers disposable and separate production beta dashboard testing. The existing V2 dashboard remains unchanged. The dated checkpoints below describe the state at the time of each check and may name older installed versions.
 
-An [unpublished beta 9 candidate](BETA9-CANDIDATE-VALIDATION.md) draws map markers as pins with their tips at the tracked locations. Its local and disposable-browser checks passed; physical DAKboard acceptance and publication remain separate steps.
+Beta 9 draws map markers as pins with their tips at the tracked locations. Its published ZIP and inventory matched the validated files. The real-source disposable instance upgraded through HACS with saved members and resource intact; authenticated browser tests passed grouped and single pin display, Ruby focus, and Everyone reset. The separate production beta installation then upgraded through HACS and restarted with five saved members; the user confirmed the grouped and Ella pins plus Ruby → Everyone interaction on the physical DAKboard.
 
 Beta 8 adds HA and Life360 person and pet portraits to member cards and map markers. A missing or failed image falls back to initials. The release candidate passed 70 Python and 21 frontend tests, package integrity and privacy checks, isolated Core lifecycle validation, and a published beta 7 to candidate beta 8 upgrade rehearsal. The published beta 8 then upgraded the real-source disposable instance through HACS; its installed files matched the published inventory and the user confirmed portrait, initials fallback, pet focus, and Everyone reset on the physical DAKboard. Production HA listed beta 8 after a HACS information refresh and was subsequently upgraded in its separate HomeCircle beta test. The authenticated browser showed five saved members and four loaded portraits; the iPhone member used initials. The user also confirmed four photos on the physical DAKboard production beta page.
 
@@ -40,4 +40,4 @@ A final independent Claude Opus 5.5 review found and prompted fixes for a public
 4. Validate the chosen V0.1 Home Assistant compatibility target beyond the pinned Core 2026.9.4 if broader support is intended. The non-admin result uses that version and fictional sources.
 If HACS is uninstalled before the HomeCircle entry is removed, HomeCircle cannot run its cleanup hook; keep the documented removal order.
 
-Stable `v0.1.0` and any production migration remain separate decisions after these checks. Production HA and V2 were unchanged by the checks recorded here.
+Stable `v0.1.0` and any migration of the V2 dashboard remain separate decisions after these checks. V2 was unchanged by the beta 9 upgrade of the separate production test dashboard.
