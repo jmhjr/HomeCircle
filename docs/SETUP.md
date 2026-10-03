@@ -1,4 +1,4 @@
-# Set up HomeCircle beta 6
+# Set up HomeCircle beta 7
 
 Use a test Home Assistant instance running Core 2026.9.4 or later. HomeCircle is an experimental prerelease. It displays existing Home Assistant entities; tracking accounts and devices are set up separately.
 
@@ -35,7 +35,7 @@ A member at an additional residence can count Home while being outside the Home 
 
 1. With HACS already configured on the test instance, open its custom repositories menu.
 2. Add `https://github.com/jmhjr/HomeCircle` with type **Integration**. See [HACS custom repositories](https://www.hacs.dev/docs/faq/custom_repositories/).
-3. Open HomeCircle in HACS, enable beta/prerelease versions, and download **v0.1.0-beta.6**.
+3. Open HomeCircle in HACS, enable beta/prerelease versions, and download **v0.1.0-beta.7**.
 4. Restart Home Assistant.
 5. Open Settings → Devices & services → Add integration → HomeCircle.
 
@@ -45,7 +45,7 @@ The release ZIP includes the card. There is no separate card download or manual 
 
 1. Under **People**, select the person records you prepared, including the pet record.
 2. Select **Primary family home** and any **Ordinary places**.
-3. On each member's **Choose trackers and places** screen, review the trackers suggested from Home Assistant and select only trackers for that member. If names repeat, compare their entity IDs. Leaving trackers empty permits person-only presence.
+3. On each member's **Choose trackers and places** screen, review the suggested single tracker and the listed GPS or presence capabilities. Check its owner and choose another tracker if appropriate. The suggestion reflects the current HA state, not measured reporting reliability. If names repeat, compare entity IDs. Existing multi-tracker selections are preserved when editing; leaving trackers empty permits person-only presence.
 4. Select any additional residences for that member.
 5. Set **Member type** to `person` or `pet`. Pet records are not detected automatically.
 6. For pets, set the location freshness thresholds on the next **Pet location timing** screen.

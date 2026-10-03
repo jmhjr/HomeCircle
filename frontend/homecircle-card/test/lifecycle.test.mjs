@@ -444,6 +444,7 @@ test("overlapping-marker choice retains keyboard focus after a marker redraw", a
     charging: null,
     driving: { value: null, status: "unknown" },
   }));
+  data.members[0].picture = "/api/image/serve/example/512x512";
   data.focus_ids.overview = data.members.map((member) => member.id);
   const value = card({
     connection: {},
@@ -471,6 +472,16 @@ test("overlapping-marker choice retains keyboard focus after a marker redraw", a
   value._markers();
   const cluster = value._mapNode.querySelector('[data-focus^="cluster:"]');
   assert.ok(cluster);
+  assert.equal(cluster.querySelectorAll(".marker-avatar").length, 2);
+  assert.equal(
+    cluster.querySelector("img")?.getAttribute("src"),
+    data.members[0].picture,
+  );
+  assert.match(
+    cluster.getAttribute("aria-label"),
+    /example_one, person.example_two/,
+  );
+  assert.doesNotMatch(cluster.textContent, /^2$/);
   cluster.focus();
   value._markers();
   assert.equal(

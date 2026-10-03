@@ -91,6 +91,68 @@ def review_label(hass, entity_id: str) -> str:
     return re.sub(r"([\\`*_{}\[\]<>])", r"\\\1", label)
 
 
+def tracker_advice(hass, associated: list[str], active: str | None) -> tuple[str | None, str]:
+    """Suggest one linked source from observable capabilities, without guessing ownership."""
+    candidates = list(dict.fromkeys([*associated, *([active] if active else [])]))
+    if not candidates:
+        return None, (
+            "No tracker is linked to this Home Assistant person. Open the picker to "
+            "choose their phone or location tracker, or leave it empty to use "
+            "the person record alone. Confirm ownership before selecting."
+        )
+
+    details = []
+    for entity_id in candidates:
+        state = hass.states.get(entity_id)
+        available = state is not None and state.state not in ("unknown", "unavailable")
+        gps = state is not None and state.attributes.get("source_type") == "gps"
+        coordinates = state is not None and all(
+            isinstance(state.attributes.get(key), (int, float))
+            and not isinstance(state.attributes.get(key), bool)
+            for key in ("latitude", "longitude")
+        )
+        rank = 0 if not available else (4 if gps and coordinates else 3 if gps else 1)
+        if available and coordinates and not gps:
+            rank = 2
+        capability = (
+            "unavailable now"
+            if not available
+            else "GPS position available"
+            if gps and coordinates
+            else "GPS tracker; no position now"
+            if gps
+            else "position available; source type unconfirmed"
+            if coordinates
+            else "Home/Away presence only"
+        )
+        if entity_id == active:
+            capability += "; currently used by the HA person"
+        details.append((entity_id, rank, capability))
+
+    best_rank = max(rank for _, rank, _ in details)
+    best = [entity_id for entity_id, rank, _ in details if rank == best_rank]
+    suggested = None
+    if best_rank > 0:
+        suggested = active if active in best else best[0] if len(best) == 1 else None
+    if suggested:
+        headline = f"Suggested tracker: **{review_label(hass, suggested)}**."
+    elif best_rank == 0:
+        headline = "No linked tracker is available right now; review the choices below."
+    else:
+        headline = "Several linked trackers look equally suitable; choose the one you trust most."
+    lines = [
+        headline,
+        "Choose one tracker for a clear location source. This is a suggestion based on "
+        "the current HA state, not a measure of update reliability or GPS report time.",
+        "Linked trackers:",
+        *(
+            f"- {review_label(hass, entity_id)} — {capability}"
+            for entity_id, _, capability in details
+        ),
+    ]
+    return suggested, "\n\n".join(lines[:2]) + "\n\n" + "\n".join(lines[2:])
+
+
 def review_duration(minutes: int | float) -> str:
     """Show the configured pet threshold in units people can scan."""
     for interval, unit in ((1440, "day"), (60, "hour")):
@@ -192,6 +254,7 @@ class SelectionFlow:
     async def async_step_member(self, user_input=None):
         person_id = self.draft[CONF_PEOPLE][self.member_index]
         associated, active = tracker_suggestions(self.hass, person_id)
+        suggested, guidance = tracker_advice(self.hass, associated, active)
         errors = {}
         if user_input is not None:
             previous = self.draft[CONF_MEMBERS].get(person_id, {})
@@ -244,7 +307,7 @@ class SelectionFlow:
         defaults = self.draft[CONF_MEMBERS].get(
             person_id,
             {
-                CONF_TRACKERS: associated or ([active] if active else []),
+                CONF_TRACKERS: [suggested] if suggested else [],
                 CONF_RESIDENCES: [],
             },
         )
@@ -275,6 +338,7 @@ class SelectionFlow:
                 "number": str(self.member_index + 1),
                 "total": str(len(self.draft[CONF_PEOPLE])),
                 "active": entity_label(self.hass, active),
+                "tracker_guidance": guidance,
             },
         )
 

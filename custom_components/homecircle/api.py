@@ -5,7 +5,7 @@ from homeassistant.components import websocket_api
 from homeassistant.core import callback
 import voluptuous as vol
 
-from .const import DOMAIN
+from .const import CONF_MEMBERS, CONF_TRACKERS, DOMAIN
 from .selection import selected_entities
 
 
@@ -17,6 +17,17 @@ def proof(value):
     }
 
 
+def local_picture(value):
+    """Use only HA-served portraits; never make the card fetch a third-party URL."""
+    return (
+        value
+        if isinstance(value, str)
+        and value.startswith(("/api/image/serve/", "/local/"))
+        and not any(char in value for char in ("\n", "\r", "\\"))
+        else None
+    )
+
+
 def snapshot(runtime):
     """Explicit public projection. Never serialize the state cache or config."""
     household = runtime.household
@@ -24,10 +35,27 @@ def snapshot(runtime):
     for member in household.members:
         location = member.location
         place = runtime.states.get(member.place)
+        person_state = runtime.states.get(member.id)
+        picture = (
+            local_picture(person_state.attributes.get("entity_picture"))
+            if person_state
+            else None
+        )
+        if picture is None:
+            for tracker_id in runtime.config[CONF_MEMBERS][member.id][CONF_TRACKERS]:
+                tracker_state = runtime.states.get(tracker_id)
+                picture = (
+                    local_picture(tracker_state.attributes.get("entity_picture"))
+                    if tracker_state
+                    else None
+                )
+                if picture:
+                    break
         members.append(
             {
                 "id": member.id,
                 "name": member.display_name,
+                "picture": picture,
                 "kind": member.kind,
                 "presence": member.presence,
                 "primary_home": member.primary_home,

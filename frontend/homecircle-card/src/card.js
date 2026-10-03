@@ -31,6 +31,21 @@ function initials(name) {
     .join("")
     .toUpperCase();
 }
+function markerAvatar(member) {
+  const avatar = el("span", "marker-avatar", initials(member.name));
+  avatar.setAttribute("aria-hidden", "true");
+  if (
+    member.picture?.startsWith("/api/image/serve/") ||
+    member.picture?.startsWith("/local/")
+  ) {
+    const picture = el("img");
+    picture.alt = "";
+    picture.src = member.picture;
+    picture.addEventListener("error", () => picture.remove(), { once: true });
+    avatar.append(picture);
+  }
+  return avatar;
+}
 
 class HomeCircleCard extends HTMLElement {
   constructor() {
@@ -432,7 +447,7 @@ class HomeCircleCard extends HTMLElement {
       const list = group.members,
         first = list[0];
       const node = button(
-        list.length > 1 ? String(list.length) : initials(first.name),
+        "",
         (event) => {
           if (list.length === 1) this._chooseFromMap(first.id, event);
           else {
@@ -447,6 +462,19 @@ class HomeCircleCard extends HTMLElement {
         },
         list.length > 1 ? "group" : "",
       );
+      if (list.length > 1) {
+        const portraits = el(
+          "span",
+          `marker-portraits count-${Math.min(list.length, 4)}`,
+        );
+        for (const member of list.slice(0, 4))
+          portraits.append(markerAvatar(member));
+        if (list.length > 4)
+          portraits.append(
+            el("span", "marker-overflow", `+${list.length - 4}`),
+          );
+        node.append(portraits);
+      } else node.append(markerAvatar(first));
       const groupKey = list.map((member) => member.id).join("|");
       if (list.length > 1) {
         node.dataset.focus = `cluster:${groupKey}`;
@@ -462,14 +490,15 @@ class HomeCircleCard extends HTMLElement {
       node.setAttribute(
         "aria-label",
         list.length > 1
-          ? `${list.length} overlapping members. Expand to choose.`
+          ? `${list.map((member) => member.name).join(", ")} at this location. Expand to choose.`
           : first.name,
       );
+      const size = list.length > 1 ? 86 : 46;
       const icon = L.divIcon({
         html: node,
         className: "marker",
-        iconSize: [46, 46],
-        iconAnchor: [23, 23],
+        iconSize: [size, size],
+        iconAnchor: [size / 2, size / 2],
       });
       L.marker([first.location.latitude, first.location.longitude], {
         icon,

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.0-beta.7 — experimental prerelease
+
+- Guide each member toward one linked tracker by showing current GPS/presence capability and the HA active source; leave equally suitable choices for the user. Existing saved selections remain intact during edits.
+- Replace overlapping map counts with a compact member portrait cluster. Use HA-served pictures when available and initials otherwise; tapping the cluster still opens individual member choices.
+
 ## 0.1.0-beta.6 — experimental prerelease
 
 - Make member setup easier to scan with household progress, readable Home Assistant entity names, clearer tracker and residence labels, and help beside each field. Show pet location timing on a separate pet-only step. Tracker suggestions and saved selections retain their existing behavior.

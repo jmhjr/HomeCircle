@@ -1,6 +1,8 @@
-# Current release readiness — through 2026-10-01
+# Current release readiness — through 2026-10-02
 
-The current experimental prerelease is [v0.1.0-beta.6](https://github.com/jmhjr/HomeCircle/releases/tag/v0.1.0-beta.6). Its [candidate checks](BETA6-CANDIDATE-VALIDATION.md) support testing on disposable HA. It is not approved for production or for replacing the existing V2 dashboard. This audit updates the older [beta 4 checkpoint](BETA4-RELEASE-AUDIT.md); it does not change that historical record.
+The current experimental prerelease is [v0.1.0-beta.7](https://github.com/jmhjr/HomeCircle/releases/tag/v0.1.0-beta.7). Its [validation record](BETA7-VALIDATION.md) supports testing on disposable HA. Production remains on beta 6 alongside the existing V2 dashboard; publishing beta 7 does not upgrade it. This audit updates the older [beta 4 checkpoint](BETA4-RELEASE-AUDIT.md); it does not change that historical record.
+
+Beta 7 guides a member toward one tracker based on the currently visible HA capabilities and replaces a numeric overlap marker with a portrait or initials group. The local candidate passed 70 Python and 21 frontend tests, Ruff, Prettier, the public-file guard, pinned Core 2026.9.4 hassfest, archive source/inventory matching, isolated package lifecycle checks, and a published beta 6 to beta 7 Core upgrade rehearsal with saved selections intact. A synthetic browser preview confirmed that a four-member cluster opens individual choices. Real-source HACS upgrade and DAKboard touch acceptance for beta 7 remain open.
 
 ## Verified since beta 4
 

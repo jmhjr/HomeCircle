@@ -13,7 +13,7 @@
       },
       "member": {
         "title": "Choose trackers and places",
-        "description": "Member {number} of {total}: {person}.\n\nHome Assistant currently uses {active}. Review the trackers selected below, then choose this member’s other homes and type.",
+        "description": "Member {number} of {total}: {person}.\n\n{tracker_guidance}\n\nThen choose this member’s other homes and type.",
         "data": {
           "trackers": "Location and presence trackers",
           "additional_residences": "Other homes for this member",
@@ -22,7 +22,7 @@
           "configure_reports": "Set up location report times"
         },
         "data_description": {
-          "trackers": "The selected trackers can provide location or presence for this member. Home Assistant person trackers are suggested automatically. If names repeat, compare entity IDs before choosing. Leave blank to use the person record alone.",
+          "trackers": "Select the suggested tracker, or choose another from the picker. Check the owner and entity ID when names repeat. One tracker is simplest; multiple sources are available for advanced setups. Leave empty to use the HA person alone. Changing this selection does not change the trackers linked to the HA person.",
           "additional_residences": "These zones also count as Home for this member. The Home map button still focuses the primary family home.",
           "kind": "Choose Pet for a pet record. Pet location timing appears on the next screen; this does not create a tracker.",
           "configure_reports": "Choose a genuine location report-time sensor separately for each selected source. Leave off if none is available.",
@@ -104,7 +104,7 @@
       },
       "member": {
         "title": "Choose trackers and places",
-        "description": "Member {number} of {total}: {person}.\n\nHome Assistant currently uses {active}. Review the trackers selected below, then choose this member’s other homes and type.",
+        "description": "Member {number} of {total}: {person}.\n\n{tracker_guidance}\n\nThen choose this member’s other homes and type.",
         "data": {
           "trackers": "Location and presence trackers",
           "additional_residences": "Other homes for this member",
@@ -113,7 +113,7 @@
           "configure_reports": "Set up location report times"
         },
         "data_description": {
-          "trackers": "The selected trackers can provide location or presence for this member. Home Assistant person trackers are suggested automatically. If names repeat, compare entity IDs before choosing. Leave blank to use the person record alone.",
+          "trackers": "Select the suggested tracker, or choose another from the picker. Check the owner and entity ID when names repeat. One tracker is simplest; multiple sources are available for advanced setups. Leave empty to use the HA person alone. Changing this selection does not change the trackers linked to the HA person.",
           "additional_residences": "These zones also count as Home for this member. The Home map button still focuses the primary family home.",
           "kind": "Choose Pet for a pet record. Pet location timing appears on the next screen; this does not create a tracker.",
           "configure_reports": "Choose a genuine location report-time sensor separately for each selected source. Leave off if none is available.",

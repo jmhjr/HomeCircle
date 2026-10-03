@@ -5,8 +5,10 @@ from unittest.mock import patch
 from homeassistant.components.lovelace.const import LOVELACE_DATA
 from homeassistant.components.lovelace.resources import ResourceYAMLCollection
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
 
 from custom_components.homecircle import frontend
+from custom_components.homecircle.api import local_picture
 from test_config_flow import start, finish
 
 
@@ -31,6 +33,23 @@ async def test_snapshot_authorization_and_projection(
     assert data["members"][1]["location"] is None
     assert "states" not in data and "config" not in data
     assert "active_source_entity" not in data["members"][0]
+    assert data["members"][0]["picture"] is None
+    hass.states.async_set(
+        "person.example_member",
+        "home",
+        {
+            "source": "device_tracker.example_phone",
+            ATTR_LATITUDE: 0.0,
+            ATTR_LONGITUDE: 0.0,
+            "entity_picture": "/api/image/serve/example/512x512",
+        },
+    )
+    await hass.async_block_till_done()
+    await client.send_json({"id": 2, "type": "homecircle/snapshot"})
+    portrait_result = await client.receive_json()
+    assert portrait_result["result"]["members"][0]["picture"] == (
+        "/api/image/serve/example/512x512"
+    )
     # Even an otherwise readable person cannot expose a denied supporting input.
     permissions = type(hass_admin_user.permissions)
     with patch.object(
@@ -38,13 +57,21 @@ async def test_snapshot_authorization_and_projection(
         "check_entity",
         side_effect=lambda entity, policy: entity != "zone.example_residence",
     ):
-        await client.send_json({"id": 2, "type": "homecircle/snapshot"})
+        await client.send_json({"id": 3, "type": "homecircle/snapshot"})
         denied = await client.receive_json()
         assert denied["error"]["code"] == "unauthorized"
         assert "result" not in denied
     await hass.config_entries.async_unload(entry.entry_id)
-    await client.send_json({"id": 3, "type": "homecircle/snapshot"})
+    await client.send_json({"id": 4, "type": "homecircle/snapshot"})
     assert (await client.receive_json())["error"]["code"] == "not_ready"
+
+
+def test_portraits_only_use_local_home_assistant_paths():
+    assert local_picture("/api/image/serve/example/512x512")
+    assert local_picture("/local/portrait.png")
+    assert local_picture("https://example.com/portrait.png") is None
+    assert local_picture("//example.com/portrait.png") is None
+    assert local_picture("/local/portrait.png\nHost: example.com") is None
 
 
 async def test_owned_resources_reload_unload_and_preserve_others(hass, household):

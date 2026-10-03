@@ -315,18 +315,55 @@ async def test_member_setup_explains_suggestions_without_changing_them(hass, hou
     ):
         result = await start(hass, household)
     assert result["step_id"] == "member"
-    assert result["description_placeholders"] == {
-        "person": "Example Member",
-        "number": "1",
-        "total": "2",
-        "active": "Example Phone",
+    placeholders = result["description_placeholders"]
+    assert {key: placeholders[key] for key in ("person", "number", "total", "active")} == {
+        "person": "Example Member", "number": "1", "total": "2", "active": "Example Phone"
     }
+    assert "Suggested tracker: **Example Phone**" in placeholders["tracker_guidance"]
+    assert "not a measure of update reliability" in placeholders["tracker_guidance"]
     tracker_field = next(
         field for field in result["data_schema"].schema if str(field) == "trackers"
     )
     assert tracker_field.description["suggested_value"] == [
         "device_tracker.example_phone"
     ]
+
+
+async def test_tracker_guide_prefers_position_over_home_only_presence(hass, household):
+    hass.states.async_set(
+        "person.example_member", "home", {"source": "device_tracker.example_router"}
+    )
+    with patch(
+        "custom_components.homecircle.selection.entities_in_person",
+        return_value=["device_tracker.example_router", "device_tracker.example_phone"],
+    ):
+        result = await start(hass, household)
+    guide = result["description_placeholders"]["tracker_guidance"]
+    assert "Suggested tracker: **example phone**" in guide
+    assert "Home/Away presence only" in guide
+    assert "GPS position available" in guide
+    tracker_field = next(
+        field for field in result["data_schema"].schema if str(field) == "trackers"
+    )
+    assert tracker_field.description["suggested_value"] == [
+        "device_tracker.example_phone"
+    ]
+
+
+async def test_tracker_guide_does_not_guess_between_equal_sources(hass, household):
+    hass.states.async_set("person.example_member", "home")
+    with patch(
+        "custom_components.homecircle.selection.entities_in_person",
+        return_value=["device_tracker.example_phone", "device_tracker.example_router"],
+    ):
+        hass.states.async_set("device_tracker.example_phone", "home")
+        result = await start(hass, household)
+    guide = result["description_placeholders"]["tracker_guidance"]
+    assert "equally suitable" in guide
+    tracker_field = next(
+        field for field in result["data_schema"].schema if str(field) == "trackers"
+    )
+    assert tracker_field.description["suggested_value"] == []
 
 
 async def test_duplicate_tracker_names_are_distinct_in_hint_and_review(hass, household):
