@@ -422,3 +422,73 @@ def test_per_source_report_times_switch_and_missing_evidence(snapshot):
     states.pop("sensor.example_other_report")
     assert member(snapshot).location.evidence.reported_at is None
     assert member(snapshot).location.evidence.freshness == "unknown"
+
+
+def test_selected_gps_tracker_supplies_battery_and_location_report_time(snapshot):
+    _, states = snapshot
+    stamp = NOW - timedelta(seconds=45)
+    states[GPS] = state(
+        GPS,
+        "home",
+        source_type="gps",
+        battery_level=0,
+        battery_charging=True,
+        last_seen=stamp.isoformat(),
+        **{ATTR_LATITUDE: 0.0, ATTR_LONGITUDE: 0.0},
+    )
+    current = member(snapshot)
+    assert current.battery.value == 0
+    assert current.charging.value is True
+    assert current.location.evidence.reported_at == stamp
+    assert current.location.evidence.report_status == "tracker_attribute"
+    assert current.location.evidence.freshness == "fresh"
+    assert member(snapshot, NOW + timedelta(seconds=301)).location.evidence.freshness == "stale"
+
+
+def test_explicit_sensors_override_tracker_attributes(snapshot):
+    config, states = snapshot
+    states[GPS] = state(
+        GPS,
+        "home",
+        source_type="gps",
+        battery_level=85,
+        battery_charging=True,
+        last_seen=(NOW - timedelta(seconds=20)).isoformat(),
+        **{ATTR_LATITUDE: 0.0, ATTR_LONGITUDE: 0.0},
+    )
+    config["members"][PERSON]["supporting"] = {
+        "battery": "sensor.example_battery",
+        "charging": "binary_sensor.example_charging",
+    }
+    config["members"][PERSON]["location_reports"] = {
+        GPS: "sensor.example_report"
+    }
+    states["sensor.example_battery"] = state(
+        "sensor.example_battery", "25", unit_of_measurement="%"
+    )
+    states["binary_sensor.example_charging"] = state(
+        "binary_sensor.example_charging", "off"
+    )
+    current = member(snapshot)
+    assert current.battery.value == 25
+    assert current.charging.value is False
+    assert current.location.evidence.reported_at is None
+    assert current.location.evidence.report_status == "unavailable"
+
+
+@pytest.mark.parametrize("stamp", ["not a time", "2026-01-01T12:02:00+00:00", "2026-01-01T11:59:00"])
+def test_invalid_tracker_last_seen_does_not_claim_gps_report(snapshot, stamp):
+    _, states = snapshot
+    states[GPS] = state(
+        GPS,
+        "home",
+        source_type="gps",
+        battery_level=101,
+        battery_charging="true",
+        last_seen=stamp,
+        **{ATTR_LATITUDE: 0.0, ATTR_LONGITUDE: 0.0},
+    )
+    current = member(snapshot)
+    assert current.location.evidence.reported_at is None
+    assert current.battery.value is None
+    assert current.charging.value is None

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0-beta.10 — release candidate
+
+- Let a full-height HomeCircle card cover the viewport in kiosk mode, including HA's title bar and dashboard margins. Exit kiosk restores the ordinary view.
+- Use a selected GPS tracker's valid `last_seen` location timestamp when no report-time sensor is configured. Keep the iPhone location report time unknown when that attribute is absent.
+- Show battery level and charging state from the selected location tracker when no explicit supporting sensor is configured. Explicit sensor mappings retain priority.
+
 ## 0.1.0-beta.9 — release candidate
 
 - Draw single and grouped member markers as pins whose tips identify the map location, leaving the avatars above the point.

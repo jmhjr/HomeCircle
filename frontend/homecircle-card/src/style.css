@@ -25,6 +25,21 @@ ha-card {
   display: flex;
   flex-direction: column;
 }
+:host([kiosk]) {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  width: 100vw;
+  height: 100dvh;
+  overflow-y: auto;
+  background: #121c28;
+}
+:host([kiosk]) ha-card {
+  min-height: 100dvh;
+  height: auto;
+  border: 0;
+  border-radius: 0;
+}
 :host([fill-screen]) .map-wrap {
   flex: 1;
   min-height: 220px;

@@ -386,6 +386,15 @@ test("unavailable member stays counted without a map point and recovers on refre
 
 test("wall kiosk control hides and restores HA navigation for this browser", async () => {
   const events = [];
+  const ha = document.createElement("home-assistant");
+  let shell = ha;
+  for (const tag of ["home-assistant-main", "ha-panel-lovelace", "hui-root"]) {
+    const child = document.createElement(tag);
+    shell.attachShadow({ mode: "open" }).append(child);
+    shell = child;
+  }
+  const viewRoot = shell.attachShadow({ mode: "open" });
+  document.body.append(ha);
   const onKiosk = (event) => events.push(event.detail.enable);
   window.addEventListener("hass-kiosk-mode", onKiosk);
   const originalFrame = globalThis.requestAnimationFrame;
@@ -410,17 +419,23 @@ test("wall kiosk control hides and restores HA navigation for this browser", asy
     );
     assert.equal(toggle.textContent, "Exit kiosk");
     assert.equal(toggle.getAttribute("aria-pressed"), "true");
+    assert.equal(value.hasAttribute("kiosk"), true);
+    assert.match(viewRoot.querySelector("style").textContent, /padding-top: 0/);
     toggle.click();
     assert.equal(
       new URL(window.location.href).searchParams.has("homecircle_kiosk"),
       false,
     );
     assert.equal(toggle.textContent, "Kiosk view");
+    assert.equal(value.hasAttribute("kiosk"), false);
+    assert.equal(viewRoot.querySelector("style"), null);
     toggle.click();
     value.remove();
+    assert.equal(viewRoot.querySelector("style"), null);
     assert.deepEqual(events, [true, false, true, false]);
   } finally {
     window.history.replaceState({}, "", "http://localhost/");
+    ha.remove();
     window.removeEventListener("hass-kiosk-mode", onKiosk);
     globalThis.requestAnimationFrame = originalFrame;
   }

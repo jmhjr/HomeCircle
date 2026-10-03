@@ -1,6 +1,6 @@
-"""Pure, provider-independent normalization of current HA state snapshots.
+"""Pure normalization of selected HA person and tracker state snapshots.
 
-No I/O, provider attribute heuristics, history, or HA tracker priority emulation.
+No I/O, history, provider credentials, or HA tracker priority emulation.
 """
 
 from collections.abc import Mapping
@@ -148,6 +148,51 @@ def evidence(
         reported_at=parsed,
         report_status="explicit_sensor",
         freshness="fresh" if age <= stale_after_seconds else "stale",
+    )
+
+
+def location_evidence(
+    source: State, report: State | None, now: datetime, report_id: str | None,
+    stale_after_seconds: float,
+) -> Evidence:
+    """Use an explicit sensor first, then a GPS tracker's own report time."""
+    if report_id is not None:
+        return evidence(source, report, now, report_id, stale_after_seconds)
+    base = evidence(source, None, now)
+    if source.attributes.get("source_type") != "gps":
+        return base
+    value = source.attributes.get("last_seen")
+    parsed = value if isinstance(value, datetime) else (
+        dt_util.parse_datetime(value) if isinstance(value, str) else None
+    )
+    if parsed is None or parsed.tzinfo is None:
+        return base
+    parsed = dt_util.as_utc(parsed)
+    age = (now - parsed).total_seconds()
+    if age < -60:
+        return base
+    return Evidence(
+        source_entity=source.entity_id,
+        observed_at=source.last_updated,
+        reported_at=parsed,
+        report_status="tracker_attribute",
+        freshness="fresh" if age <= stale_after_seconds else "stale",
+    )
+
+
+def tracker_optional(source: State, attribute: str, kind: str) -> OptionalValue:
+    """Read common battery fields only from the selected location tracker."""
+    value = source.attributes.get(attribute) if available(source) else None
+    if kind == "battery":
+        value = number(value)
+        if value is None or not 0 <= value <= 100:
+            value = None
+    elif not isinstance(value, bool):
+        value = None
+    return OptionalValue(
+        value,
+        Evidence(source_entity=source.entity_id, observed_at=source.last_updated),
+        "%" if kind == "battery" and value is not None else None,
     )
 
 
@@ -331,10 +376,17 @@ def normalize_member(
                     ("pet_home_minutes", 1440) if residence else ("pet_away_minutes", 5)
                 )
                 stale_after = member_config.get(key, default) * 60
-            proof = evidence(
+            proof = location_evidence(
                 location_source, states.get(report_id), now, report_id, stale_after
             )
             location = Location(*point, origin=origin, evidence=proof)
+            if location_source.entity_id in selected_trackers:
+                if not supporting.get("battery"):
+                    battery = tracker_optional(location_source, "battery_level", "battery")
+                if not supporting.get("charging"):
+                    charging = tracker_optional(
+                        location_source, "battery_charging", "boolean"
+                    )
     else:
         issues.append("person_unavailable")
     return Member(

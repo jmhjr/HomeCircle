@@ -1,6 +1,6 @@
 # Card and frontend interface
 
-Experimental beta 6 prerelease. Start with the [complete setup guide](SETUP.md). See [ADR-002](adr/ADR-002-map-and-frontend.md) for library, licensing, network and authorization decisions.
+The current published prerelease is beta 9; beta 10 is a local candidate. Start with the [complete setup guide](SETUP.md). See [ADR-002](adr/ADR-002-map-and-frontend.md) for library, licensing, network and authorization decisions.
 
 ## UI-only setup
 
@@ -9,7 +9,7 @@ Experimental beta 6 prerelease. Start with the [complete setup guide](SETUP.md).
 3. Open the dashboard, choose Edit dashboard → Add card → Browse all cards → HomeCircle.
 4. Use the visual editor for title, visible members and map background; save and choose Done. No provider account, map key, resource YAML or card YAML is required.
 
-The tested automatic resource path is HA's storage mode. Existing YAML resource collections are preserved and are not covered by UI-only onboarding. A YAML-managed resource collection must add the module URL `/homecircle_static/homecircle-card.js?v=0.1.0-beta.6` through its own configuration. Release ZIPs include the built card; source checkouts require a frontend build.
+The tested automatic resource path is HA's storage mode. Existing YAML resource collections are preserved and are not covered by UI-only onboarding. A YAML-managed resource collection must add the module URL `/homecircle_static/homecircle-card.js?v=0.1.0-beta.9` for the current published release through its own configuration; use the installed version in that URL after an upgrade. Release ZIPs include the built card; source checkouts require a frontend build.
 
 ## Display and interaction
 
@@ -18,7 +18,7 @@ The card is dark, responsive and uses initials rather than private photos. Every
 Select member cards or map markers to focus. Markers whose screen positions overlap form a numbered group; activate it to choose an individual. All controls use native buttons, visible focus styling and keyboard activation. Each card owns its own focus and map. The visual editor can hide members from an individual card and its counts, without changing backend selections or permissions.
 
 Beta 6 adds an optional **Fill wall display height** setting for a dedicated full-width panel view. It measures the remaining browser height below the card and lets the map expand into that space. Ordinary cards keep their previous fixed map height when the setting is off.
-On a full-height card, **Kiosk view** hides the HA sidebar and top-bar controls in that browser session; **Exit kiosk** restores them. The URL records the kiosk choice so refresh retains it. The option changes presentation only and does not change HA permissions.
+On a full-height card, **Kiosk view** covers the browser viewport and hides the HA sidebar and title bar in that browser session; **Exit kiosk** restores the ordinary dashboard layout. The URL records the kiosk choice so refresh retains it. Use a dedicated view with one HomeCircle card so other cards do not sit behind the kiosk overlay. The option changes presentation only and does not change HA permissions.
 
 The default background makes no tile requests. Optional OSM tiles are disclosed in the editor and have visible attribution. Network failure retains presence and markers. There is no geocoding, routing, history, satellite view, weather, provider refresh or photo fetching.
 

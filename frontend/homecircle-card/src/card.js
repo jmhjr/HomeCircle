@@ -158,7 +158,10 @@ class HomeCircleCard extends HTMLElement {
     if (!this._config?.fill_screen || !this.isConnected) return;
     const available = Math.max(
       480,
-      Math.round(window.innerHeight - this.getBoundingClientRect().top - 8),
+      Math.round(
+        window.innerHeight -
+          (this._kioskEnabled ? 0 : this.getBoundingClientRect().top + 8),
+      ),
     );
     this.style.setProperty("--homecircle-screen-height", `${available}px`);
     this._map?.invalidateSize({ pan: false });
@@ -166,6 +169,8 @@ class HomeCircleCard extends HTMLElement {
   _setKiosk(enabled) {
     if (Boolean(this._kioskEnabled) === enabled) return;
     this._kioskEnabled = enabled;
+    this.toggleAttribute("kiosk", enabled);
+    this._syncKioskChrome(enabled);
     window.dispatchEvent(
       new CustomEvent("hass-kiosk-mode", { detail: { enable: enabled } }),
     );
@@ -174,6 +179,22 @@ class HomeCircleCard extends HTMLElement {
       this._kioskButton.setAttribute("aria-pressed", String(enabled));
     }
     requestAnimationFrame(() => requestAnimationFrame(() => this._fitScreen()));
+  }
+  _syncKioskChrome(enabled) {
+    this._kioskChromeStyle?.remove();
+    this._kioskChromeStyle = null;
+    if (!enabled) return;
+    const root = document
+      .querySelector("home-assistant")
+      ?.shadowRoot?.querySelector("home-assistant-main")
+      ?.shadowRoot?.querySelector("ha-panel-lovelace")
+      ?.shadowRoot?.querySelector("hui-root")?.shadowRoot;
+    if (!root) return;
+    const style = document.createElement("style");
+    style.textContent =
+      ".header { display: none !important; } hui-view-container { padding-top: 0 !important; }";
+    root.append(style);
+    this._kioskChromeStyle = style;
   }
   _toggleKiosk() {
     const enabled = !this._kioskEnabled;
