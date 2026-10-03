@@ -17,4 +17,4 @@ The published ZIP and inventory downloaded from GitHub matched the validated loc
 
 ## Still to check
 
-Physical DAKboard touch behavior for beta 7 and any production upgrade are separate from these checks. Production beta 6 and the existing V2 dashboard were unchanged.
+The user reported that the beta 7 DAKboard display "looks good." That confirms the visual check, but the reply did not separately identify the group → Ruby → Everyone tap results, so physical touch acceptance remains open. Any production upgrade is separate. Production beta 6 and the existing V2 dashboard were unchanged.
