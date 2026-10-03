@@ -14,8 +14,11 @@ Version `0.1.0-beta.8` adds HA and Life360 person and pet portraits to member ca
 
 The [published prerelease](https://github.com/jmhjr/HomeCircle/releases/tag/v0.1.0-beta.8) is tagged at the reviewed beta 8 commit. Unauthenticated downloads of `homecircle.zip` and `inventory.json` matched the validated local files byte for byte. The published ZIP SHA-256 is `987c8469dee18a9bcca909f66a02e63790a3b26891f6a12dfa76892a81c9ab60`.
 
-## Remaining verification
+## Disposable HACS and touch display
 
-- Upgrade a disposable HACS installation and check real HA and Life360 image loading on the DAKboard. Local tests establish image selection and fallback logic, not delivery by the two external image hosts on that display.
+- The real-source disposable HA installation upgraded from published beta 7 to published beta 8 through HACS and restarted. HACS and the integration both reported beta 8. All 14 installed package files matched the published inventory, and its three saved test members and street map loaded.
+- In the authenticated browser, the Life360 member and pet had portraits in both cards and the map group; the iPhone member used initials. On the physical DAKboard, the user confirmed those portraits and fallback, then confirmed pet focus and Everyone reset still worked.
+
+The separate production HomeCircle beta test remained on beta 7 during this verification. Its HACS pre-release option was enabled, but HACS needed a repository information refresh before Home Assistant Settings listed beta 8 as an available update.
 
 This is an experimental prerelease. Stable-release readiness and broader tracking-source behavior remain governed by [current release readiness](CURRENT-RELEASE-READINESS.md).

@@ -437,7 +437,13 @@ class HomeCircleCard extends HTMLElement {
       if (points.length)
         this._map.fitBounds(
           points.map((m) => [m.location.latitude, m.location.longitude]),
-          { padding: [48, 48], maxZoom: 14, animate: false },
+          {
+            // Leave room for a full group marker beside Leaflet's zoom controls.
+            paddingTopLeft: [112, 48],
+            paddingBottomRight: [48, 48],
+            maxZoom: 14,
+            animate: false,
+          },
         );
       else this._map.setView([0, 0], 2, { animate: false });
       this._fit = false;
