@@ -15,6 +15,10 @@ Version `0.1.0-beta.7` adds a guided one-tracker suggestion for each member and 
 
 The published ZIP and inventory downloaded from GitHub matched the validated local assets byte for byte. The real-source disposable instance then upgraded from beta 6 to beta 7 through HACS and restarted. HACS reported the installed version as beta 7 and up to date; HA showed the HomeCircle integration at `0.1.0-beta.7`. The saved three-member household loaded with street tiles and three positions. The three overlapping members appeared as initials, tapping the group offered all three members, choosing Ruby focused one map position, and Everyone restored all three. Reopening setup showed the saved iPhone tracker and a one-tracker suggestion; the flow was closed without saving changes.
 
+## Physical touch check
+
+The user confirmed on the DAKboard that the beta 7 display looked good and that tapping the grouped marker, choosing Ruby, and tapping Everyone worked.
+
 ## Still to check
 
-The user reported that the beta 7 DAKboard display "looks good." That confirms the visual check, but the reply did not separately identify the group → Ruby → Everyone tap results, so physical touch acceptance remains open. Any production upgrade is separate. Production beta 6 and the existing V2 dashboard were unchanged.
+Any production upgrade is separate. Production beta 6 and the existing V2 dashboard were unchanged. Production HACS currently offers a newer main-branch commit by hash in its ordinary update list; beta 7 is available in its manual release picker. No production download or restart was performed.
