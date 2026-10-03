@@ -10,9 +10,12 @@ Version `0.1.0-beta.8` adds HA and Life360 person and pet portraits to member ca
 - An isolated upgrade from the published beta 7 ZIP to the beta 8 candidate ZIP passed with the saved household retained through restart, then entry removal and post-removal restart passed.
 - An independent read-only Claude Opus 5.5 review and follow-up check found no publication blocker. It verified the source-to-ZIP correspondence and version alignment. One nonblocking hardening item remains: the backend accepts dot segments in HA-local picture paths before its external-image path check; the card rejects those paths. No external host is added by that behavior.
 
+## Published assets
+
+The [published prerelease](https://github.com/jmhjr/HomeCircle/releases/tag/v0.1.0-beta.8) is tagged at the reviewed beta 8 commit. Unauthenticated downloads of `homecircle.zip` and `inventory.json` matched the validated local files byte for byte. The published ZIP SHA-256 is `987c8469dee18a9bcca909f66a02e63790a3b26891f6a12dfa76892a81c9ab60`.
+
 ## Remaining verification
 
-- Confirm the published GitHub assets match the validated local ZIP and inventory byte for byte.
 - Upgrade a disposable HACS installation and check real HA and Life360 image loading on the DAKboard. Local tests establish image selection and fallback logic, not delivery by the two external image hosts on that display.
 
 This is an experimental prerelease. Stable-release readiness and broader tracking-source behavior remain governed by [current release readiness](CURRENT-RELEASE-READINESS.md).
