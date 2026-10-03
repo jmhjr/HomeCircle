@@ -1,6 +1,6 @@
 """Authenticated, permission-checked snapshot API; no raw states or history."""
 
-from urllib.parse import urlsplit
+from urllib.parse import unquote, urlsplit
 
 from homeassistant.auth.permissions.const import POLICY_READ
 from homeassistant.components import websocket_api
@@ -21,7 +21,9 @@ def proof(value):
 
 def allowed_picture(value):
     """Expose HA portraits and Life360's user-image endpoint only."""
-    if not isinstance(value, str) or any(ord(char) < 32 or char == "\\" for char in value):
+    if not isinstance(value, str) or any(
+        ord(char) < 32 or char == "\\" for char in value
+    ):
         return None
     if value.startswith(("/api/image/serve/", "/local/")):
         return value
@@ -29,12 +31,17 @@ def allowed_picture(value):
         url = urlsplit(value)
     except ValueError:
         return None
+    decoded_path = unquote(url.path)
+    if (
+        any(part in (".", "..") for part in decoded_path.split("/"))
+        or "%2e" in decoded_path.lower()
+    ):
+        return None
     life360_image = (
-        url.netloc == "www.life360.com"
-        and url.path.startswith("/img/user_images/")
+        url.netloc == "www.life360.com" and decoded_path.startswith("/img/user_images/")
     ) or (
         url.netloc == "life360-images-pub.life360.com"
-        and url.path.endswith((".jpeg", ".jpg", ".png", ".webp"))
+        and decoded_path.endswith((".jpeg", ".jpg", ".png", ".webp"))
     )
     if url.scheme == "https" and life360_image and not url.fragment:
         return value

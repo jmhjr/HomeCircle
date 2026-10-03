@@ -98,9 +98,21 @@ def test_portraits_use_ha_or_life360_images_only():
     )
     assert allowed_picture("https://life360-images-pub.life360.com/example/pet.jpeg")
     assert allowed_picture("https://example.com/portrait.png") is None
-    assert allowed_picture("https://www.life360.com.evil.test/img/user_images/x") is None
+    assert (
+        allowed_picture("https://www.life360.com.evil.test/img/user_images/x") is None
+    )
     assert allowed_picture("http://www.life360.com/img/user_images/x") is None
-    assert allowed_picture("https://life360-images-pub.life360.com.evil.test/pet.jpeg") is None
+    assert (
+        allowed_picture("https://life360-images-pub.life360.com.evil.test/pet.jpeg")
+        is None
+    )
+    assert (
+        allowed_picture("https://www.life360.com/img/user_images/%2e%2e/other.jpeg")
+        is None
+    )
+    assert (
+        allowed_picture("https://life360-images-pub.life360.com/../other.jpeg") is None
+    )
     assert allowed_picture("//www.life360.com/img/user_images/x") is None
     assert allowed_picture("/local/portrait.png\nHost: example.com") is None
 

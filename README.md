@@ -4,7 +4,7 @@ Family location and presence for Home Assistant, independent of the tracking pro
 
 **Experimental development software — not a stable release.**
 
-Use a disposable or test Home Assistant instance. Beta 7 guides single-tracker selection and shows overlapping members as portrait or initials clusters. The earlier beta 6 ZIP passed a beta 5-to-beta 6 HACS upgrade on real-source disposable HA, and the three-member DAKboard map check passed after that upgrade. Broader field acceptance remains open. No stable release is approved.
+Use a disposable or test Home Assistant instance. Beta 8 adds HA and Life360 person/pet portraits to member cards and map markers, with initials when unavailable. Beta 7 guided single-tracker selection and showed overlapping members as portrait or initials clusters. Broader field acceptance remains open. No stable release is approved.
 
 **Status: milestones 1–3 development integration; development prerelease; not production-ready.** HomeCircle is a working name; public naming remains a release decision. The existing V2 dashboard remains the reference system. Development does not replace, install over, or change it.
 
@@ -13,7 +13,7 @@ HomeCircle consumes standard HA `person` and `device_tracker` entities, with opt
 ## Start here
 
 - [Per-source report times](docs/PER-SOURCE-REPORTS.md)
-- [Current release readiness](docs/CURRENT-RELEASE-READINESS.md), [beta 7 validation](docs/BETA7-VALIDATION.md), and [beta 6 validation](docs/BETA6-CANDIDATE-VALIDATION.md)
+- [Current release readiness](docs/CURRENT-RELEASE-READINESS.md), [beta 8 validation](docs/BETA8-VALIDATION.md), and [beta 7 validation](docs/BETA7-VALIDATION.md)
 
 - [Step-by-step setup: iPhone, Life360, pets and supporting sensors](docs/SETUP.md)
 
@@ -31,7 +31,7 @@ HomeCircle consumes standard HA `person` and `device_tracker` entities, with opt
 
 ## Release preparation
 
-Maintainer: [@jmhjr](https://github.com/jmhjr). The repository is public for development review and HACS custom-repository testing. The current experimental prerelease is [v0.1.0-beta.7](https://github.com/jmhjr/HomeCircle/releases/tag/v0.1.0-beta.7). See [current release readiness](docs/CURRENT-RELEASE-READINESS.md) and the [historical release preparation record](docs/RELEASE-VALIDATION.md).
+Maintainer: [@jmhjr](https://github.com/jmhjr). The repository is public for development review and HACS custom-repository testing. The current experimental prerelease is [v0.1.0-beta.8](https://github.com/jmhjr/HomeCircle/releases/tag/v0.1.0-beta.8). See [current release readiness](docs/CURRENT-RELEASE-READINESS.md) and the [historical release preparation record](docs/RELEASE-VALIDATION.md).
 
 ## Repository
 
