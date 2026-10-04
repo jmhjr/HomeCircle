@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0-beta.12 — experimental prerelease
+
+- Shorten initial household setup with a clearer review step and guidance for choosing Home Assistant people and trackers.
+- Add a focused path in Options to add one new tracker without reconfirming every existing household member.
+- Let an existing tracker be removed from the household or kept as a member while its map marker is hidden.
+- Add an administrator Settings button to the map card header. It opens HomeCircle's Home Assistant integration page and stays hidden in kiosk view.
+
 ## 0.1.0-beta.11 — experimental prerelease
 
 - Let an existing Home Assistant device tracker be selected directly as a pet, without creating a Person record. The pet uses that tracker for presence and location, with its own residences, freshness limits and optional supporting sensors.

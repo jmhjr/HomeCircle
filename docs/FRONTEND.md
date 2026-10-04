@@ -1,6 +1,6 @@
 # Card and frontend interface
 
-The current published prerelease is beta 11. Start with the [complete setup guide](SETUP.md). See [ADR-002](adr/ADR-002-map-and-frontend.md) for library, licensing, network and authorization decisions.
+The current experimental prerelease is beta 12. Start with the [complete setup guide](SETUP.md). See [ADR-002](adr/ADR-002-map-and-frontend.md) for library, licensing, network and authorization decisions.
 
 ## UI-only setup
 
@@ -9,7 +9,7 @@ The current published prerelease is beta 11. Start with the [complete setup guid
 3. Open the dashboard, choose Edit dashboard → Add card → Browse all cards → HomeCircle.
 4. Use the visual editor for title, visible members and map background; save and choose Done. No provider account, map key, resource YAML or card YAML is required.
 
-The tested automatic resource path is HA's storage mode. Existing YAML resource collections are preserved and are not covered by UI-only onboarding. A YAML-managed resource collection must add the module URL `/homecircle_static/homecircle-card.js?v=0.1.0-beta.11` for the current published release through its own configuration; use the installed version in that URL after an upgrade. Release ZIPs include the built card; source checkouts require a frontend build.
+The tested automatic resource path is HA's storage mode. Existing YAML resource collections are preserved and are not covered by UI-only onboarding. A YAML-managed resource collection must add the module URL `/homecircle_static/homecircle-card.js?v=0.1.0-beta.12` for the current published release through its own configuration; use the installed version in that URL after an upgrade. Release ZIPs include the built card; source checkouts require a frontend build.
 
 ## Display and interaction
 

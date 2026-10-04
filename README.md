@@ -32,7 +32,7 @@ HomeCircle consumes standard HA `person` and `device_tracker` entities, with opt
 
 ## Release preparation
 
-Maintainer: [@jmhjr](https://github.com/jmhjr). The repository is public for development review and HACS custom-repository testing. The current experimental prerelease is [v0.1.0-beta.11](https://github.com/jmhjr/HomeCircle/releases/tag/v0.1.0-beta.11). See [beta 11 validation](docs/DIRECT-LIFE360-CANDIDATE-VALIDATION.md) and the [historical release preparation record](docs/RELEASE-VALIDATION.md).
+Maintainer: [@jmhjr](https://github.com/jmhjr). The repository is public for development review and HACS custom-repository testing. The current experimental prerelease is [v0.1.0-beta.12](https://github.com/jmhjr/HomeCircle/releases/tag/v0.1.0-beta.12). See [beta 12 validation](docs/BETA12-VALIDATION.md) and the [historical release preparation record](docs/RELEASE-VALIDATION.md).
 
 ## Repository
 

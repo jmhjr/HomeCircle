@@ -1,6 +1,6 @@
 # Set up HomeCircle
 
-Use a test Home Assistant instance running Core 2026.9.4 or later. HomeCircle beta 11 is an experimental prerelease. It can use existing Home Assistant trackers or optionally connect to Life360 directly.
+Use a test Home Assistant instance running Core 2026.9.4 or later. HomeCircle beta 12 is an experimental prerelease. It can use existing Home Assistant trackers or optionally connect to Life360 directly.
 
 ## 1. Get a working source into Home Assistant
 
@@ -35,7 +35,7 @@ A member at an additional residence can count Home while being outside the Home 
 
 1. With HACS already configured on the test instance, open its custom repositories menu.
 2. Add `https://github.com/jmhjr/HomeCircle` with type **Integration**. See [HACS custom repositories](https://www.hacs.dev/docs/faq/custom_repositories/).
-3. Open HomeCircle in HACS, enable beta/prerelease versions, and download **v0.1.0-beta.11**.
+3. Open HomeCircle in HACS, enable beta/prerelease versions, and download **v0.1.0-beta.12**.
 4. Restart Home Assistant.
 5. Open Settings → Devices & services → Add integration → HomeCircle.
 
@@ -43,7 +43,7 @@ The release ZIP includes the card. There is no separate card download or manual 
 
 ### Pet setup
 
-The setup flow has separate **People** and **Pet trackers** fields. Select an existing `device_tracker` for each pet; a Person record is not required. You may set up a household with only pets. Each pet then gets an **Other homes** screen, pet location timing, and optional sensor/report-time screens. The tracker selected on the first screen remains that pet's source; it cannot be replaced on the member screen. Existing pets configured through HA Person records continue through **People** and retain their saved settings. This path passed a disposable Home Assistant UI walkthrough and an isolated upgrade rehearsal from the published beta 10 ZIP. It has not been installed on the live server.
+The setup flow has separate **People** and **Pet trackers** fields. Select an existing `device_tracker` for each pet; a Person record is not required. You may set up a household with only pets. Each pet then gets an **Other homes** screen, pet location timing, and optional sensor/report-time screens. The tracker selected on the first screen remains that pet's source; it cannot be replaced on the member screen. Existing pets configured through HA Person records continue through **People** and retain their saved settings.
 
 ### Direct Life360 setup
 
@@ -96,6 +96,8 @@ Beta 10 reads valid `battery_level`, `battery_charging` and GPS `last_seen` attr
 
 To add mappings later, open HomeCircle's Options, continue to that member, and enable the appropriate status-sensor or report-time switch. Clearing a field on its screen removes that mapping. Skipping the screen preserves existing mappings.
 
+For one change, use the shortcuts at the top of Options: **Add a new tracker**, **Remove one tracker**, or **Edit one member**. These use the saved household settings and do not send you through every existing member. Review the result before saving. On a member's screen, turn off **Show on map** to keep the member and their presence count while hiding their marker. To open Options from the card, an administrator can select **Settings** in the card header, then **Configure** on HomeCircle's integration page. Settings is hidden in kiosk view; exit kiosk first.
+
 ## 6. Understand freshness
 
 | Member | Location becomes stale after |
@@ -125,7 +127,7 @@ Check these results:
 
 ## Troubleshooting and later changes
 
-- **No people in the selector:** create enabled HA person records first, including one for the pet.
+- **No people in the selector:** create an enabled HA Person or select an existing device tracker directly as a person or pet.
 - **No pet tracker:** fix the separate provider integration; Member type does not create a tracker.
 - **No map position:** check the active source for coordinates. Router presence alone may be locationless.
 - **Sensor missing from picker:** check its entity domain and enabled state. Tracker attributes need separate sensors.
@@ -137,4 +139,4 @@ HACS upgrades require a restart. To uninstall from a test instance, first remove
 
 ## Validation scope
 
-See [beta 11 validation](DIRECT-LIFE360-CANDIDATE-VALIDATION.md) for this release's tested scope. A full real departure/return test remains open.
+See [beta 12 validation](BETA12-VALIDATION.md) for this release's tested scope. A full real departure/return test remains open.

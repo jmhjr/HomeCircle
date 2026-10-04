@@ -8,7 +8,7 @@ from homeassistant.components.lovelace.resources import ResourceStorageCollectio
 from homeassistant.helpers.storage import Store
 
 URL = "/homecircle_static/homecircle-card.js"
-VERSION = "0.1.0-beta.11"
+VERSION = "0.1.0-beta.12"
 KEY = "homecircle_frontend"
 RELOAD_ENTRY = "reload_entry"
 
