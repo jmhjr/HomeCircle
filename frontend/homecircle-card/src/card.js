@@ -482,7 +482,7 @@ class HomeCircleCard extends HTMLElement {
   _updateMapNote() {
     if (!this._mapNote) return;
     this._mapNote.textContent = !this._points?.length
-      ? "No usable map position for this selection. Presence counts are unchanged."
+      ? "No map position shown for this selection. Presence counts are unchanged."
       : this._tileUnavailable
         ? "Street tiles unavailable. Presence and markers still work."
         : this._config.map_tiles === "osm"

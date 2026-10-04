@@ -10,6 +10,7 @@ from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.helpers import selector
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 from life360 import Life360Error, LoginError, RateLimited, Unauthorized
 
 from .const import (
@@ -23,7 +24,10 @@ from .const import (
     CONF_PRIMARY_HOME,
     CONF_RESIDENCES,
     CONF_TRACKERS,
+    CONF_DISPLAY_NAME,
+    CONF_SHOW_ON_MAP,
 )
+from .normalize import normalize_household, normalize_member
 from .selection import (
     SUPPORTING_DOMAINS,
     household_errors,
@@ -110,8 +114,9 @@ def life360_account_schema(*, legacy_replacement: bool = False):
             ),
             **(
                 {
-                    vol.Optional(CONFIRM_SAME_ACCOUNT, default=False):
-                        selector.BooleanSelector()
+                    vol.Optional(
+                        CONFIRM_SAME_ACCOUNT, default=False
+                    ): selector.BooleanSelector()
                 }
                 if legacy_replacement
                 else {}
@@ -180,7 +185,12 @@ async def life360_continuity_error(
 
 def review_label(hass, entity_id: str) -> str:
     """Keep names on one line and prevent entity names from shaping Markdown."""
-    label = " ".join(entity_label(hass, entity_id).split())
+    return markdown_label(entity_label(hass, entity_id))
+
+
+def markdown_label(value: str) -> str:
+    """Keep user-provided labels from shaping the review Markdown."""
+    label = " ".join(value.split())
     return re.sub(r"([\\`*_{}\[\]<>])", r"\\\1", label)
 
 
@@ -257,9 +267,53 @@ def review_duration(minutes: int | float) -> str:
     return f"{minutes:g} min"
 
 
+def current_position(hass, draft, person_id, member):
+    """Use the same source decision as the dashboard for an unsaved member."""
+    states = {state.entity_id: state for state in hass.states.async_all()}
+    zone_names = {
+        entity_id: state.name
+        for entity_id, state in states.items()
+        if entity_id.startswith("zone.")
+    }
+    return normalize_member(
+        person_id, member, draft, states, zone_names, dt_util.utcnow()
+    )
+
+
+def position_guidance(hass, person_id, current) -> str:
+    """Explain the current effective position source without guessing associations."""
+    if current.location is None:
+        return (
+            "No usable map position right now. Check this tracker's GPS state "
+            "before saving."
+            if person_id.startswith("device_tracker.")
+            else "No usable map position right now. Check the Home Assistant "
+            "Person or select a GPS tracker before saving."
+        )
+    source = current.location.evidence.source_entity
+    if source == person_id and not person_id.startswith("device_tracker."):
+        active = current.active_source_entity
+        active_text = (
+            f" Its active tracker is {review_label(hass, active)}." if active else ""
+        )
+        return (
+            f"Current map position comes from the Home Assistant Person "
+            f"({review_label(hass, person_id)}).{active_text} A selected tracker's "
+            "report-time sensor will be used only if that tracker later drives "
+            "the map."
+        )
+    return f"Current map position comes from {review_label(hass, source)}."
+
+
 def review_summary(hass, draft: dict[str, Any]) -> dict[str, str]:
     """Describe the exact unsaved household selections in the final form."""
     places = ", ".join(review_label(hass, place) for place in draft[CONF_PLACES])
+    current = normalize_household(
+        draft,
+        {state.entity_id: state for state in hass.states.async_all()},
+        dt_util.utcnow(),
+    )
+    current_members = {member.id: member for member in current.members}
     members = []
     for person_id in [
         *draft.get(CONF_PEOPLE, []),
@@ -289,8 +343,9 @@ def review_summary(hass, draft: dict[str, Any]) -> dict[str, str]:
             review_label(hass, zone) for zone in member[CONF_RESIDENCES]
         )
         kind = " (Pet)" if member.get("kind") == "pet" else ""
+        label = member.get(CONF_DISPLAY_NAME) or entity_label(hass, person_id)
         lines = [
-            f"**{review_label(hass, person_id)}{kind}**",
+            f"**{markdown_label(label)}{kind}**",
             f"- Trackers: {trackers or 'Person presence only'}",
             f"- Other homes: {residences or 'None'}",
             f"- Status sensors: {status or 'None mapped'}",
@@ -302,6 +357,19 @@ def review_summary(hass, draft: dict[str, Any]) -> dict[str, str]:
                 f"home {review_duration(member['pet_home_minutes'])}, "
                 f"away {review_duration(member['pet_away_minutes'])}"
             )
+        if member.get(CONF_SHOW_ON_MAP) is False:
+            lines.append("- Map marker: hidden; member card and presence count remain")
+        current_member = current_members.get(person_id)
+        if current_member and current_member.location is None:
+            lines.append(f"- {position_guidance(hass, person_id, current_member)}")
+        elif current_member and current_member.location:
+            source = current_member.location.evidence.source_entity
+            lines.append(f"- {position_guidance(hass, person_id, current_member)}")
+            if reports and source not in reports:
+                lines.append(
+                    "- Current location report time: no sensor mapped for the "
+                    f"source driving the map ({review_label(hass, source)})."
+                )
         members.append("\n".join(lines))
     return {
         "primary_home": review_label(hass, draft[CONF_PRIMARY_HOME]),
@@ -318,6 +386,7 @@ class SelectionFlow:
         self.draft = deepcopy(dict(config))
         self.member_index = 0
         self.pending_connections = []
+        self.single_edit = False
 
     def member_ids(self) -> list[str]:
         return [
@@ -329,11 +398,126 @@ class SelectionFlow:
     async def async_step_household(self, user_input=None):
         errors = {}
         if user_input is not None:
+            if isinstance(self, HomeCircleOptionsFlow):
+                shortcuts = [
+                    key
+                    for key in ("add_tracker", "remove_tracker", "edit_member")
+                    if user_input.get(key)
+                ]
+                changed_fields = (
+                    CONF_PEOPLE,
+                    CONF_TRACKER_PEOPLE,
+                    CONF_PETS,
+                    CONF_PRIMARY_HOME,
+                    CONF_PLACES,
+                    *(
+                        provider.enabled_key
+                        for provider in tracker_providers.TRACKER_PROVIDERS
+                    ),
+                    *(
+                        provider.replace_key
+                        for provider in tracker_providers.TRACKER_PROVIDERS
+                    ),
+                )
+                empty_lists = {CONF_PEOPLE, CONF_TRACKER_PEOPLE, CONF_PETS, CONF_PLACES}
+                if shortcuts and (
+                    len(shortcuts) > 1
+                    or any(
+                        key in user_input
+                        and user_input[key]
+                        != self.draft.get(key, [] if key in empty_lists else False)
+                        for key in changed_fields
+                    )
+                ):
+                    errors["base"] = "shortcut_conflict"
+                removed = user_input.get("remove_tracker")
+                if removed and not errors:
+                    selected = {
+                        tracker
+                        for member in self.draft[CONF_MEMBERS].values()
+                        for tracker in member[CONF_TRACKERS]
+                    }
+                    if removed not in selected:
+                        errors["remove_tracker"] = "invalid_entity"
+                    else:
+                        proposed = deepcopy(self.draft)
+                        if removed in proposed.get(CONF_TRACKER_PEOPLE, []):
+                            proposed[CONF_TRACKER_PEOPLE].remove(removed)
+                            proposed[CONF_MEMBERS].pop(removed)
+                        elif removed in proposed.get(CONF_PETS, []):
+                            proposed[CONF_PETS].remove(removed)
+                            proposed[CONF_MEMBERS].pop(removed)
+                        else:
+                            for member in proposed[CONF_MEMBERS].values():
+                                if removed in member[CONF_TRACKERS]:
+                                    member[CONF_TRACKERS].remove(removed)
+                                    member.get("location_reports", {}).pop(
+                                        removed, None
+                                    )
+                                    supporting = member.get("supporting", {})
+                                    if (
+                                        supporting.get("location_report_source")
+                                        == removed
+                                    ):
+                                        supporting.pop("location_report_source", None)
+                                        supporting.pop("location_reported_at", None)
+                        household_issue = household_errors(self.hass, proposed)
+                        if household_issue:
+                            errors["remove_tracker"] = next(
+                                iter(household_issue.values())
+                            )
+                        else:
+                            self.draft = proposed
+                            return await self.async_step_confirm()
+                new_tracker = user_input.get("add_tracker")
+                if new_tracker and not errors:
+                    kind = user_input.get("add_tracker_kind", "person")
+                    if kind not in ("person", "pet"):
+                        errors["add_tracker_kind"] = "invalid_kind"
+                    elif not selectable(self.hass, new_tracker, "device_tracker"):
+                        errors["add_tracker"] = "invalid_entity"
+                    elif new_tracker in self.member_ids():
+                        errors["add_tracker"] = "duplicate_selection"
+                    elif new_tracker in trackers_assigned_elsewhere(
+                        self.draft, new_tracker
+                    ):
+                        errors["add_tracker"] = "duplicate_selection"
+                    else:
+                        field = CONF_PETS if kind == "pet" else CONF_TRACKER_PEOPLE
+                        proposed = deepcopy(self.draft)
+                        proposed.setdefault(field, []).append(new_tracker)
+                        household_issue = household_errors(self.hass, proposed)
+                        if household_issue:
+                            errors["add_tracker"] = next(iter(household_issue.values()))
+                        else:
+                            self.draft = proposed
+                            self.member_index = self.member_ids().index(new_tracker)
+                            self.single_edit = True
+                            return await self.async_step_member()
+                edit_member = user_input.get("edit_member")
+                if edit_member:
+                    if edit_member not in self.member_ids():
+                        errors["edit_member"] = "invalid_entity"
+                    elif not errors:
+                        self.member_index = self.member_ids().index(edit_member)
+                        self.single_edit = True
+                        return await self.async_step_member()
+        if user_input is not None and not errors:
             replace_keys = {
                 provider.replace_key for provider in tracker_providers.TRACKER_PROVIDERS
             }
+            shortcut_keys = {
+                "add_tracker",
+                "add_tracker_kind",
+                "remove_tracker",
+                "edit_member",
+            }
             values = {
-                **{k: v for k, v in user_input.items() if k not in replace_keys},
+                **{
+                    k: v
+                    for k, v in user_input.items()
+                    if k not in replace_keys | shortcut_keys
+                },
                 CONF_PEOPLE: user_input.get(CONF_PEOPLE, []),
                 CONF_TRACKER_PEOPLE: user_input.get(CONF_TRACKER_PEOPLE, []),
                 CONF_PETS: user_input.get(CONF_PETS, []),
@@ -378,12 +562,92 @@ class SelectionFlow:
                 return await self.async_step_next_connection()
         schema = vol.Schema(
             {
+                **(
+                    {
+                        vol.Optional("add_tracker"): entity_selector(
+                            "device_tracker", False
+                        ),
+                        vol.Optional(
+                            "add_tracker_kind", default="person"
+                        ): selector.SelectSelector(
+                            selector.SelectSelectorConfig(
+                                options=[
+                                    {"value": "person", "label": "Person"},
+                                    {"value": "pet", "label": "Pet"},
+                                ]
+                            )
+                        ),
+                        **(
+                            {
+                                vol.Optional("remove_tracker"): selector.SelectSelector(
+                                    selector.SelectSelectorConfig(
+                                        options=[
+                                            {
+                                                "value": tracker,
+                                                "label": (
+                                                    f"{self.draft[CONF_MEMBERS][tracker][CONF_DISPLAY_NAME]} ({tracker})"
+                                                    if tracker
+                                                    in self.draft[CONF_MEMBERS]
+                                                    and self.draft[CONF_MEMBERS][
+                                                        tracker
+                                                    ].get(CONF_DISPLAY_NAME)
+                                                    else entity_label(
+                                                        self.hass, tracker
+                                                    )
+                                                ),
+                                            }
+                                            for tracker in dict.fromkeys(
+                                                tracker
+                                                for member in self.draft[
+                                                    CONF_MEMBERS
+                                                ].values()
+                                                for tracker in member[CONF_TRACKERS]
+                                            )
+                                        ],
+                                        custom_value=False,
+                                        mode=selector.SelectSelectorMode.DROPDOWN,
+                                    )
+                                )
+                            }
+                            if any(
+                                member[CONF_TRACKERS]
+                                for member in self.draft[CONF_MEMBERS].values()
+                            )
+                            else {}
+                        ),
+                        **(
+                            {
+                                vol.Optional("edit_member"): selector.SelectSelector(
+                                    selector.SelectSelectorConfig(
+                                        options=[
+                                            {
+                                                "value": member_id,
+                                                "label": self.draft[CONF_MEMBERS][
+                                                    member_id
+                                                ].get(CONF_DISPLAY_NAME)
+                                                or entity_label(self.hass, member_id),
+                                            }
+                                            for member_id in self.member_ids()
+                                        ],
+                                        custom_value=False,
+                                        mode=selector.SelectSelectorMode.DROPDOWN,
+                                    )
+                                )
+                            }
+                            if self.member_ids()
+                            else {}
+                        ),
+                    }
+                    if isinstance(self, HomeCircleOptionsFlow)
+                    else {}
+                ),
                 vol.Optional(CONF_PEOPLE): entity_selector("person"),
                 vol.Optional(CONF_TRACKER_PEOPLE): tracker_selector(self.hass),
                 vol.Optional(CONF_PETS): tracker_selector(self.hass),
                 **{
                     vol.Optional(
-                        provider.enabled_key, default=False
+                        provider.enabled_key,
+                        default=bool(self.draft.get(provider.enabled_key)),
                     ): selector.BooleanSelector()
                     for provider in tracker_providers.TRACKER_PROVIDERS
                 },
@@ -394,7 +658,13 @@ class SelectionFlow:
                     for provider in tracker_providers.TRACKER_PROVIDERS
                     if self.draft.get(provider.account_key)
                 },
-                vol.Required(CONF_PRIMARY_HOME): entity_selector("zone", False),
+                (
+                    vol.Optional(
+                        CONF_PRIMARY_HOME, default=self.draft[CONF_PRIMARY_HOME]
+                    )
+                    if isinstance(self, HomeCircleOptionsFlow)
+                    else vol.Required(CONF_PRIMARY_HOME)
+                ): entity_selector("zone", False),
                 vol.Optional(CONF_PLACES): entity_selector("zone"),
             }
         )
@@ -458,9 +728,7 @@ class SelectionFlow:
                 return await self.connection_saved("life360", account)
         return self.async_show_form(
             step_id="life360_account",
-            data_schema=life360_account_schema(
-                legacy_replacement=legacy_replacement
-            ),
+            data_schema=life360_account_schema(legacy_replacement=legacy_replacement),
             errors=errors,
         )
 
@@ -497,6 +765,17 @@ class SelectionFlow:
                 pet_home_minutes=previous.get("pet_home_minutes", 1440),
                 pet_away_minutes=previous.get("pet_away_minutes", 5),
             )
+            if (
+                user_input.get(CONF_SHOW_ON_MAP, previous.get(CONF_SHOW_ON_MAP, True))
+                is False
+            ):
+                values[CONF_SHOW_ON_MAP] = False
+            if tracker_only_member:
+                name = user_input.get(CONF_DISPLAY_NAME)
+                if isinstance(name, str) and name.strip():
+                    values[CONF_DISPLAY_NAME] = name.strip()
+                elif name is not None and not isinstance(name, str):
+                    values[CONF_DISPLAY_NAME] = name
             previous_reports = previous.get("location_reports", {})
             if previous_reports:
                 values["location_reports"] = deepcopy(previous_reports)
@@ -522,7 +801,9 @@ class SelectionFlow:
             if set(values[CONF_TRACKERS]) & trackers_assigned_elsewhere(
                 self.draft, person_id
             ):
-                errors[CONF_TRACKERS] = "duplicate_selection"
+                errors["base" if tracker_only_member else CONF_TRACKERS] = (
+                    "duplicate_selection"
+                )
             if not errors:
                 self.draft[CONF_MEMBERS][person_id] = values
                 self.edit_sensors = bool(user_input.get("configure_sensors")) or bool(
@@ -537,7 +818,10 @@ class SelectionFlow:
                         values[CONF_TRACKERS],
                     )
                 )
-                if values["kind"] == "pet":
+                self.edit_timing = bool(user_input.get("configure_timing")) or (
+                    values["kind"] == "pet" and previous.get("kind") != "pet"
+                )
+                if values["kind"] == "pet" and self.edit_timing:
                     return await self.async_step_pet_freshness()
                 return await self.after_member()
         defaults = self.draft[CONF_MEMBERS].get(
@@ -547,17 +831,40 @@ class SelectionFlow:
                 CONF_RESIDENCES: [],
             },
         )
+        position = current_position(
+            self.hass,
+            self.draft,
+            person_id,
+            values if user_input is not None else defaults,
+        )
         fields = {vol.Optional(CONF_RESIDENCES): entity_selector("zone")}
         if not tracker_only_member:
             fields = {
                 vol.Optional(CONF_TRACKERS): tracker_selector(self.hass),
                 **fields,
                 vol.Optional("kind", default="person"): selector.SelectSelector(
-                    selector.SelectSelectorConfig(options=["person", "pet"])
+                    selector.SelectSelectorConfig(
+                        options=[
+                            {"value": "person", "label": "Person"},
+                            {"value": "pet", "label": "Pet"},
+                        ]
+                    )
                 ),
             }
+        else:
+            fields = {
+                vol.Optional(CONF_DISPLAY_NAME): selector.TextSelector(),
+                **fields,
+            }
+        if tracker_only_pet or defaults.get("kind") == "pet":
+            fields[vol.Optional("configure_timing", default=False)] = (
+                selector.BooleanSelector()
+            )
         fields.update(
             {
+                vol.Optional(
+                    CONF_SHOW_ON_MAP, default=True
+                ): selector.BooleanSelector(),
                 vol.Optional(
                     "configure_sensors", default=False
                 ): selector.BooleanSelector(),
@@ -586,6 +893,7 @@ class SelectionFlow:
                 "total": str(len(self.member_ids())),
                 "active": entity_label(self.hass, active),
                 "tracker_guidance": guidance,
+                "position_guidance": position_guidance(self.hass, person_id, position),
             },
         )
 
@@ -643,8 +951,8 @@ class SelectionFlow:
     async def next_member(self):
         if getattr(self, "edit_reports", False):
             self.edit_reports = False
-            person = self.member_ids()[self.member_index]
-            member = self.draft[CONF_MEMBERS][person]
+            member_id = self.member_ids()[self.member_index]
+            member = self.draft[CONF_MEMBERS][member_id]
             reports = member.setdefault("location_reports", {})
             supporting = member.get("supporting", {})
             source = supporting.pop("location_report_source", None)
@@ -653,15 +961,47 @@ class SelectionFlow:
                 reports.setdefault(source, timestamp)
             if not supporting:
                 member.pop("supporting", None)
+            current = current_position(self.hass, self.draft, member_id, member)
+            effective = (
+                current.location.evidence.source_entity if current.location else None
+            )
+            trackers = member[CONF_TRACKERS]
             self.report_sources = list(
-                dict.fromkeys([person, *member[CONF_TRACKERS], *reports])
+                dict.fromkeys(
+                    [
+                        *([effective] if effective else []),
+                        *(
+                            item
+                            for item in trackers
+                            if member_id.startswith("device_tracker.")
+                            or (state := self.hass.states.get(item)) is None
+                            or state.state in ("unknown", "unavailable")
+                            or state.attributes.get("source_type") == "gps"
+                        ),
+                        *reports,
+                    ]
+                )
             )
             self.report_index = 0
+            self.report_effective = effective
+            if not self.report_sources:
+                return await self.async_step_no_report_sources()
             return await self.async_step_source_report()
+        if self.single_edit:
+            self.single_edit = False
+            return await self.async_step_confirm()
         self.member_index += 1
         if self.member_index < len(self.member_ids()):
             return await self.async_step_member()
         return await self.async_step_confirm()
+
+    async def async_step_no_report_sources(self, user_input=None):
+        """Explain why a requested report-time step has no usable source."""
+        if user_input is not None:
+            return await self.next_member()
+        return self.async_show_form(
+            step_id="no_report_sources", data_schema=vol.Schema({})
+        )
 
     async def async_step_source_report(self, user_input=None):
         person = self.member_ids()[self.member_index]
@@ -699,6 +1039,15 @@ class SelectionFlow:
                 "source": entity_label(self.hass, source),
                 "number": str(self.report_index + 1),
                 "total": str(len(self.report_sources)),
+                "purpose": (
+                    "Current map source"
+                    if source == self.report_effective
+                    else "Home Assistant Person mapping, used when the Person drives the map"
+                    if source == person and person in self.draft.get(CONF_PEOPLE, [])
+                    else "Selected tracker mapping, used only if this tracker drives the map"
+                    if source in member[CONF_TRACKERS]
+                    else "Removed source mapping; leave empty to clear it"
+                ),
             },
         )
 
@@ -740,6 +1089,11 @@ class SelectionFlow:
 
     async def async_step_confirm(self, user_input=None):
         if user_input is not None:
+            edit_member = user_input.get("edit_member")
+            if edit_member in self.member_ids():
+                self.member_index = self.member_ids().index(edit_member)
+                self.single_edit = True
+                return await self.async_step_member()
             dependencies = selected_entities(self.draft)
             for person_id in self.draft.get(CONF_PEOPLE, []):
                 linked, active = person_tracker_references(self.hass, person_id)
@@ -772,7 +1126,28 @@ class SelectionFlow:
             return self.save()
         return self.async_show_form(
             step_id="confirm",
-            data_schema=vol.Schema({}),
+            data_schema=vol.Schema(
+                {
+                    vol.Optional("edit_member"): selector.SelectSelector(
+                        selector.SelectSelectorConfig(
+                            options=[
+                                {
+                                    "value": member_id,
+                                    "label": self.draft[CONF_MEMBERS][member_id].get(
+                                        CONF_DISPLAY_NAME
+                                    )
+                                    or entity_label(self.hass, member_id),
+                                }
+                                for member_id in self.member_ids()
+                            ],
+                            custom_value=False,
+                            mode=selector.SelectSelectorMode.DROPDOWN,
+                        )
+                    )
+                }
+                if self.member_ids()
+                else {}
+            ),
             description_placeholders=review_summary(self.hass, self.draft),
         )
 
@@ -832,9 +1207,7 @@ class HomeCircleConfigFlow(SelectionFlow, config_entries.ConfigFlow, domain=DOMA
                 account_key = self.reauth_provider.account_key
                 data = {**entry.data, account_key: account}
                 options = (
-                    {**entry.options, account_key: account}
-                    if entry.options
-                    else {}
+                    {**entry.options, account_key: account} if entry.options else {}
                 )
                 frontend.preserve_for_reload(self.hass, entry.entry_id)
                 return self.async_update_reload_and_abort(
@@ -842,9 +1215,7 @@ class HomeCircleConfigFlow(SelectionFlow, config_entries.ConfigFlow, domain=DOMA
                 )
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=life360_account_schema(
-                legacy_replacement=legacy_replacement
-            ),
+            data_schema=life360_account_schema(legacy_replacement=legacy_replacement),
             errors=errors,
         )
 

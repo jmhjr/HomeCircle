@@ -36,7 +36,11 @@ export function selection(members, mode, focusIds) {
   const category = ["overview", ...categories].includes(mode);
   const listed = category ? new Set(focusIds?.[mode] || []) : new Set([mode]);
   return members.filter(
-    (member) => member.focusable && member.location && listed.has(member.id),
+    (member) =>
+      member.focusable &&
+      member.location &&
+      member.map_visible !== false &&
+      listed.has(member.id),
   );
 }
 function ageLabel(stamp, now) {

@@ -8,7 +8,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import entity_registry as er
 import voluptuous as vol
 
-from .const import CONF_MEMBERS, CONF_TRACKERS, DOMAIN
+from .const import CONF_MEMBERS, CONF_SHOW_ON_MAP, CONF_TRACKERS, DOMAIN
 from .selection import selected_entities
 from .tracker_providers import connected_providers
 
@@ -64,7 +64,9 @@ def provider_alerts(hass, runtime):
         if (
             state == "connected"
             and health.available_trackers > 0
-            and not any(provider.owns_entity(registry, entity_id) for entity_id in selected)
+            and not any(
+                provider.owns_entity(registry, entity_id) for entity_id in selected
+            )
         ):
             alerts.append({"name": provider.display_name, "state": "selection_needed"})
             continue
@@ -106,6 +108,9 @@ def snapshot(runtime, alerts=()):
                 "primary_home": member.primary_home,
                 "place": place.name if place else None,
                 "focusable": member.focusable,
+                "map_visible": runtime.config[CONF_MEMBERS][member.id].get(
+                    CONF_SHOW_ON_MAP, True
+                ),
                 "location": {
                     "latitude": location.latitude,
                     "longitude": location.longitude,

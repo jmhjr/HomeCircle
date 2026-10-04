@@ -209,12 +209,204 @@ async def test_tracker_only_pet_setup_and_options(hass, household):
     flow = await options.async_configure(
         flow["flow_id"], {"additional_residences": ["zone.example_residence"]}
     )
-    flow = await options.async_configure(flow["flow_id"], {})
     assert flow["step_id"] == "confirm"
     await options.async_configure(flow["flow_id"], {})
     await hass.async_block_till_done()
     assert entry.options["members"][pet]["pet_home_minutes"] == 720
     assert entry.runtime_data.household.members[0].id == pet
+
+
+async def test_add_hide_and_remove_one_tracker_without_reconfirming_household(
+    hass, household
+):
+    from custom_components.homecircle.api import snapshot
+
+    entry = await create(hass, household)
+    original_members = deepcopy(dict(entry.data["members"]))
+    tracker = "device_tracker.example_bike"
+    hass.states.async_set(
+        tracker,
+        "home",
+        {"source_type": "gps", ATTR_LATITUDE: 0.0, ATTR_LONGITUDE: 0.0},
+    )
+    options = hass.config_entries.options
+    result = await options.async_init(entry.entry_id)
+    result = await options.async_configure(
+        result["flow_id"], {"add_tracker": tracker, "add_tracker_kind": "person"}
+    )
+    assert result["step_id"] == "tracker_member"
+    result = await options.async_configure(
+        result["flow_id"], {"display_name": "Bike", "show_on_map": False}
+    )
+    assert result["step_id"] == "confirm"
+    assert "Bike" in result["description_placeholders"]["members"]
+    assert "Map marker: hidden" in result["description_placeholders"]["members"]
+    await options.async_configure(result["flow_id"], {})
+    await hass.async_block_till_done()
+    assert all(
+        entry.options["members"][key] == value
+        for key, value in original_members.items()
+    )
+    assert entry.options["members"][tracker]["display_name"] == "Bike"
+    bike = next(
+        member
+        for member in snapshot(entry.runtime_data)["members"]
+        if member["id"] == tracker
+    )
+    assert bike["name"] == "Bike"
+    assert bike["map_visible"] is False
+    assert bike["location"] is not None
+    assert entry.runtime_data.household.counts["home"] == 3
+
+    result = await options.async_init(entry.entry_id)
+    result = await options.async_configure(result["flow_id"], {"edit_member": tracker})
+    assert result["step_id"] == "tracker_member"
+    result = await options.async_configure(
+        result["flow_id"], {"display_name": "Bike", "show_on_map": True}
+    )
+    assert result["step_id"] == "confirm"
+    await options.async_configure(result["flow_id"], {})
+    await hass.async_block_till_done()
+    assert entry.options["members"][tracker]["display_name"] == "Bike"
+    assert snapshot(entry.runtime_data)["members"][-1]["map_visible"] is True
+
+    result = await options.async_init(entry.entry_id)
+    result = await options.async_configure(result["flow_id"], {"edit_member": tracker})
+    result = await options.async_configure(result["flow_id"], {"display_name": "  "})
+    assert result["step_id"] == "confirm"
+    await options.async_configure(result["flow_id"], {})
+    await hass.async_block_till_done()
+    assert "display_name" not in entry.options["members"][tracker]
+
+    result = await options.async_init(entry.entry_id)
+    result = await options.async_configure(
+        result["flow_id"], {"remove_tracker": tracker}
+    )
+    assert result["step_id"] == "confirm"
+    assert "Bike" not in result["description_placeholders"]["members"]
+    await options.async_configure(result["flow_id"], {})
+    await hass.async_block_till_done()
+    assert tracker not in entry.options["members"]
+    assert all(
+        entry.options["members"][key] == value
+        for key, value in original_members.items()
+    )
+    assert tracker not in {
+        member["id"] for member in snapshot(entry.runtime_data)["members"]
+    }
+
+
+async def test_remove_selected_person_tracker_preserves_person(hass, household):
+    entry = await create(hass, household)
+    options = hass.config_entries.options
+    result = await options.async_init(entry.entry_id)
+    result = await options.async_configure(
+        result["flow_id"], {"remove_tracker": "device_tracker.example_phone"}
+    )
+    assert result["step_id"] == "confirm"
+    await options.async_configure(result["flow_id"], {})
+    await hass.async_block_till_done()
+    member = entry.options["members"]["person.example_member"]
+    assert member["trackers"] == []
+    assert "person.example_member" in {
+        item.id for item in entry.runtime_data.household.members
+    }
+
+
+async def test_tracker_shortcuts_reject_conflicts_before_member_form(hass, household):
+    entry = await create(hass, household)
+    manager = hass.config_entries.options
+    result = await manager.async_init(entry.entry_id)
+    result = await manager.async_configure(
+        result["flow_id"], {"add_tracker": "device_tracker.example_phone"}
+    )
+    assert result["step_id"] == "household"
+    assert result["errors"]["add_tracker"] == "duplicate_selection"
+    result = await manager.async_configure(
+        result["flow_id"],
+        {"edit_member": "person.example_member", "places": []},
+    )
+    assert result["errors"]["base"] == "shortcut_conflict"
+    result = await manager.async_configure(
+        result["flow_id"],
+        {"edit_member": "person.example_member", "life360_direct": True},
+    )
+    assert result["errors"]["base"] == "shortcut_conflict"
+    manager.async_abort(result["flow_id"])
+    assert not entry.options
+
+
+async def test_offline_tracker_still_gets_report_time_prompt(hass, household):
+    tracker = "device_tracker.example_offline"
+    hass.states.async_set(tracker, "unavailable")
+    selection = {
+        "people": [],
+        "people_trackers": [tracker],
+        "primary_home": household["primary_home"],
+        "places": [],
+    }
+    result = await start(hass, selection)
+    assert (
+        "No usable map position"
+        in result["description_placeholders"]["position_guidance"]
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"configure_reports": True}
+    )
+    assert result["step_id"] == "source_report"
+    assert result["description_placeholders"]["source"] == "example offline"
+    assert (
+        "used only if this tracker drives the map"
+        in result["description_placeholders"]["purpose"]
+    )
+
+
+async def test_person_offline_tracker_and_no_source_report_steps(hass, household):
+    hass.states.async_set("device_tracker.example_phone", "unavailable")
+    hass.states.async_set(
+        "person.example_member", "home", {"source": "device_tracker.example_phone"}
+    )
+    result = await start(hass, household)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"trackers": ["device_tracker.example_phone"], "configure_reports": True},
+    )
+    assert result["step_id"] == "source_report"
+    assert result["description_placeholders"]["source"] == "example phone"
+    hass.config_entries.flow.async_abort(result["flow_id"])
+
+    result = await start(hass, household)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"trackers": [], "configure_reports": True}
+    )
+    assert result["step_id"] == "no_report_sources"
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["step_id"] == "member"
+
+
+async def test_full_household_options_can_still_add_tracker(hass, household):
+    entry = await create(hass, household)
+    tracker = "device_tracker.example_bike"
+    hass.states.async_set(tracker, "not_home", {"source_type": "gps"})
+    manager = hass.config_entries.options
+    result = await manager.async_init(entry.entry_id)
+    result = await manager.async_configure(
+        result["flow_id"], {**household, "people_trackers": [tracker]}
+    )
+    assert result["step_id"] == "member"
+    result = await manager.async_configure(
+        result["flow_id"], {"trackers": ["device_tracker.example_phone"]}
+    )
+    result = await manager.async_configure(
+        result["flow_id"], {"trackers": ["device_tracker.example_router"]}
+    )
+    assert result["step_id"] == "tracker_member"
+    result = await manager.async_configure(result["flow_id"], {})
+    assert result["step_id"] == "confirm"
+    await manager.async_configure(result["flow_id"], {})
+    await hass.async_block_till_done()
+    assert tracker in entry.options["members"]
+    assert "add_tracker_kind" not in entry.options
 
 
 async def test_direct_life360_account_and_tracker_person_setup(hass, household):
@@ -267,7 +459,7 @@ async def test_direct_life360_account_and_tracker_person_setup(hass, household):
     assert "waiting for trackers" in flow["description_placeholders"]["tracker_status"]
     flow = await options.async_configure(
         flow["flow_id"],
-        {**selection, "people_trackers": ["device_tracker.example_phone"]},
+        {"add_tracker": "device_tracker.example_phone"},
     )
     assert flow["step_id"] == "tracker_member"
     flow = await options.async_configure(flow["flow_id"], {})
@@ -334,7 +526,9 @@ async def test_direct_life360_account_and_tracker_person_setup(hass, household):
     assert entry.runtime_data.household.members[0].id == "device_tracker.example_phone"
 
 
-async def test_disabled_direct_tracker_does_not_interrupt_other_members(hass, household):
+async def test_disabled_direct_tracker_does_not_interrupt_other_members(
+    hass, household
+):
     for zone_id in ("zone.example_residence", "zone.example_work"):
         hass.states.async_set(
             zone_id,
@@ -444,7 +638,9 @@ async def test_failed_tracker_platform_setup_can_retry_cleanly(hass, household):
     assert await hass.config_entries.async_unload(entry.entry_id)
 
 
-async def test_saved_direct_tracker_is_unavailable_during_offline_reload(hass, household):
+async def test_saved_direct_tracker_is_unavailable_during_offline_reload(
+    hass, household
+):
     for zone_id in ("zone.example_residence", "zone.example_work"):
         hass.states.async_set(
             zone_id,
@@ -1150,6 +1346,8 @@ async def test_options_reconfigure_and_listener_replacement(hass, household):
             "pet_away_minutes": 5,
         }
     }
+    assert "add_tracker_kind" not in entry.options
+    assert "edit_member" not in entry.options
     assert not old_runtime.states
     assert "person.example_member" not in entry.runtime_data.states
     result = await hass.config_entries.flow.async_init(
@@ -1324,6 +1522,76 @@ async def test_tracker_guide_prefers_position_over_home_only_presence(hass, hous
     ]
 
 
+async def test_map_source_guidance_and_report_prompts_follow_effective_source(
+    hass, household
+):
+    hass.states.async_set(
+        "person.example_member",
+        "home",
+        {
+            "source": "device_tracker.example_router",
+            ATTR_LATITUDE: 0.0,
+            ATTR_LONGITUDE: 0.0,
+        },
+    )
+    with patch(
+        "custom_components.homecircle.selection.entities_in_person",
+        return_value=["device_tracker.example_phone", "device_tracker.example_router"],
+    ):
+        result = await start(hass, household)
+    guidance = result["description_placeholders"]["position_guidance"]
+    assert "Home Assistant Person" in guidance
+    assert "example router" in guidance
+    assert "selected tracker's report-time sensor will be used only if" in guidance
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"trackers": ["device_tracker.example_phone"], "configure_reports": True},
+    )
+    assert result["step_id"] == "source_report"
+    assert result["description_placeholders"]["source"] == "example member"
+    assert result["description_placeholders"]["purpose"] == "Current map source"
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["step_id"] == "source_report"
+    assert result["description_placeholders"]["source"] == "example phone"
+    assert (
+        "used only if this tracker drives the map"
+        in result["description_placeholders"]["purpose"]
+    )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["step_id"] == "confirm"
+    assert (
+        "Current map position comes from the Home Assistant Person"
+        in result["description_placeholders"]["members"]
+    )
+
+
+async def test_saved_person_report_mapping_is_not_labelled_for_deletion(
+    hass, household
+):
+    hass.states.async_set("sensor.example_report", "2026-01-01T00:00:00+00:00")
+    entry = await create(hass, household)
+    person = "person.example_member"
+    data = deepcopy(dict(entry.data))
+    data["members"][person]["location_reports"] = {person: "sensor.example_report"}
+    hass.config_entries.async_update_entry(entry, data=data)
+    manager = hass.config_entries.options
+    result = await manager.async_init(entry.entry_id)
+    result = await manager.async_configure(result["flow_id"], {"edit_member": person})
+    result = await manager.async_configure(
+        result["flow_id"],
+        {"trackers": ["device_tracker.example_phone"], "configure_reports": True},
+    )
+    assert result["step_id"] == "source_report"
+    result = await manager.async_configure(result["flow_id"], {})
+    assert result["description_placeholders"]["source"] == "example member"
+    assert (
+        "used when the Person drives the map"
+        in result["description_placeholders"]["purpose"]
+    )
+    manager.async_abort(result["flow_id"])
+
+
 async def test_tracker_guide_does_not_guess_between_equal_sources(hass, household):
     hass.states.async_set("person.example_member", "home")
     with patch(
@@ -1450,9 +1718,9 @@ async def test_supporting_flow_validation_persistence_and_clear(hass, household)
     )
     assert result["step_id"] == "source_report"
     assert result["description_placeholders"]["number"] == "1"
-    assert result["description_placeholders"]["total"] == "2"
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["description_placeholders"]["number"] == "2"
+    assert result["description_placeholders"]["total"] == "1"
+    assert result["description_placeholders"]["source"] == "example phone"
+    assert result["description_placeholders"]["purpose"] == "Current map source"
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"timestamp": "sensor.example_report"}
     )
@@ -1584,6 +1852,7 @@ async def test_pet_thresholds_persist_in_options(hass, household):
             "trackers": ["device_tracker.example_phone"],
             "kind": "pet",
             "configure_sensors": True,
+            "configure_timing": True,
         },
     )
     assert flow["step_id"] == "pet_freshness"
@@ -1619,7 +1888,6 @@ async def test_per_source_flow_migrates_preserves_and_clears(hass, household):
         {"trackers": ["device_tracker.example_phone"]},
     )
     assert result["step_id"] == "source_report"
-    result = await options.async_configure(result["flow_id"], {})
     result = await options.async_configure(
         result["flow_id"], {"timestamp": "sensor.example_missing"}
     )

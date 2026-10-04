@@ -419,7 +419,7 @@ test("unavailable member stays counted without a map point and recovers on refre
   assert.match(value.shadowRoot.textContent, /No usable map position/);
   value.shadowRoot.querySelector('[aria-label="Unavailable: 1"]').click();
   assert.equal(points.length, 0);
-  assert.match(value._mapNote.textContent, /No usable map position/);
+  assert.match(value._mapNote.textContent, /No map position shown/);
   value.shadowRoot.querySelector(".overview").click();
   assert.equal(points.length, 1);
   recovered = true;

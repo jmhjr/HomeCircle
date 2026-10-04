@@ -16,6 +16,8 @@ from .const import (
     CONF_PRIMARY_HOME,
     CONF_RESIDENCES,
     CONF_TRACKERS,
+    CONF_DISPLAY_NAME,
+    CONF_SHOW_ON_MAP,
 )
 from .tracker_providers import connection_requested
 
@@ -37,9 +39,7 @@ def tracker_suggestions(
 ) -> tuple[list[str], str | None]:
     """Distinguish configured associations from the currently active source."""
     linked, active = person_tracker_references(hass, entity_id)
-    associated = [
-        item for item in linked if selectable(hass, item, "device_tracker")
-    ]
+    associated = [item for item in linked if selectable(hass, item, "device_tracker")]
     if not selectable(hass, active, "device_tracker"):
         active = None
     return associated, active
@@ -73,9 +73,7 @@ def selected_entities(config: Mapping[str, Any]) -> set[str]:
     return result
 
 
-def trackers_assigned_elsewhere(
-    config: Mapping[str, Any], member_id: str
-) -> set[str]:
+def trackers_assigned_elsewhere(config: Mapping[str, Any], member_id: str) -> set[str]:
     """Find explicit tracker assignments belonging to another household member."""
     assigned = {
         tracker
@@ -161,6 +159,17 @@ def member_errors(
     errors = {}
     if values.get("kind", "person") not in ("person", "pet"):
         errors["kind"] = "invalid_kind"
+    if CONF_DISPLAY_NAME in values:
+        name = values[CONF_DISPLAY_NAME]
+        if (
+            not isinstance(name, str)
+            or not name.strip()
+            or len(name.strip()) > 60
+            or any(ord(char) < 32 for char in name)
+        ):
+            errors[CONF_DISPLAY_NAME] = "invalid_display_name"
+    if CONF_SHOW_ON_MAP in values and not isinstance(values[CONF_SHOW_ON_MAP], bool):
+        errors[CONF_SHOW_ON_MAP] = "invalid_map_visibility"
     if person_id and person_id.startswith("device_tracker."):
         if values.get(CONF_TRACKERS) != [person_id]:
             errors["base"] = "invalid_tracker_source"

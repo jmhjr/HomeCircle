@@ -23,25 +23,35 @@
       },
       "member": {
         "title": "Choose trackers and places",
-        "description": "Member {number} of {total}: {person}.\n\n{tracker_guidance}\n\nThen choose this member’s other homes and type.",
+        "description": "Member {number} of {total}: {person}.\n\n{tracker_guidance}\n\n{position_guidance}\n\nThen choose this member’s other homes and type.\n\nThe map source note reflects the selections when this screen opened; the review updates after you submit.",
         "data": {
           "trackers": "Location and presence trackers",
           "additional_residences": "Other homes for this member",
           "configure_sensors": "Set up battery and motion sensors",
           "kind": "Member type",
-          "configure_reports": "Set up location report times"
+          "configure_reports": "Set up location report times",
+          "configure_timing": "Adjust pet location timing",
+          "show_on_map": "Show this member on the map"
         },
         "data_description": {
-          "trackers": "Select the suggested tracker, or choose another from the picker. Check the owner and entity ID when names repeat. One tracker is simplest; multiple sources are available for advanced setups. Leave empty to use the HA person alone. Changing this selection does not change the trackers linked to the HA person.",
+          "trackers": "Select a tracker you own. Home Assistant Person remains the position source while it has a usable location; a selected GPS tracker can supplement it when needed. Changing this selection does not change the trackers linked to the HA Person.",
           "additional_residences": "These zones also count as Home for this member. The Home map button still focuses the primary family home.",
-          "kind": "Choose Pet for a pet record. Pet location timing appears on the next screen; this does not create a tracker.",
+          "kind": "Choose Pet for a pet record. Pet timing can be adjusted when needed; this does not create a tracker.",
           "configure_reports": "Choose a genuine location report-time sensor separately for each selected source. Leave off if none is available.",
-          "configure_sensors": "Choose optional battery, charging, speed and driving sensors on the next screen."
+          "configure_sensors": "Choose optional battery, charging, speed and driving sensors on the next screen.",
+          "configure_timing": "Only for pets. Keep the current timing when the defaults are right.",
+          "show_on_map": "Turn off to keep the member card and Home/Away count while hiding the map marker."
         }
       },
       "confirm": {
         "title": "Review and save household",
-        "description": "Review these selections before saving. HomeCircle uses the selected Home Assistant entities. If you connected a tracker account directly, its trackers may appear after setup; reopen Options to choose people from them.\n\n**Primary home:** {primary_home}\n\n**Ordinary places:** {places}\n\n{members}\n\nSubmit to save, or close this window to discard the draft."
+        "description": "Review these selections before saving. HomeCircle uses the selected Home Assistant entities. If you connected a tracker account directly, its trackers may appear after setup; reopen Options to choose people from them.\n\n**Primary home:** {primary_home}\n\n**Ordinary places:** {places}\n\n{members}\n\nTo correct one member, choose it below and submit. Otherwise submit to save; closing discards the draft. After saving, open a dashboard → Add card → By card → HomeCircle.",
+        "data": {
+          "edit_member": "Edit one member before saving"
+        },
+        "data_description": {
+          "edit_member": "Return to just this member, then come back to the review without repeating the others."
+        }
       },
       "supporting": {
         "title": "Status sensors",
@@ -63,7 +73,7 @@
       },
       "source_report": {
         "title": "Location report time",
-        "description": "Source {number} of {total}: {source}. Choose a sensor with the actual time this source reported its location. Leave empty if unknown, or to clear an old mapping for a removed source. Home Assistant state updates are not GPS report times.",
+        "description": "Source {number} of {total}: {source}. {purpose}. Choose a sensor with the actual time this source reported its location. Leave empty if unknown or to clear an old mapping. Home Assistant state updates are not GPS report times.",
         "data": {
           "timestamp": "Location report time sensor"
         }
@@ -82,16 +92,22 @@
       },
       "pet_member": {
         "title": "Choose pet places and details",
-        "description": "Member {number} of {total}: {person}. This pet uses its selected tracker directly. Choose any other homes and optional supporting sensors.",
+        "description": "Member {number} of {total}: {person}. This pet uses its selected tracker directly. Choose any other homes and optional supporting sensors.\n\n{position_guidance}",
         "data": {
           "additional_residences": "Other homes for this pet",
           "configure_sensors": "Set up battery and motion sensors",
-          "configure_reports": "Set up location report time"
+          "configure_reports": "Set up location report time",
+          "display_name": "Name shown on the dashboard (optional)",
+          "configure_timing": "Adjust pet location timing",
+          "show_on_map": "Show this member on the map"
         },
         "data_description": {
           "additional_residences": "These zones also count as Home for this pet. The Home map button still focuses the primary family home.",
           "configure_reports": "Choose a genuine location report-time sensor for this tracker. Leave off if none is available.",
-          "configure_sensors": "Choose optional battery, charging, speed and driving sensors on the next screen."
+          "configure_sensors": "Battery and charging are usually enough. Other optional device sensors are on the next screen.",
+          "display_name": "Leave blank to use the tracker name. Useful when two collars have the same name.",
+          "configure_timing": "Keep the default 24 h at home and 5 min away unless this pet needs different stale-location timing.",
+          "show_on_map": "Turn off to keep the member card and Home/Away count while hiding the map marker."
         }
       },
       "life360_account": {
@@ -105,7 +121,8 @@
         },
         "data_description": {
           "secret": "For access token, enter only the token value. HomeCircle uses Bearer authorization.",
-          "confirm_same_account": "Only needed if HomeCircle cannot verify the previously saved sign-in for this older setup."
+          "confirm_same_account": "Only needed if HomeCircle cannot verify the previously saved sign-in for this older setup.",
+          "username": "Required when using email and password. Leave empty for access token."
         }
       },
       "reauth_confirm": {
@@ -124,12 +141,25 @@
       },
       "tracker_member": {
         "title": "Choose person places and details",
-        "description": "Member {number} of {total}: {person}. This person uses the selected tracker directly. Choose any other homes and optional supporting sensors.",
+        "description": "Member {number} of {total}: {person}. This person uses the selected tracker directly. Choose any other homes and optional supporting sensors.\n\n{position_guidance}",
         "data": {
           "additional_residences": "Other homes for this person",
           "configure_sensors": "Set up battery and motion sensors",
-          "configure_reports": "Set up location report time"
+          "configure_reports": "Set up location report time",
+          "display_name": "Name shown on the dashboard (optional)",
+          "show_on_map": "Show this member on the map"
+        },
+        "data_description": {
+          "display_name": "Leave blank to use the tracker name.",
+          "additional_residences": "These zones also count as Home for this person. The Home map button still focuses the primary family home.",
+          "configure_reports": "Choose a genuine report-time sensor for this tracker only if available.",
+          "configure_sensors": "Choose optional battery, charging, speed and driving sensors on the next screen.",
+          "show_on_map": "Turn off to keep the member card and Home/Away count while hiding the map marker."
         }
+      },
+      "no_report_sources": {
+        "title": "No report-time source to set up",
+        "description": "This member has no current map source or selected tracker that can provide a location report time. Continue without a mapping. You can edit this member later when a tracker is available."
       }
     },
     "error": {
@@ -154,7 +184,10 @@
       "unexpected_response": "Life360 returned an unexpected response. Check HomeCircle diagnostics if this continues.",
       "invalid_tracker_source": "A directly selected person or pet must use that tracker as the source.",
       "direct_trackers_selected": "Before disconnecting, replace HomeCircle-owned trackers selected here or linked to a selected Home Assistant Person.",
-      "tracker_already_in_person": "This tracker is already linked to a selected Home Assistant Person. Keep that Person or choose the tracker as a separate member, not both."
+      "tracker_already_in_person": "This tracker is already linked to a selected Home Assistant Person. Keep that Person or choose the tracker as a separate member, not both.",
+      "invalid_display_name": "Enter a name of 1–60 characters without line breaks, or leave this field empty.",
+      "invalid_map_visibility": "Choose whether this member appears on the map.",
+      "shortcut_conflict": "Choose one quick action at a time. Save other household changes separately."
     },
     "abort": {
       "already_configured": "HomeCircle is already configured. Use Options to edit the household.",
@@ -169,44 +202,62 @@
     "step": {
       "household": {
         "title": "Choose your household and places",
-        "description": "Select existing Home Assistant people, person trackers, pet trackers and zones. To connect Life360 without another integration, turn on direct connection; its trackers appear after setup and can then be selected in Options.\n\n{tracker_status}",
+        "description": "To add or remove one tracker, or edit one member, use the shortcuts below; existing members stay as saved. Save changes to other fields separately; quick actions use their saved values. To change the whole household, edit the remaining fields. Direct Life360 trackers appear here after connection and discovery.\n\n{tracker_status}",
         "data": {
+          "add_tracker": "Add a new tracker",
+          "add_tracker_kind": "Add it as",
+          "edit_member": "Edit one existing member",
           "people": "Home Assistant People (optional)",
           "primary_home": "Primary family home",
           "places": "Ordinary places (optional)",
           "pets": "Pet trackers (optional)",
           "people_trackers": "People trackers (optional)",
           "life360_direct": "Connect a Life360 account directly",
-          "replace_life360_login": "Replace saved Life360 sign-in"
+          "replace_life360_login": "Replace saved Life360 sign-in",
+          "remove_tracker": "Remove one tracker"
         },
         "data_description": {
+          "add_tracker": "Pick one Home Assistant device tracker that is not already a household member. Only its details will open.",
+          "add_tracker_kind": "Choose Person or Pet for the new tracker.",
+          "edit_member": "Open just this member’s details. Other members stay as saved.",
           "pets": "Choose an existing tracker for each pet. Each selected tracker becomes one pet; no Home Assistant Person record is needed. Check ownership when names repeat.",
           "people_trackers": "Choose a tracker for each person who does not have a Home Assistant Person record. A connected Life360 tracker can be selected here after it appears.",
           "life360_direct": "Optional. HomeCircle will connect to Life360 itself and create device trackers in Home Assistant. Turn this off after replacing any selected HomeCircle-owned Life360 trackers.",
-          "replace_life360_login": "Use this if the password or token changed for the same Life360 account. Existing member selections are kept."
+          "replace_life360_login": "Use this if the password or token changed for the same Life360 account. Existing member selections are kept.",
+          "remove_tracker": "Remove just this tracker from HomeCircle after review. A tracker-only member disappears; a Home Assistant Person remains. Removing a tracker from a Person does not unlink it in Home Assistant."
         }
       },
       "member": {
         "title": "Choose trackers and places",
-        "description": "Member {number} of {total}: {person}.\n\n{tracker_guidance}\n\nThen choose this member’s other homes and type.",
+        "description": "Member {number} of {total}: {person}.\n\n{tracker_guidance}\n\n{position_guidance}\n\nThen choose this member’s other homes and type.\n\nThe map source note reflects the selections when this screen opened; the review updates after you submit.",
         "data": {
           "trackers": "Location and presence trackers",
           "additional_residences": "Other homes for this member",
           "configure_sensors": "Set up battery and motion sensors",
           "kind": "Member type",
-          "configure_reports": "Set up location report times"
+          "configure_reports": "Set up location report times",
+          "configure_timing": "Adjust pet location timing",
+          "show_on_map": "Show this member on the map"
         },
         "data_description": {
-          "trackers": "Select the suggested tracker, or choose another from the picker. Check the owner and entity ID when names repeat. One tracker is simplest; multiple sources are available for advanced setups. Leave empty to use the HA person alone. Changing this selection does not change the trackers linked to the HA person.",
+          "trackers": "Select a tracker you own. Home Assistant Person remains the position source while it has a usable location; a selected GPS tracker can supplement it when needed. Changing this selection does not change the trackers linked to the HA Person.",
           "additional_residences": "These zones also count as Home for this member. The Home map button still focuses the primary family home.",
-          "kind": "Choose Pet for a pet record. Pet location timing appears on the next screen; this does not create a tracker.",
+          "kind": "Choose Pet for a pet record. Pet timing can be adjusted when needed; this does not create a tracker.",
           "configure_reports": "Choose a genuine location report-time sensor separately for each selected source. Leave off if none is available.",
-          "configure_sensors": "Choose optional battery, charging, speed and driving sensors on the next screen."
+          "configure_sensors": "Choose optional battery, charging, speed and driving sensors on the next screen.",
+          "configure_timing": "Only for pets. Keep the current timing when the defaults are right.",
+          "show_on_map": "Turn off to keep the member card and Home/Away count while hiding the map marker."
         }
       },
       "confirm": {
         "title": "Review and save household",
-        "description": "Review these selections before saving. HomeCircle uses the selected Home Assistant entities. If you connected a tracker account directly, its trackers may appear after setup; reopen Options to choose people from them.\n\n**Primary home:** {primary_home}\n\n**Ordinary places:** {places}\n\n{members}\n\nSubmit to save, or close this window to discard the draft."
+        "description": "Review these selections before saving. HomeCircle uses the selected Home Assistant entities. If you connected a tracker account directly, its trackers may appear after setup; reopen Options to choose people from them.\n\n**Primary home:** {primary_home}\n\n**Ordinary places:** {places}\n\n{members}\n\nTo correct one member, choose it below and submit. Otherwise submit to save; closing discards the draft. After saving, open a dashboard → Add card → By card → HomeCircle.",
+        "data": {
+          "edit_member": "Edit one member before saving"
+        },
+        "data_description": {
+          "edit_member": "Return to just this member, then come back to the review without repeating the others."
+        }
       },
       "supporting": {
         "title": "Status sensors",
@@ -228,7 +279,7 @@
       },
       "source_report": {
         "title": "Location report time",
-        "description": "Source {number} of {total}: {source}. Choose a sensor with the actual time this source reported its location. Leave empty if unknown, or to clear an old mapping for a removed source. Home Assistant state updates are not GPS report times.",
+        "description": "Source {number} of {total}: {source}. {purpose}. Choose a sensor with the actual time this source reported its location. Leave empty if unknown or to clear an old mapping. Home Assistant state updates are not GPS report times.",
         "data": {
           "timestamp": "Location report time sensor"
         }
@@ -247,16 +298,22 @@
       },
       "pet_member": {
         "title": "Choose pet places and details",
-        "description": "Member {number} of {total}: {person}. This pet uses its selected tracker directly. Choose any other homes and optional supporting sensors.",
+        "description": "Member {number} of {total}: {person}. This pet uses its selected tracker directly. Choose any other homes and optional supporting sensors.\n\n{position_guidance}",
         "data": {
           "additional_residences": "Other homes for this pet",
           "configure_sensors": "Set up battery and motion sensors",
-          "configure_reports": "Set up location report time"
+          "configure_reports": "Set up location report time",
+          "display_name": "Name shown on the dashboard (optional)",
+          "configure_timing": "Adjust pet location timing",
+          "show_on_map": "Show this member on the map"
         },
         "data_description": {
           "additional_residences": "These zones also count as Home for this pet. The Home map button still focuses the primary family home.",
           "configure_reports": "Choose a genuine location report-time sensor for this tracker. Leave off if none is available.",
-          "configure_sensors": "Choose optional battery, charging, speed and driving sensors on the next screen."
+          "configure_sensors": "Battery and charging are usually enough. Other optional device sensors are on the next screen.",
+          "display_name": "Leave blank to use the tracker name. Useful when two collars have the same name.",
+          "configure_timing": "Keep the default 24 h at home and 5 min away unless this pet needs different stale-location timing.",
+          "show_on_map": "Turn off to keep the member card and Home/Away count while hiding the map marker."
         }
       },
       "life360_account": {
@@ -270,17 +327,31 @@
         },
         "data_description": {
           "secret": "For access token, enter only the token value. HomeCircle uses Bearer authorization.",
-          "confirm_same_account": "Only needed if HomeCircle cannot verify the previously saved sign-in for this older setup."
+          "confirm_same_account": "Only needed if HomeCircle cannot verify the previously saved sign-in for this older setup.",
+          "username": "Required when using email and password. Leave empty for access token."
         }
       },
       "tracker_member": {
         "title": "Choose person places and details",
-        "description": "Member {number} of {total}: {person}. This person uses the selected tracker directly. Choose any other homes and optional supporting sensors.",
+        "description": "Member {number} of {total}: {person}. This person uses the selected tracker directly. Choose any other homes and optional supporting sensors.\n\n{position_guidance}",
         "data": {
           "additional_residences": "Other homes for this person",
           "configure_sensors": "Set up battery and motion sensors",
-          "configure_reports": "Set up location report time"
+          "configure_reports": "Set up location report time",
+          "display_name": "Name shown on the dashboard (optional)",
+          "show_on_map": "Show this member on the map"
+        },
+        "data_description": {
+          "display_name": "Leave blank to use the tracker name.",
+          "additional_residences": "These zones also count as Home for this person. The Home map button still focuses the primary family home.",
+          "configure_reports": "Choose a genuine report-time sensor for this tracker only if available.",
+          "configure_sensors": "Choose optional battery, charging, speed and driving sensors on the next screen.",
+          "show_on_map": "Turn off to keep the member card and Home/Away count while hiding the map marker."
         }
+      },
+      "no_report_sources": {
+        "title": "No report-time source to set up",
+        "description": "This member has no current map source or selected tracker that can provide a location report time. Continue without a mapping. You can edit this member later when a tracker is available."
       }
     },
     "error": {
@@ -305,7 +376,10 @@
       "unexpected_response": "Life360 returned an unexpected response. Check HomeCircle diagnostics if this continues.",
       "invalid_tracker_source": "A directly selected person or pet must use that tracker as the source.",
       "direct_trackers_selected": "Before disconnecting, replace HomeCircle-owned trackers selected here or linked to a selected Home Assistant Person.",
-      "tracker_already_in_person": "This tracker is already linked to a selected Home Assistant Person. Keep that Person or choose the tracker as a separate member, not both."
+      "tracker_already_in_person": "This tracker is already linked to a selected Home Assistant Person. Keep that Person or choose the tracker as a separate member, not both.",
+      "invalid_display_name": "Enter a name of 1–60 characters without line breaks, or leave this field empty.",
+      "invalid_map_visibility": "Choose whether this member appears on the map.",
+      "shortcut_conflict": "Choose one quick action at a time. Save other household changes separately."
     }
   },
   "issues": {

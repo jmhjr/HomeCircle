@@ -22,6 +22,7 @@ from .const import (
     CONF_PRIMARY_HOME,
     CONF_RESIDENCES,
     CONF_TRACKERS,
+    CONF_DISPLAY_NAME,
 )
 
 STALE_AFTER_SECONDS = 300
@@ -405,7 +406,8 @@ def normalize_member(
         )
     return Member(
         id=person_id,
-        display_name=person_state.name if person_state else person_id,
+        display_name=member_config.get(CONF_DISPLAY_NAME)
+        or (person_state.name if person_state else person_id),
         kind=member_config.get("kind", "person"),
         person_entity=None if tracker_only_member else person_id,
         source_entity=person_id,
