@@ -1,0 +1,7 @@
+# Beta 11 production and DAKboard validation
+
+[v0.1.0-beta.11](https://github.com/jmhjr/HomeCircle/releases/tag/v0.1.0-beta.11) was downloaded through production HACS. A named Home Assistant backup was completed before the update. Home Assistant was restarted, and its HomeCircle integration page then showed `0.1.0-beta.11` loaded. The JavaScript served by the production HomeCircle card matched the release bundle byte for byte (SHA-256 `8c88cb428fd27de1658c6f0f3d8fca864e2adc15fb095f990ed3ae8b3da85dd4`). The saved five-member household and existing Home Assistant entity source path remained in use; no direct Life360 account was configured in production.
+
+After source integrations finished starting, the authenticated beta dashboard showed five map positions, Home 4 and Away 1, selected tracker battery values, Life360 report ages, and an explicit unknown report time for the phone source without a genuine report timestamp. Pet focus reduced the map to one position, Everyone restored five, and Home focus selected the four primary-house positions. Kiosk view filled the browser viewport, and Exit kiosk restored the normal Home Assistant page.
+
+The user refreshed the physical DAKboard and confirmed that five members, battery and report details, full-screen layout, member selection, and Everyone reset all passed. This physical check is separate from the authenticated browser verification. The frozen V2 dashboard was unchanged. Complete departure and return field tests remain open.
