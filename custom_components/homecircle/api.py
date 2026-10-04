@@ -10,10 +10,34 @@ import voluptuous as vol
 
 from .const import CONF_MEMBERS, CONF_SHOW_ON_MAP, CONF_TRACKERS, DOMAIN
 from .selection import selected_entities
-from .tracker_providers import connected_providers
+from .tracker_providers import TRACKER_PROVIDERS, connected_providers
 
 
-def location_source_label(runtime, source_entity):
+TRACKER_PLATFORM_NAMES = {"life360_pet": "Life360 Pet GPS"}
+
+
+def tracker_integration_label(registry, entity_id):
+    """Identify a tracker's integration from HA registration, never its name."""
+    if registry is None or (entity := registry.async_get(entity_id)) is None:
+        return None
+    if entity.platform == DOMAIN:
+        return next(
+            (
+                provider.display_name
+                for provider in TRACKER_PROVIDERS
+                if provider.owns_entity(registry, entity_id)
+            ),
+            "HomeCircle",
+        )
+    for provider in TRACKER_PROVIDERS:
+        if entity.platform in provider.external_platforms:
+            return provider.display_name
+    return TRACKER_PLATFORM_NAMES.get(
+        entity.platform, entity.platform.replace("_", " ").title()
+    )
+
+
+def location_source_label(runtime, source_entity, registry=None):
     """Name only the exact Person or selected tracker behind this map point."""
     if not source_entity:
         return None
@@ -27,18 +51,21 @@ def location_source_label(runtime, source_entity):
         )
         if sum(state.name.casefold() == name.casefold() for state in trackers) > 1:
             name = f"{name} ({source_entity})"
+        integration = tracker_integration_label(registry, source_entity)
+        if integration and not name.casefold().startswith(f"{integration} ".casefold()):
+            return f"Tracker: {name} · {integration}"
         return f"Tracker: {name}"
     if source_entity.startswith("person."):
         return f"HA Person: {name}"
     return name
 
 
-def proof(value, runtime):
+def proof(value, runtime, registry=None):
     return {
         "reported_at": value.reported_at.isoformat() if value.reported_at else None,
         "observed_at": value.observed_at.isoformat() if value.observed_at else None,
         "freshness": value.freshness,
-        "source_label": location_source_label(runtime, value.source_entity),
+        "source_label": location_source_label(runtime, value.source_entity, registry),
     }
 
 
@@ -96,7 +123,7 @@ def provider_alerts(hass, runtime):
     return alerts
 
 
-def snapshot(runtime, alerts=()):
+def snapshot(runtime, alerts=(), registry=None):
     """Explicit public projection. Never serialize the state cache or config."""
     household = runtime.household
     members = []
@@ -137,7 +164,7 @@ def snapshot(runtime, alerts=()):
                     "longitude": location.longitude,
                     "accuracy": location.accuracy,
                     "origin": location.origin,
-                    "evidence": proof(location.evidence, runtime),
+                    "evidence": proof(location.evidence, runtime, registry),
                 }
                 if location and member.focusable
                 else None,
@@ -188,5 +215,9 @@ def websocket_snapshot(hass, connection, msg):
         return
     connection.send_result(
         msg["id"],
-        snapshot(runtime, provider_alerts(hass, runtime) if user.is_admin else ()),
+        snapshot(
+            runtime,
+            provider_alerts(hass, runtime) if user.is_admin else (),
+            er.async_get(hass),
+        ),
     )
