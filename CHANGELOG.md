@@ -1,6 +1,10 @@
 # Changelog
 
-## 0.1.0-beta.13 — candidate, not published
+## 0.1.0-beta.14 — candidate
+
+- Show the registered tracker integration beside a location source when the tracker's name alone does not identify it. A Life360 Pet GPS tracker named Ruby now reads `Tracker: Ruby · Life360 Pet GPS`.
+
+## 0.1.0-beta.13 — experimental prerelease
 
 - Create a HomeCircle dashboard and card during first setup when neither already exists; preserve existing dashboards and remove only an untouched HomeCircle-created dashboard on uninstall.
 - Require a Home Assistant Person for each newly added person or pet. Select or create the Person, assign a tracker, then configure that member. Keep older tracker-only members and offer a settings-preserving move to a Person.

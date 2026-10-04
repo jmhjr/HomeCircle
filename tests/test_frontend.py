@@ -7,6 +7,7 @@ from homeassistant.components.lovelace.const import LOVELACE_DATA
 from homeassistant.components.lovelace.resources import ResourceYAMLCollection
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from custom_components.homecircle import dashboard_setup, frontend
@@ -208,6 +209,28 @@ async def test_location_source_label_follows_actual_map_source(hass, household):
     assert location_source_label(
         entry.runtime_data, "person.example_member"
     ).startswith("HA Person:")
+
+
+async def test_tracker_label_uses_registered_integration_not_friendly_name(
+    hass, household
+):
+    entry = await setup(hass, household)
+    registry = er.async_get(hass)
+    pet = registry.async_get_or_create("device_tracker", "life360_pet", "ruby")
+    hass.states.async_set(pet.entity_id, "home", {"friendly_name": "Ruby"})
+    entry.runtime_data.states[pet.entity_id] = hass.states.get(pet.entity_id)
+    assert location_source_label(entry.runtime_data, pet.entity_id, registry) == (
+        "Tracker: Ruby · Life360 Pet GPS"
+    )
+
+    phone = registry.async_get_or_create("device_tracker", "life360", "example_phone")
+    hass.states.async_set(
+        phone.entity_id, "home", {"friendly_name": "Life360 Example Phone"}
+    )
+    entry.runtime_data.states[phone.entity_id] = hass.states.get(phone.entity_id)
+    assert location_source_label(entry.runtime_data, phone.entity_id, registry) == (
+        "Tracker: Life360 Example Phone"
+    )
 
 
 async def test_provider_status_is_visible_only_to_admin(
