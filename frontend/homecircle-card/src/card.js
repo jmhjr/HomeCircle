@@ -110,6 +110,7 @@ class HomeCircleCard extends HTMLElement {
     const reconnected =
       this._hass?.connected === false && hass.connected !== false;
     this._hass = hass;
+    this._syncSettingsVisibility();
     if (changed) {
       clearTimeout(this._timeout);
       this._generation++;
@@ -205,6 +206,15 @@ class HomeCircleCard extends HTMLElement {
     window.history.replaceState(window.history.state, "", url);
     this._setKiosk(enabled);
   }
+  _syncSettingsVisibility() {
+    if (this._settingsButton)
+      this._settingsButton.hidden = this._hass?.user?.is_admin !== true;
+  }
+  _openSettings() {
+    const path = "/config/integrations/integration/homecircle";
+    window.history.pushState(null, "", path);
+    window.dispatchEvent(new window.Event("location-changed"));
+  }
   _layout() {
     if (this._shell || !this._config) return;
     const style = el("style");
@@ -227,7 +237,14 @@ class HomeCircleCard extends HTMLElement {
       "kiosk-toggle",
     );
     this._kioskButton.setAttribute("aria-pressed", "false");
-    actions.append(this._kioskButton, this._overview);
+    this._settingsButton = button(
+      "Settings",
+      () => this._openSettings(),
+      "settings-toggle",
+    );
+    this._settingsButton.title = "Open HomeCircle settings";
+    this._syncSettingsVisibility();
+    actions.append(this._kioskButton, this._settingsButton, this._overview);
     header.append(brand, actions);
     this._status = el("div", "status");
     this._status.setAttribute("role", "status");

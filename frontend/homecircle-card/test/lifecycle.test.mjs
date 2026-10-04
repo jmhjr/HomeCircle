@@ -452,11 +452,14 @@ test("wall kiosk control hides and restores HA navigation for this browser", asy
     value.hass = {
       connection: {},
       connected: true,
+      user: { is_admin: true },
       callWS: async () => response(),
     };
     document.body.append(value);
     await tick();
     const toggle = value.shadowRoot.querySelector(".kiosk-toggle");
+    const settings = value.shadowRoot.querySelector(".settings-toggle");
+    assert.equal(settings.hidden, false);
     assert.equal(toggle.textContent, "Kiosk view");
     toggle.click();
     assert.equal(
@@ -466,6 +469,10 @@ test("wall kiosk control hides and restores HA navigation for this browser", asy
     assert.equal(toggle.textContent, "Exit kiosk");
     assert.equal(toggle.getAttribute("aria-pressed"), "true");
     assert.equal(value.hasAttribute("kiosk"), true);
+    assert.match(
+      value.shadowRoot.querySelector("style").textContent,
+      /:host\(\[kiosk\]\) \.settings-toggle/,
+    );
     assert.match(viewRoot.querySelector("style").textContent, /padding-top: 0/);
     toggle.click();
     assert.equal(
@@ -484,6 +491,39 @@ test("wall kiosk control hides and restores HA navigation for this browser", asy
     ha.remove();
     window.removeEventListener("hass-kiosk-mode", onKiosk);
     globalThis.requestAnimationFrame = originalFrame;
+  }
+});
+
+test("settings opens HomeCircle integration for administrators", async () => {
+  const value = card({
+    connection: {},
+    connected: true,
+    user: { is_admin: false },
+    callWS: async () => response(),
+  });
+  const settings = value.shadowRoot.querySelector(".settings-toggle");
+  assert.equal(settings.hidden, true);
+  value.hass = {
+    connection: value._hass.connection,
+    connected: true,
+    user: { is_admin: true },
+    callWS: async () => response(),
+  };
+  assert.equal(settings.hidden, false);
+  let navigations = 0;
+  const onNavigate = () => navigations++;
+  window.addEventListener("location-changed", onNavigate);
+  try {
+    settings.click();
+    assert.equal(
+      window.location.pathname,
+      "/config/integrations/integration/homecircle",
+    );
+    assert.equal(navigations, 1);
+  } finally {
+    window.history.replaceState({}, "", "http://localhost/");
+    window.removeEventListener("location-changed", onNavigate);
+    value.remove();
   }
 });
 
