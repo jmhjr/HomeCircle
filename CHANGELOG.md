@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.0-beta.13 — candidate, not published
+
+- Create a HomeCircle dashboard and card during first setup when neither already exists; preserve existing dashboards and remove only an untouched HomeCircle-created dashboard on uninstall.
+- Require a Home Assistant Person for each newly added person or pet. Select or create the Person, assign a tracker, then configure that member. Keep older tracker-only members and offer a settings-preserving move to a Person.
+- Open task-based settings over the dashboard from a cog in the card header. Keep the same choices in Home Assistant's Configure flow, including focused tracker add, remove, map visibility, sensor, and household tasks.
+- Create missing Home Assistant zones during setup, clarify the purpose of Away places, and add Back navigation without discarding other member selections.
+- Default new cards to OpenStreetMap street tiles while retaining a Private setting that makes no external tile requests.
+- Identify the device behind each map position and keep Home Assistant state-update time separate from genuine location-report time. Filter battery sensor choices to relevant candidates while preserving saved mappings.
+- Show `HomeCircle - Beta 13` on default card titles from the integration version; retain custom titles.
+
 ## 0.1.0-beta.12 — experimental prerelease
 
 - Shorten initial household setup with a clearer review step and guidance for choosing Home Assistant people and trackers.

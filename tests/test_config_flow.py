@@ -13,9 +13,10 @@ from homeassistant.config_entries import (
     ConfigEntryState,
 )
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import FlowResultType, InvalidData
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from life360 import Unauthorized
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.homecircle.const import DOMAIN
 from custom_components.homecircle import frontend
@@ -46,7 +47,18 @@ async def finish(hass, result, manager=None):
         },
     )
     assert result["step_id"] == "confirm"
-    return await manager.async_configure(result["flow_id"], {})
+    return await configure_empty(manager, result)
+
+
+async def configure_empty(manager, result):
+    """Submit an empty form or choose Save at the review menu."""
+    user_input = (
+        {"next_step_id": "confirm_save"}
+        if result["type"] == FlowResultType.MENU
+        and result["step_id"] in ("confirm", "confirm_remove")
+        else {}
+    )
+    return await manager.async_configure(result["flow_id"], user_input)
 
 
 async def create(hass, household):
@@ -56,6 +68,476 @@ async def create(hass, household):
     entry = result["result"]
     assert entry.state == ConfigEntryState.LOADED
     return entry
+
+
+async def legacy_tracker_entry(hass, tracker, *, kind="pet", reports=None):
+    """Load a beta-12 tracker-only household to test upgrade compatibility."""
+    data = {
+        "people": [],
+        "people_trackers": [tracker] if kind == "person" else [],
+        "pets": [tracker] if kind == "pet" else [],
+        "primary_home": "zone.home",
+        "places": [],
+        "members": {
+            tracker: {
+                "trackers": [tracker],
+                "additional_residences": [],
+                "kind": kind,
+                "pet_home_minutes": 1440,
+                "pet_away_minutes": 5,
+                **({"location_reports": reports} if reports else {}),
+            }
+        },
+    }
+    entry = MockConfigEntry(
+        domain=DOMAIN, title="HomeCircle", data=data, unique_id=DOMAIN
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    return entry
+
+
+async def test_new_pet_person_is_created_and_tracker_linked_on_save(hass):
+    """A new pet goes through HA Person before HomeCircle tracker settings."""
+    from homeassistant.components.person import entities_in_person
+    from homeassistant.setup import async_setup_component
+
+    assert await async_setup_component(hass, "zone", {})
+    hass.states.async_set(
+        "device_tracker.example_pet", "not_home", {"source_type": "gps"}
+    )
+    manager = hass.config_entries.flow
+    result = await manager.async_init(DOMAIN, context={"source": SOURCE_USER})
+    result = await manager.async_configure(
+        result["flow_id"], {"create_person": True, "primary_home": "zone.home"}
+    )
+    assert result["step_id"] == "create_person"
+    result = await manager.async_configure(result["flow_id"], {"name": "Example Pet"})
+    assert result["step_id"] == "household"
+    assert "people_trackers" not in [str(key) for key in result["data_schema"].schema]
+    person_id = next(
+        state.entity_id
+        for state in hass.states.async_all("person")
+        if state.name == "Example Pet"
+    )
+    result = await manager.async_configure(
+        result["flow_id"], {"people": [person_id], "primary_home": "zone.home"}
+    )
+    assert result["step_id"] == "assign_tracker"
+    result = await manager.async_configure(
+        result["flow_id"], {"tracker": "device_tracker.example_pet"}
+    )
+    assert result["step_id"] == "member"
+    result = await manager.async_configure(
+        result["flow_id"],
+        {"kind": "pet"},
+    )
+    assert result["step_id"] == "pet_freshness"
+    result = await manager.async_configure(result["flow_id"], {})
+    assert result["step_id"] == "confirm"
+    assert entities_in_person(hass, person_id) == []
+    result = await configure_empty(manager, result)
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert entities_in_person(hass, person_id) == ["device_tracker.example_pet"]
+    assert result["data"]["members"][person_id]["kind"] == "pet"
+
+
+async def test_saved_tracker_only_pet_can_move_to_person_without_losing_settings(hass):
+    from homeassistant.components.person import async_create_person, entities_in_person
+    from homeassistant.setup import async_setup_component
+
+    assert await async_setup_component(hass, "zone", {})
+    assert await async_setup_component(hass, "person", {"person": []})
+    pet = "device_tracker.example_pet"
+    hass.states.async_set(pet, "not_home", {"source_type": "gps"})
+    entry = await legacy_tracker_entry(hass, pet)
+    await async_create_person(hass, "Example Pet")
+    person_id = next(
+        state.entity_id
+        for state in hass.states.async_all("person")
+        if state.name == "Example Pet"
+    )
+    manager = hass.config_entries.options
+    result = await start_options(manager, entry, "convert_legacy_member")
+    assert result["step_id"] == "convert_legacy_member"
+    result = await manager.async_configure(
+        result["flow_id"], {"person": person_id, "legacy_tracker": pet}
+    )
+    assert result["step_id"] == "member"
+    result = await manager.async_configure(result["flow_id"], {})
+    assert result["step_id"] == "confirm"
+    assert entities_in_person(hass, person_id) == []
+    await configure_empty(manager, result)
+    await hass.async_block_till_done()
+    assert pet not in entry.options["pets"]
+    assert entry.options["members"][person_id]["kind"] == "pet"
+    assert entry.options["members"][person_id]["trackers"] == [pet]
+    assert entities_in_person(hass, person_id) == [pet]
+
+
+async def test_review_back_and_edit_member_preserve_two_member_draft(hass, household):
+    manager = hass.config_entries.flow
+    result = await start(hass, household)
+    result = await manager.async_configure(
+        result["flow_id"], {"trackers": ["device_tracker.example_phone"]}
+    )
+    result = await manager.async_configure(
+        result["flow_id"], {"trackers": ["device_tracker.example_router"]}
+    )
+    assert result["type"] == FlowResultType.MENU
+    assert result["menu_options"] == [
+        "confirm_back",
+        "confirm_edit_member",
+        "confirm_save",
+    ]
+
+    result = await manager.async_configure(
+        result["flow_id"], {"next_step_id": "confirm_back"}
+    )
+    assert result["step_id"] == "member"
+    assert result["description_placeholders"]["number"] == "2"
+    result = await manager.async_configure(
+        result["flow_id"], {"trackers": ["device_tracker.example_router"]}
+    )
+    assert result["step_id"] == "confirm"
+
+    result = await manager.async_configure(
+        result["flow_id"], {"next_step_id": "confirm_edit_member"}
+    )
+    assert result["step_id"] == "confirm_edit_member"
+    result = await manager.async_configure(
+        result["flow_id"], {"member": "person.example_member"}
+    )
+    assert result["step_id"] == "member"
+    assert result["description_placeholders"]["number"] == "1"
+    result = await manager.async_configure(
+        result["flow_id"], {"trackers": ["device_tracker.example_phone"]}
+    )
+    assert result["step_id"] == "confirm"
+    result = await configure_empty(manager, result)
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    members = result["data"]["members"]
+    assert members["person.example_member"]["trackers"] == [
+        "device_tracker.example_phone"
+    ]
+    assert members["person.example_second"]["trackers"] == [
+        "device_tracker.example_router"
+    ]
+
+
+async def test_create_place_zone_keeps_household_draft(hass, household):
+    manager = hass.config_entries.flow
+    result = await manager.async_init(DOMAIN, context={"source": SOURCE_USER})
+    result = await manager.async_configure(
+        result["flow_id"], {**household, "create_zone": True}
+    )
+    assert result["step_id"] == "create_zone"
+    result = await manager.async_configure(
+        result["flow_id"],
+        {
+            "name": "Example Office",
+            "location": {ATTR_LATITUDE: 0.1, ATTR_LONGITUDE: 0.1, "radius": 100},
+            "use": "place",
+        },
+    )
+    assert result["step_id"] == "household"
+    assert (
+        "Created Example Office" in result["description_placeholders"]["new_zone_hint"]
+    )
+    zone_id = next(
+        state.entity_id
+        for state in hass.states.async_all("zone")
+        if state.name == "Example Office"
+    )
+    prefill = {
+        str(field): (field.description or {}).get("suggested_value")
+        for field in result["data_schema"].schema
+    }
+    assert prefill["people"] == household["people"]
+    assert prefill["places"] == [*household["places"], zone_id]
+    result = await manager.async_configure(
+        result["flow_id"], {**household, "places": [*household["places"], zone_id]}
+    )
+    assert result["step_id"] == "member"
+    result = await manager.async_configure(
+        result["flow_id"], {"trackers": ["device_tracker.example_phone"]}
+    )
+    result = await manager.async_configure(
+        result["flow_id"], {"trackers": ["device_tracker.example_router"]}
+    )
+    result = await configure_empty(manager, result)
+    assert zone_id in result["data"]["places"]
+
+
+async def test_create_other_home_zone_preserves_member_choices(hass, household):
+    manager = hass.config_entries.flow
+    result = await start(hass, {**household, "people": ["person.example_member"]})
+    result = await manager.async_configure(
+        result["flow_id"],
+        {"trackers": ["device_tracker.example_phone"], "create_zone": True},
+    )
+    assert result["step_id"] == "create_zone"
+    result = await manager.async_configure(
+        result["flow_id"],
+        {
+            "name": "Example Second Home",
+            "location": {ATTR_LATITUDE: 0.2, ATTR_LONGITUDE: 0.2, "radius": 150},
+        },
+    )
+    assert result["step_id"] == "member"
+    assert (
+        "Created Example Second Home"
+        in result["description_placeholders"]["new_zone_hint"]
+    )
+    zone_id = next(
+        state.entity_id
+        for state in hass.states.async_all("zone")
+        if state.name == "Example Second Home"
+    )
+    prefill = {
+        str(field): (field.description or {}).get("suggested_value")
+        for field in result["data_schema"].schema
+    }
+    assert prefill["trackers"] == ["device_tracker.example_phone"]
+    assert prefill["additional_residences"] == [zone_id]
+    result = await manager.async_configure(
+        result["flow_id"],
+        {
+            "trackers": ["device_tracker.example_phone"],
+            "additional_residences": [zone_id],
+        },
+    )
+    result = await configure_empty(manager, result)
+    assert result["data"]["members"]["person.example_member"][
+        "additional_residences"
+    ] == [zone_id]
+
+
+async def test_create_primary_zone_rejects_duplicate_name(hass, household):
+    manager = hass.config_entries.flow
+    result = await manager.async_init(DOMAIN, context={"source": SOURCE_USER})
+    result = await manager.async_configure(
+        result["flow_id"], {**household, "create_zone": True}
+    )
+    location = {ATTR_LATITUDE: 0.3, ATTR_LONGITUDE: 0.3, "radius": 120}
+    result = await manager.async_configure(
+        result["flow_id"],
+        {
+            "name": hass.states.get("zone.home").name,
+            "location": location,
+            "use": "primary",
+        },
+    )
+    assert result["step_id"] == "create_zone"
+    assert result["errors"]["name"] == "zone_already_exists"
+    result = await manager.async_configure(
+        result["flow_id"],
+        {"name": "Example Family Home", "location": location, "use": "primary"},
+    )
+    assert result["step_id"] == "household"
+    zone_id = next(
+        state.entity_id
+        for state in hass.states.async_all("zone")
+        if state.name == "Example Family Home"
+    )
+    prefill = {
+        str(field): (field.description or {}).get("suggested_value")
+        for field in result["data_schema"].schema
+    }
+    assert prefill["primary_home"] == zone_id
+    assert prefill["people"] == household["people"]
+    manager.async_abort(result["flow_id"])
+
+
+async def start_options(manager, entry, next_step="household"):
+    """Choose an explicit task from the options menu."""
+    result = await manager.async_init(entry.entry_id)
+    assert result["type"] == FlowResultType.MENU
+    return await manager.async_configure(result["flow_id"], {"next_step_id": next_step})
+
+
+async def test_options_battery_task_shows_only_member_then_sensors(hass, household):
+    entry = await create(hass, household)
+    original_second = deepcopy(entry.data["members"]["person.example_second"])
+    hass.states.async_set("sensor.example_battery", "78", {"unit_of_measurement": "%"})
+    hass.states.async_set("sensor.example_backup", "2026-10-04T00:00:00+00:00")
+    hass.states.async_set(
+        "sensor.example_humidity",
+        "55",
+        {"unit_of_measurement": "%", "device_class": "humidity"},
+    )
+    manager = hass.config_entries.options
+    result = await start_options(manager, entry, "tracker_member_choice")
+    assert result["step_id"] == "tracker_member_choice"
+    assert {str(field) for field in result["data_schema"].schema} == {
+        "member",
+        "setting",
+    }
+    result = await manager.async_configure(
+        result["flow_id"], {"member": "person.example_member", "setting": "sensors"}
+    )
+    assert result["step_id"] == "supporting"
+    battery_field = next(
+        value
+        for key, value in result["data_schema"].schema.items()
+        if str(key) == "battery"
+    )
+    assert battery_field.config["include_entities"] == ["sensor.example_battery"]
+    result = await manager.async_configure(
+        result["flow_id"], {"battery": "sensor.example_battery"}
+    )
+    assert result["step_id"] == "confirm"
+    await configure_empty(manager, result)
+    await hass.async_block_till_done()
+    assert (
+        entry.options["members"]["person.example_member"]["supporting"]["battery"]
+        == "sensor.example_battery"
+    )
+    assert entry.options["members"]["person.example_second"] == original_second
+
+
+async def test_options_person_settings_open_selected_members_details(hass, household):
+    entry = await create(hass, household)
+    manager = hass.config_entries.options
+    result = await start_options(manager, entry, "tracker_member_choice")
+    result = await manager.async_configure(
+        result["flow_id"], {"member": "person.example_second", "setting": "details"}
+    )
+    assert result["step_id"] == "member"
+    manager.async_abort(result["flow_id"])
+
+
+async def test_options_remove_tracker_is_scoped_to_selected_person(hass, household):
+    entry = await create(hass, household)
+    manager = hass.config_entries.options
+    result = await start_options(manager, entry, "tracker_member_choice")
+    result = await manager.async_configure(
+        result["flow_id"], {"member": "person.example_member", "setting": "remove"}
+    )
+    assert result["step_id"] == "remove_tracker_choice"
+    tracker_field = next(
+        value
+        for key, value in result["data_schema"].schema.items()
+        if str(key) == "remove_tracker"
+    )
+    assert [option["value"] for option in tracker_field.config["options"]] == [
+        "device_tracker.example_phone"
+    ]
+    with pytest.raises(InvalidData):
+        await manager.async_configure(
+            result["flow_id"], {"remove_tracker": "device_tracker.example_router"}
+        )
+    result = await manager.async_configure(
+        result["flow_id"], {"remove_tracker": "device_tracker.example_phone"}
+    )
+    assert result["step_id"] == "confirm_remove"
+    assert result["menu_options"] == ["confirm_back_remove", "confirm_save"]
+    result = await manager.async_configure(
+        result["flow_id"], {"next_step_id": "confirm_back_remove"}
+    )
+    assert result["step_id"] == "remove_tracker_choice"
+    result = await manager.async_configure(
+        result["flow_id"], {"remove_tracker": "device_tracker.example_phone"}
+    )
+    assert result["step_id"] == "confirm_remove"
+    await configure_empty(manager, result)
+    await hass.async_block_till_done()
+    assert entry.options["members"]["person.example_member"]["trackers"] == []
+    assert entry.options["members"]["person.example_second"]["trackers"] == [
+        "device_tracker.example_router"
+    ]
+
+
+async def test_options_add_tracker_task_uses_short_form(hass, household):
+    from homeassistant.components.person import async_create_person, entities_in_person
+    from homeassistant.setup import async_setup_component
+
+    entry = await create(hass, household)
+    tracker = "device_tracker.example_bike"
+    hass.states.async_set(tracker, "not_home", {"source_type": "gps"})
+    assert await async_setup_component(hass, "person", {"person": []})
+    await async_create_person(hass, "Example Bike")
+    person_id = next(
+        state.entity_id
+        for state in hass.states.async_all("person")
+        if state.name == "Example Bike"
+    )
+    manager = hass.config_entries.options
+    result = await start_options(manager, entry, "add_tracker_choice")
+    assert result["step_id"] == "add_tracker_choice"
+    assert {str(field) for field in result["data_schema"].schema} == {
+        "person",
+        "create_person",
+    }
+    result = await manager.async_configure(result["flow_id"], {"person": person_id})
+    assert result["step_id"] == "add_tracker_assign"
+    assert {str(field) for field in result["data_schema"].schema} == {
+        "add_tracker",
+        "add_tracker_kind",
+    }
+    result = await manager.async_configure(
+        result["flow_id"], {"add_tracker": tracker, "add_tracker_kind": "person"}
+    )
+    assert result["step_id"] == "member"
+    result = await configure_empty(manager, result)
+    assert result["step_id"] == "confirm"
+    assert "Example Bike" in result["description_placeholders"]["members"]
+    assert entities_in_person(hass, person_id) == []
+    await configure_empty(manager, result)
+    await hass.async_block_till_done()
+    assert person_id in entry.options["people"]
+    assert entry.options["members"][person_id]["trackers"] == [tracker]
+    assert entities_in_person(hass, person_id) == [tracker]
+
+
+async def test_options_create_pet_person_before_assigning_tracker(hass, household):
+    from homeassistant.components.person import entities_in_person
+    from homeassistant.setup import async_setup_component
+
+    entry = await create(hass, household)
+    tracker = "device_tracker.example_pet_collar"
+    hass.states.async_set(tracker, "not_home", {"source_type": "gps"})
+    assert await async_setup_component(hass, "person", {"person": []})
+    manager = hass.config_entries.options
+    result = await start_options(manager, entry, "add_tracker_choice")
+    result = await manager.async_configure(result["flow_id"], {"create_person": True})
+    assert result["step_id"] == "create_person"
+    result = await manager.async_configure(result["flow_id"], {"name": "Example Pet"})
+    assert result["step_id"] == "add_tracker_choice"
+    person_id = next(
+        state.entity_id
+        for state in hass.states.async_all("person")
+        if state.name == "Example Pet"
+    )
+    result = await manager.async_configure(result["flow_id"], {"person": person_id})
+    assert result["step_id"] == "add_tracker_assign"
+    result = await manager.async_configure(
+        result["flow_id"], {"add_tracker": tracker, "add_tracker_kind": "pet"}
+    )
+    assert result["step_id"] == "member"
+    result = await configure_empty(manager, result)
+    assert result["step_id"] == "confirm"
+    assert entities_in_person(hass, person_id) == []
+    await configure_empty(manager, result)
+    await hass.async_block_till_done()
+    assert entry.options["members"][person_id]["kind"] == "pet"
+    assert entities_in_person(hass, person_id) == [tracker]
+
+
+async def test_create_person_with_existing_yaml_person(hass, household):
+    from homeassistant.setup import async_setup_component
+
+    assert await async_setup_component(
+        hass, "person", {"person": [{"id": "existing", "name": "Existing"}]}
+    )
+    entry = await create(hass, household)
+    manager = hass.config_entries.options
+    result = await start_options(manager, entry, "add_tracker_choice")
+    result = await manager.async_configure(result["flow_id"], {"create_person": True})
+    assert result["step_id"] == "create_person"
+    result = await manager.async_configure(result["flow_id"], {"name": "Example Pet"})
+    assert result["step_id"] == "add_tracker_choice"
 
 
 async def test_setup_persistence_sources_and_unload(hass, household):
@@ -99,7 +581,7 @@ async def test_cancel_and_duplicate_flow(hass, household):
     )
     assert duplicate["reason"] == "single_instance_allowed"
     saved = deepcopy(dict(entry.data))
-    options = await hass.config_entries.options.async_init(entry.entry_id)
+    options = await start_options(hass.config_entries.options, entry)
     options = await hass.config_entries.options.async_configure(
         options["flow_id"],
         {
@@ -130,6 +612,7 @@ async def test_invalid_household(hass, household, field, value, error_field, err
 
 
 async def test_tracker_only_pet_setup_and_options(hass, household):
+    """A saved beta-12 pet remains usable and editable during migration."""
     pet = "device_tracker.example_pet"
     report = "sensor.example_pet_report"
     hass.states.async_set(
@@ -138,45 +621,9 @@ async def test_tracker_only_pet_setup_and_options(hass, household):
         {"source_type": "gps", ATTR_LATITUDE: 0.0, ATTR_LONGITUDE: 0.0},
     )
     hass.states.async_set(report, "2026-01-01T00:00:00+00:00")
-    selection = {
-        "people": [],
-        "pets": [pet],
-        "primary_home": household["primary_home"],
-        "places": [],
-    }
-    flow = await start(hass, selection)
-    assert flow["step_id"] == "pet_member"
-    assert "trackers" not in {str(field) for field in flow["data_schema"].schema}
-    flow = await hass.config_entries.flow.async_configure(
-        flow["flow_id"],
-        {
-            "additional_residences": ["zone.example_residence"],
-            "configure_reports": True,
-        },
-    )
-    assert flow["step_id"] == "pet_freshness"
-    flow = await hass.config_entries.flow.async_configure(
-        flow["flow_id"], {"pet_home_minutes": 720, "pet_away_minutes": 10}
-    )
-    assert flow["step_id"] == "source_report"
-    flow = await hass.config_entries.flow.async_configure(
-        flow["flow_id"], {"timestamp": report}
-    )
-    assert flow["step_id"] == "confirm"
-    assert "example pet (Pet)" in flow["description_placeholders"]["members"]
-    flow = await hass.config_entries.flow.async_configure(flow["flow_id"], {})
-    await hass.async_block_till_done()
-    assert flow["type"] == FlowResultType.CREATE_ENTRY
-    entry = flow["result"]
+    entry = await legacy_tracker_entry(hass, pet, reports={pet: report})
     assert entry.state == ConfigEntryState.LOADED
-    assert entry.data["members"][pet] == {
-        "trackers": [pet],
-        "additional_residences": ["zone.example_residence"],
-        "kind": "pet",
-        "pet_home_minutes": 720,
-        "pet_away_minutes": 10,
-        "location_reports": {pet: report},
-    }
+    assert entry.data["members"][pet]["location_reports"] == {pet: report}
     assert entry.runtime_data.household.members[0].id == pet
     assert entry.runtime_data.household.members[0].person_entity is None
     assert entry.runtime_data.household.counts["home"] == 1
@@ -203,14 +650,22 @@ async def test_tracker_only_pet_setup_and_options(hass, household):
     )
 
     options = hass.config_entries.options
-    flow = await options.async_init(entry.entry_id)
-    flow = await options.async_configure(flow["flow_id"], selection)
+    flow = await start_options(options, entry)
+    flow = await options.async_configure(
+        flow["flow_id"],
+        {"pets": [pet], "primary_home": household["primary_home"]},
+    )
     assert flow["step_id"] == "pet_member"
     flow = await options.async_configure(
-        flow["flow_id"], {"additional_residences": ["zone.example_residence"]}
+        flow["flow_id"],
+        {"additional_residences": ["zone.example_residence"], "configure_timing": True},
+    )
+    assert flow["step_id"] == "pet_freshness"
+    flow = await options.async_configure(
+        flow["flow_id"], {"pet_home_minutes": 720, "pet_away_minutes": 10}
     )
     assert flow["step_id"] == "confirm"
-    await options.async_configure(flow["flow_id"], {})
+    await configure_empty(options, flow)
     await hass.async_block_till_done()
     assert entry.options["members"][pet]["pet_home_minutes"] == 720
     assert entry.runtime_data.household.members[0].id == pet
@@ -219,6 +674,8 @@ async def test_tracker_only_pet_setup_and_options(hass, household):
 async def test_add_hide_and_remove_one_tracker_without_reconfirming_household(
     hass, household
 ):
+    from homeassistant.components.person import async_create_person, entities_in_person
+    from homeassistant.setup import async_setup_component
     from custom_components.homecircle.api import snapshot
 
     entry = await create(hass, household)
@@ -229,82 +686,76 @@ async def test_add_hide_and_remove_one_tracker_without_reconfirming_household(
         "home",
         {"source_type": "gps", ATTR_LATITUDE: 0.0, ATTR_LONGITUDE: 0.0},
     )
-    options = hass.config_entries.options
-    result = await options.async_init(entry.entry_id)
-    result = await options.async_configure(
-        result["flow_id"], {"add_tracker": tracker, "add_tracker_kind": "person"}
+    assert await async_setup_component(hass, "person", {"person": []})
+    await async_create_person(hass, "Example Bike")
+    person_id = next(
+        state.entity_id
+        for state in hass.states.async_all("person")
+        if state.name == "Example Bike"
     )
-    assert result["step_id"] == "tracker_member"
+    options = hass.config_entries.options
+    result = await start_options(options, entry, "add_tracker_choice")
+    result = await options.async_configure(result["flow_id"], {"person": person_id})
+    assert result["step_id"] == "add_tracker_assign"
+    result = await options.async_configure(result["flow_id"], {"add_tracker": tracker})
+    assert result["step_id"] == "member"
     result = await options.async_configure(
-        result["flow_id"], {"display_name": "Bike", "show_on_map": False}
+        result["flow_id"], {"trackers": [tracker], "show_on_map": False}
     )
     assert result["step_id"] == "confirm"
-    assert "Bike" in result["description_placeholders"]["members"]
     assert "Map marker: hidden" in result["description_placeholders"]["members"]
-    await options.async_configure(result["flow_id"], {})
+    await configure_empty(options, result)
     await hass.async_block_till_done()
     assert all(
         entry.options["members"][key] == value
         for key, value in original_members.items()
     )
-    assert entry.options["members"][tracker]["display_name"] == "Bike"
+    assert entities_in_person(hass, person_id) == [tracker]
     bike = next(
         member
         for member in snapshot(entry.runtime_data)["members"]
-        if member["id"] == tracker
+        if member["id"] == person_id
     )
-    assert bike["name"] == "Bike"
+    assert bike["name"] == "Example Bike"
     assert bike["map_visible"] is False
-    assert bike["location"] is not None
-    assert entry.runtime_data.household.counts["home"] == 3
 
-    result = await options.async_init(entry.entry_id)
-    result = await options.async_configure(result["flow_id"], {"edit_member": tracker})
-    assert result["step_id"] == "tracker_member"
+    result = await start_options(options, entry, "tracker_member_choice")
     result = await options.async_configure(
-        result["flow_id"], {"display_name": "Bike", "show_on_map": True}
+        result["flow_id"], {"member": person_id, "setting": "details"}
     )
-    assert result["step_id"] == "confirm"
-    await options.async_configure(result["flow_id"], {})
+    result = await options.async_configure(
+        result["flow_id"], {"trackers": [tracker], "show_on_map": True}
+    )
+    await configure_empty(options, result)
     await hass.async_block_till_done()
-    assert entry.options["members"][tracker]["display_name"] == "Bike"
     assert snapshot(entry.runtime_data)["members"][-1]["map_visible"] is True
 
-    result = await options.async_init(entry.entry_id)
-    result = await options.async_configure(result["flow_id"], {"edit_member": tracker})
-    result = await options.async_configure(result["flow_id"], {"display_name": "  "})
-    assert result["step_id"] == "confirm"
-    await options.async_configure(result["flow_id"], {})
-    await hass.async_block_till_done()
-    assert "display_name" not in entry.options["members"][tracker]
-
-    result = await options.async_init(entry.entry_id)
+    result = await start_options(options, entry, "tracker_member_choice")
+    result = await options.async_configure(
+        result["flow_id"], {"member": person_id, "setting": "remove"}
+    )
     result = await options.async_configure(
         result["flow_id"], {"remove_tracker": tracker}
     )
-    assert result["step_id"] == "confirm"
-    assert "Bike" not in result["description_placeholders"]["members"]
-    await options.async_configure(result["flow_id"], {})
+    assert result["step_id"] == "confirm_remove"
+    await configure_empty(options, result)
     await hass.async_block_till_done()
-    assert tracker not in entry.options["members"]
+    assert entry.options["members"][person_id]["trackers"] == []
     assert all(
         entry.options["members"][key] == value
         for key, value in original_members.items()
     )
-    assert tracker not in {
-        member["id"] for member in snapshot(entry.runtime_data)["members"]
-    }
 
 
 async def test_remove_selected_person_tracker_preserves_person(hass, household):
     entry = await create(hass, household)
     options = hass.config_entries.options
-    result = await options.async_init(entry.entry_id)
+    result = await start_options(options, entry)
     result = await options.async_configure(
         result["flow_id"], {"remove_tracker": "device_tracker.example_phone"}
     )
     assert result["step_id"] == "confirm"
-    await options.async_configure(result["flow_id"], {})
+    await configure_empty(options, result)
     await hass.async_block_till_done()
     member = entry.options["members"]["person.example_member"]
     assert member["trackers"] == []
@@ -316,12 +767,8 @@ async def test_remove_selected_person_tracker_preserves_person(hass, household):
 async def test_tracker_shortcuts_reject_conflicts_before_member_form(hass, household):
     entry = await create(hass, household)
     manager = hass.config_entries.options
-    result = await manager.async_init(entry.entry_id)
-    result = await manager.async_configure(
-        result["flow_id"], {"add_tracker": "device_tracker.example_phone"}
-    )
-    assert result["step_id"] == "household"
-    assert result["errors"]["add_tracker"] == "duplicate_selection"
+    result = await start_options(manager, entry)
+    assert "add_tracker" not in {str(field) for field in result["data_schema"].schema}
     result = await manager.async_configure(
         result["flow_id"],
         {"edit_member": "person.example_member", "places": []},
@@ -340,19 +787,16 @@ async def test_offline_tracker_still_gets_report_time_prompt(hass, household):
     tracker = "device_tracker.example_offline"
     hass.states.async_set(tracker, "unavailable")
     selection = {
-        "people": [],
-        "people_trackers": [tracker],
+        "people": ["person.example_member"],
         "primary_home": household["primary_home"],
         "places": [],
     }
     result = await start(hass, selection)
-    assert (
-        "No usable map position"
-        in result["description_placeholders"]["position_guidance"]
-    )
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"configure_reports": True}
+        result["flow_id"], {"trackers": [tracker], "configure_reports": True}
     )
+    assert result["step_id"] == "source_report"
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["step_id"] == "source_report"
     assert result["description_placeholders"]["source"] == "example offline"
     assert (
@@ -380,19 +824,20 @@ async def test_person_offline_tracker_and_no_source_report_steps(hass, household
         result["flow_id"], {"trackers": [], "configure_reports": True}
     )
     assert result["step_id"] == "no_report_sources"
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    result = await configure_empty(hass.config_entries.flow, result)
     assert result["step_id"] == "member"
 
 
-async def test_full_household_options_can_still_add_tracker(hass, household):
+async def test_full_household_options_keeps_people_and_hides_legacy_additions(
+    hass, household
+):
     entry = await create(hass, household)
-    tracker = "device_tracker.example_bike"
-    hass.states.async_set(tracker, "not_home", {"source_type": "gps"})
     manager = hass.config_entries.options
-    result = await manager.async_init(entry.entry_id)
-    result = await manager.async_configure(
-        result["flow_id"], {**household, "people_trackers": [tracker]}
-    )
+    result = await start_options(manager, entry)
+    fields = {str(field) for field in result["data_schema"].schema}
+    assert "people_trackers" not in fields
+    assert "pets" not in fields
+    result = await manager.async_configure(result["flow_id"], household)
     assert result["step_id"] == "member"
     result = await manager.async_configure(
         result["flow_id"], {"trackers": ["device_tracker.example_phone"]}
@@ -400,12 +845,13 @@ async def test_full_household_options_can_still_add_tracker(hass, household):
     result = await manager.async_configure(
         result["flow_id"], {"trackers": ["device_tracker.example_router"]}
     )
-    assert result["step_id"] == "tracker_member"
-    result = await manager.async_configure(result["flow_id"], {})
     assert result["step_id"] == "confirm"
-    await manager.async_configure(result["flow_id"], {})
+    await configure_empty(manager, result)
     await hass.async_block_till_done()
-    assert tracker in entry.options["members"]
+    assert entry.options["people"] == household["people"]
+    assert entry.options["members"]["person.example_member"]["trackers"] == [
+        "device_tracker.example_phone"
+    ]
     assert "add_tracker_kind" not in entry.options
 
 
@@ -413,8 +859,6 @@ async def test_direct_life360_account_and_tracker_person_setup(hass, household):
     """An account can start empty, then its tracker can be chosen in Options."""
     selection = {
         "people": [],
-        "people_trackers": [],
-        "pets": [],
         "primary_home": household["primary_home"],
         "places": [],
         "life360_direct": True,
@@ -436,7 +880,7 @@ async def test_direct_life360_account_and_tracker_person_setup(hass, household):
         "custom_components.homecircle.life360_direct.DirectLife360.async_start",
         new_callable=AsyncMock,
     ):
-        flow = await hass.config_entries.flow.async_configure(flow["flow_id"], {})
+        flow = await configure_empty(hass.config_entries.flow, flow)
         await hass.async_block_till_done()
     entry = flow["result"]
     assert entry.data["life360_account"] == {
@@ -454,36 +898,49 @@ async def test_direct_life360_account_and_tracker_person_setup(hass, household):
     assert "example-token" not in str(diagnostics)
     assert entry.runtime_data.household.members == ()
 
-    options = hass.config_entries.options
-    flow = await options.async_init(entry.entry_id)
-    assert "waiting for trackers" in flow["description_placeholders"]["tracker_status"]
-    flow = await options.async_configure(
-        flow["flow_id"],
-        {"add_tracker": "device_tracker.example_phone"},
+    from homeassistant.components.person import async_create_person
+    from homeassistant.setup import async_setup_component
+
+    assert await async_setup_component(hass, "person", {"person": []})
+    await async_create_person(hass, "Example Direct Member")
+    person_id = next(
+        state.entity_id
+        for state in hass.states.async_all("person")
+        if state.name == "Example Direct Member"
     )
-    assert flow["step_id"] == "tracker_member"
-    flow = await options.async_configure(flow["flow_id"], {})
+    options = hass.config_entries.options
+    flow = await start_options(options, entry)
+    assert "waiting for trackers" in flow["description_placeholders"]["tracker_status"]
+    options.async_abort(flow["flow_id"])
+    flow = await start_options(options, entry, "add_tracker_choice")
+    flow = await options.async_configure(flow["flow_id"], {"person": person_id})
+    assert flow["step_id"] == "add_tracker_assign"
+    flow = await options.async_configure(
+        flow["flow_id"], {"add_tracker": "device_tracker.example_phone"}
+    )
+    assert flow["step_id"] == "member"
+    flow = await configure_empty(options, flow)
     assert flow["step_id"] == "confirm"
     with patch(
         "custom_components.homecircle.life360_direct.DirectLife360.async_start",
         new_callable=AsyncMock,
     ):
-        await options.async_configure(flow["flow_id"], {})
+        await configure_empty(options, flow)
         await hass.async_block_till_done()
     assert entry.options["life360_account"]["secret"] == "example-token"
     member = entry.runtime_data.household.members[0]
-    assert member.id == "device_tracker.example_phone"
+    assert member.id == person_id
     assert member.kind == "person"
-    assert member.person_entity is None
+    assert member.person_entity == person_id
     from custom_components.homecircle.api import snapshot
 
     assert "example-token" not in str(snapshot(entry.runtime_data))
-    flow = await options.async_init(entry.entry_id)
+    flow = await start_options(options, entry)
     flow = await options.async_configure(
         flow["flow_id"],
         {
             **selection,
-            "people_trackers": ["device_tracker.example_phone"],
+            "people": [person_id],
             "replace_life360_login": True,
         },
     )
@@ -496,34 +953,34 @@ async def test_direct_life360_account_and_tracker_person_setup(hass, household):
         flow = await options.async_configure(
             flow["flow_id"], {"method": "token", "secret": "replacement-example"}
         )
-    assert flow["step_id"] == "tracker_member"
-    flow = await options.async_configure(flow["flow_id"], {})
+    assert flow["step_id"] == "member"
+    flow = await configure_empty(options, flow)
     with patch(
         "custom_components.homecircle.life360_direct.DirectLife360.async_start",
         new_callable=AsyncMock,
     ):
-        await options.async_configure(flow["flow_id"], {})
+        await configure_empty(options, flow)
         await hass.async_block_till_done()
     assert entry.options["life360_account"]["secret"] == "replacement-example"
     assert entry.data["life360_account"]["secret"] == "replacement-example"
     assert "replacement-example" not in str(snapshot(entry.runtime_data))
-    flow = await options.async_init(entry.entry_id)
+    flow = await start_options(options, entry)
     flow = await options.async_configure(
         flow["flow_id"],
         {
             **selection,
             "life360_direct": False,
-            "people_trackers": ["device_tracker.example_phone"],
+            "people": [person_id],
         },
     )
-    assert flow["step_id"] == "tracker_member"
-    flow = await options.async_configure(flow["flow_id"], {})
-    await options.async_configure(flow["flow_id"], {})
+    assert flow["step_id"] == "member"
+    flow = await configure_empty(options, flow)
+    await configure_empty(options, flow)
     await hass.async_block_till_done()
     assert "life360_account" not in entry.options
     assert "life360_account" not in entry.data
     assert entry.runtime_data.managed_trackers == {}
-    assert entry.runtime_data.household.members[0].id == "device_tracker.example_phone"
+    assert entry.runtime_data.household.members[0].id == person_id
 
 
 async def test_disabled_direct_tracker_does_not_interrupt_other_members(
@@ -579,7 +1036,7 @@ async def test_disabled_direct_tracker_does_not_interrupt_other_members(
         flow = await hass.config_entries.flow.async_configure(
             flow["flow_id"], {"method": "token", "secret": "example-token"}
         )
-        flow = await hass.config_entries.flow.async_configure(flow["flow_id"], {})
+        flow = await configure_empty(hass.config_entries.flow, flow)
         await hass.async_block_till_done()
         entry = flow["result"]
         client = entry.runtime_data.managed_trackers["life360"]
@@ -615,7 +1072,7 @@ async def test_failed_tracker_platform_setup_can_retry_cleanly(hass, household):
         flow = await hass.config_entries.flow.async_configure(
             flow["flow_id"], {"method": "token", "secret": "example-token"}
         )
-        flow = await hass.config_entries.flow.async_configure(flow["flow_id"], {})
+        flow = await configure_empty(hass.config_entries.flow, flow)
         await hass.async_block_till_done()
     entry = flow["result"]
     # HA keeps the parent entry loaded even when a forwarded platform fails.
@@ -682,7 +1139,7 @@ async def test_saved_direct_tracker_is_unavailable_during_offline_reload(
         flow = await hass.config_entries.flow.async_configure(
             flow["flow_id"], {"method": "token", "secret": "example-token"}
         )
-        flow = await hass.config_entries.flow.async_configure(flow["flow_id"], {})
+        flow = await configure_empty(hass.config_entries.flow, flow)
         await hass.async_block_till_done()
     entry = flow["result"]
     original = entry.runtime_data.managed_trackers["life360"].trackers[
@@ -717,8 +1174,6 @@ async def test_saved_direct_tracker_is_unavailable_during_offline_reload(
 async def test_life360_reauth_replaces_secret_and_preserves_household(hass, household):
     selection = {
         "people": [],
-        "people_trackers": [],
-        "pets": [],
         "primary_home": household["primary_home"],
         "places": [],
         "life360_direct": True,
@@ -738,7 +1193,7 @@ async def test_life360_reauth_replaces_secret_and_preserves_household(hass, hous
         flow = await hass.config_entries.flow.async_configure(
             flow["flow_id"], {"method": "token", "secret": "old-example-secret"}
         )
-        flow = await hass.config_entries.flow.async_configure(flow["flow_id"], {})
+        flow = await configure_empty(hass.config_entries.flow, flow)
         await hass.async_block_till_done()
     entry = flow["result"]
     original_home = entry.data["primary_home"]
@@ -806,7 +1261,7 @@ async def test_reconnect_rejects_a_different_life360_account(hass, household):
         flow = await hass.config_entries.flow.async_configure(
             flow["flow_id"], {"method": "token", "secret": "original-token"}
         )
-        flow = await hass.config_entries.flow.async_configure(flow["flow_id"], {})
+        flow = await configure_empty(hass.config_entries.flow, flow)
         await hass.async_block_till_done()
     entry = flow["result"]
     assert entry.data["life360_account"]["account_id_hash"] == (
@@ -838,7 +1293,7 @@ async def test_reconnect_rejects_a_different_life360_account(hass, household):
     hass.config_entries.flow.async_abort(active[0]["flow_id"])
 
     options = hass.config_entries.options
-    flow = await options.async_init(entry.entry_id)
+    flow = await start_options(options, entry)
     flow = await options.async_configure(
         flow["flow_id"], {**selection, "replace_life360_login": True}
     )
@@ -876,13 +1331,13 @@ async def test_older_account_replacement_compares_valid_old_sign_in(hass, househ
         flow = await hass.config_entries.flow.async_configure(
             flow["flow_id"], {"method": "token", "secret": "old-fictional-token"}
         )
-        flow = await hass.config_entries.flow.async_configure(flow["flow_id"], {})
+        flow = await configure_empty(hass.config_entries.flow, flow)
         await hass.async_block_till_done()
     entry = flow["result"]
     assert "account_id_hash" not in entry.data["life360_account"]
 
     options = hass.config_entries.options
-    flow = await options.async_init(entry.entry_id)
+    flow = await start_options(options, entry)
     flow = await options.async_configure(
         flow["flow_id"], {**selection, "replace_life360_login": True}
     )
@@ -949,7 +1404,7 @@ async def test_older_account_replacement_compares_valid_old_sign_in(hass, househ
             {"method": "token", "secret": "replacement-fictional-token"},
         )
         assert flow["step_id"] == "confirm"
-        await options.async_configure(flow["flow_id"], {})
+        await configure_empty(options, flow)
         await hass.async_block_till_done()
     assert entry.options["life360_account"]["account_id_hash"] == "old-fingerprint"
     assert entry.data["life360_account"]["account_id_hash"] == "old-fingerprint"
@@ -977,7 +1432,7 @@ async def test_older_reauth_requires_confirmation_if_old_sign_in_expired(
         flow = await hass.config_entries.flow.async_configure(
             flow["flow_id"], {"method": "token", "secret": "expired-fictional-token"}
         )
-        flow = await hass.config_entries.flow.async_configure(flow["flow_id"], {})
+        flow = await configure_empty(hass.config_entries.flow, flow)
         await hass.async_block_till_done()
     entry = flow["result"]
     entry.async_start_reauth(hass, data={"_homecircle_reauth_provider": "life360"})
@@ -1088,7 +1543,6 @@ async def test_direct_life360_creates_selectable_tracker(hass, household):
 
     selection = {
         "people": [],
-        "pets": [],
         "primary_home": household["primary_home"],
         "places": [],
         "life360_direct": True,
@@ -1108,7 +1562,7 @@ async def test_direct_life360_creates_selectable_tracker(hass, household):
         flow = await hass.config_entries.flow.async_configure(
             flow["flow_id"], {"method": "token", "secret": "example-token"}
         )
-        flow = await hass.config_entries.flow.async_configure(flow["flow_id"], {})
+        flow = await configure_empty(hass.config_entries.flow, flow)
         await hass.async_block_till_done()
         entry = flow["result"]
         states = [
@@ -1121,123 +1575,90 @@ async def test_direct_life360_creates_selectable_tracker(hass, household):
         assert tracker != existing.entity_id
         assert hass.states.get(existing.entity_id).state == "home"
         options = hass.config_entries.options
-        flow = await options.async_init(entry.entry_id)
+        flow = await start_options(options, entry)
         assert (
             "duplicate trackers" in flow["description_placeholders"]["tracker_status"]
         )
         assert (
             "1 tracker(s) found" in flow["description_placeholders"]["tracker_status"]
         )
-        flow = await options.async_configure(
-            flow["flow_id"], {**selection, "people_trackers": [tracker]}
+        options.async_abort(flow["flow_id"])
+        from homeassistant.components.person import (
+            async_create_person,
+            entities_in_person,
         )
-        assert flow["step_id"] == "tracker_member"
-        flow = await options.async_configure(flow["flow_id"], {})
-        await options.async_configure(flow["flow_id"], {})
+        from homeassistant.setup import async_setup_component
+
+        assert await async_setup_component(hass, "person", {"person": []})
+        await async_create_person(hass, "Direct Member")
+        person_id = next(
+            state.entity_id
+            for state in hass.states.async_all("person")
+            if state.name == "Direct Member"
+        )
+        flow = await start_options(options, entry, "add_tracker_choice")
+        flow = await options.async_configure(flow["flow_id"], {"person": person_id})
+        assert flow["step_id"] == "add_tracker_assign"
+        flow = await options.async_configure(flow["flow_id"], {"add_tracker": tracker})
+        assert flow["step_id"] == "member"
+        flow = await configure_empty(options, flow)
+        await configure_empty(options, flow)
         await hass.async_block_till_done()
-        flow = await options.async_init(entry.entry_id)
+        assert entities_in_person(hass, person_id) == [tracker]
+        flow = await start_options(options, entry)
         flow = await options.async_configure(
             flow["flow_id"],
             {
                 **selection,
                 "life360_direct": False,
-                "people_trackers": [tracker],
+                "people": [person_id],
             },
         )
-        flow = await options.async_configure(flow["flow_id"], {})
-        flow = await options.async_configure(flow["flow_id"], {})
+        flow = await configure_empty(options, flow)
+        flow = await configure_empty(options, flow)
         assert flow["step_id"] == "household"
         assert flow["errors"] == {"base": "direct_trackers_selected"}
         options.async_abort(flow["flow_id"])
-
-        async def attempt_disconnect_with_person():
-            flow = await options.async_init(entry.entry_id)
-            flow = await options.async_configure(
-                flow["flow_id"],
-                {
-                    **selection,
-                    "life360_direct": False,
-                    "people": ["person.example_member"],
-                },
-            )
-            assert flow["step_id"] == "member"
-            flow = await options.async_configure(flow["flow_id"], {"trackers": []})
-            assert flow["step_id"] == "confirm"
-            flow = await options.async_configure(flow["flow_id"], {})
-            assert flow["step_id"] == "household"
-            assert flow["errors"] == {"base": "direct_trackers_selected"}
-            options.async_abort(flow["flow_id"])
-
-        hass.states.async_set("person.example_member", "home", {"source": tracker})
-        await attempt_disconnect_with_person()
-        hass.states.async_set(
-            "person.example_member", "home", {"source": existing.entity_id}
-        )
-        with patch(
-            "custom_components.homecircle.selection.entities_in_person",
-            return_value=[tracker],
-        ):
-            await attempt_disconnect_with_person()
-    assert entry.runtime_data.household.members[0].id == tracker
+    assert entry.runtime_data.household.members[0].id == person_id
     assert entry.runtime_data.household.counts["away"] == 1
 
 
-async def test_tracker_only_pet_selection_rejects_missing_and_duplicate(
-    hass, household
-):
-    base = {"people": [], "primary_home": household["primary_home"], "places": []}
-    flow = await start(hass, {**base, "pets": ["device_tracker.example_missing"]})
-    assert flow["errors"]["pets"] == "invalid_entity"
-    flow = await hass.config_entries.flow.async_configure(
-        flow["flow_id"], {**base, "pets": ["device_tracker.example_phone"] * 2}
+async def test_new_setup_requires_a_person_for_pet_tracker(hass, household):
+    flow = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
     )
-    assert flow["errors"]["pets"] == "duplicate_selection"
-
-
-async def test_person_tracker_cannot_be_added_as_a_second_member(hass, household):
-    manager = hass.config_entries.flow
-    flow = await manager.async_init(DOMAIN, context={"source": SOURCE_USER})
-    selection = {
-        "people": ["person.example_member"],
-        "people_trackers": ["device_tracker.example_phone"],
-        "primary_home": household["primary_home"],
-    }
-    with patch(
-        "custom_components.homecircle.selection.entities_in_person", return_value=[]
-    ):
-        flow = await manager.async_configure(flow["flow_id"], selection)
-    assert flow["errors"]["people_trackers"] == "tracker_already_in_person"
-
-    hass.states.async_set(
-        "person.example_member",
-        "home",
-        {"source": "device_tracker.example_router"},
-    )
-    with patch(
-        "custom_components.homecircle.selection.entities_in_person",
-        return_value=["device_tracker.example_phone"],
-    ):
-        flow = await manager.async_configure(
+    fields = {str(field) for field in flow["data_schema"].schema}
+    assert "pets" not in fields
+    assert "people_trackers" not in fields
+    with pytest.raises(InvalidData):
+        await hass.config_entries.flow.async_configure(
             flow["flow_id"],
-            {
-                **selection,
-                "people_trackers": [],
-                "pets": ["device_tracker.example_phone"],
-            },
+            {"pets": ["device_tracker.example_phone"], "primary_home": "zone.home"},
         )
-    assert flow["errors"]["pets"] == "tracker_already_in_person"
 
-    hass.states.async_set(
-        "device_tracker.example_phone",
-        "home",
-        {"friendly_name": "Example Member", "source_type": "gps"},
+
+async def test_tracker_linked_to_another_ha_person_is_rejected(hass):
+    from homeassistant.components.person import async_create_person
+    from homeassistant.setup import async_setup_component
+
+    assert await async_setup_component(hass, "zone", {})
+    assert await async_setup_component(hass, "person", {"person": []})
+    tracker = "device_tracker.example_phone"
+    hass.states.async_set(tracker, "home", {"source_type": "gps"})
+    await async_create_person(hass, "Example Owner", device_trackers=[tracker])
+    await async_create_person(hass, "Example Other")
+    other = next(
+        state.entity_id
+        for state in hass.states.async_all("person")
+        if state.name == "Example Other"
     )
-    with patch(
-        "custom_components.homecircle.selection.entities_in_person", return_value=[]
-    ):
-        flow = await manager.async_configure(flow["flow_id"], selection)
-    assert flow["step_id"] == "member"
-    manager.async_abort(flow["flow_id"])
+    flow = await start(hass, {"people": [other], "primary_home": "zone.home"})
+    assert flow["step_id"] == "assign_tracker"
+    flow = await hass.config_entries.flow.async_configure(
+        flow["flow_id"], {"tracker": tracker}
+    )
+    assert flow["step_id"] == "assign_tracker"
+    assert flow["errors"]["tracker"] == "tracker_linked_elsewhere"
 
 
 async def test_same_tracker_cannot_be_assigned_to_two_people(hass, household):
@@ -1254,40 +1675,54 @@ async def test_same_tracker_cannot_be_assigned_to_two_people(hass, household):
     assert flow["errors"]["trackers"] == "duplicate_selection"
 
 
-async def test_person_and_tracker_only_pet_share_household_flow(hass, household):
+async def test_person_and_pet_person_share_household_flow(hass, household):
+    from homeassistant.components.person import async_create_person, entities_in_person
+    from homeassistant.setup import async_setup_component
+
     pet = "device_tracker.example_pet"
     hass.states.async_set(
         pet,
         "not_home",
         {"source_type": "gps", ATTR_LATITUDE: 1.0, ATTR_LONGITUDE: 0.0},
     )
+    assert await async_setup_component(hass, "person", {"person": []})
+    await async_create_person(hass, "Example Pet")
+    pet_person = next(
+        state.entity_id
+        for state in hass.states.async_all("person")
+        if state.name == "Example Pet"
+    )
     flow = await start(
         hass,
         {
             **household,
-            "people": ["person.example_member"],
-            "pets": [pet],
+            "people": ["person.example_member", pet_person],
         },
     )
     assert flow["step_id"] == "member"
     flow = await hass.config_entries.flow.async_configure(
         flow["flow_id"], {"trackers": ["device_tracker.example_phone"]}
     )
-    assert flow["step_id"] == "pet_member"
-    flow = await hass.config_entries.flow.async_configure(flow["flow_id"], {})
+    assert flow["step_id"] == "assign_tracker"
+    flow = await hass.config_entries.flow.async_configure(
+        flow["flow_id"], {"tracker": pet}
+    )
+    assert flow["step_id"] == "member"
+    flow = await hass.config_entries.flow.async_configure(
+        flow["flow_id"], {"kind": "pet"}
+    )
     assert flow["step_id"] == "pet_freshness"
-    flow = await hass.config_entries.flow.async_configure(flow["flow_id"], {})
+    flow = await configure_empty(hass.config_entries.flow, flow)
     assert flow["step_id"] == "confirm"
-    flow = await hass.config_entries.flow.async_configure(flow["flow_id"], {})
+    flow = await configure_empty(hass.config_entries.flow, flow)
     await hass.async_block_till_done()
     household_view = flow["result"].runtime_data.household
     assert [member.id for member in household_view.members] == [
         "person.example_member",
-        pet,
+        pet_person,
     ]
-    assert household_view.counts["home"] == 1
-    assert household_view.counts["away"] == 1
-    assert household_view.focus_ids["overview"] == ("person.example_member", pet)
+    assert household_view.members[1].kind == "pet"
+    assert entities_in_person(hass, pet_person) == [pet]
 
 
 async def test_invalid_members_and_deleted_during_flow(hass, household):
@@ -1303,10 +1738,10 @@ async def test_invalid_members_and_deleted_during_flow(hass, household):
         "trackers": "invalid_entity",
         "additional_residences": "primary_in_residences",
     }
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    result = await configure_empty(hass.config_entries.flow, result)
+    result = await configure_empty(hass.config_entries.flow, result)
     hass.states.async_remove("person.example_member")
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    result = await configure_empty(hass.config_entries.flow, result)
     assert result["step_id"] == "household"
     assert result["errors"] == {"base": "entities_changed"}
     assert not hass.config_entries.async_entries(DOMAIN)
@@ -1320,7 +1755,7 @@ async def test_options_reconfigure_and_listener_replacement(hass, household):
     )
     old_runtime = entry.runtime_data
     manager = hass.config_entries.options
-    result = await manager.async_init(entry.entry_id)
+    result = await start_options(manager, entry)
     result = await manager.async_configure(
         result["flow_id"],
         {
@@ -1329,8 +1764,8 @@ async def test_options_reconfigure_and_listener_replacement(hass, household):
             "places": [],
         },
     )
-    result = await manager.async_configure(result["flow_id"], {})
-    result = await manager.async_configure(result["flow_id"], {})
+    result = await configure_empty(manager, result)
+    result = await configure_empty(manager, result)
     assert result["type"] == FlowResultType.CREATE_ENTRY
     await hass.async_block_till_done()
     owned_after_options = next(
@@ -1550,15 +1985,15 @@ async def test_map_source_guidance_and_report_prompts_follow_effective_source(
     assert result["step_id"] == "source_report"
     assert result["description_placeholders"]["source"] == "example member"
     assert result["description_placeholders"]["purpose"] == "Current map source"
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    result = await configure_empty(hass.config_entries.flow, result)
     assert result["step_id"] == "source_report"
     assert result["description_placeholders"]["source"] == "example phone"
     assert (
         "used only if this tracker drives the map"
         in result["description_placeholders"]["purpose"]
     )
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    result = await configure_empty(hass.config_entries.flow, result)
+    result = await configure_empty(hass.config_entries.flow, result)
     assert result["step_id"] == "confirm"
     assert (
         "Current map position comes from the Home Assistant Person"
@@ -1576,14 +2011,14 @@ async def test_saved_person_report_mapping_is_not_labelled_for_deletion(
     data["members"][person]["location_reports"] = {person: "sensor.example_report"}
     hass.config_entries.async_update_entry(entry, data=data)
     manager = hass.config_entries.options
-    result = await manager.async_init(entry.entry_id)
+    result = await start_options(manager, entry)
     result = await manager.async_configure(result["flow_id"], {"edit_member": person})
     result = await manager.async_configure(
         result["flow_id"],
         {"trackers": ["device_tracker.example_phone"], "configure_reports": True},
     )
     assert result["step_id"] == "source_report"
-    result = await manager.async_configure(result["flow_id"], {})
+    result = await configure_empty(manager, result)
     assert result["description_placeholders"]["source"] == "example member"
     assert (
         "used when the Person drives the map"
@@ -1636,7 +2071,7 @@ async def test_duplicate_tracker_names_are_distinct_in_hint_and_review(hass, hou
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"trackers": [stale]}
     )
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    result = await configure_empty(hass.config_entries.flow, result)
     assert result["step_id"] == "confirm"
     assert (
         "- Trackers: Example Phone (device\\_tracker.example\\_phone\\_old)"
@@ -1707,11 +2142,11 @@ async def test_supporting_flow_validation_persistence_and_clear(hass, household)
         "driving",
         "driving_reported_at",
     }
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {"battery": "sensor.example_missing"},
-    )
-    assert result["errors"]["battery"] == "invalid_entity"
+    with pytest.raises(InvalidData):
+        await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"battery": "sensor.example_missing"},
+        )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {"battery": "sensor.example_battery"},
@@ -1724,12 +2159,12 @@ async def test_supporting_flow_validation_persistence_and_clear(hass, household)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"timestamp": "sensor.example_report"}
     )
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    result = await configure_empty(hass.config_entries.flow, result)
     assert result["step_id"] == "confirm"
     review = result["description_placeholders"]["members"]
     assert "Battery: Example Battery" in review
     assert "Example Report" in review
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    result = await configure_empty(hass.config_entries.flow, result)
     entry = result["result"]
     await hass.async_block_till_done()
     assert entry.runtime_data.household.members[0].battery.value == 0
@@ -1738,7 +2173,7 @@ async def test_supporting_flow_validation_persistence_and_clear(hass, household)
         "device_tracker.example_phone": "sensor.example_report"
     }
     options = hass.config_entries.options
-    result = await options.async_init(entry.entry_id)
+    result = await start_options(options, entry)
     result = await options.async_configure(result["flow_id"], household)
     result = await options.async_configure(
         result["flow_id"],
@@ -1747,9 +2182,9 @@ async def test_supporting_flow_validation_persistence_and_clear(hass, household)
             "configure_sensors": True,
         },
     )
-    result = await options.async_configure(result["flow_id"], {})
-    result = await options.async_configure(result["flow_id"], {})
-    await options.async_configure(result["flow_id"], {})
+    result = await configure_empty(options, result)
+    result = await configure_empty(options, result)
+    await configure_empty(options, result)
     await hass.async_block_till_done()
     assert entry.runtime_data.household.members[0].battery.value is None
     assert "sensor.example_battery" not in entry.runtime_data.states
@@ -1781,8 +2216,8 @@ async def test_runtime_report_aging_source_changes_and_unload(hass, household, f
             "driving_reported_at": "sensor.example_driving_report",
         },
     )
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    result = await configure_empty(hass.config_entries.flow, result)
+    result = await configure_empty(hass.config_entries.flow, result)
     entry = result["result"]
     await hass.async_block_till_done()
     runtime = entry.runtime_data
@@ -1809,7 +2244,7 @@ async def test_runtime_report_aging_source_changes_and_unload(hass, household, f
 async def test_pet_thresholds_persist_in_options(hass, household):
     entry = await create(hass, household)
     manager = hass.config_entries.options
-    flow = await manager.async_init(entry.entry_id)
+    flow = await start_options(manager, entry)
     flow = await manager.async_configure(
         flow["flow_id"], {**household, "people": ["person.example_member"]}
     )
@@ -1833,7 +2268,7 @@ async def test_pet_thresholds_persist_in_options(hass, household):
         "Pet timing: home 12 hours, away 10 min"
         in flow["description_placeholders"]["members"]
     )
-    flow = await manager.async_configure(flow["flow_id"], {})
+    flow = await configure_empty(manager, flow)
     await hass.async_block_till_done()
     assert flow["type"] == FlowResultType.CREATE_ENTRY
     member = entry.options["members"]["person.example_member"]
@@ -1842,7 +2277,7 @@ async def test_pet_thresholds_persist_in_options(hass, household):
     assert member["pet_away_minutes"] == 10
     assert entry.runtime_data.config["members"]["person.example_member"] == member
 
-    flow = await manager.async_init(entry.entry_id)
+    flow = await start_options(manager, entry)
     flow = await manager.async_configure(
         flow["flow_id"], {**household, "people": ["person.example_member"]}
     )
@@ -1857,11 +2292,11 @@ async def test_pet_thresholds_persist_in_options(hass, household):
     )
     assert flow["step_id"] == "pet_freshness"
     suggested = {
-        str(field): field.description.get("suggested_value")
+        str(field): (field.description or {}).get("suggested_value")
         for field in flow["data_schema"].schema
     }
     assert suggested == {"pet_home_minutes": 720, "pet_away_minutes": 10}
-    flow = await manager.async_configure(flow["flow_id"], {})
+    flow = await configure_empty(manager, flow)
     assert flow["step_id"] == "supporting"
     manager.async_abort(flow["flow_id"])
     assert entry.options["members"]["person.example_member"] == member
@@ -1881,7 +2316,7 @@ async def test_per_source_flow_migrates_preserves_and_clears(hass, household):
     }
     hass.config_entries.async_update_entry(entry, data=original)
     options = hass.config_entries.options
-    result = await options.async_init(entry.entry_id)
+    result = await start_options(options, entry)
     result = await options.async_configure(result["flow_id"], household)
     result = await options.async_configure(
         result["flow_id"],
@@ -1898,7 +2333,7 @@ async def test_per_source_flow_migrates_preserves_and_clears(hass, household):
     result = await options.async_configure(
         result["flow_id"], {"trackers": ["device_tracker.example_router"]}
     )
-    await options.async_configure(result["flow_id"], {})
+    await configure_empty(options, result)
     await hass.async_block_till_done()
     saved = entry.options["members"][person]
     assert saved["location_reports"] == {
@@ -1913,20 +2348,20 @@ async def test_per_source_flow_migrates_preserves_and_clears(hass, household):
         == saved["location_reports"]
     )
     # Removing a tracker requires explicitly clearing its prior report mapping.
-    result = await options.async_init(entry.entry_id)
+    result = await start_options(options, entry)
     result = await options.async_configure(result["flow_id"], household)
     result = await options.async_configure(result["flow_id"], {"trackers": []})
     assert result["step_id"] == "source_report"
-    result = await options.async_configure(result["flow_id"], {})
+    result = await configure_empty(options, result)
     result = await options.async_configure(
         result["flow_id"], {"timestamp": "sensor.example_report"}
     )
     assert result["errors"]["timestamp"] == "invalid_report_source"
-    result = await options.async_configure(result["flow_id"], {})
+    result = await configure_empty(options, result)
     result = await options.async_configure(
         result["flow_id"], {"trackers": ["device_tracker.example_router"]}
     )
-    await options.async_configure(result["flow_id"], {})
+    await configure_empty(options, result)
     await hass.async_block_till_done()
     assert entry.options["members"][person]["location_reports"] == {}
     assert "sensor.example_report" not in selected_entities(entry.options)

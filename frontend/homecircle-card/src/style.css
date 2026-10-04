@@ -76,6 +76,16 @@ header {
 :host([kiosk]) .settings-toggle {
   display: none;
 }
+.settings-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  padding: 8px;
+}
+.settings-toggle ha-icon {
+  --mdc-icon-size: 20px;
+}
 h2 {
   margin: 2px 0;
   font-size: 25px;
@@ -403,6 +413,10 @@ button[aria-pressed="true"] {
 }
 .place {
   color: #c2d2de;
+}
+.report-part.source {
+  color: #b6d9e7;
+  font-weight: 600;
 }
 .battery {
   color: #c3d9df;

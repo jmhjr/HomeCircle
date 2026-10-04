@@ -7,9 +7,14 @@ from homeassistant.components.lovelace.const import LOVELACE_DATA
 from homeassistant.components.lovelace.resources import ResourceYAMLCollection
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
+from homeassistant.setup import async_setup_component
 
-from custom_components.homecircle import frontend
-from custom_components.homecircle.api import allowed_picture
+from custom_components.homecircle import dashboard_setup, frontend
+from custom_components.homecircle.api import (
+    allowed_picture,
+    location_source_label,
+    snapshot,
+)
 from custom_components.homecircle.tracker_providers import ProviderHealth
 from test_config_flow import start, finish
 
@@ -18,6 +23,94 @@ async def setup(hass, household):
     result = await finish(hass, await start(hass, household))
     await hass.async_block_till_done()
     return result["result"]
+
+
+async def test_first_setup_creates_one_dashboard_and_card(hass, household):
+    entry = await setup(hass, household)
+    dashboards = hass.data[LOVELACE_DATA].dashboards
+    assert "dashboard-homecircle" in dashboards
+    config = await dashboards["dashboard-homecircle"].async_load(False)
+    assert config == {
+        "views": [
+            {
+                "title": "HomeCircle",
+                "type": "panel",
+                "cards": [
+                    {
+                        "type": "custom:homecircle-card",
+                        "fill_screen": True,
+                        "map_tiles": "osm",
+                    }
+                ],
+            }
+        ]
+    }
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    assert [path for path in dashboards if path == "dashboard-homecircle"] == [
+        "dashboard-homecircle"
+    ]
+    await hass.config_entries.async_remove(entry.entry_id)
+    assert "dashboard-homecircle" not in dashboards
+
+
+async def test_edited_homecircle_dashboard_survives_integration_removal(
+    hass, household
+):
+    entry = await setup(hass, household)
+    dashboards = hass.data[LOVELACE_DATA].dashboards
+    dashboard = dashboards["dashboard-homecircle"]
+    config = await dashboard.async_load(False)
+    config["views"][0]["cards"].append(
+        {"type": "entities", "entities": ["person.example_member"]}
+    )
+    await dashboard.async_save(config)
+    await hass.config_entries.async_remove(entry.entry_id)
+    assert "dashboard-homecircle" in dashboards
+    assert await dashboard.async_load(False) == config
+
+
+async def test_existing_card_dashboard_is_left_unchanged(hass, household):
+    assert await async_setup_component(hass, "lovelace", {"lovelace": {}})
+    collection = dashboard_setup._active_collection(hass)
+    assert collection is not None
+    await collection.async_create_item(
+        {"title": "Family", "url_path": "dashboard-family", "show_in_sidebar": True}
+    )
+    existing = hass.data[LOVELACE_DATA].dashboards["dashboard-family"]
+    config = {
+        "views": [
+            {
+                "title": "Family",
+                "cards": [
+                    {"type": "entities", "entities": ["person.example_member"]},
+                    {"type": "custom:homecircle-card"},
+                ],
+            }
+        ]
+    }
+    await existing.async_save(config)
+    await setup(hass, household)
+    assert "dashboard-homecircle" not in hass.data[LOVELACE_DATA].dashboards
+    assert await existing.async_load(False) == config
+
+
+async def test_existing_named_homecircle_dashboard_is_not_replaced(hass, household):
+    assert await async_setup_component(hass, "lovelace", {"lovelace": {}})
+    collection = dashboard_setup._active_collection(hass)
+    assert collection is not None
+    await collection.async_create_item(
+        {
+            "title": "HomeCircle",
+            "url_path": "dashboard-family-map",
+            "show_in_sidebar": True,
+        }
+    )
+    existing = hass.data[LOVELACE_DATA].dashboards["dashboard-family-map"]
+    config = {"views": [{"title": "Household", "cards": []}]}
+    await existing.async_save(config)
+    await setup(hass, household)
+    assert "dashboard-homecircle" not in hass.data[LOVELACE_DATA].dashboards
+    assert await existing.async_load(False) == config
 
 
 async def test_snapshot_authorization_and_projection(
@@ -32,6 +125,9 @@ async def test_snapshot_authorization_and_projection(
     assert data["schema_version"] == 1
     assert data["counts"]["home"] == 2
     assert data["members"][0]["location"]["evidence"]["reported_at"] is None
+    assert data["members"][0]["location"]["evidence"]["source_label"].startswith(
+        "Tracker:"
+    )
     assert data["members"][1]["location"] is None
     assert "states" not in data and "config" not in data
     assert "active_source_entity" not in data["members"][0]
@@ -92,6 +188,28 @@ async def test_snapshot_authorization_and_projection(
     assert (await client.receive_json())["error"]["code"] == "not_ready"
 
 
+async def test_location_source_label_follows_actual_map_source(hass, household):
+    entry = await setup(hass, household)
+    hass.states.async_set(
+        "device_tracker.example_phone",
+        "home",
+        {
+            "friendly_name": "Example Phone",
+            "source_type": "gps",
+            ATTR_LATITUDE: 0.0,
+            ATTR_LONGITUDE: 0.0,
+        },
+    )
+    await hass.async_block_till_done()
+    evidence = snapshot(entry.runtime_data)["members"][0]["location"]["evidence"]
+    assert evidence["source_label"] == "Tracker: Example Phone"
+    assert evidence["reported_at"] is None
+
+    assert location_source_label(
+        entry.runtime_data, "person.example_member"
+    ).startswith("HA Person:")
+
+
 async def test_provider_status_is_visible_only_to_admin(
     hass, household, hass_ws_client, hass_read_only_access_token
 ):
@@ -124,18 +242,36 @@ async def test_provider_status_is_visible_only_to_admin(
         runtime.config.pop("life360_account")
 
 
-async def test_tracker_only_pet_requires_permission_to_read_tracker(
+async def test_pet_person_requires_permission_to_read_tracker(
     hass, household, hass_ws_client, hass_admin_user
 ):
+    from homeassistant.components.person import async_create_person
+    from homeassistant.setup import async_setup_component
+
     pet = "device_tracker.example_pet"
     hass.states.async_set(pet, "home", {"source_type": "gps"})
+    assert await async_setup_component(hass, "person", {"person": []})
+    await async_create_person(hass, "Example Pet")
+    pet_person = next(
+        state.entity_id
+        for state in hass.states.async_all("person")
+        if state.name == "Example Pet"
+    )
     result = await start(
         hass,
-        {"people": [], "pets": [pet], "primary_home": household["primary_home"]},
+        {"people": [pet_person], "primary_home": household["primary_home"]},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"tracker": pet}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"kind": "pet"}
     )
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["step_id"] == "confirm"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "confirm_save"}
+    )
     await hass.async_block_till_done()
     client = await hass_ws_client(hass)
     permissions = type(hass_admin_user.permissions)

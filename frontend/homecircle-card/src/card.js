@@ -1,6 +1,8 @@
 import * as L from "leaflet";
 import leafletCSS from "leaflet/dist/leaflet.css";
 import css from "./style.css";
+import integrationManifest from "../../../custom_components/homecircle/manifest.json";
+import { openSettingsDialog } from "./settings-dialog.js";
 import {
   categories,
   labels,
@@ -12,6 +14,17 @@ import {
   validateConfig,
   providerAlertText,
 } from "./model.js";
+
+const betaNumber = /-beta\.(\d+)(?:$|[.-])/.exec(
+  integrationManifest.version,
+)?.[1];
+const releaseTitle = betaNumber
+  ? `HomeCircle - Beta ${betaNumber}`
+  : "HomeCircle";
+const displayedTitle = (title) =>
+  title === "HomeCircle" || /^HomeCircle - Beta \d+$/.test(title)
+    ? releaseTitle
+    : title;
 
 function el(tag, className, text) {
   const node = document.createElement(tag);
@@ -80,8 +93,8 @@ class HomeCircleCard extends HTMLElement {
   static getStubConfig() {
     return {
       type: "custom:homecircle-card",
-      title: "HomeCircle",
-      map_tiles: "none",
+      title: releaseTitle,
+      map_tiles: "osm",
     };
   }
   getCardSize() {
@@ -211,9 +224,8 @@ class HomeCircleCard extends HTMLElement {
       this._settingsButton.hidden = this._hass?.user?.is_admin !== true;
   }
   _openSettings() {
-    const path = "/config/integrations/integration/homecircle";
-    window.history.pushState(null, "", path);
-    window.dispatchEvent(new window.Event("location-changed"));
+    if (this._hass?.user?.is_admin === true)
+      openSettingsDialog(this, this._hass);
   }
   _layout() {
     if (this._shell || !this._config) return;
@@ -238,11 +250,16 @@ class HomeCircleCard extends HTMLElement {
     );
     this._kioskButton.setAttribute("aria-pressed", "false");
     this._settingsButton = button(
-      "Settings",
+      "",
       () => this._openSettings(),
       "settings-toggle",
     );
-    this._settingsButton.title = "Open HomeCircle settings";
+    const settingsIcon = el("ha-icon");
+    settingsIcon.setAttribute("icon", "mdi:cog");
+    settingsIcon.setAttribute("aria-hidden", "true");
+    this._settingsButton.append(settingsIcon);
+    this._settingsButton.setAttribute("aria-label", "HomeCircle settings");
+    this._settingsButton.title = "HomeCircle settings";
     this._syncSettingsVisibility();
     actions.append(this._kioskButton, this._settingsButton, this._overview);
     header.append(brand, actions);
@@ -337,7 +354,7 @@ class HomeCircleCard extends HTMLElement {
   _render() {
     if (!this._shell) return;
     const focused = this.shadowRoot.activeElement?.dataset?.focus;
-    this._title.textContent = this._config.title;
+    this._title.textContent = displayedTitle(this._config.title);
     this._overview.setAttribute(
       "aria-pressed",
       String(this._mode === "overview"),
@@ -718,7 +735,7 @@ class HomeCircleEditor extends HTMLElement {
       el(
         "p",
         "",
-        "Street tiles are optional. Enabling OpenStreetMap sends the viewed map area, your network address, and site origin to its tile service. No names or HA credentials are sent. Availability is best effort.",
+        "OpenStreetMap street tiles are on by default. Tile requests send the viewed map area, your network address, and site origin to its tile service. No names or HA credentials are sent. Choose Private to turn external tiles off. Availability is best effort.",
       ),
     );
     const link = el("a", "", "OpenStreetMap privacy policy");

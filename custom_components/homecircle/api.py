@@ -13,11 +13,32 @@ from .selection import selected_entities
 from .tracker_providers import connected_providers
 
 
-def proof(value):
+def location_source_label(runtime, source_entity):
+    """Name only the exact Person or selected tracker behind this map point."""
+    if not source_entity:
+        return None
+    source = runtime.states.get(source_entity)
+    name = source.name if source else source_entity
+    if source_entity.startswith("device_tracker."):
+        trackers = (
+            state
+            for entity_id, state in runtime.states.items()
+            if entity_id.startswith("device_tracker.") and state is not None
+        )
+        if sum(state.name.casefold() == name.casefold() for state in trackers) > 1:
+            name = f"{name} ({source_entity})"
+        return f"Tracker: {name}"
+    if source_entity.startswith("person."):
+        return f"HA Person: {name}"
+    return name
+
+
+def proof(value, runtime):
     return {
         "reported_at": value.reported_at.isoformat() if value.reported_at else None,
         "observed_at": value.observed_at.isoformat() if value.observed_at else None,
         "freshness": value.freshness,
+        "source_label": location_source_label(runtime, value.source_entity),
     }
 
 
@@ -116,7 +137,7 @@ def snapshot(runtime, alerts=()):
                     "longitude": location.longitude,
                     "accuracy": location.accuracy,
                     "origin": location.origin,
-                    "evidence": proof(location.evidence),
+                    "evidence": proof(location.evidence, runtime),
                 }
                 if location and member.focusable
                 else None,

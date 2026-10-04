@@ -22,6 +22,7 @@ async def run_phase(
 ) -> None:
     from homeassistant import bootstrap, loader
     from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
+    from homeassistant.components.lovelace.const import LOVELACE_DATA
     from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
     from homeassistant.core import HomeAssistant
 
@@ -97,15 +98,25 @@ async def run_phase(
                 "device_tracker.example_phone",
                 "device_tracker.example_router",
             ]:
+                assert result["step_id"] == "assign_tracker"
+                result = await manager.async_configure(
+                    result["flow_id"], {"tracker": tracker}
+                )
+                assert result["step_id"] == "member"
                 result = await manager.async_configure(
                     result["flow_id"], {"trackers": [tracker]}
                 )
-            result = await manager.async_configure(result["flow_id"], {})
+            result = await manager.async_configure(
+                result["flow_id"], {"next_step_id": "confirm_save"}
+            )
             entry = result["result"]
             await hass.async_block_till_done()
             # Persist an options override and verify it survives a separate process.
             manager = hass.config_entries.options
             result = await manager.async_init(entry.entry_id)
+            result = await manager.async_configure(
+                result["flow_id"], {"next_step_id": "household"}
+            )
             result = await manager.async_configure(result["flow_id"], household)
             result = await manager.async_configure(
                 result["flow_id"],
@@ -115,16 +126,27 @@ async def run_phase(
                 },
             )
             result = await manager.async_configure(result["flow_id"], {"trackers": []})
-            await manager.async_configure(result["flow_id"], {})
+            await manager.async_configure(
+                result["flow_id"], {"next_step_id": "confirm_save"}
+            )
             await hass.async_block_till_done()
         entries = hass.config_entries.async_entries("homecircle")
         assert len(entries) == 1
         entry = entries[0]
         assert entry.state == ConfigEntryState.LOADED
+        dashboards = hass.data[LOVELACE_DATA].dashboards
+        assert "dashboard-homecircle" in dashboards
+        dashboard_config = await dashboards["dashboard-homecircle"].async_load(False)
+        assert dashboard_config["views"][0]["cards"] == [
+            {
+                "type": "custom:homecircle-card",
+                "fill_screen": True,
+                "map_tiles": "osm",
+            }
+        ]
         if package_version:
             import aiohttp
             import custom_components.homecircle as installed
-            from homeassistant.components.lovelace.const import LOVELACE_DATA
 
             expected = Path(config_dir) / "custom_components/homecircle"
             assert Path(installed.__file__).resolve().parent == expected.resolve()
