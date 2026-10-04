@@ -4,7 +4,7 @@ Family location and presence for Home Assistant, independent of the tracking pro
 
 **Experimental development software — not a stable release.**
 
-Use a disposable or test Home Assistant dashboard. Published beta 12 includes direct Life360 tracking and tracker-only people and pets. A beta 13 candidate with Person-first setup and the usability changes in the [changelog](CHANGELOG.md) is being validated locally. Broader field acceptance remains open. No stable release is approved.
+Use a disposable or test Home Assistant dashboard. Published beta 13 guides new people and pets through Person selection, tracker assignment, and member configuration. Existing tracker-only members remain supported. See the [changelog](CHANGELOG.md) for the other setup and dashboard changes. Physical DAKboard acceptance and broader field testing remain open. No stable release is approved.
 
 **Status: milestones 1–3 development integration; development prerelease; not production-ready.** HomeCircle is a working name; public naming remains a release decision. The existing V2 dashboard remains the reference system. Development does not replace, install over, or change it.
 
@@ -13,7 +13,7 @@ HomeCircle consumes standard HA `person` and `device_tracker` entities, with opt
 ## Start here
 
 - [Per-source report times](docs/PER-SOURCE-REPORTS.md)
-- [Beta 13 candidate validation](docs/BETA13-VALIDATION.md), [beta 12 validation](docs/BETA12-VALIDATION.md), [current release readiness](docs/CURRENT-RELEASE-READINESS.md), and [earlier direct Life360 validation](docs/DIRECT-LIFE360-CANDIDATE-VALIDATION.md)
+- [Beta 13 validation](docs/BETA13-VALIDATION.md), [beta 12 validation](docs/BETA12-VALIDATION.md), [current release readiness](docs/CURRENT-RELEASE-READINESS.md), and [earlier direct Life360 validation](docs/DIRECT-LIFE360-CANDIDATE-VALIDATION.md)
 
 - [Step-by-step setup: iPhone, Life360, pets and supporting sensors](docs/SETUP.md)
 
@@ -32,7 +32,7 @@ HomeCircle consumes standard HA `person` and `device_tracker` entities, with opt
 
 ## Release preparation
 
-Maintainer: [@jmhjr](https://github.com/jmhjr). The repository is public for development review and HACS custom-repository testing. The current experimental prerelease is [v0.1.0-beta.12](https://github.com/jmhjr/HomeCircle/releases/tag/v0.1.0-beta.12). See [beta 12 validation](docs/BETA12-VALIDATION.md) and the [historical release preparation record](docs/RELEASE-VALIDATION.md).
+Maintainer: [@jmhjr](https://github.com/jmhjr). The repository is public for development review and HACS custom-repository testing. The current experimental prerelease is [v0.1.0-beta.13](https://github.com/jmhjr/HomeCircle/releases/tag/v0.1.0-beta.13). See [beta 13 validation](docs/BETA13-VALIDATION.md) and the [historical release preparation record](docs/RELEASE-VALIDATION.md).
 
 ## Repository
 
