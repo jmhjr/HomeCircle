@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0-beta.14 — candidate
+## 0.1.0-beta.14 — experimental prerelease
 
 - Show the registered tracker integration beside a location source when the tracker's name alone does not identify it. A Life360 Pet GPS tracker named Ruby now reads `Tracker: Ruby · Life360 Pet GPS`.
 
