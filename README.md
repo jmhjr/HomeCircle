@@ -4,7 +4,7 @@ Family location and presence for Home Assistant, independent of the tracking pro
 
 **Experimental development software — not a stable release.**
 
-Use a disposable or test Home Assistant dashboard. Published beta 14 identifies the integration behind a selected location tracker, including Ruby's Life360 Pet GPS tracker. Beta 13 added Person-first setup and dashboard improvements. Existing tracker-only members remain supported. See the [changelog](CHANGELOG.md) for the other changes. Physical DAKboard acceptance and broader field testing remain open. No stable release is approved.
+Use a disposable or test Home Assistant dashboard. Published beta 14 identifies the integration behind a selected location tracker, including Ruby's Life360 Pet GPS tracker. Beta 13 added Person-first setup and dashboard improvements. Existing tracker-only members remain supported. See the [changelog](CHANGELOG.md) for the other changes. Beta 14 passed the physical DAKboard check; broader field testing remains open. No stable release is approved.
 
 **Status: milestones 1–3 development integration; development prerelease; not production-ready.** HomeCircle is a working name; public naming remains a release decision. The existing V2 dashboard remains the reference system. Development does not replace, install over, or change it.
 

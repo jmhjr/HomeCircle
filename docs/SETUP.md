@@ -143,4 +143,4 @@ HACS upgrades require a restart. To uninstall from a test instance, first remove
 
 ## Validation scope
 
-See [beta 14 validation](BETA14-CANDIDATE-VALIDATION.md) for this release's tested scope. Physical DAKboard acceptance and a full real departure/return test remain open.
+See [beta 14 validation](BETA14-CANDIDATE-VALIDATION.md) for this release's tested scope. The physical DAKboard check passed. A full real departure/return test remains open.
