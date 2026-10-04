@@ -10,6 +10,7 @@ import {
   markerGroups,
   pinFitPadding,
   validateConfig,
+  providerAlertText,
 } from "./model.js";
 
 function el(tag, className, text) {
@@ -231,6 +232,7 @@ class HomeCircleCard extends HTMLElement {
     this._status = el("div", "status");
     this._status.setAttribute("role", "status");
     this._status.setAttribute("aria-live", "polite");
+    this._providerAlerts = el("div", "provider-alerts");
     const wrap = el("div", "map-wrap");
     this._mapNode = el("div", "map");
     this._mapNode.setAttribute("aria-label", "Household locations");
@@ -242,6 +244,7 @@ class HomeCircleCard extends HTMLElement {
     this._shell.append(
       header,
       this._status,
+      this._providerAlerts,
       wrap,
       this._expanded,
       this._categories,
@@ -324,6 +327,7 @@ class HomeCircleCard extends HTMLElement {
     );
     this._categories.replaceChildren();
     this._members.replaceChildren();
+    this._providerAlerts.replaceChildren();
     if (!this._data) {
       this._status.textContent = this._error || "Connecting to HomeCircle…";
       this._mapNote.textContent =
@@ -345,6 +349,11 @@ class HomeCircleCard extends HTMLElement {
       labels[this._mode] || members.find((m) => m.id === this._mode)?.name;
     const points = selection(members, this._mode, this._data.focus_ids);
     this._status.textContent = `${name} · ${points.length} map ${points.length === 1 ? "position" : "positions"}${this._mode === "home" ? " · Primary house only" : ""}`;
+    for (const alert of this._data.provider_alerts || []) {
+      const message = providerAlertText(alert);
+      if (message)
+        this._providerAlerts.append(el("div", "provider-alert", message));
+    }
     for (const category of categories) {
       const node = button("", () => this._choose(category), "category");
       node.dataset.focus = category;

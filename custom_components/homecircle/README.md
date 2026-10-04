@@ -1,7 +1,7 @@
-# HomeCircle development integration
+# HomeCircle integration
 
-Milestones 1–3 implement UI config/options/reconfigure flows, optional evidence mappings, read-only normalization, household counts/focus, an authenticated snapshot interface, and a registered card with visual editor. It creates no recorder entities, provider connection, or location history.
+HomeCircle consumes Home Assistant people and device trackers for household presence and location. Beta 11 also offers an optional direct Life360 connection that creates ordinary Home Assistant device trackers. Existing trackers remain usable without a HomeCircle Life360 account. Neither path requires manual YAML.
 
-Development target: HA Core 2026.9.4 and Python 3.14.2+. Maintainer and repository metadata are set; public distribution and HACS acceptance remain pending. Version 0.0.3-dev1 is a local development identifier, not a published tag.
+Development target: HA Core 2026.9.4 and Python 3.14.2+. Beta 11 is an experimental prerelease for test Home Assistant instances; it has not been installed on the live server. HomeCircle does not create a separate location history store. Direct tracker states may be retained by Home Assistant Recorder according to the user's settings.
 
-Build the frontend before starting HA. See [development](../../docs/DEVELOPMENT.md), [frontend setup](../../docs/FRONTEND.md), and [validation](../../docs/MILESTONE-3-VALIDATION.md).
+Build the frontend before starting HA. See [development](../../docs/DEVELOPMENT.md), [setup](../../docs/SETUP.md), and [direct Life360 candidate validation](../../docs/DIRECT-LIFE360-CANDIDATE-VALIDATION.md).

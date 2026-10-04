@@ -21,7 +21,10 @@ def main():
     parser.add_argument(
         "--lan-address", help="Explicit private IPv4 address for physical display QA"
     )
+    parser.add_argument("--port", type=int, default=18124, help="Disposable HTTP port")
     args = parser.parse_args()
+    if not 1024 <= args.port <= 65535:
+        parser.error("Use an unprivileged TCP port")
     hosts = ["127.0.0.1"]
     if args.lan_address:
         address = ipaddress.ip_address(args.lan_address)
@@ -95,7 +98,7 @@ def main():
         storage = config_dir / ".storage"
         storage.mkdir()
         stable_http = dict(
-            HTTP_STORAGE_SCHEMA({"server_host": hosts, "server_port": 18124}),
+            HTTP_STORAGE_SCHEMA({"server_host": hosts, "server_port": args.port}),
             created_at=dt_util.utcnow().isoformat(),
             error=None,
             error_message=None,
@@ -115,7 +118,10 @@ def main():
             )
         )
         for host in hosts:
-            print(f"Disposable HA: http://{host}:18124 (Ctrl-C cleans up)", flush=True)
+            print(
+                f"Disposable HA: http://{host}:{args.port} (Ctrl-C cleans up)",
+                flush=True,
+            )
         while True:
             process = subprocess.Popen(
                 [

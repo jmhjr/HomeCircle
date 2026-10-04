@@ -1,6 +1,7 @@
 """HA websocket authorization and owned-resource lifecycle acceptance."""
 
 from unittest.mock import patch
+from types import SimpleNamespace
 
 from homeassistant.components.lovelace.const import LOVELACE_DATA
 from homeassistant.components.lovelace.resources import ResourceYAMLCollection
@@ -9,6 +10,7 @@ from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
 
 from custom_components.homecircle import frontend
 from custom_components.homecircle.api import allowed_picture
+from custom_components.homecircle.tracker_providers import ProviderHealth
 from test_config_flow import start, finish
 
 
@@ -88,6 +90,64 @@ async def test_snapshot_authorization_and_projection(
     await hass.config_entries.async_unload(entry.entry_id)
     await client.send_json({"id": 5, "type": "homecircle/snapshot"})
     assert (await client.receive_json())["error"]["code"] == "not_ready"
+
+
+async def test_provider_status_is_visible_only_to_admin(
+    hass, household, hass_ws_client, hass_read_only_access_token
+):
+    entry = await setup(hass, household)
+    runtime = entry.runtime_data
+    runtime.config["life360_account"] = {
+        "method": "token",
+        "secret": "example-private-token",
+    }
+    runtime.managed_trackers["life360"] = SimpleNamespace(
+        health_snapshot=lambda: ProviderHealth(state="auth_required")
+    )
+
+    admin = await hass_ws_client(hass)
+    await admin.send_json({"id": 1, "type": "homecircle/snapshot"})
+    admin_result = (await admin.receive_json())["result"]
+    assert admin_result["provider_alerts"] == [
+        {"name": "Life360", "state": "auth_required"}
+    ]
+    assert "example-private-token" not in str(admin_result)
+
+    viewer = await hass_ws_client(hass, hass_read_only_access_token)
+    try:
+        await viewer.send_json({"id": 1, "type": "homecircle/snapshot"})
+        viewer_result = await viewer.receive_json()
+        assert viewer_result["success"]
+        assert viewer_result["result"]["provider_alerts"] == []
+    finally:
+        runtime.managed_trackers.clear()
+        runtime.config.pop("life360_account")
+
+
+async def test_tracker_only_pet_requires_permission_to_read_tracker(
+    hass, household, hass_ws_client, hass_admin_user
+):
+    pet = "device_tracker.example_pet"
+    hass.states.async_set(pet, "home", {"source_type": "gps"})
+    result = await start(
+        hass,
+        {"people": [], "pets": [pet], "primary_home": household["primary_home"]},
+    )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    await hass.async_block_till_done()
+    client = await hass_ws_client(hass)
+    permissions = type(hass_admin_user.permissions)
+    with patch.object(
+        permissions,
+        "check_entity",
+        side_effect=lambda entity, policy: entity != pet,
+    ):
+        await client.send_json({"id": 1, "type": "homecircle/snapshot"})
+        result = await client.receive_json()
+    assert result["error"]["code"] == "unauthorized"
+    assert "result" not in result
 
 
 def test_portraits_use_ha_or_life360_images_only():

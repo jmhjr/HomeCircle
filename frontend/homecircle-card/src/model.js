@@ -6,6 +6,27 @@ export const labels = {
   unavailable: "Unavailable",
   overview: "Everyone",
 };
+const providerMessages = {
+  selection_needed:
+    "trackers are ready; open HomeCircle Options to choose a tracker from this account",
+  starting: "connecting to the tracker service",
+  discovering: "finding trackers",
+  partial:
+    "some trackers could not be updated; check HomeCircle Options if this continues",
+  auth_required: "sign-in needs attention; open Home Assistant Repairs",
+  rate_limited: "temporarily rate limited; HomeCircle will retry",
+  network_error: "connection failed; HomeCircle will retry",
+  api_error:
+    "tracker request failed; check HomeCircle Options if this continues",
+  unexpected_response:
+    "tracker service response changed; check HomeCircle diagnostics",
+};
+export function providerAlertText(alert) {
+  const message = providerMessages[alert?.state];
+  return message && typeof alert.name === "string"
+    ? `${alert.name}: ${message}.`
+    : null;
+}
 export function visibleMembers(snapshot, hidden = []) {
   return (snapshot?.members || []).filter(
     (member) => !hidden.includes(member.id),

@@ -4,22 +4,23 @@ Family location and presence for Home Assistant, independent of the tracking pro
 
 **Experimental development software — not a stable release.**
 
-Use a disposable or test Home Assistant dashboard. Beta 10 makes kiosk view fill the screen and uses valid report-time and battery attributes from a selected tracker when no explicit sensors are configured. Beta 9 draws single and grouped member markers as location pins. Broader field acceptance remains open. No stable release is approved.
+Use a disposable or test Home Assistant dashboard. Beta 11 adds direct Life360 tracking and tracker-only people and pets. It retains the existing Home Assistant entity path, map, kiosk view, and report-time handling. Broader field acceptance remains open. No stable release is approved.
 
 **Status: milestones 1–3 development integration; development prerelease; not production-ready.** HomeCircle is a working name; public naming remains a release decision. The existing V2 dashboard remains the reference system. Development does not replace, install over, or change it.
 
-HomeCircle consumes standard HA `person` and `device_tracker` entities, with optional explicitly selected supporting sensors. Life360, the Companion app, and other tracking integrations remain independently managed sources. HomeCircle will never require a Life360 account or token.
+HomeCircle consumes standard HA `person` and `device_tracker` entities, with optional explicitly selected supporting sensors. Beta 11 also offers an optional direct Life360 connection through a built in tracker provider contract designed for more providers in later releases. Existing HA trackers remain selectable without a HomeCircle provider account.
 
 ## Start here
 
 - [Per-source report times](docs/PER-SOURCE-REPORTS.md)
-- [Current release readiness](docs/CURRENT-RELEASE-READINESS.md), [beta 10 validation](docs/BETA10-VALIDATION.md), and [beta 9 validation](docs/BETA9-VALIDATION.md)
+- [Beta 11 validation](docs/DIRECT-LIFE360-CANDIDATE-VALIDATION.md), [current release readiness](docs/CURRENT-RELEASE-READINESS.md), and [beta 10 validation](docs/BETA10-VALIDATION.md)
 
 - [Step-by-step setup: iPhone, Life360, pets and supporting sensors](docs/SETUP.md)
 
 - [Product and V0.1 boundary](docs/PRODUCT.md)
 - [Feature inventory and reference evidence](reference/feature-inventory.md)
 - [Architecture](docs/ARCHITECTURE.md) and [ADR-001](docs/adr/ADR-001-provider-independence.md)
+- [Troubleshooting built in tracker providers](docs/TRACKER-PROVIDER-ISSUES.md)
 - [Roadmap and acceptance gates](docs/ROADMAP.md)
 - [Development and Git workflow](docs/DEVELOPMENT.md)
 - [Privacy and security](docs/PRIVACY.md)
@@ -31,7 +32,7 @@ HomeCircle consumes standard HA `person` and `device_tracker` entities, with opt
 
 ## Release preparation
 
-Maintainer: [@jmhjr](https://github.com/jmhjr). The repository is public for development review and HACS custom-repository testing. The current experimental prerelease is [v0.1.0-beta.10](https://github.com/jmhjr/HomeCircle/releases/tag/v0.1.0-beta.10). See [current release readiness](docs/CURRENT-RELEASE-READINESS.md) and the [historical release preparation record](docs/RELEASE-VALIDATION.md).
+Maintainer: [@jmhjr](https://github.com/jmhjr). The repository is public for development review and HACS custom-repository testing. The current experimental prerelease is [v0.1.0-beta.11](https://github.com/jmhjr/HomeCircle/releases/tag/v0.1.0-beta.11). See [beta 11 validation](docs/DIRECT-LIFE360-CANDIDATE-VALIDATION.md) and the [historical release preparation record](docs/RELEASE-VALIDATION.md).
 
 ## Repository
 

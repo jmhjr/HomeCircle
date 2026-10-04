@@ -5,10 +5,12 @@ from urllib.parse import unquote, urlsplit
 from homeassistant.auth.permissions.const import POLICY_READ
 from homeassistant.components import websocket_api
 from homeassistant.core import callback
+from homeassistant.helpers import entity_registry as er
 import voluptuous as vol
 
 from .const import CONF_MEMBERS, CONF_TRACKERS, DOMAIN
 from .selection import selected_entities
+from .tracker_providers import connected_providers
 
 
 def proof(value):
@@ -48,7 +50,30 @@ def allowed_picture(value):
     return None
 
 
-def snapshot(runtime):
+def provider_alerts(hass, runtime):
+    """Allowlisted status for the account holder, without provider details."""
+    alerts = []
+    registry = er.async_get(hass)
+    selected = selected_entities(runtime.config)
+    for provider in connected_providers(runtime.config):
+        client = runtime.managed_trackers.get(provider.id)
+        if client is None:
+            continue
+        health = client.health_snapshot()
+        state = health.state
+        if (
+            state == "connected"
+            and health.available_trackers > 0
+            and not any(provider.owns_entity(registry, entity_id) for entity_id in selected)
+        ):
+            alerts.append({"name": provider.display_name, "state": "selection_needed"})
+            continue
+        if state not in ("connected", "not_loaded"):
+            alerts.append({"name": provider.display_name, "state": state})
+    return alerts
+
+
+def snapshot(runtime, alerts=()):
     """Explicit public projection. Never serialize the state cache or config."""
     household = runtime.household
     members = []
@@ -105,6 +130,7 @@ def snapshot(runtime):
         "members": members,
         "counts": household.counts,
         "focus_ids": household.focus_ids,
+        "provider_alerts": list(alerts),
     }
 
 
@@ -134,4 +160,7 @@ def websocket_snapshot(hass, connection, msg):
             msg["id"], "unauthorized", "Household access is not allowed."
         )
         return
-    connection.send_result(msg["id"], snapshot(runtime))
+    connection.send_result(
+        msg["id"],
+        snapshot(runtime, provider_alerts(hass, runtime) if user.is_admin else ()),
+    )

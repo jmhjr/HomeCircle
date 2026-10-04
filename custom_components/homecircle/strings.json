@@ -4,11 +4,21 @@
     "step": {
       "household": {
         "title": "Choose your household and places",
-        "description": "Select existing Home Assistant people and zones. Ordinary places do not count as Home unless assigned as a residence for a member.",
+        "description": "Select existing Home Assistant people, person trackers, pet trackers and zones. To connect Life360 without another integration, turn on direct connection; its trackers appear after setup and can then be selected in Options.\n\n{tracker_status}",
         "data": {
-          "people": "People",
+          "people": "Home Assistant People (optional)",
           "primary_home": "Primary family home",
-          "places": "Ordinary places (optional)"
+          "places": "Ordinary places (optional)",
+          "pets": "Pet trackers (optional)",
+          "people_trackers": "People trackers (optional)",
+          "life360_direct": "Connect a Life360 account directly",
+          "replace_life360_login": "Replace saved Life360 sign-in"
+        },
+        "data_description": {
+          "pets": "Choose an existing tracker for each pet. Each selected tracker becomes one pet; no Home Assistant Person record is needed. Check ownership when names repeat.",
+          "people_trackers": "Choose a tracker for each person who does not have a Home Assistant Person record. A connected Life360 tracker can be selected here after it appears.",
+          "life360_direct": "Optional. HomeCircle will connect to Life360 itself and create device trackers in Home Assistant. Turn this off after replacing any selected HomeCircle-owned Life360 trackers.",
+          "replace_life360_login": "Use this if the password or token changed for the same Life360 account. Existing member selections are kept."
         }
       },
       "member": {
@@ -31,7 +41,7 @@
       },
       "confirm": {
         "title": "Review and save household",
-        "description": "Review these selections before saving. HomeCircle reads existing Home Assistant entities only.\n\n**Primary home:** {primary_home}\n\n**Ordinary places:** {places}\n\n{members}\n\nSubmit to save, or close this window to discard the draft."
+        "description": "Review these selections before saving. HomeCircle uses the selected Home Assistant entities. If you connected a tracker account directly, its trackers may appear after setup; reopen Options to choose people from them.\n\n**Primary home:** {primary_home}\n\n**Ordinary places:** {places}\n\n{members}\n\nSubmit to save, or close this window to discard the draft."
       },
       "supporting": {
         "title": "Status sensors",
@@ -69,6 +79,57 @@
           "pet_home_minutes": "Default: 24 hours. Applies at the primary home and this pet’s other homes.",
           "pet_away_minutes": "Default: 5 minutes. Applies when this pet is away from its homes."
         }
+      },
+      "pet_member": {
+        "title": "Choose pet places and details",
+        "description": "Member {number} of {total}: {person}. This pet uses its selected tracker directly. Choose any other homes and optional supporting sensors.",
+        "data": {
+          "additional_residences": "Other homes for this pet",
+          "configure_sensors": "Set up battery and motion sensors",
+          "configure_reports": "Set up location report time"
+        },
+        "data_description": {
+          "additional_residences": "These zones also count as Home for this pet. The Home map button still focuses the primary family home.",
+          "configure_reports": "Choose a genuine location report-time sensor for this tracker. Leave off if none is available.",
+          "configure_sensors": "Choose optional battery, charging, speed and driving sensors on the next screen."
+        }
+      },
+      "life360_account": {
+        "title": "Connect Life360",
+        "description": "Enter a Life360 email and password, or an access token. Some accounts with verified phone numbers cannot use password sign-in. Credentials are saved in Home Assistant configuration storage. Home Assistant Recorder may keep a history of the new tracker locations; review its settings before connecting. Member trackers may take several minutes to appear; reopen HomeCircle Options to select them.",
+        "data": {
+          "method": "Sign-in method",
+          "username": "Life360 email (password method)",
+          "secret": "Password or access token",
+          "confirm_same_account": "I confirm this is the same Life360 account"
+        },
+        "data_description": {
+          "secret": "For access token, enter only the token value. HomeCircle uses Bearer authorization.",
+          "confirm_same_account": "Only needed if HomeCircle cannot verify the previously saved sign-in for this older setup."
+        }
+      },
+      "reauth_confirm": {
+        "title": "Reconnect Life360",
+        "description": "Life360 rejected the saved sign-in. Enter a current password or access token for the same account. HomeCircle will keep your household and tracker selections.",
+        "data": {
+          "method": "Sign-in method",
+          "username": "Life360 email (password method)",
+          "secret": "Password or access token",
+          "confirm_same_account": "I confirm this is the same Life360 account"
+        },
+        "data_description": {
+          "secret": "For access token, enter only the token value.",
+          "confirm_same_account": "The old sign-in may have expired, so HomeCircle may need your confirmation that these credentials belong to the same account."
+        }
+      },
+      "tracker_member": {
+        "title": "Choose person places and details",
+        "description": "Member {number} of {total}: {person}. This person uses the selected tracker directly. Choose any other homes and optional supporting sensors.",
+        "data": {
+          "additional_residences": "Other homes for this person",
+          "configure_sensors": "Set up battery and motion sensors",
+          "configure_reports": "Set up location report time"
+        }
       }
     },
     "error": {
@@ -82,12 +143,25 @@
       "invalid_report_source": "Select this person or one of their explicitly selected trackers.",
       "driving_required": "Select a driving binary sensor for this report timestamp.",
       "invalid_kind": "Choose person or pet.",
-      "invalid_freshness": "Enter a number between 1 and 10080 minutes."
+      "invalid_freshness": "Enter a number between 1 and 10080 minutes.",
+      "no_members": "Select at least one person or tracker, or connect a tracker account directly.",
+      "invalid_credentials": "Enter the required account fields.",
+      "invalid_auth": "Life360 did not accept these credentials.",
+      "different_account": "Use the same Life360 account to keep your selected trackers. To switch accounts, remove this HomeCircle setup and set up a new household.",
+      "same_account_confirmation_required": "HomeCircle could not verify the old account. Confirm that the new sign-in is for the same account before keeping these trackers.",
+      "rate_limited": "Life360 is temporarily limiting sign-in. Try again later.",
+      "cannot_connect": "Could not contact Life360. Try again later.",
+      "unexpected_response": "Life360 returned an unexpected response. Check HomeCircle diagnostics if this continues.",
+      "invalid_tracker_source": "A directly selected person or pet must use that tracker as the source.",
+      "direct_trackers_selected": "Before disconnecting, replace HomeCircle-owned trackers selected here or linked to a selected Home Assistant Person.",
+      "tracker_already_in_person": "This tracker is already linked to a selected Home Assistant Person. Keep that Person or choose the tracker as a separate member, not both."
     },
     "abort": {
       "already_configured": "HomeCircle is already configured. Use Options to edit the household.",
       "already_in_progress": "HomeCircle setup is already in progress.",
       "reconfigure_successful": "HomeCircle configuration updated.",
+      "reauth_successful": "Tracker connection updated.",
+      "provider_reauth_unavailable": "This tracker connection cannot be reconnected here. Open HomeCircle Options to review the account.",
       "single_instance_allowed": "Only one HomeCircle household is supported. Use Options to edit it."
     }
   },
@@ -95,11 +169,21 @@
     "step": {
       "household": {
         "title": "Choose your household and places",
-        "description": "Select existing Home Assistant people and zones. Ordinary places do not count as Home unless assigned as a residence for a member.",
+        "description": "Select existing Home Assistant people, person trackers, pet trackers and zones. To connect Life360 without another integration, turn on direct connection; its trackers appear after setup and can then be selected in Options.\n\n{tracker_status}",
         "data": {
-          "people": "People",
+          "people": "Home Assistant People (optional)",
           "primary_home": "Primary family home",
-          "places": "Ordinary places (optional)"
+          "places": "Ordinary places (optional)",
+          "pets": "Pet trackers (optional)",
+          "people_trackers": "People trackers (optional)",
+          "life360_direct": "Connect a Life360 account directly",
+          "replace_life360_login": "Replace saved Life360 sign-in"
+        },
+        "data_description": {
+          "pets": "Choose an existing tracker for each pet. Each selected tracker becomes one pet; no Home Assistant Person record is needed. Check ownership when names repeat.",
+          "people_trackers": "Choose a tracker for each person who does not have a Home Assistant Person record. A connected Life360 tracker can be selected here after it appears.",
+          "life360_direct": "Optional. HomeCircle will connect to Life360 itself and create device trackers in Home Assistant. Turn this off after replacing any selected HomeCircle-owned Life360 trackers.",
+          "replace_life360_login": "Use this if the password or token changed for the same Life360 account. Existing member selections are kept."
         }
       },
       "member": {
@@ -122,7 +206,7 @@
       },
       "confirm": {
         "title": "Review and save household",
-        "description": "Review these selections before saving. HomeCircle reads existing Home Assistant entities only.\n\n**Primary home:** {primary_home}\n\n**Ordinary places:** {places}\n\n{members}\n\nSubmit to save, or close this window to discard the draft."
+        "description": "Review these selections before saving. HomeCircle uses the selected Home Assistant entities. If you connected a tracker account directly, its trackers may appear after setup; reopen Options to choose people from them.\n\n**Primary home:** {primary_home}\n\n**Ordinary places:** {places}\n\n{members}\n\nSubmit to save, or close this window to discard the draft."
       },
       "supporting": {
         "title": "Status sensors",
@@ -160,6 +244,43 @@
           "pet_home_minutes": "Default: 24 hours. Applies at the primary home and this pet’s other homes.",
           "pet_away_minutes": "Default: 5 minutes. Applies when this pet is away from its homes."
         }
+      },
+      "pet_member": {
+        "title": "Choose pet places and details",
+        "description": "Member {number} of {total}: {person}. This pet uses its selected tracker directly. Choose any other homes and optional supporting sensors.",
+        "data": {
+          "additional_residences": "Other homes for this pet",
+          "configure_sensors": "Set up battery and motion sensors",
+          "configure_reports": "Set up location report time"
+        },
+        "data_description": {
+          "additional_residences": "These zones also count as Home for this pet. The Home map button still focuses the primary family home.",
+          "configure_reports": "Choose a genuine location report-time sensor for this tracker. Leave off if none is available.",
+          "configure_sensors": "Choose optional battery, charging, speed and driving sensors on the next screen."
+        }
+      },
+      "life360_account": {
+        "title": "Connect Life360",
+        "description": "Enter a Life360 email and password, or an access token. Some accounts with verified phone numbers cannot use password sign-in. Credentials are saved in Home Assistant configuration storage. Home Assistant Recorder may keep a history of the new tracker locations; review its settings before connecting. Member trackers may take several minutes to appear; reopen HomeCircle Options to select them.",
+        "data": {
+          "method": "Sign-in method",
+          "username": "Life360 email (password method)",
+          "secret": "Password or access token",
+          "confirm_same_account": "I confirm this is the same Life360 account"
+        },
+        "data_description": {
+          "secret": "For access token, enter only the token value. HomeCircle uses Bearer authorization.",
+          "confirm_same_account": "Only needed if HomeCircle cannot verify the previously saved sign-in for this older setup."
+        }
+      },
+      "tracker_member": {
+        "title": "Choose person places and details",
+        "description": "Member {number} of {total}: {person}. This person uses the selected tracker directly. Choose any other homes and optional supporting sensors.",
+        "data": {
+          "additional_residences": "Other homes for this person",
+          "configure_sensors": "Set up battery and motion sensors",
+          "configure_reports": "Set up location report time"
+        }
       }
     },
     "error": {
@@ -173,13 +294,28 @@
       "invalid_report_source": "Select this person or one of their explicitly selected trackers.",
       "driving_required": "Select a driving binary sensor for this report timestamp.",
       "invalid_kind": "Choose person or pet.",
-      "invalid_freshness": "Enter a number between 1 and 10080 minutes."
+      "invalid_freshness": "Enter a number between 1 and 10080 minutes.",
+      "no_members": "Select at least one person or tracker, or connect a tracker account directly.",
+      "invalid_credentials": "Enter the required account fields.",
+      "invalid_auth": "Life360 did not accept these credentials.",
+      "different_account": "Use the same Life360 account to keep your selected trackers. To switch accounts, remove this HomeCircle setup and set up a new household.",
+      "same_account_confirmation_required": "HomeCircle could not verify the old account. Confirm that the new sign-in is for the same account before keeping these trackers.",
+      "rate_limited": "Life360 is temporarily limiting sign-in. Try again later.",
+      "cannot_connect": "Could not contact Life360. Try again later.",
+      "unexpected_response": "Life360 returned an unexpected response. Check HomeCircle diagnostics if this continues.",
+      "invalid_tracker_source": "A directly selected person or pet must use that tracker as the source.",
+      "direct_trackers_selected": "Before disconnecting, replace HomeCircle-owned trackers selected here or linked to a selected Home Assistant Person.",
+      "tracker_already_in_person": "This tracker is already linked to a selected Home Assistant Person. Keep that Person or choose the tracker as a separate member, not both."
     }
   },
   "issues": {
     "missing_entities": {
       "title": "HomeCircle selections need attention",
       "description": "{count} selected entities are missing or disabled. Sources may still be starting. If they do not return, open HomeCircle Options to remove or replace them. Renamed entities must be selected again. Saved selections are retained; missing sources are not treated as Away."
+    },
+    "life360_auth_failed": {
+      "title": "HomeCircle Life360 sign-in needs attention",
+      "description": "The direct Life360 connection is no longer authorized. Its trackers may be unavailable. Check the account authorization and reconnect HomeCircle; existing Home Assistant sources remain available."
     }
   }
 }

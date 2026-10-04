@@ -19,6 +19,7 @@ from .normalize import Household, normalize_household
 
 from .const import DOMAIN
 from .selection import selected_entities
+from .tracker_providers import TrackerClient, connected_providers
 from . import api, frontend
 from homeassistant.components import websocket_api
 
@@ -35,6 +36,7 @@ class HomeCircleRuntime:
     states: dict[str, State | None] = field(default_factory=dict)
     missing: set[str] = field(default_factory=set)
     unavailable: set[str] = field(default_factory=set)
+    managed_trackers: dict[str, TrackerClient] = field(default_factory=dict)
 
 
 type HomeCircleEntry = ConfigEntry[HomeCircleRuntime]
@@ -46,7 +48,7 @@ async def async_setup(hass, config):
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: HomeCircleEntry) -> bool:
-    """Track only selected HA entities without writing to their integrations."""
+    """Track selected HA entities and optional HomeCircle-owned Life360 trackers."""
     await frontend.async_register(hass)
     runtime = entry.runtime_data = HomeCircleRuntime(dict(entry.options or entry.data))
     entity_ids = selected_entities(runtime.config)
@@ -127,11 +129,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeCircleEntry) -> bool
     )
     entry.async_on_unload(lambda: ir.async_delete_issue(hass, DOMAIN, issue_id))
     refresh()
+    platforms = sorted(
+        {provider.platform for provider in connected_providers(runtime.config)}
+    )
+    if platforms:
+        await hass.config_entries.async_forward_entry_setups(entry, platforms)
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: HomeCircleEntry) -> bool:
     """HA removes registered listeners after this successful unload."""
+    runtime = entry.runtime_data
+    for client in runtime.managed_trackers.values():
+        await client.async_stop()
+    platforms = sorted(
+        {provider.platform for provider in connected_providers(runtime.config)}
+    )
+    if platforms:
+        await hass.config_entries.async_unload_platforms(entry, platforms)
+    runtime.managed_trackers.clear()
     if frontend.consume_reload_preservation(hass, entry.entry_id):
 
         async def cleanup_failed_reload():

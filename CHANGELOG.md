@@ -1,6 +1,24 @@
 # Changelog
 
-## 0.1.0-beta.10 — release candidate
+## 0.1.0-beta.11 — experimental prerelease
+
+- Let an existing Home Assistant device tracker be selected directly as a pet, without creating a Person record. The pet uses that tracker for presence and location, with its own residences, freshness limits and optional supporting sensors.
+- Preserve custom pet freshness limits when reopening and saving Options without changing those fields.
+- Offer optional direct Life360 account connection with password or access token. HomeCircle creates ordinary HA device trackers for discovered members; existing Life360 entities remain selectable without direct connection. People can also be selected from trackers without creating HA Person records.
+- Route managed tracker connections through a provider registry so future built in sources can have separate credentials, setup steps, tracker ownership and lifecycle while sharing the existing HA entity and household model.
+- Allow any registered tracker provider to complete account setup before its trackers appear, then choose members in Options after discovery.
+- Route account repair to the provider that reported the authorization failure, so future connected tracker services can have separate reconnect forms.
+- Keep the setup prompt visible until a tracker from the connected account is explicitly selected, even when other household members already exist.
+- Prevent disconnecting a tracker account while a selected Home Assistant Person is configured to use, or currently reports from, one of its trackers.
+- Report malformed Life360 location fields as an unexpected provider response while treating intentionally unshared locations as unavailable.
+- Keep checking Life360 for newly added Circle members after initial discovery, track failures per member, and show tracker discovery status in HomeCircle Options.
+- Classify provider failures with safe health codes, export sanitized Home Assistant diagnostics, and open a reauthentication repair flow when Life360 rejects a saved credential. Document the same issue workflow for future built in providers.
+- Keep other Life360 members updating when one direct tracker is disabled or access to one Circle or member is denied. Stop retrying a rejected credential until it is repaired, cancel an active refresh on unload, and create TLS contexts off Home Assistant's event loop.
+- Reject a tracker assigned to more than one household member.
+- Recover saved direct trackers as unavailable during an offline restart, retry cleanly after a failed tracker-platform setup, and check account access when every member request is denied.
+- Verify Life360 account continuity when replacing credentials or reconnecting; reject a different verified account while preserving selected trackers. For older development entries without a saved account identity, compare the old and new sign-ins when possible, or require explicit same-account confirmation when the old sign-in cannot be verified.
+
+## 0.1.0-beta.10 — experimental prerelease
 
 - Let a full-height HomeCircle card cover the viewport in kiosk mode, including HA's title bar and dashboard margins. Exit kiosk restores the ordinary view.
 - Use a selected GPS tracker's valid `last_seen` location timestamp when no report-time sensor is configured. Keep the iPhone location report time unknown when that attribute is absent.

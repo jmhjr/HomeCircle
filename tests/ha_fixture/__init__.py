@@ -33,6 +33,17 @@ async def async_setup(hass, config):
             )
         hass.states.async_set("device_tracker.example_phone", state, phone)
         hass.states.async_set("device_tracker.example_router", "home", router)
+        hass.states.async_set(
+            "device_tracker.example_pet",
+            "Example Residence",
+            {
+                "friendly_name": "Example Pet GPS",
+                "source_type": "gps",
+                ATTR_LATITUDE: 1.0,
+                ATTR_LONGITUDE: 0.0,
+                "in_zones": ["zone.example_residence"],
+            },
+        )
 
     scenario("home")
 

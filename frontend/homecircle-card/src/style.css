@@ -120,6 +120,18 @@ button[aria-pressed="true"] {
   color: #b9c9d8;
   font-size: 12px;
 }
+.provider-alerts:not(:empty) {
+  margin: 0 14px 14px;
+  padding: 10px 12px;
+  border: 1px solid #8b6d3d;
+  border-radius: 10px;
+  background: #392f23;
+  color: #f5ddac;
+  font-size: 12px;
+}
+.provider-alert + .provider-alert {
+  margin-top: 6px;
+}
 .map-wrap {
   position: relative;
   margin: 0 14px;

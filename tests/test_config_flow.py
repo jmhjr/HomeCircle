@@ -1,17 +1,21 @@
 """Exercise HA's actual flow manager, selectors, persistence and runtime."""
 
 from copy import deepcopy
-from unittest.mock import patch
+from datetime import datetime, timezone
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from homeassistant.components.lovelace.const import LOVELACE_DATA
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
+    SOURCE_REAUTH,
     SOURCE_USER,
     ConfigEntryState,
 )
+from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from life360 import Unauthorized
 
 from custom_components.homecircle.const import DOMAIN
 from custom_components.homecircle import frontend
@@ -109,20 +113,985 @@ async def test_cancel_and_duplicate_flow(hass, household):
 
 
 @pytest.mark.parametrize(
-    ("field", "value", "error"),
+    ("field", "value", "error_field", "error"),
     [
-        ("people", [], "no_people"),
-        ("people", ["person.example_deleted"], "invalid_entity"),
-        ("people", ["person.example_member"] * 2, "duplicate_selection"),
-        ("primary_home", "zone.example_deleted", "invalid_entity"),
-        ("places", ["zone.home"], "primary_in_places"),
+        ("people", [], "base", "no_members"),
+        ("people", ["person.example_deleted"], "people", "invalid_entity"),
+        ("people", ["person.example_member"] * 2, "people", "duplicate_selection"),
+        ("primary_home", "zone.example_deleted", "primary_home", "invalid_entity"),
+        ("places", ["zone.home"], "places", "primary_in_places"),
     ],
 )
-async def test_invalid_household(hass, household, field, value, error):
+async def test_invalid_household(hass, household, field, value, error_field, error):
     result = await start(hass, {**household, field: value})
     assert result["step_id"] == "household"
-    assert result["errors"][field] == error
+    assert result["errors"][error_field] == error
     assert not hass.config_entries.async_entries(DOMAIN)
+
+
+async def test_tracker_only_pet_setup_and_options(hass, household):
+    pet = "device_tracker.example_pet"
+    report = "sensor.example_pet_report"
+    hass.states.async_set(
+        pet,
+        "home",
+        {"source_type": "gps", ATTR_LATITUDE: 0.0, ATTR_LONGITUDE: 0.0},
+    )
+    hass.states.async_set(report, "2026-01-01T00:00:00+00:00")
+    selection = {
+        "people": [],
+        "pets": [pet],
+        "primary_home": household["primary_home"],
+        "places": [],
+    }
+    flow = await start(hass, selection)
+    assert flow["step_id"] == "pet_member"
+    assert "trackers" not in {str(field) for field in flow["data_schema"].schema}
+    flow = await hass.config_entries.flow.async_configure(
+        flow["flow_id"],
+        {
+            "additional_residences": ["zone.example_residence"],
+            "configure_reports": True,
+        },
+    )
+    assert flow["step_id"] == "pet_freshness"
+    flow = await hass.config_entries.flow.async_configure(
+        flow["flow_id"], {"pet_home_minutes": 720, "pet_away_minutes": 10}
+    )
+    assert flow["step_id"] == "source_report"
+    flow = await hass.config_entries.flow.async_configure(
+        flow["flow_id"], {"timestamp": report}
+    )
+    assert flow["step_id"] == "confirm"
+    assert "example pet (Pet)" in flow["description_placeholders"]["members"]
+    flow = await hass.config_entries.flow.async_configure(flow["flow_id"], {})
+    await hass.async_block_till_done()
+    assert flow["type"] == FlowResultType.CREATE_ENTRY
+    entry = flow["result"]
+    assert entry.state == ConfigEntryState.LOADED
+    assert entry.data["members"][pet] == {
+        "trackers": [pet],
+        "additional_residences": ["zone.example_residence"],
+        "kind": "pet",
+        "pet_home_minutes": 720,
+        "pet_away_minutes": 10,
+        "location_reports": {pet: report},
+    }
+    assert entry.runtime_data.household.members[0].id == pet
+    assert entry.runtime_data.household.members[0].person_entity is None
+    assert entry.runtime_data.household.counts["home"] == 1
+    assert entry.runtime_data.household.focus_ids["home"] == (pet,)
+    assert entry.runtime_data.household.members[0].location.evidence.report_entity == (
+        report
+    )
+    from custom_components.homecircle.api import snapshot
+
+    assert snapshot(entry.runtime_data)["members"][0]["kind"] == "pet"
+    hass.states.async_set(
+        pet,
+        "home",
+        {
+            "source_type": "gps",
+            ATTR_LATITUDE: 0.0,
+            ATTR_LONGITUDE: 0.0,
+            "entity_picture": "/local/example-pet.png",
+        },
+    )
+    await hass.async_block_till_done()
+    assert snapshot(entry.runtime_data)["members"][0]["picture"] == (
+        "/local/example-pet.png"
+    )
+
+    options = hass.config_entries.options
+    flow = await options.async_init(entry.entry_id)
+    flow = await options.async_configure(flow["flow_id"], selection)
+    assert flow["step_id"] == "pet_member"
+    flow = await options.async_configure(
+        flow["flow_id"], {"additional_residences": ["zone.example_residence"]}
+    )
+    flow = await options.async_configure(flow["flow_id"], {})
+    assert flow["step_id"] == "confirm"
+    await options.async_configure(flow["flow_id"], {})
+    await hass.async_block_till_done()
+    assert entry.options["members"][pet]["pet_home_minutes"] == 720
+    assert entry.runtime_data.household.members[0].id == pet
+
+
+async def test_direct_life360_account_and_tracker_person_setup(hass, household):
+    """An account can start empty, then its tracker can be chosen in Options."""
+    selection = {
+        "people": [],
+        "people_trackers": [],
+        "pets": [],
+        "primary_home": household["primary_home"],
+        "places": [],
+        "life360_direct": True,
+    }
+    flow = await start(hass, selection)
+    assert flow["step_id"] == "life360_account"
+    with patch(
+        "custom_components.homecircle.config_flow.validate_account",
+        new_callable=AsyncMock,
+        return_value="same-account-fingerprint",
+    ) as verify:
+        flow = await hass.config_entries.flow.async_configure(
+            flow["flow_id"],
+            {"method": "token", "secret": "example-token"},
+        )
+    verify.assert_awaited_once()
+    assert flow["step_id"] == "confirm"
+    with patch(
+        "custom_components.homecircle.life360_direct.DirectLife360.async_start",
+        new_callable=AsyncMock,
+    ):
+        flow = await hass.config_entries.flow.async_configure(flow["flow_id"], {})
+        await hass.async_block_till_done()
+    entry = flow["result"]
+    assert entry.data["life360_account"] == {
+        "method": "token",
+        "username": "",
+        "secret": "example-token",
+        "account_id_hash": "same-account-fingerprint",
+    }
+    from custom_components.homecircle.diagnostics import (
+        async_get_config_entry_diagnostics,
+    )
+
+    diagnostics = await async_get_config_entry_diagnostics(hass, entry)
+    assert diagnostics["providers"]["life360"]["state"] == "starting"
+    assert "example-token" not in str(diagnostics)
+    assert entry.runtime_data.household.members == ()
+
+    options = hass.config_entries.options
+    flow = await options.async_init(entry.entry_id)
+    assert "waiting for trackers" in flow["description_placeholders"]["tracker_status"]
+    flow = await options.async_configure(
+        flow["flow_id"],
+        {**selection, "people_trackers": ["device_tracker.example_phone"]},
+    )
+    assert flow["step_id"] == "tracker_member"
+    flow = await options.async_configure(flow["flow_id"], {})
+    assert flow["step_id"] == "confirm"
+    with patch(
+        "custom_components.homecircle.life360_direct.DirectLife360.async_start",
+        new_callable=AsyncMock,
+    ):
+        await options.async_configure(flow["flow_id"], {})
+        await hass.async_block_till_done()
+    assert entry.options["life360_account"]["secret"] == "example-token"
+    member = entry.runtime_data.household.members[0]
+    assert member.id == "device_tracker.example_phone"
+    assert member.kind == "person"
+    assert member.person_entity is None
+    from custom_components.homecircle.api import snapshot
+
+    assert "example-token" not in str(snapshot(entry.runtime_data))
+    flow = await options.async_init(entry.entry_id)
+    flow = await options.async_configure(
+        flow["flow_id"],
+        {
+            **selection,
+            "people_trackers": ["device_tracker.example_phone"],
+            "replace_life360_login": True,
+        },
+    )
+    assert flow["step_id"] == "life360_account"
+    with patch(
+        "custom_components.homecircle.config_flow.validate_account",
+        new_callable=AsyncMock,
+        return_value="same-account-fingerprint",
+    ):
+        flow = await options.async_configure(
+            flow["flow_id"], {"method": "token", "secret": "replacement-example"}
+        )
+    assert flow["step_id"] == "tracker_member"
+    flow = await options.async_configure(flow["flow_id"], {})
+    with patch(
+        "custom_components.homecircle.life360_direct.DirectLife360.async_start",
+        new_callable=AsyncMock,
+    ):
+        await options.async_configure(flow["flow_id"], {})
+        await hass.async_block_till_done()
+    assert entry.options["life360_account"]["secret"] == "replacement-example"
+    assert entry.data["life360_account"]["secret"] == "replacement-example"
+    assert "replacement-example" not in str(snapshot(entry.runtime_data))
+    flow = await options.async_init(entry.entry_id)
+    flow = await options.async_configure(
+        flow["flow_id"],
+        {
+            **selection,
+            "life360_direct": False,
+            "people_trackers": ["device_tracker.example_phone"],
+        },
+    )
+    assert flow["step_id"] == "tracker_member"
+    flow = await options.async_configure(flow["flow_id"], {})
+    await options.async_configure(flow["flow_id"], {})
+    await hass.async_block_till_done()
+    assert "life360_account" not in entry.options
+    assert "life360_account" not in entry.data
+    assert entry.runtime_data.managed_trackers == {}
+    assert entry.runtime_data.household.members[0].id == "device_tracker.example_phone"
+
+
+async def test_disabled_direct_tracker_does_not_interrupt_other_members(hass, household):
+    for zone_id in ("zone.example_residence", "zone.example_work"):
+        hass.states.async_set(
+            zone_id,
+            "0",
+            {ATTR_LATITUDE: 0.0, ATTR_LONGITUDE: 0.0, "radius": 100},
+        )
+    registry = er.async_get(hass)
+    disabled = registry.async_get_or_create(
+        "device_tracker",
+        DOMAIN,
+        "homecircle_life360_example-disabled",
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+
+    class FakeAPI:
+        position = 1
+
+        async def get_circles(self):
+            return [{"id": "example-circle"}]
+
+        async def get_circle_members(self, _circle):
+            return [{"id": "example-disabled"}, {"id": "example-enabled"}]
+
+        async def get_circle_member(self, _circle, member):
+            return {
+                "id": member,
+                "location": {ATTR_LATITUDE: str(self.position), ATTR_LONGITUDE: "2"},
+            }
+
+    selection = {
+        "people": [],
+        "primary_home": household["primary_home"],
+        "life360_direct": True,
+    }
+    flow = await start(hass, selection)
+    with (
+        patch(
+            "custom_components.homecircle.config_flow.validate_account",
+            new_callable=AsyncMock,
+            return_value="same-account-fingerprint",
+        ),
+        patch(
+            "custom_components.homecircle.life360_direct.authorized_client",
+            new_callable=AsyncMock,
+            return_value=FakeAPI(),
+        ),
+    ):
+        flow = await hass.config_entries.flow.async_configure(
+            flow["flow_id"], {"method": "token", "secret": "example-token"}
+        )
+        flow = await hass.config_entries.flow.async_configure(flow["flow_id"], {})
+        await hass.async_block_till_done()
+        entry = flow["result"]
+        client = entry.runtime_data.managed_trackers["life360"]
+        assert client.trackers["example-disabled"].entity_id == disabled.entity_id
+        assert client.trackers["example-disabled"].hass is None
+        assert hass.states.get(disabled.entity_id) is None
+        enabled_id = client.trackers["example-enabled"].entity_id
+        assert hass.states.get(enabled_id) is not None
+        client.api.position = 3
+        await client.async_refresh()
+        assert hass.states.get(enabled_id).attributes[ATTR_LATITUDE] == 3
+        assert client.health_snapshot().state == "connected"
+
+
+async def test_failed_tracker_platform_setup_can_retry_cleanly(hass, household):
+    selection = {
+        "people": [],
+        "primary_home": household["primary_home"],
+        "life360_direct": True,
+    }
+    flow = await start(hass, selection)
+    with (
+        patch(
+            "custom_components.homecircle.config_flow.validate_account",
+            new_callable=AsyncMock,
+        ),
+        patch(
+            "custom_components.homecircle.life360_direct.DirectLife360.async_start",
+            new_callable=AsyncMock,
+            side_effect=OSError("fictional startup failure"),
+        ),
+    ):
+        flow = await hass.config_entries.flow.async_configure(
+            flow["flow_id"], {"method": "token", "secret": "example-token"}
+        )
+        flow = await hass.config_entries.flow.async_configure(flow["flow_id"], {})
+        await hass.async_block_till_done()
+    entry = flow["result"]
+    # HA keeps the parent entry loaded even when a forwarded platform fails.
+    assert entry.state is ConfigEntryState.LOADED
+    assert not entry.runtime_data.managed_trackers
+
+    class EmptyAPI:
+        async def get_circles(self):
+            return []
+
+    with patch(
+        "custom_components.homecircle.life360_direct.authorized_client",
+        new_callable=AsyncMock,
+        return_value=EmptyAPI(),
+    ):
+        assert await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.LOADED
+    assert "life360" in entry.runtime_data.managed_trackers
+    assert await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_saved_direct_tracker_is_unavailable_during_offline_reload(hass, household):
+    for zone_id in ("zone.example_residence", "zone.example_work"):
+        hass.states.async_set(
+            zone_id,
+            "0",
+            {ATTR_LATITUDE: 0.0, ATTR_LONGITUDE: 0.0, "radius": 100},
+        )
+    raw = {
+        "id": "example-member-id",
+        "location": {ATTR_LATITUDE: "1", ATTR_LONGITUDE: "2"},
+    }
+
+    class FakeAPI:
+        async def get_circles(self):
+            return [{"id": "example-circle"}]
+
+        async def get_circle_members(self, _circle):
+            return [raw]
+
+        async def get_circle_member(self, _circle, _member):
+            return raw
+
+    selection = {
+        "people": [],
+        "primary_home": household["primary_home"],
+        "life360_direct": True,
+    }
+    flow = await start(hass, selection)
+    with (
+        patch(
+            "custom_components.homecircle.config_flow.validate_account",
+            new_callable=AsyncMock,
+        ),
+        patch(
+            "custom_components.homecircle.life360_direct.authorized_client",
+            new_callable=AsyncMock,
+            return_value=FakeAPI(),
+        ),
+    ):
+        flow = await hass.config_entries.flow.async_configure(
+            flow["flow_id"], {"method": "token", "secret": "example-token"}
+        )
+        flow = await hass.config_entries.flow.async_configure(flow["flow_id"], {})
+        await hass.async_block_till_done()
+    entry = flow["result"]
+    original = entry.runtime_data.managed_trackers["life360"].trackers[
+        "example-member-id"
+    ]
+    assert hass.states.get(original.entity_id).attributes[ATTR_LATITUDE] == 1
+
+    with patch(
+        "custom_components.homecircle.life360_direct.authorized_client",
+        new_callable=AsyncMock,
+        side_effect=OSError("fictional network outage"),
+    ):
+        assert await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+    client = entry.runtime_data.managed_trackers["life360"]
+    restored = client.trackers["example-member-id"]
+    assert restored.entity_id == original.entity_id
+    assert hass.states.get(restored.entity_id).state == "unavailable"
+    assert client.health_snapshot().state == "network_error"
+
+    client._retry_at = datetime.min.replace(tzinfo=timezone.utc)
+    with patch(
+        "custom_components.homecircle.life360_direct.authorized_client",
+        new_callable=AsyncMock,
+        return_value=FakeAPI(),
+    ):
+        await client.async_refresh()
+    assert hass.states.get(restored.entity_id).attributes[ATTR_LATITUDE] == 1
+    assert client.health_snapshot().state == "connected"
+
+
+async def test_life360_reauth_replaces_secret_and_preserves_household(hass, household):
+    selection = {
+        "people": [],
+        "people_trackers": [],
+        "pets": [],
+        "primary_home": household["primary_home"],
+        "places": [],
+        "life360_direct": True,
+    }
+    flow = await start(hass, selection)
+    with (
+        patch(
+            "custom_components.homecircle.config_flow.validate_account",
+            new_callable=AsyncMock,
+            return_value="same-account-fingerprint",
+        ),
+        patch(
+            "custom_components.homecircle.life360_direct.DirectLife360.async_start",
+            new_callable=AsyncMock,
+        ),
+    ):
+        flow = await hass.config_entries.flow.async_configure(
+            flow["flow_id"], {"method": "token", "secret": "old-example-secret"}
+        )
+        flow = await hass.config_entries.flow.async_configure(flow["flow_id"], {})
+        await hass.async_block_till_done()
+    entry = flow["result"]
+    original_home = entry.data["primary_home"]
+    client = entry.runtime_data.managed_trackers["life360"]
+    client.session = AsyncMock()
+    with patch(
+        "custom_components.homecircle.life360_direct.authorized_client",
+        new_callable=AsyncMock,
+        side_effect=Unauthorized("fictional rejection", None),
+    ):
+        await client.async_refresh()
+        await hass.async_block_till_done()
+    active = hass.config_entries.flow.async_progress_by_handler(
+        DOMAIN, match_context={"entry_id": entry.entry_id}
+    )
+    assert len(active) == 1
+    assert active[0]["context"]["source"] == SOURCE_REAUTH
+    reauth = active[0]
+    with (
+        patch(
+            "custom_components.homecircle.config_flow.validate_account",
+            new_callable=AsyncMock,
+            return_value="same-account-fingerprint",
+        ) as verify,
+        patch(
+            "custom_components.homecircle.life360_direct.DirectLife360.async_start",
+            new_callable=AsyncMock,
+        ),
+    ):
+        verify.side_effect = ValueError("fictional changed response")
+        failed = await hass.config_entries.flow.async_configure(
+            reauth["flow_id"], {"method": "token", "secret": "new-example-secret"}
+        )
+        assert failed["errors"] == {"base": "unexpected_response"}
+        assert entry.data["life360_account"]["secret"] == "old-example-secret"
+        verify.side_effect = None
+        result = await hass.config_entries.flow.async_configure(
+            reauth["flow_id"], {"method": "token", "secret": "new-example-secret"}
+        )
+        await hass.async_block_till_done()
+    assert result["reason"] == "reauth_successful"
+    assert entry.data["life360_account"]["secret"] == "new-example-secret"
+    assert entry.data["primary_home"] == original_home
+    assert entry.state == ConfigEntryState.LOADED
+
+
+async def test_reconnect_rejects_a_different_life360_account(hass, household):
+    selection = {
+        "people": [],
+        "primary_home": household["primary_home"],
+        "life360_direct": True,
+    }
+    flow = await start(hass, selection)
+    with (
+        patch(
+            "custom_components.homecircle.config_flow.validate_account",
+            new_callable=AsyncMock,
+            return_value="original-account-fingerprint",
+        ),
+        patch(
+            "custom_components.homecircle.life360_direct.DirectLife360.async_start",
+            new_callable=AsyncMock,
+        ),
+    ):
+        flow = await hass.config_entries.flow.async_configure(
+            flow["flow_id"], {"method": "token", "secret": "original-token"}
+        )
+        flow = await hass.config_entries.flow.async_configure(flow["flow_id"], {})
+        await hass.async_block_till_done()
+    entry = flow["result"]
+    assert entry.data["life360_account"]["account_id_hash"] == (
+        "original-account-fingerprint"
+    )
+    from custom_components.homecircle.diagnostics import (
+        async_get_config_entry_diagnostics,
+    )
+
+    diagnostics = await async_get_config_entry_diagnostics(hass, entry)
+    assert "original-account-fingerprint" not in str(diagnostics)
+
+    entry.async_start_reauth(hass, data={"_homecircle_reauth_provider": "life360"})
+    await hass.async_block_till_done()
+    active = hass.config_entries.flow.async_progress_by_handler(
+        DOMAIN, match_context={"entry_id": entry.entry_id}
+    )
+    assert len(active) == 1
+    with patch(
+        "custom_components.homecircle.config_flow.validate_account",
+        new_callable=AsyncMock,
+        return_value="different-account-fingerprint",
+    ):
+        rejected = await hass.config_entries.flow.async_configure(
+            active[0]["flow_id"], {"method": "token", "secret": "different-token"}
+        )
+    assert rejected["errors"] == {"base": "different_account"}
+    assert entry.data["life360_account"]["secret"] == "original-token"
+    hass.config_entries.flow.async_abort(active[0]["flow_id"])
+
+    options = hass.config_entries.options
+    flow = await options.async_init(entry.entry_id)
+    flow = await options.async_configure(
+        flow["flow_id"], {**selection, "replace_life360_login": True}
+    )
+    assert flow["step_id"] == "life360_account"
+    with patch(
+        "custom_components.homecircle.config_flow.validate_account",
+        new_callable=AsyncMock,
+        return_value="different-account-fingerprint",
+    ):
+        rejected = await options.async_configure(
+            flow["flow_id"], {"method": "token", "secret": "different-token"}
+        )
+    assert rejected["errors"] == {"base": "different_account"}
+    assert entry.data["life360_account"]["secret"] == "original-token"
+    options.async_abort(flow["flow_id"])
+
+
+async def test_older_account_replacement_compares_valid_old_sign_in(hass, household):
+    selection = {
+        "people": [],
+        "primary_home": household["primary_home"],
+        "life360_direct": True,
+    }
+    flow = await start(hass, selection)
+    with (
+        patch(
+            "custom_components.homecircle.config_flow.validate_account",
+            new_callable=AsyncMock,
+        ),
+        patch(
+            "custom_components.homecircle.life360_direct.DirectLife360.async_start",
+            new_callable=AsyncMock,
+        ),
+    ):
+        flow = await hass.config_entries.flow.async_configure(
+            flow["flow_id"], {"method": "token", "secret": "old-fictional-token"}
+        )
+        flow = await hass.config_entries.flow.async_configure(flow["flow_id"], {})
+        await hass.async_block_till_done()
+    entry = flow["result"]
+    assert "account_id_hash" not in entry.data["life360_account"]
+
+    options = hass.config_entries.options
+    flow = await options.async_init(entry.entry_id)
+    flow = await options.async_configure(
+        flow["flow_id"], {**selection, "replace_life360_login": True}
+    )
+    assert flow["step_id"] == "life360_account"
+    assert "confirm_same_account" in {
+        str(field) for field in flow["data_schema"].schema
+    }
+
+    async def identity(account):
+        return (
+            "old-fingerprint"
+            if account["secret"] == "old-fictional-token"
+            else "different-fingerprint"
+        )
+
+    with patch(
+        "custom_components.homecircle.config_flow.validate_account",
+        new_callable=AsyncMock,
+        side_effect=identity,
+    ):
+        rejected = await options.async_configure(
+            flow["flow_id"],
+            {
+                "method": "token",
+                "secret": "different-fictional-token",
+                "confirm_same_account": True,
+            },
+        )
+    assert rejected["errors"] == {"base": "different_account"}
+    assert entry.data["life360_account"]["secret"] == "old-fictional-token"
+
+    async def expired_old_identity(account):
+        if account["secret"] == "old-fictional-token":
+            raise Unauthorized("fictional expired token", None)
+        return "old-fingerprint"
+
+    with patch(
+        "custom_components.homecircle.config_flow.validate_account",
+        new_callable=AsyncMock,
+        side_effect=expired_old_identity,
+    ):
+        rejected = await options.async_configure(
+            flow["flow_id"],
+            {"method": "token", "secret": "replacement-fictional-token"},
+        )
+    assert rejected["errors"] == {
+        "confirm_same_account": "same_account_confirmation_required"
+    }
+    assert entry.data["life360_account"]["secret"] == "old-fictional-token"
+
+    with (
+        patch(
+            "custom_components.homecircle.config_flow.validate_account",
+            new_callable=AsyncMock,
+            return_value="old-fingerprint",
+        ),
+        patch(
+            "custom_components.homecircle.life360_direct.DirectLife360.async_start",
+            new_callable=AsyncMock,
+        ),
+    ):
+        flow = await options.async_configure(
+            flow["flow_id"],
+            {"method": "token", "secret": "replacement-fictional-token"},
+        )
+        assert flow["step_id"] == "confirm"
+        await options.async_configure(flow["flow_id"], {})
+        await hass.async_block_till_done()
+    assert entry.options["life360_account"]["account_id_hash"] == "old-fingerprint"
+    assert entry.data["life360_account"]["account_id_hash"] == "old-fingerprint"
+
+
+async def test_older_reauth_requires_confirmation_if_old_sign_in_expired(
+    hass, household
+):
+    selection = {
+        "people": [],
+        "primary_home": household["primary_home"],
+        "life360_direct": True,
+    }
+    flow = await start(hass, selection)
+    with (
+        patch(
+            "custom_components.homecircle.config_flow.validate_account",
+            new_callable=AsyncMock,
+        ),
+        patch(
+            "custom_components.homecircle.life360_direct.DirectLife360.async_start",
+            new_callable=AsyncMock,
+        ),
+    ):
+        flow = await hass.config_entries.flow.async_configure(
+            flow["flow_id"], {"method": "token", "secret": "expired-fictional-token"}
+        )
+        flow = await hass.config_entries.flow.async_configure(flow["flow_id"], {})
+        await hass.async_block_till_done()
+    entry = flow["result"]
+    entry.async_start_reauth(hass, data={"_homecircle_reauth_provider": "life360"})
+    await hass.async_block_till_done()
+    active = hass.config_entries.flow.async_progress_by_handler(
+        DOMAIN, match_context={"entry_id": entry.entry_id}
+    )
+    assert len(active) == 1
+    flow_id = active[0]["flow_id"]
+
+    async def identity(account):
+        if account["secret"] == "expired-fictional-token":
+            raise Unauthorized("fictional expired token", None)
+        return "same-account-fingerprint"
+
+    with patch(
+        "custom_components.homecircle.config_flow.validate_account",
+        new_callable=AsyncMock,
+        side_effect=identity,
+    ) as verify:
+        rejected = await hass.config_entries.flow.async_configure(
+            flow_id, {"method": "token", "secret": "replacement-fictional-token"}
+        )
+    assert [call.args[0]["secret"] for call in verify.await_args_list] == [
+        "replacement-fictional-token"
+    ]
+    assert rejected["errors"] == {
+        "confirm_same_account": "same_account_confirmation_required"
+    }
+    assert entry.data["life360_account"]["secret"] == "expired-fictional-token"
+
+    with (
+        patch(
+            "custom_components.homecircle.config_flow.validate_account",
+            new_callable=AsyncMock,
+            side_effect=identity,
+        ) as verify,
+        patch(
+            "custom_components.homecircle.life360_direct.DirectLife360.async_start",
+            new_callable=AsyncMock,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            flow_id,
+            {
+                "method": "token",
+                "secret": "replacement-fictional-token",
+                "confirm_same_account": True,
+            },
+        )
+        await hass.async_block_till_done()
+    assert [call.args[0]["secret"] for call in verify.await_args_list] == [
+        "replacement-fictional-token"
+    ]
+    assert result["reason"] == "reauth_successful"
+    assert entry.data["life360_account"]["account_id_hash"] == (
+        "same-account-fingerprint"
+    )
+
+
+async def test_direct_life360_creates_selectable_tracker(hass, household):
+    """Exercise the real HA tracker platform with a fictional API response."""
+    registry = er.async_get(hass)
+    existing = registry.async_get_or_create(
+        "device_tracker", "life360", "example-existing-id"
+    )
+    hass.states.async_set(
+        existing.entity_id,
+        "home",
+        {"friendly_name": "Life360 Existing Member", "source_type": "gps"},
+    )
+    for entity_id, latitude in (
+        ("zone.example_residence", 2.0),
+        ("zone.example_work", 3.0),
+    ):
+        hass.states.async_set(
+            entity_id,
+            "0",
+            {
+                ATTR_LATITUDE: latitude,
+                ATTR_LONGITUDE: 0.0,
+                "radius": 100,
+                "passive": False,
+            },
+        )
+    raw = {
+        "id": "example-direct-id",
+        "firstName": "Direct",
+        "lastName": "Member",
+        "features": {"shareLocation": "1"},
+        "location": {
+            ATTR_LATITUDE: str(0),
+            ATTR_LONGITUDE: str(0),
+            "accuracy": "10",
+            "timestamp": "1760000000",
+        },
+    }
+
+    class FakeAPI:
+        async def get_circles(self):
+            return [{"id": "example-circle"}]
+
+        async def get_circle_members(self, _circle):
+            return [raw]
+
+        async def get_circle_member(self, _circle, _member):
+            return raw
+
+    selection = {
+        "people": [],
+        "pets": [],
+        "primary_home": household["primary_home"],
+        "places": [],
+        "life360_direct": True,
+    }
+    flow = await start(hass, selection)
+    with (
+        patch(
+            "custom_components.homecircle.config_flow.validate_account",
+            new_callable=AsyncMock,
+        ),
+        patch(
+            "custom_components.homecircle.life360_direct.authorized_client",
+            new_callable=AsyncMock,
+            return_value=FakeAPI(),
+        ),
+    ):
+        flow = await hass.config_entries.flow.async_configure(
+            flow["flow_id"], {"method": "token", "secret": "example-token"}
+        )
+        flow = await hass.config_entries.flow.async_configure(flow["flow_id"], {})
+        await hass.async_block_till_done()
+        entry = flow["result"]
+        states = [
+            state
+            for state in hass.states.async_all("device_tracker")
+            if state.name == "Life360 Direct Member"
+        ]
+        assert len(states) == 1
+        tracker = states[0].entity_id
+        assert tracker != existing.entity_id
+        assert hass.states.get(existing.entity_id).state == "home"
+        options = hass.config_entries.options
+        flow = await options.async_init(entry.entry_id)
+        assert (
+            "duplicate trackers" in flow["description_placeholders"]["tracker_status"]
+        )
+        assert (
+            "1 tracker(s) found" in flow["description_placeholders"]["tracker_status"]
+        )
+        flow = await options.async_configure(
+            flow["flow_id"], {**selection, "people_trackers": [tracker]}
+        )
+        assert flow["step_id"] == "tracker_member"
+        flow = await options.async_configure(flow["flow_id"], {})
+        await options.async_configure(flow["flow_id"], {})
+        await hass.async_block_till_done()
+        flow = await options.async_init(entry.entry_id)
+        flow = await options.async_configure(
+            flow["flow_id"],
+            {
+                **selection,
+                "life360_direct": False,
+                "people_trackers": [tracker],
+            },
+        )
+        flow = await options.async_configure(flow["flow_id"], {})
+        flow = await options.async_configure(flow["flow_id"], {})
+        assert flow["step_id"] == "household"
+        assert flow["errors"] == {"base": "direct_trackers_selected"}
+        options.async_abort(flow["flow_id"])
+
+        async def attempt_disconnect_with_person():
+            flow = await options.async_init(entry.entry_id)
+            flow = await options.async_configure(
+                flow["flow_id"],
+                {
+                    **selection,
+                    "life360_direct": False,
+                    "people": ["person.example_member"],
+                },
+            )
+            assert flow["step_id"] == "member"
+            flow = await options.async_configure(flow["flow_id"], {"trackers": []})
+            assert flow["step_id"] == "confirm"
+            flow = await options.async_configure(flow["flow_id"], {})
+            assert flow["step_id"] == "household"
+            assert flow["errors"] == {"base": "direct_trackers_selected"}
+            options.async_abort(flow["flow_id"])
+
+        hass.states.async_set("person.example_member", "home", {"source": tracker})
+        await attempt_disconnect_with_person()
+        hass.states.async_set(
+            "person.example_member", "home", {"source": existing.entity_id}
+        )
+        with patch(
+            "custom_components.homecircle.selection.entities_in_person",
+            return_value=[tracker],
+        ):
+            await attempt_disconnect_with_person()
+    assert entry.runtime_data.household.members[0].id == tracker
+    assert entry.runtime_data.household.counts["away"] == 1
+
+
+async def test_tracker_only_pet_selection_rejects_missing_and_duplicate(
+    hass, household
+):
+    base = {"people": [], "primary_home": household["primary_home"], "places": []}
+    flow = await start(hass, {**base, "pets": ["device_tracker.example_missing"]})
+    assert flow["errors"]["pets"] == "invalid_entity"
+    flow = await hass.config_entries.flow.async_configure(
+        flow["flow_id"], {**base, "pets": ["device_tracker.example_phone"] * 2}
+    )
+    assert flow["errors"]["pets"] == "duplicate_selection"
+
+
+async def test_person_tracker_cannot_be_added_as_a_second_member(hass, household):
+    manager = hass.config_entries.flow
+    flow = await manager.async_init(DOMAIN, context={"source": SOURCE_USER})
+    selection = {
+        "people": ["person.example_member"],
+        "people_trackers": ["device_tracker.example_phone"],
+        "primary_home": household["primary_home"],
+    }
+    with patch(
+        "custom_components.homecircle.selection.entities_in_person", return_value=[]
+    ):
+        flow = await manager.async_configure(flow["flow_id"], selection)
+    assert flow["errors"]["people_trackers"] == "tracker_already_in_person"
+
+    hass.states.async_set(
+        "person.example_member",
+        "home",
+        {"source": "device_tracker.example_router"},
+    )
+    with patch(
+        "custom_components.homecircle.selection.entities_in_person",
+        return_value=["device_tracker.example_phone"],
+    ):
+        flow = await manager.async_configure(
+            flow["flow_id"],
+            {
+                **selection,
+                "people_trackers": [],
+                "pets": ["device_tracker.example_phone"],
+            },
+        )
+    assert flow["errors"]["pets"] == "tracker_already_in_person"
+
+    hass.states.async_set(
+        "device_tracker.example_phone",
+        "home",
+        {"friendly_name": "Example Member", "source_type": "gps"},
+    )
+    with patch(
+        "custom_components.homecircle.selection.entities_in_person", return_value=[]
+    ):
+        flow = await manager.async_configure(flow["flow_id"], selection)
+    assert flow["step_id"] == "member"
+    manager.async_abort(flow["flow_id"])
+
+
+async def test_same_tracker_cannot_be_assigned_to_two_people(hass, household):
+    flow = await start(hass, household)
+    assert flow["step_id"] == "member"
+    flow = await hass.config_entries.flow.async_configure(
+        flow["flow_id"], {"trackers": ["device_tracker.example_phone"]}
+    )
+    assert flow["step_id"] == "member"
+    flow = await hass.config_entries.flow.async_configure(
+        flow["flow_id"], {"trackers": ["device_tracker.example_phone"]}
+    )
+    assert flow["step_id"] == "member"
+    assert flow["errors"]["trackers"] == "duplicate_selection"
+
+
+async def test_person_and_tracker_only_pet_share_household_flow(hass, household):
+    pet = "device_tracker.example_pet"
+    hass.states.async_set(
+        pet,
+        "not_home",
+        {"source_type": "gps", ATTR_LATITUDE: 1.0, ATTR_LONGITUDE: 0.0},
+    )
+    flow = await start(
+        hass,
+        {
+            **household,
+            "people": ["person.example_member"],
+            "pets": [pet],
+        },
+    )
+    assert flow["step_id"] == "member"
+    flow = await hass.config_entries.flow.async_configure(
+        flow["flow_id"], {"trackers": ["device_tracker.example_phone"]}
+    )
+    assert flow["step_id"] == "pet_member"
+    flow = await hass.config_entries.flow.async_configure(flow["flow_id"], {})
+    assert flow["step_id"] == "pet_freshness"
+    flow = await hass.config_entries.flow.async_configure(flow["flow_id"], {})
+    assert flow["step_id"] == "confirm"
+    flow = await hass.config_entries.flow.async_configure(flow["flow_id"], {})
+    await hass.async_block_till_done()
+    household_view = flow["result"].runtime_data.household
+    assert [member.id for member in household_view.members] == [
+        "person.example_member",
+        pet,
+    ]
+    assert household_view.counts["home"] == 1
+    assert household_view.counts["away"] == 1
+    assert household_view.focus_ids["overview"] == ("person.example_member", pet)
 
 
 async def test_invalid_members_and_deleted_during_flow(hass, household):
@@ -316,8 +1285,13 @@ async def test_member_setup_explains_suggestions_without_changing_them(hass, hou
         result = await start(hass, household)
     assert result["step_id"] == "member"
     placeholders = result["description_placeholders"]
-    assert {key: placeholders[key] for key in ("person", "number", "total", "active")} == {
-        "person": "Example Member", "number": "1", "total": "2", "active": "Example Phone"
+    assert {
+        key: placeholders[key] for key in ("person", "number", "total", "active")
+    } == {
+        "person": "Example Member",
+        "number": "1",
+        "total": "2",
+        "active": "Example Phone",
     }
     assert "Suggested tracker: **Example Phone**" in placeholders["tracker_guidance"]
     assert "not a measure of update reliability" in placeholders["tracker_guidance"]

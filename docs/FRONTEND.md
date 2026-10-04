@@ -1,6 +1,6 @@
 # Card and frontend interface
 
-The current published prerelease is beta 9; beta 10 is a local candidate. Start with the [complete setup guide](SETUP.md). See [ADR-002](adr/ADR-002-map-and-frontend.md) for library, licensing, network and authorization decisions.
+The current published prerelease is beta 11. Start with the [complete setup guide](SETUP.md). See [ADR-002](adr/ADR-002-map-and-frontend.md) for library, licensing, network and authorization decisions.
 
 ## UI-only setup
 
@@ -9,7 +9,7 @@ The current published prerelease is beta 9; beta 10 is a local candidate. Start 
 3. Open the dashboard, choose Edit dashboard → Add card → Browse all cards → HomeCircle.
 4. Use the visual editor for title, visible members and map background; save and choose Done. No provider account, map key, resource YAML or card YAML is required.
 
-The tested automatic resource path is HA's storage mode. Existing YAML resource collections are preserved and are not covered by UI-only onboarding. A YAML-managed resource collection must add the module URL `/homecircle_static/homecircle-card.js?v=0.1.0-beta.9` for the current published release through its own configuration; use the installed version in that URL after an upgrade. Release ZIPs include the built card; source checkouts require a frontend build.
+The tested automatic resource path is HA's storage mode. Existing YAML resource collections are preserved and are not covered by UI-only onboarding. A YAML-managed resource collection must add the module URL `/homecircle_static/homecircle-card.js?v=0.1.0-beta.11` for the current published release through its own configuration; use the installed version in that URL after an upgrade. Release ZIPs include the built card; source checkouts require a frontend build.
 
 ## Display and interaction
 
@@ -27,6 +27,8 @@ The default background makes no tile requests. Optional OSM tiles are disclosed 
 HA websocket command `homecircle/snapshot` accepts only the command type and standard message ID. Every request checks the active user's read permission on all configured input entities/zones. Missing any permission returns `unauthorized` with no payload; unloaded integration returns `not_ready`.
 
 Schema version 1 exposes normalized member ID/name/status/place label, primary-house flag, usable nullable location with origin/report metadata, optional battery/charging/speed/driving, issue codes, category counts and focus IDs. It does not expose config entries, raw state attributes, tokens, active unselected source IDs, photos, or precise location history. Known conflicting locations are omitted from the projection. The static JavaScript endpoint contains code only and does not grant household access.
+
+In beta 11, the snapshot also supplies a short, allowlisted tracker connection status to Home Assistant admins. The card shows it when a built in provider is still connecting or needs attention, then clears it after recovery. When trackers are ready but the household has no selected members, the card prompts an admin to finish selection in Options and clears the prompt after a member is chosen. Other authorized viewers receive no provider status. No account identifiers, error text, tracker IDs, coordinates, or API replies are included in that status.
 
 Each connected card requests a current snapshot every 15 seconds. Requests time out after 10 seconds, clearing stale display data. Reconnection requests new data. Disconnect/unload clears retained current snapshots; late responses are discarded. No persistent browser storage is used. Unknown GPS report time is labelled explicitly, independently of HA observation times.
 

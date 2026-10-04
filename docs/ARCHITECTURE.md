@@ -3,20 +3,30 @@
 ## Boundaries
 
 ```text
-Tracking integrations (Companion, Life360, other sources)
-    -> HA person / device_tracker / zone + optional selected sensors
+Existing HA integrations ───────────────────────────┐
+HomeCircle managed tracker providers -> HA trackers ─┴─> HA person / device_tracker / zone + optional selected sensors
     -> HomeCircle selection, normalization, residence rules
     -> authenticated HA-facing data interface
     -> HomeCircle card and visual editor
 ```
 
-The backend owns selection, normalized data, freshness metadata, and household/place rules. The frontend owns rendering and interaction. Neither layer imports Life360 API clients or requires provider credentials. Map, geocoding, routing, and weather are separate optional rendering/enrichment services, not location-source dependencies.
+The backend owns selection, normalized data, freshness metadata, and household/place rules. The frontend owns rendering and interaction. Existing Home Assistant entities remain the default boundary. Optional managed providers create ordinary HA trackers that enter the same selection and normalization path. The frontend never receives provider credentials. Map, geocoding, routing, and weather are separate optional rendering/enrichment services.
+
+## Built in tracker provider contract
+
+`tracker_providers.py` registers each managed provider with a stable ID, its own saved account and enable keys, a credential-flow step, a tracker entity ownership prefix, an HA platform, and a client factory. The client implements `async_start` and `async_stop`. The setup flow processes enabled providers' credential steps before member setup; each provider form verifies its own credentials and calls `connection_saved`. A provider can be disconnected independently, but a selected tracker that it owns must be replaced first. A single HomeCircle entry can connect multiple providers.
+
+The HA entity registry and state machine are the shared data boundary. Provider adapters own authentication, discovery, polling, retries and translation into HA tracker state. They must never write directly into HomeCircle's household model, infer tracker ownership from names, or copy raw API responses into entity attributes. Existing third party tracker integrations remain selectable without a HomeCircle provider connection. New providers must add their own setup field translations, credential step, client, manifest dependency if needed, and contract tests. Provider IDs and tracker unique IDs must remain stable across upgrades.
+
+Life360 is the first registered managed provider. Its existing `life360_account` storage key remains stable for development snapshots and upgrade tests. No network connection is created unless the user enables and verifies it. Additional providers must have independent credentials and failure handling so one service outage cannot disable unrelated tracking sources.
+
+Each client also returns a typed, allowlisted health snapshot. HomeCircle Options uses its status code for guidance; HA diagnostics exports only that snapshot and aggregate counts. Authorization failure starts HA's reauthentication flow. See the [provider issue workflow](TRACKER-PROVIDER-ISSUES.md) for triage and release checks when an unsupported API changes.
 
 ## Entity discovery and lifecycle
 
 Use supported HA state and registry interfaces. Read `person` state and its active source where available; do not independently reimplement HA's tracker priority rules. Association discovery must distinguish the active source from all configured trackers. Verify the supported access path when implementing against a pinned HA version; fall back to explicit UI selection if full associations are unavailable. A selected GPS tracker may supplement coordinates without silently overriding authoritative person presence; retain provenance and expose conflicts.
 
-Subscribe to relevant HA state changes. Unsubscribe on unload and rebuild mappings on reconfiguration. Handle removed/renamed entities, unknown/unavailable sources, unavailable zones, restarts, and locationless presence. Do not poll a tracking provider or trigger source-specific refresh services by default.
+Subscribe to relevant HA state changes. Unsubscribe on unload and rebuild mappings on reconfiguration. Handle removed/renamed entities, unknown/unavailable sources, unavailable zones, restarts, and locationless presence. Each managed provider polls only when its connection is enabled; households using existing HA entities do no provider polling.
 
 ## Normalized member contract
 

@@ -14,7 +14,11 @@ Do not use whole Home Assistant backups, `.storage`, databases, or credential-on
 
 ## Runtime requirements
 
-Use HA authentication and authorization. Do not expose unauthenticated household data. Keep provider credentials in their existing integrations. No analytics by default, no background exports, no new precise-location history store. Redact diagnostics by allowlisting safe fields; never log raw entity attributes, coordinates, address strings, tokens or requests containing them.
+Use HA authentication and authorization. Do not expose unauthenticated household data. The published beta keeps provider credentials in their existing integrations. Each enabled built in tracker connection owns its credentials in Home Assistant's config entry storage; the current Life360 path stores a password or access token and a hashed account identity there. Credentials and the identity fingerprint are not sent to the card, diagnostic snapshot, or repository. HA config storage is not encrypted by HomeCircle. No analytics by default, no background exports, no separate precise-location history store. Directly created tracker entities may be retained by Home Assistant Recorder under the user's Recorder settings. Redact diagnostics by allowlisting safe fields; never log raw entity attributes, coordinates, address strings, tokens or requests containing them.
+
+Home Assistant's HomeCircle diagnostics export includes only provider status codes, aggregate tracker counts, and API operation times. It excludes the saved account configuration, member IDs, locations, raw responses, and exception text. Review any other Home Assistant diagnostics separately before sharing them.
+
+The card shows a fixed, allowlisted connection message to Home Assistant admins when a built in provider needs attention. Non-admin viewers receive no account status in the authenticated snapshot. This status contains no identifiers, locations, credentials, raw errors, or API response fields.
 
 Show last-reported age honestly and distinguish unknown freshness. Location displays are informational, not a guarantee of safety or real-time presence. Give users control over which household members and fields are shown on shared displays. Kiosk presentation is not an access-control boundary.
 

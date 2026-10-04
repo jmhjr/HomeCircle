@@ -16,6 +16,8 @@ from homeassistant.util import dt as dt_util
 from .const import (
     CONF_MEMBERS,
     CONF_PEOPLE,
+    CONF_TRACKER_PEOPLE,
+    CONF_PETS,
     CONF_PLACES,
     CONF_PRIMARY_HOME,
     CONF_RESIDENCES,
@@ -57,7 +59,7 @@ class Member:
     id: str
     display_name: str
     kind: str
-    person_entity: str
+    person_entity: str | None
     source_entity: str
     active_source_entity: str | None
     presence: str
@@ -152,7 +154,10 @@ def evidence(
 
 
 def location_evidence(
-    source: State, report: State | None, now: datetime, report_id: str | None,
+    source: State,
+    report: State | None,
+    now: datetime,
+    report_id: str | None,
     stale_after_seconds: float,
 ) -> Evidence:
     """Use an explicit sensor first, then a GPS tracker's own report time."""
@@ -162,8 +167,10 @@ def location_evidence(
     if source.attributes.get("source_type") != "gps":
         return base
     value = source.attributes.get("last_seen")
-    parsed = value if isinstance(value, datetime) else (
-        dt_util.parse_datetime(value) if isinstance(value, str) else None
+    parsed = (
+        value
+        if isinstance(value, datetime)
+        else (dt_util.parse_datetime(value) if isinstance(value, str) else None)
     )
     if parsed is None or parsed.tzinfo is None:
         return base
@@ -251,11 +258,14 @@ def membership(
 def normalize_member(
     person_id, member_config, config, states, zone_names, now
 ) -> Member:
+    tracker_only_member = person_id.startswith("device_tracker.")
     person_state = states.get(person_id)
     selected_trackers = member_config[CONF_TRACKERS]
     supporting = member_config.get("supporting", {})
     issues = []
-    active = person_state.attributes.get("source") if person_state else None
+    active = person_id if tracker_only_member else None
+    if not tracker_only_member and person_state:
+        active = person_state.attributes.get("source")
     if not isinstance(active, str) or not active.startswith("device_tracker."):
         active = None
     source = states.get(active) if active in selected_trackers else None
@@ -382,18 +392,22 @@ def normalize_member(
             location = Location(*point, origin=origin, evidence=proof)
             if location_source.entity_id in selected_trackers:
                 if not supporting.get("battery"):
-                    battery = tracker_optional(location_source, "battery_level", "battery")
+                    battery = tracker_optional(
+                        location_source, "battery_level", "battery"
+                    )
                 if not supporting.get("charging"):
                     charging = tracker_optional(
                         location_source, "battery_charging", "boolean"
                     )
     else:
-        issues.append("person_unavailable")
+        issues.append(
+            "tracker_unavailable" if tracker_only_member else "person_unavailable"
+        )
     return Member(
         id=person_id,
         display_name=person_state.name if person_state else person_id,
         kind=member_config.get("kind", "person"),
-        person_entity=person_id,
+        person_entity=None if tracker_only_member else person_id,
         source_entity=person_id,
         active_source_entity=active,
         presence=presence,
@@ -431,7 +445,11 @@ def normalize_household(
     )
     members = tuple(
         normalize_member(item, config[CONF_MEMBERS][item], config, states, names, now)
-        for item in config[CONF_PEOPLE]
+        for item in [
+            *config.get(CONF_PEOPLE, []),
+            *config.get(CONF_TRACKER_PEOPLE, []),
+            *config.get(CONF_PETS, []),
+        ]
     )
     categories = ("home", "away", "driving", "unavailable")
     counts = {

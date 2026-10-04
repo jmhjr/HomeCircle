@@ -44,4 +44,4 @@ As of experimental beta 6, snapshot retry, the beta 5 HACS upgrade/removal path,
 
 ## Later milestones
 
-V0.2 candidates: tracker-only pet setup, battery/charging refinements, configurable freshness, address display, driving estimates and local distance-apart summary. Later: history, traffic, weather/radar providers, full kiosk/DAKboard acceptance and landscape polish. These are planning buckets, not delivery promises. Maintain inventory status as scope changes.
+Beta 11 adds tracker-only pet setup, optional direct Life360 tracking, and a shared provider contract. Future candidates: address display, driving estimates, and a local distance-apart summary. Additional built in tracker providers should use the shared contract, with separate credentials, setup, ownership, polling and failure handling. Each provider needs its own real-account acceptance before release; existing HA tracker selection remains available. Later: history, traffic, weather/radar providers, full kiosk/DAKboard acceptance and landscape polish. These are planning buckets, not delivery promises. Maintain inventory status as scope changes.

@@ -10,11 +10,14 @@ from homeassistant.helpers import entity_registry as er
 from .const import (
     CONF_MEMBERS,
     CONF_PEOPLE,
+    CONF_TRACKER_PEOPLE,
+    CONF_PETS,
     CONF_PLACES,
     CONF_PRIMARY_HOME,
     CONF_RESIDENCES,
     CONF_TRACKERS,
 )
+from .tracker_providers import connection_requested
 
 
 @callback
@@ -33,21 +36,34 @@ def tracker_suggestions(
     hass: HomeAssistant, entity_id: str
 ) -> tuple[list[str], str | None]:
     """Distinguish configured associations from the currently active source."""
+    linked, active = person_tracker_references(hass, entity_id)
     associated = [
-        item
-        for item in entities_in_person(hass, entity_id)
-        if selectable(hass, item, "device_tracker")
+        item for item in linked if selectable(hass, item, "device_tracker")
     ]
-    state = hass.states.get(entity_id)
-    active = state.attributes.get("source") if state else None
     if not selectable(hass, active, "device_tracker"):
         active = None
     return associated, active
 
 
+def person_tracker_references(
+    hass: HomeAssistant, entity_id: str
+) -> tuple[list[str], str | None]:
+    """Read exact HA Person links, including disabled or unavailable trackers."""
+    linked = list(entities_in_person(hass, entity_id))
+    state = hass.states.get(entity_id)
+    active = state.attributes.get("source") if state else None
+    return linked, active if isinstance(active, str) else None
+
+
 def selected_entities(config: Mapping[str, Any]) -> set[str]:
     """Return only explicitly selected entities, never inferred sources."""
-    result = {config[CONF_PRIMARY_HOME], *config[CONF_PLACES], *config[CONF_PEOPLE]}
+    result = {
+        config[CONF_PRIMARY_HOME],
+        *config[CONF_PLACES],
+        *config.get(CONF_PEOPLE, []),
+        *config.get(CONF_TRACKER_PEOPLE, []),
+        *config.get(CONF_PETS, []),
+    }
     for member in config[CONF_MEMBERS].values():
         result.update(member[CONF_TRACKERS])
         result.update(member[CONF_RESIDENCES])
@@ -57,19 +73,72 @@ def selected_entities(config: Mapping[str, Any]) -> set[str]:
     return result
 
 
+def trackers_assigned_elsewhere(
+    config: Mapping[str, Any], member_id: str
+) -> set[str]:
+    """Find explicit tracker assignments belonging to another household member."""
+    assigned = {
+        tracker
+        for tracker in (
+            *config.get(CONF_TRACKER_PEOPLE, []),
+            *config.get(CONF_PETS, []),
+        )
+        if tracker != member_id
+    }
+    for other_id, member in config.get(CONF_MEMBERS, {}).items():
+        if other_id != member_id:
+            assigned.update(member.get(CONF_TRACKERS, []))
+    return assigned
+
+
 @callback
 def household_errors(hass: HomeAssistant, values: Mapping[str, Any]) -> dict[str, str]:
     """Validate household selections again at submission time."""
     errors = {}
     people = values.get(CONF_PEOPLE, [])
+    tracker_people = values.get(CONF_TRACKER_PEOPLE, [])
+    pets = values.get(CONF_PETS, [])
     places = values.get(CONF_PLACES, [])
     primary = values.get(CONF_PRIMARY_HOME)
-    if not people:
-        errors[CONF_PEOPLE] = "no_people"
-    elif len(people) != len(set(people)):
+    if (
+        not people
+        and not tracker_people
+        and not pets
+        and not connection_requested(values)
+    ):
+        errors["base"] = "no_members"
+    if len(people) != len(set(people)):
         errors[CONF_PEOPLE] = "duplicate_selection"
     elif any(not selectable(hass, item, "person") for item in people):
         errors[CONF_PEOPLE] = "invalid_entity"
+    if len(tracker_people) != len(set(tracker_people)) or set(tracker_people) & set(
+        pets
+    ):
+        errors[CONF_TRACKER_PEOPLE] = "duplicate_selection"
+    elif any(not selectable(hass, item, "device_tracker") for item in tracker_people):
+        errors[CONF_TRACKER_PEOPLE] = "invalid_entity"
+    if len(pets) != len(set(pets)):
+        errors[CONF_PETS] = "duplicate_selection"
+    elif any(not selectable(hass, item, "device_tracker") for item in pets):
+        errors[CONF_PETS] = "invalid_entity"
+    if people and (tracker_people or pets) and CONF_PEOPLE not in errors:
+        configured_trackers = {
+            tracker for person in people for tracker in entities_in_person(hass, person)
+        }
+        active_trackers = {
+            state.attributes["source"]
+            for person in people
+            if (state := hass.states.get(person)) is not None
+            and isinstance(state.attributes.get("source"), str)
+        }
+        for field, trackers in (
+            (CONF_TRACKER_PEOPLE, tracker_people),
+            (CONF_PETS, pets),
+        ):
+            if field not in errors and (
+                configured_trackers | active_trackers
+            ).intersection(trackers):
+                errors[field] = "tracker_already_in_person"
     if not selectable(hass, primary, "zone"):
         errors[CONF_PRIMARY_HOME] = "invalid_entity"
     if len(places) != len(set(places)):
@@ -92,6 +161,9 @@ def member_errors(
     errors = {}
     if values.get("kind", "person") not in ("person", "pet"):
         errors["kind"] = "invalid_kind"
+    if person_id and person_id.startswith("device_tracker."):
+        if values.get(CONF_TRACKERS) != [person_id]:
+            errors["base"] = "invalid_tracker_source"
     for key, default in (("pet_home_minutes", 1440), ("pet_away_minutes", 5)):
         value = values.get(key, default)
         if (

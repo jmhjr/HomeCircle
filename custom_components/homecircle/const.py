@@ -2,6 +2,10 @@
 
 DOMAIN = "homecircle"
 CONF_PEOPLE = "people"
+CONF_TRACKER_PEOPLE = "people_trackers"
+CONF_PETS = "pets"
+CONF_LIFE360_ACCOUNT = "life360_account"
+CONF_LIFE360_DIRECT = "life360_direct"
 CONF_PRIMARY_HOME = "primary_home"
 CONF_PLACES = "places"
 CONF_MEMBERS = "members"

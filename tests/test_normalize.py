@@ -398,6 +398,38 @@ def test_pet_location_threshold_changes_with_residence_without_faking_report(sna
     assert member(snapshot).location.evidence.freshness == "unknown"
 
 
+def test_tracker_only_pet_counts_and_focuses_without_person(snapshot):
+    config, states = snapshot
+    pet = "device_tracker.example_pet"
+    config["pets"] = [pet]
+    config["members"][pet] = {
+        "trackers": [pet],
+        "additional_residences": [RESIDENCE],
+        "kind": "pet",
+        "pet_home_minutes": 1440,
+        "pet_away_minutes": 5,
+    }
+    states[pet] = gps(pet, value="Example Residence", zones=[RESIDENCE], coords=(1, 0))
+    current = normalize_household(config, states, NOW)
+    direct_pet = current.members[-1]
+    assert direct_pet.person_entity is None
+    assert direct_pet.source_entity == pet
+    assert direct_pet.kind == "pet"
+    assert direct_pet.residence == RESIDENCE
+    assert direct_pet.location.evidence.source_entity == pet
+    assert current.counts["home"] == 3
+    assert current.primary_home_ids == (PERSON, SECOND)
+    assert current.focus_ids["home"] == (PERSON,)
+    assert current.focus_ids["all_residences"] == (PERSON, pet)
+    assert current.focus_ids["overview"] == (PERSON, pet)
+
+    states[pet] = state(pet, "unavailable")
+    unavailable = normalize_household(config, states, NOW)
+    assert unavailable.members[-1].presence == "unavailable"
+    assert "tracker_unavailable" in unavailable.members[-1].issues
+    assert pet not in unavailable.focus_ids["overview"]
+
+
 def test_per_source_report_times_switch_and_missing_evidence(snapshot):
     config, states = snapshot
     settings = config["members"][PERSON]
@@ -442,7 +474,10 @@ def test_selected_gps_tracker_supplies_battery_and_location_report_time(snapshot
     assert current.location.evidence.reported_at == stamp
     assert current.location.evidence.report_status == "tracker_attribute"
     assert current.location.evidence.freshness == "fresh"
-    assert member(snapshot, NOW + timedelta(seconds=301)).location.evidence.freshness == "stale"
+    assert (
+        member(snapshot, NOW + timedelta(seconds=301)).location.evidence.freshness
+        == "stale"
+    )
 
 
 def test_explicit_sensors_override_tracker_attributes(snapshot):
@@ -460,9 +495,7 @@ def test_explicit_sensors_override_tracker_attributes(snapshot):
         "battery": "sensor.example_battery",
         "charging": "binary_sensor.example_charging",
     }
-    config["members"][PERSON]["location_reports"] = {
-        GPS: "sensor.example_report"
-    }
+    config["members"][PERSON]["location_reports"] = {GPS: "sensor.example_report"}
     states["sensor.example_battery"] = state(
         "sensor.example_battery", "25", unit_of_measurement="%"
     )
@@ -476,7 +509,9 @@ def test_explicit_sensors_override_tracker_attributes(snapshot):
     assert current.location.evidence.report_status == "unavailable"
 
 
-@pytest.mark.parametrize("stamp", ["not a time", "2026-01-01T12:02:00+00:00", "2026-01-01T11:59:00"])
+@pytest.mark.parametrize(
+    "stamp", ["not a time", "2026-01-01T12:02:00+00:00", "2026-01-01T11:59:00"]
+)
 def test_invalid_tracker_last_seen_does_not_claim_gps_report(snapshot, stamp):
     _, states = snapshot
     states[GPS] = state(

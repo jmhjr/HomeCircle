@@ -7,6 +7,7 @@ import {
   pinFitPadding,
   reportLabel,
   validateConfig,
+  providerAlertText,
 } from "../src/model.js";
 // Fictional origin and screen separation; never household coordinates.
 const origin = 0,
@@ -19,6 +20,21 @@ const member = (id, presence = "home", focusable = true) => ({
   location: focusable
     ? { latitude: origin, longitude: origin, evidence: { reported_at: null } }
     : null,
+});
+test("provider alerts use fixed messages and ignore unknown states", () => {
+  assert.match(
+    providerAlertText({ name: "Life360", state: "auth_required" }),
+    /sign-in needs attention/,
+  );
+  assert.equal(
+    providerAlertText({ name: "Life360", state: "connected" }),
+    null,
+  );
+  assert.equal(providerAlertText({ name: "Life360", state: "invented" }), null);
+  assert.match(
+    providerAlertText({ name: "Life360", state: "selection_needed" }),
+    /open HomeCircle Options to choose a tracker from this account/,
+  );
 });
 test("Home focus excludes secondary residences while counts can include them", () => {
   const members = [

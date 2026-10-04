@@ -56,6 +56,52 @@ test("authorization rejection clears displayed snapshot and retained signatures"
   assert.match(value.shadowRoot.textContent, /cannot view all selected/);
   value.remove();
 });
+test("card shows and clears a provider repair message", async () => {
+  let state = "auth_required";
+  const value = card({
+    connection: {},
+    connected: true,
+    callWS: async () => ({
+      ...response(),
+      provider_alerts:
+        state === "connected" ? [] : [{ name: "Life360", state }],
+    }),
+  });
+  await tick();
+  assert.match(
+    value.shadowRoot.textContent,
+    /Life360: sign-in needs attention/,
+  );
+  state = "connected";
+  await value._load();
+  assert.doesNotMatch(value.shadowRoot.textContent, /sign-in needs attention/);
+  value.remove();
+});
+test("card prompts to finish member selection and clears the prompt", async () => {
+  let needsSelection = true;
+  const value = card({
+    connection: {},
+    connected: true,
+    callWS: async () => ({
+      ...response(),
+      provider_alerts: needsSelection
+        ? [{ name: "Life360", state: "selection_needed" }]
+        : [],
+    }),
+  });
+  await tick();
+  assert.match(
+    value.shadowRoot.textContent,
+    /choose a tracker from this account/,
+  );
+  needsSelection = false;
+  await value._load();
+  assert.doesNotMatch(
+    value.shadowRoot.textContent,
+    /choose a tracker from this account/,
+  );
+  value.remove();
+});
 test("snapshot rejection waits for the timer or a new connection before retrying", async () => {
   let calls = 0;
   const connection = {};
