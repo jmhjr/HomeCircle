@@ -1,6 +1,6 @@
 # Set up HomeCircle
 
-Use a test Home Assistant instance running Core 2026.9.4 or later. HomeCircle beta 12 is an experimental prerelease. It can use existing Home Assistant trackers or optionally connect to Life360 directly.
+Use a test Home Assistant instance running Core 2026.9.4 or later. Published beta 12 is an experimental prerelease. The Person-first screens below describe the beta 13 candidate; beta 12 still offers tracker-only setup. HomeCircle can use existing Home Assistant trackers or optionally connect to Life360 directly.
 
 ## 1. Get a working source into Home Assistant
 
@@ -19,15 +19,17 @@ Direct Life360 connection is optional; pet GPS still needs its own tracker sourc
 
 ## 2. Create people and places
 
-For a Home Assistant Person, open Settings → People, create or edit the record, and assign its tracker. Follow HA's [Person setup](https://www.home-assistant.io/integrations/person/). You can instead select an existing tracker directly as a person in HomeCircle. Multiple sources for one individual belong to one person's record or selection rather than duplicate household members.
+Every new HomeCircle member, including a pet, needs a Home Assistant Person record. Create one in HomeCircle setup, or open Settings → People first. Follow HA's [Person setup](https://www.home-assistant.io/integrations/person/). HomeCircle links the chosen tracker to that Person when you save. Multiple sources for one individual belong to one Person rather than duplicate household members.
 
-For a pet, select its existing tracker directly under **Pet trackers** in HomeCircle. A Home Assistant Person record is no longer required. Existing pets configured through Person records can remain there.
+For a pet, create a Home Assistant Person for the pet, then choose its existing tracker and set **Member type** to Pet. Older tracker-only pets remain usable and can be moved to a Person from HomeCircle Options.
 
-Check your Home zone in Settings → Areas, labels & zones → Zones. Create additional zones you need. HomeCircle distinguishes:
+Check your Home zone in Settings → Areas, labels & zones → Zones. You can create missing zones there or while setting up HomeCircle. HomeCircle distinguishes:
 
 - **Primary family home:** applies to all members; the Home map button focuses this house.
 - **Additional residences:** apply to the selected member and count as Home for that member.
-- **Ordinary places:** labels such as work; do not count as a residence.
+- **Places shown while Away:** labels such as work or school; these do not count as Home.
+
+On the household screen, choose **Create a new home or place zone** to set a name, map location, radius, and use. The flow returns to your household selections. A new primary home or Away place is selected automatically. For **Another home for a member**, select the new zone on that member's **Other homes** screen. You can also choose **Create another home zone** directly on a member's screen; it returns with that zone selected for the member. Creating a zone adds it to Home Assistant immediately, even if you later close HomeCircle setup.
 
 A member at an additional residence can count Home while being outside the Home button's map focus. Everyone includes all usable positions.
 
@@ -35,23 +37,23 @@ A member at an additional residence can count Home while being outside the Home 
 
 1. With HACS already configured on the test instance, open its custom repositories menu.
 2. Add `https://github.com/jmhjr/HomeCircle` with type **Integration**. See [HACS custom repositories](https://www.hacs.dev/docs/faq/custom_repositories/).
-3. Open HomeCircle in HACS, enable beta/prerelease versions, and download **v0.1.0-beta.12**.
+3. Open HomeCircle in HACS. In Download, open **Need a different version?**, choose the **Release** option, select **v0.1.0-beta.12**, and download it. The default branch commit shown by HACS is not beta 12. Every HomeCircle release is currently a prerelease, so HACS can show the branch commit as its available version while beta updates are off. For future beta update checks, enable and turn on HACS's **HomeCircle pre-release** switch in Home Assistant's Entities settings; it is disabled by default. [HACS explains this switch](https://www.hacs.dev/docs/use/entities/switch/).
 4. Restart Home Assistant.
 5. Open Settings → Devices & services → Add integration → HomeCircle.
 
-The release ZIP includes the card. There is no separate card download or manual resource entry for the tested storage-mode dashboard setup. GitHub source archives are not the installable release ZIP.
+HACS downloads the files; **Add integration** creates the HomeCircle household and selections. Both steps are required. The release ZIP includes the card. There is no separate card download or manual resource entry for the tested storage-mode dashboard setup. GitHub source archives are not the installable release ZIP.
 
 ### Pet setup
 
-The setup flow has separate **People** and **Pet trackers** fields. Select an existing `device_tracker` for each pet; a Person record is not required. You may set up a household with only pets. Each pet then gets an **Other homes** screen, pet location timing, and optional sensor/report-time screens. The tracker selected on the first screen remains that pet's source; it cannot be replaced on the member screen. Existing pets configured through HA Person records continue through **People** and retain their saved settings.
+Select or create a Home Assistant Person for each pet. The next screen asks for its `device_tracker`; then set **Member type** to Pet and configure its other homes, location timing, and optional sensors. You may set up a household with only pets. The chosen tracker remains that pet's source until you change its HomeCircle settings. Existing tracker-only pets remain usable until you move them to a Person.
 
 ### Direct Life360 setup
 
-If your Life360 trackers already exist in Home Assistant, select those entities under **Home Assistant People**, **People trackers**, or **Pet trackers** as appropriate. You do not need to connect a Life360 account in HomeCircle. A **People trackers** selection creates a person member from an existing tracker without a separate HA Person record.
+If your Life360 trackers already exist in Home Assistant, choose or create a Home Assistant Person for each member, then select that Person's existing Life360 tracker. You do not need to connect a Life360 account in HomeCircle. Home Assistant does not identify whether a tracker belongs to a person or pet; choose **Member type** yourself.
 
 When a separate Life360 integration is already present, the household screen warns that connecting the same account directly may create another set of trackers and additional provider requests. Existing and HomeCircle-created trackers have distinct Home Assistant identities, so you can keep both connections during a switch. Select only one tracker for each member and disconnect the route you no longer need after checking the replacement.
 
-To connect Life360 directly, turn on **Connect a Life360 account directly** on the household screen. Enter either an email and password or an access token. Some Life360 accounts with a verified phone number cannot use password sign-in; see the [Life360 integration maintainer's authorization guidance](https://github.com/pnbruckner/ha-life360#account-authorization-methods). HomeCircle saves the credential in HA config entry storage, then creates HA `device_tracker` entities for members it discovers. Life360 may delay the Circle/member list for several minutes, so the first save may show no members. When the trackers appear under Settings → Devices & services → Entities, reopen HomeCircle Options and choose the intended members under **People trackers** or **Pet trackers**. The admin card keeps a setup reminder until at least one HomeCircle-created tracker is explicitly selected; existing household members and external trackers do not clear it. You can mix them with existing HA People, pet trackers and other providers. HomeCircle prevents adding a tracker as a separate person or pet when a selected HA Person is explicitly linked to it or currently uses it as the active source. A matching display name alone is never treated as proof of ownership.
+To connect Life360 directly, turn on **Connect a Life360 account directly** on the household screen. Enter either an email and password or an access token. Some accounts with a verified phone number cannot use password sign-in; see the [Life360 integration maintainer's authorization guidance](https://github.com/pnbruckner/ha-life360#account-authorization-methods). HomeCircle saves the credential in HA config entry storage, then creates HA `device_tracker` entities for members it discovers. Life360 may delay the Circle/member list for several minutes, so the first save may show no members. When the trackers appear under Settings → Devices & services → Entities, reopen HomeCircle Options, choose **Add a tracker**, select or create a Person, then choose that Person's tracker. The admin card keeps a setup reminder until at least one HomeCircle-created tracker is explicitly selected; existing household members and external trackers do not clear it. You can mix Life360 with existing HA People, pet trackers and other providers. HomeCircle prevents linking a tracker already assigned to another Person. A matching display name alone is never treated as proof of ownership.
 
 HomeCircle Options shows whether the direct account is still waiting for trackers or how many trackers have appeared and are reporting. It checks for newly added Circle members again during normal operation, so you do not need to restart Home Assistant to discover them. If Life360 delays the member list, leave the account connected and reopen Options after a few minutes.
 
@@ -67,14 +69,14 @@ This direct path uses Life360's undocumented API through the `life360` Python cl
 
 ## 4. Choose the household
 
-1. Under **People**, **People trackers**, and **Pet trackers**, select the records or entities for the intended household members.
-2. Select **Primary family home** and any **Ordinary places**.
-3. On each member's **Choose trackers and places** screen, review the suggested single tracker and the listed GPS or presence capabilities. Check its owner and choose another tracker if appropriate. The suggestion reflects the current HA state, not measured reporting reliability. If names repeat, compare entity IDs. Existing multi-tracker selections are preserved when editing; leaving trackers empty permits person-only presence.
-4. Select any additional residences for that member.
-5. Set **Member type** to `person` or `pet`. Pet records are not detected automatically.
+1. Under **Home Assistant People**, choose a Person for each member, including pets. Use **Create a new Home Assistant Person** if one is missing. A newly created Person remains in Home Assistant even if you later cancel HomeCircle setup.
+2. Select **Primary family home** and any **Places shown while Away**. Create a missing zone here if needed.
+3. On **Assign a tracker**, choose the device that belongs to that Home Assistant Person. HomeCircle links a newly chosen tracker to the Person when you save. A tracker already linked to another Person must be reassigned there first. Suggested trackers reflect Home Assistant's configured links, not measured reporting reliability; compare entity IDs when names repeat.
+4. On **Choose trackers and places**, configure the selected tracker and any additional residences for that member.
+5. Set **Member type** to `person` or `pet`. A pet also needs a Home Assistant Person record; HomeCircle does not infer pet status from its tracker.
 6. For pets, set the location freshness thresholds on the next **Pet location timing** screen.
 7. Enable **Set up battery and motion sensors** if you have supporting sensors. Enable **Set up location report times** if a selected source exposes a genuine report-time sensor. Those choices open separate screens.
-8. Repeat for each member. The **Review and save household** screen lists the selected homes, trackers, sensors, report times and pet timing. Submit to save; closing the flow discards the draft.
+8. Repeat for each member. The **Review and save household** screen lists the selected homes, roles, trackers, sensors, report times and pet timing. Choose **Back to last member** or **Edit a member** to correct a draft selection, then **Save household**. Closing the flow discards the draft.
 
 ## 5. Add optional battery and report-time sensors
 
@@ -92,11 +94,13 @@ The **Status sensors** screen contains the five fields above. The separate **Loc
 
 Match each timestamp to the source named on its screen. A timestamp for a different source cannot establish the age of the active location.
 
+On the card, **Tracker: name** or **HA Person: name** identifies the source currently supplying the map position. **Reported** uses a genuine location timestamp from that source. **HA state updated** only says when Home Assistant last changed the source entity; it does not prove when the device obtained its location. If no genuine timestamp exists, the card says **Location report time unknown**.
+
 Beta 10 reads valid `battery_level`, `battery_charging` and GPS `last_seen` attributes from the selected tracker when explicit sensors are not configured. Explicit sensor mappings take priority. Other provider attributes may need a separately configured HA template sensor. Verify an attribute's meaning in that provider's documentation before building a helper; there is no universal Life360/pet attribute recipe. Preserve unavailable values rather than replacing them with zero or the current time. If no genuine report timestamp is available, leave it unmapped: **Location report time unknown** is the correct result. HA's `last_changed` and `last_updated` are not GPS fix times.
 
 To add mappings later, open HomeCircle's Options, continue to that member, and enable the appropriate status-sensor or report-time switch. Clearing a field on its screen removes that mapping. Skipping the screen preserves existing mappings.
 
-For one change, use the shortcuts at the top of Options: **Add a new tracker**, **Remove one tracker**, or **Edit one member**. These use the saved household settings and do not send you through every existing member. Review the result before saving. On a member's screen, turn off **Show on map** to keep the member and their presence count while hiding their marker. To open Options from the card, an administrator can select **Settings** in the card header, then **Configure** on HomeCircle's integration page. Settings is hidden in kiosk view; exit kiosk first.
+For one change, use **Person and tracker settings** to choose someone first, then select their details, battery and status sensors, or **Remove a tracker**. The removal picker shows only trackers attached to that selection. Removing a tracker from HomeCircle leaves its Home Assistant Person link in place; change that link separately in Settings → People if needed. **Add a tracker** asks for its Home Assistant Person first, with an option to create one; the next screen asks for the tracker and member type, followed by that member's settings. Older tracker-only members remain usable; select **Move a tracker-only member to a Person** to keep their role, homes, and sensors while linking their tracker. These actions do not send you through every existing member. Review the result before saving. On a member's screen, turn off **Show on map** to keep the member and their presence count while hiding the map marker. An administrator can select the **cog** in the card header to open these same HomeCircle options over the dashboard. The cog is hidden in kiosk view; exit kiosk first.
 
 ## 6. Understand freshness
 
@@ -112,9 +116,9 @@ A longer threshold does not wake a tracker, produce a new GPS fix, or establish 
 
 ## 7. Add and check the card
 
-Create a dashboard from scratch in Settings → Dashboards. Open it, select Edit dashboard → Add card → Browse all cards → HomeCircle. Choose a title and visible members, save, then Done. Use a full-width/panel view for a dedicated wall display if desired.
+After saving the HomeCircle integration, open the new HomeCircle dashboard in the sidebar. If you already have a HomeCircle card, setup keeps that dashboard instead of creating another. Refresh the page once if the newly registered card does not appear. For a separate dashboard, select Edit dashboard → Add card → By card → HomeCircle, then select Done to leave edit mode.
 
-Keep the default private background for no external tile requests. Optional street tiles make requests to the external tile service for the displayed area.
+OpenStreetMap street tiles are on by default. Tile requests send the viewed map area, your network address, and site origin to OpenStreetMap; member names and Home Assistant credentials are not sent. To avoid external tile requests, edit the card and choose **Private · no external tiles** under Map background. Existing cards explicitly set to Private stay private.
 
 Check these results:
 
@@ -127,7 +131,7 @@ Check these results:
 
 ## Troubleshooting and later changes
 
-- **No people in the selector:** create an enabled HA Person or select an existing device tracker directly as a person or pet.
+- **No people in the selector:** use **Create a new Home Assistant Person**, then assign that member's tracker. This applies to pets too.
 - **No pet tracker:** fix the separate provider integration; Member type does not create a tracker.
 - **No map position:** check the active source for coordinates. Router presence alone may be locationless.
 - **Sensor missing from picker:** check its entity domain and enabled state. Tracker attributes need separate sensors.

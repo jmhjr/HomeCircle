@@ -1,5 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { JSDOM } from "jsdom";
 const dom = new JSDOM("<!doctype html><body></body>", {
   url: "http://localhost/",
@@ -36,6 +37,30 @@ function card(hass) {
   document.body.append(value);
   return value;
 }
+test("default card title follows the integration beta release", async () => {
+  const manifest = JSON.parse(
+    readFileSync(
+      new URL(
+        "../../../custom_components/homecircle/manifest.json",
+        import.meta.url,
+      ),
+    ),
+  );
+  const beta = /-beta\.(\d+)$/.exec(manifest.version)?.[1];
+  assert.ok(beta);
+  const expected = `HomeCircle - Beta ${beta}`;
+  const value = card({ connection: {}, callWS: async () => response() });
+  await tick();
+  assert.equal(value.shadowRoot.querySelector("h2").textContent, expected);
+  value.setConfig({
+    type: "custom:homecircle-card",
+    title: "HomeCircle - Beta 1",
+  });
+  assert.equal(value.shadowRoot.querySelector("h2").textContent, expected);
+  value.setConfig({ type: "custom:homecircle-card", title: "Family Map" });
+  assert.equal(value.shadowRoot.querySelector("h2").textContent, "Family Map");
+  value.remove();
+});
 test("authorization rejection clears displayed snapshot and retained signatures", async () => {
   let reject = false;
   const value = card({
@@ -321,6 +346,7 @@ test("unknown report time stays distinct from an HA observation on a member card
         evidence: {
           reported_at: null,
           observed_at: new Date(Date.now() - 10 * 60000).toISOString(),
+          source_label: "Tracker: Example Phone",
         },
       },
       battery: 44,
@@ -342,6 +368,10 @@ test("unknown report time stays distinct from an HA observation on a member card
     /At Example Residence/,
   );
   assert.equal(member.querySelector(".battery").textContent, "Battery 44%");
+  assert.equal(
+    member.querySelector(".report-part.source").textContent,
+    "Tracker: Example Phone",
+  );
   assert.match(
     member.querySelector(".report-part.observed").textContent,
     /HA state updated/,
@@ -494,35 +524,194 @@ test("wall kiosk control hides and restores HA navigation for this browser", asy
   }
 });
 
-test("settings opens HomeCircle integration for administrators", async () => {
+test("settings cog opens task choices over the dashboard for administrators", async () => {
+  const dialogPrototype = dom.window.HTMLDialogElement.prototype;
+  const originalShowModal = dialogPrototype.showModal;
+  const originalClose = dialogPrototype.close;
+  dialogPrototype.showModal = function () {
+    this.open = true;
+  };
+  dialogPrototype.close = function () {
+    this.open = false;
+    this.dispatchEvent(new window.Event("close"));
+  };
   const value = card({
     connection: {},
     connected: true,
     user: { is_admin: false },
     callWS: async () => response(),
   });
+  const flowCalls = [];
   const settings = value.shadowRoot.querySelector(".settings-toggle");
   assert.equal(settings.hidden, true);
   value.hass = {
     connection: value._hass.connection,
     connected: true,
     user: { is_admin: true },
-    callWS: async () => response(),
+    callWS: async (request) =>
+      request.type === "config_entries/get"
+        ? [{ entry_id: "sample-entry" }]
+        : response(),
+    callApi: async (method, path, data) => {
+      flowCalls.push({ method, path, data });
+      if (path.endsWith("/sample-flow") && data?.remove_tracker)
+        return {
+          type: "menu",
+          flow_id: "sample-flow",
+          step_id: "confirm_remove",
+          menu_options: ["confirm_back_remove", "confirm_save"],
+          description_placeholders: { members: "Sample tracker removed" },
+        };
+      if (path.endsWith("/sample-flow") && data?.setting === "remove")
+        return {
+          type: "form",
+          flow_id: "sample-flow",
+          step_id: "remove_tracker_choice",
+          handler: "sample-entry",
+          data_schema: [
+            {
+              name: "remove_tracker",
+              required: true,
+              selector: {
+                select: { options: [{ value: "tracker", label: "Tracker" }] },
+              },
+            },
+          ],
+          errors: {},
+        };
+      return path.endsWith("/sample-flow")
+        ? {
+            type: "form",
+            flow_id: "sample-flow",
+            step_id: "tracker_member_choice",
+            handler: "sample-entry",
+            data_schema: [
+              {
+                name: "member",
+                required: true,
+                selector: {
+                  select: {
+                    options: [
+                      { value: "sample", label: "Sample" },
+                      { value: "empty", label: "No tracker" },
+                    ],
+                  },
+                },
+              },
+              {
+                name: "setting",
+                required: true,
+                selector: {
+                  select: {
+                    options: [
+                      {
+                        value: "details",
+                        label: "Details, homes, and map visibility",
+                      },
+                      { value: "sensors", label: "Battery and status sensors" },
+                      { value: "remove", label: "Remove a tracker" },
+                    ],
+                  },
+                },
+              },
+            ],
+            description_placeholders: { removable_members: "sample" },
+            errors: {},
+          }
+        : {
+            type: "menu",
+            flow_id: "sample-flow",
+            step_id: "init",
+            menu_options: ["tracker_member_choice", "household"],
+          };
+    },
+    loadBackendTranslation: async () => {},
+    localize: (key, placeholders) => {
+      if (key.endsWith("step.confirm_remove.description"))
+        return `Review ${placeholders.members} before saving.`;
+      if (key.endsWith("step.confirm_remove.title"))
+        return "Review tracker removal";
+      if (key.endsWith("tracker_member_choice"))
+        return "Person and tracker settings";
+      if (key.endsWith("household")) return "Manage the whole household";
+      return "";
+    },
   };
   assert.equal(settings.hidden, false);
-  let navigations = 0;
-  const onNavigate = () => navigations++;
-  window.addEventListener("location-changed", onNavigate);
   try {
+    const path = window.location.pathname;
     settings.click();
+    await tick();
+    assert.equal(window.location.pathname, path);
+    assert.equal(settings.getAttribute("aria-label"), "HomeCircle settings");
     assert.equal(
-      window.location.pathname,
-      "/config/integrations/integration/homecircle",
+      settings.querySelector("ha-icon")?.getAttribute("icon"),
+      "mdi:cog",
     );
-    assert.equal(navigations, 1);
+    const dialog = document.querySelector("dialog.homecircle-settings");
+    assert.ok(dialog?.open);
+    assert.match(dialog.textContent, /Person and tracker settings/);
+    dialog.querySelector(".choice").click();
+    await tick();
+    assert.match(dialog.textContent, /HomeCircle settings/);
+    assert.equal(dialog.querySelector("ha-form")?.schema?.[0]?.name, "member");
+    assert.equal(dialog.querySelector("ha-form")?.data?.member, undefined);
+    const choices = dialog.querySelector(".body > div[hidden]");
+    assert.ok(choices);
+    assert.match(choices.textContent, /Battery and status sensors/);
+    dialog.querySelector("ha-form").dispatchEvent(
+      new window.CustomEvent("value-changed", {
+        detail: { value: { member: "sample" } },
+      }),
+    );
+    assert.equal(choices.hidden, false);
+    assert.equal(choices.querySelectorAll("button")[2].hidden, false);
+    dialog.querySelector("ha-form").dispatchEvent(
+      new window.CustomEvent("value-changed", {
+        detail: { value: { member: "empty" } },
+      }),
+    );
+    assert.equal(choices.querySelectorAll("button")[2].hidden, true);
+    dialog.querySelector("ha-form").dispatchEvent(
+      new window.CustomEvent("value-changed", {
+        detail: { value: { member: "sample" } },
+      }),
+    );
+    choices.querySelectorAll("button")[1].click();
+    await tick();
+    assert.deepEqual(flowCalls[2], {
+      method: "POST",
+      path: "config/config_entries/options/flow/sample-flow",
+      data: { member: "sample", setting: "sensors" },
+    });
+    assert.deepEqual(flowCalls[1], {
+      method: "POST",
+      path: "config/config_entries/options/flow/sample-flow",
+      data: { next_step_id: "tracker_member_choice" },
+    });
+    dialog.querySelectorAll(".body .choice")[2].click();
+    await tick();
+    assert.equal(
+      dialog.querySelector("ha-form")?.schema?.[0]?.name,
+      "remove_tracker",
+    );
+    dialog.querySelector(".actions button").click();
+    await tick();
+    assert.equal(dialog.querySelector("ha-form")?.data?.member, "sample");
+    assert.match(dialog.textContent, /Remove a tracker/);
+    assert.equal(flowCalls.at(-2).data.next_step_id, "tracker_member_choice");
+    dialog.querySelectorAll(".body .choice")[2].click();
+    await tick();
+    dialog.querySelectorAll(".actions button")[1].click();
+    await tick();
+    assert.match(
+      dialog.textContent,
+      /Review Sample tracker removed before saving/,
+    );
+    dialog.close();
   } finally {
-    window.history.replaceState({}, "", "http://localhost/");
-    window.removeEventListener("location-changed", onNavigate);
+    dialogPrototype.showModal = originalShowModal;
+    dialogPrototype.close = originalClose;
     value.remove();
   }
 });

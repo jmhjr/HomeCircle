@@ -57,9 +57,14 @@ export function reportParts(member, now = Date.now()) {
   if (!member.location)
     return [{ kind: "missing", text: "No usable map position" }];
   const proof = member.location.evidence;
+  const source =
+    typeof proof?.source_label === "string" && proof.source_label.trim()
+      ? [{ kind: "source", text: proof.source_label }]
+      : [];
   const reported = proof?.reported_at ? Date.parse(proof.reported_at) : NaN;
   if (Number.isFinite(reported) && reported <= now + 60000)
     return [
+      ...source,
       ...(proof.freshness === "stale"
         ? [{ kind: "stale", text: "Stale" }]
         : []),
@@ -68,13 +73,14 @@ export function reportParts(member, now = Date.now()) {
   const observed = proof?.observed_at ? Date.parse(proof.observed_at) : NaN;
   if (Number.isFinite(observed) && observed <= now + 60000)
     return [
+      ...source,
       {
         kind: "observed",
         text: `HA state updated ${ageLabel(observed, now)} ago`,
       },
       { kind: "unknown", text: "Location report time unknown" },
     ];
-  return [{ kind: "unknown", text: "Location report time unknown" }];
+  return [...source, { kind: "unknown", text: "Location report time unknown" }];
 }
 export function reportLabel(member, now = Date.now()) {
   return reportParts(member, now)
@@ -125,7 +131,7 @@ export function validateConfig(config) {
   return {
     ...config,
     title: String(config.title || "HomeCircle"),
-    map_tiles: config.map_tiles || "none",
+    map_tiles: config.map_tiles || "osm",
     fill_screen: config.fill_screen || false,
     hidden_members: config.hidden_members || [],
   };

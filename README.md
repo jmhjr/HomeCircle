@@ -4,16 +4,16 @@ Family location and presence for Home Assistant, independent of the tracking pro
 
 **Experimental development software — not a stable release.**
 
-Use a disposable or test Home Assistant dashboard. Beta 11 adds direct Life360 tracking and tracker-only people and pets. It retains the existing Home Assistant entity path, map, kiosk view, and report-time handling. Broader field acceptance remains open. No stable release is approved.
+Use a disposable or test Home Assistant dashboard. Published beta 12 includes direct Life360 tracking and tracker-only people and pets. A beta 13 candidate with Person-first setup and the usability changes in the [changelog](CHANGELOG.md) is being validated locally. Broader field acceptance remains open. No stable release is approved.
 
 **Status: milestones 1–3 development integration; development prerelease; not production-ready.** HomeCircle is a working name; public naming remains a release decision. The existing V2 dashboard remains the reference system. Development does not replace, install over, or change it.
 
-HomeCircle consumes standard HA `person` and `device_tracker` entities, with optional explicitly selected supporting sensors. Beta 11 also offers an optional direct Life360 connection through a built in tracker provider contract designed for more providers in later releases. Existing HA trackers remain selectable without a HomeCircle provider account.
+HomeCircle consumes standard HA `person` and `device_tracker` entities, with optional explicitly selected supporting sensors. An optional direct Life360 connection uses a built in tracker provider contract designed for more providers in later releases. Existing HA trackers remain selectable without a HomeCircle provider account.
 
 ## Start here
 
 - [Per-source report times](docs/PER-SOURCE-REPORTS.md)
-- [Beta 11 validation](docs/DIRECT-LIFE360-CANDIDATE-VALIDATION.md), [current release readiness](docs/CURRENT-RELEASE-READINESS.md), and [beta 10 validation](docs/BETA10-VALIDATION.md)
+- [Beta 13 candidate validation](docs/BETA13-VALIDATION.md), [beta 12 validation](docs/BETA12-VALIDATION.md), [current release readiness](docs/CURRENT-RELEASE-READINESS.md), and [earlier direct Life360 validation](docs/DIRECT-LIFE360-CANDIDATE-VALIDATION.md)
 
 - [Step-by-step setup: iPhone, Life360, pets and supporting sensors](docs/SETUP.md)
 

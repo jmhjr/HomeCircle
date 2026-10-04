@@ -34,4 +34,4 @@ Broader HA compatibility beyond the tested 2026.9.4 baseline, configurable fresh
 
 ## Milestone 3 implemented decisions
 
-[ADR-002](adr/ADR-002-map-and-frontend.md) records bundled Leaflet, external tiles off by default, native card/editor, esbuild, permission-checked snapshots and resource ownership. [Validation](MILESTONE-3-VALIDATION.md) records the exact tested scope.
+[ADR-002](adr/ADR-002-map-and-frontend.md) records bundled Leaflet, the original private map default, native card/editor, esbuild, permission-checked snapshots and resource ownership. The 2026-10-04 usability revision in that ADR changes new cards to street tiles by default. [Validation](MILESTONE-3-VALIDATION.md) records the original milestone 3 scope.

@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass, field
 from datetime import timedelta
+import logging
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
@@ -20,11 +21,12 @@ from .normalize import Household, normalize_household
 from .const import DOMAIN
 from .selection import selected_entities
 from .tracker_providers import TrackerClient, connected_providers
-from . import api, frontend
+from . import api, dashboard_setup, frontend
 from homeassistant.components import websocket_api
 
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -50,6 +52,12 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass: HomeAssistant, entry: HomeCircleEntry) -> bool:
     """Track selected HA entities and optional HomeCircle-owned Life360 trackers."""
     await frontend.async_register(hass)
+    try:
+        await dashboard_setup.async_ensure_dashboard(hass)
+    except Exception:
+        # Dashboard creation is optional; the integration and existing views
+        # must still work when Lovelace storage cannot be changed.
+        _LOGGER.exception("Could not create the optional HomeCircle dashboard")
     runtime = entry.runtime_data = HomeCircleRuntime(dict(entry.options or entry.data))
     entity_ids = selected_entities(runtime.config)
     issue_id = f"missing_entities_{entry.entry_id}"
@@ -174,3 +182,4 @@ async def async_unload_entry(hass: HomeAssistant, entry: HomeCircleEntry) -> boo
 async def async_remove_entry(hass: HomeAssistant, entry: HomeCircleEntry) -> None:
     """Clean up an owned resource even when the entry was not loaded."""
     await frontend.async_unregister(hass)
+    await dashboard_setup.async_remove_untouched_dashboard(hass)
