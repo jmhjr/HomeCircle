@@ -17,6 +17,6 @@ The live browser check exposed compressed member grid rows that let card details
 
 The final package contains 21 files and has SHA-256 `ec63aa699160b0e844ef4f717c2520ff259eb2b3f502c0cd3f2f4b8ba5c493fa`.
 
-## Still required
+## Physical display acceptance
 
-The physical DAKboard must be refreshed and checked for non-kiosk scrolling with the map visible, member focus, Everyone reset, and kiosk behavior. Publication remains pending that user-operated display check.
+The user refreshed the physical DAKboard and confirmed that member cards and their data no longer overlap. The member list scrolled while the map stayed visible, and selecting one member then Everyone worked. The beta 16 GitHub/HACS prerelease was still unpublished at this checkpoint.
