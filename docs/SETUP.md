@@ -87,8 +87,8 @@ These fields select existing HA entities. An attribute on a tracker is not itsel
 | Battery percentage sensor | Numeric battery percentage with `%` units |
 | Charging binary sensor | On/off charging state for this member |
 | Speed sensor | Numeric speed in m/s, km/h or mph |
-| Driving binary sensor | On/off driving evidence |
-| Driving report timestamp sensor | Actual timestamp for that driving report; needs a driving binary sensor |
+| Driving binary sensor | Optional on/off driving evidence; overrides the selected GPS tracker's driving flag |
+| Driving report timestamp sensor | Actual timestamp for the selected driving sensor; needs a driving binary sensor |
 
 The **Status sensors** screen contains the five fields above. The separate **Location report time** screen visits each selected tracker and the person source; choose a genuine timestamp sensor for that source, or leave it empty. Older single-source mappings remain supported and are guided through the per-source screen when edited. See [per-source report times](PER-SOURCE-REPORTS.md) and [multiple-source checks](MULTI-SOURCE-VALIDATION.md).
 
@@ -96,7 +96,7 @@ Match each timestamp to the source named on its screen. A timestamp for a differ
 
 On the card, **Tracker: name** or **HA Person: name** identifies the source currently supplying the map position. **Reported** uses a genuine location timestamp from that source. **HA state updated** only says when Home Assistant last changed the source entity; it does not prove when the device obtained its location. If no genuine timestamp exists, the card says **Location report time unknown**.
 
-Beta 10 reads valid `battery_level`, `battery_charging` and GPS `last_seen` attributes from the selected tracker when explicit sensors are not configured. Explicit sensor mappings take priority. Other provider attributes may need a separately configured HA template sensor. Verify an attribute's meaning in that provider's documentation before building a helper; there is no universal Life360/pet attribute recipe. Preserve unavailable values rather than replacing them with zero or the current time. If no genuine report timestamp is available, leave it unmapped: **Location report time unknown** is the correct result. HA's `last_changed` and `last_updated` are not GPS fix times.
+Beta 10 reads valid `battery_level`, `battery_charging` and GPS `last_seen` attributes from the selected tracker when explicit sensors are not configured. The beta 15 candidate also reads a selected GPS tracker's boolean `driving` attribute when no driving sensor is configured, using its `last_seen` to decide whether the report is current. Explicit sensor mappings take priority. Other provider attributes may need a separately configured HA template sensor. Verify an attribute's meaning in that provider's documentation before building a helper; there is no universal Life360/pet attribute recipe. Preserve unavailable values rather than replacing them with zero or the current time. If no genuine report timestamp is available, leave it unmapped: **Location report time unknown** is the correct result. HA's `last_changed` and `last_updated` are not GPS fix times.
 
 To add mappings later, open HomeCircle's Options, continue to that member, and enable the appropriate status-sensor or report-time switch. Clearing a field on its screen removes that mapping. Skipping the screen preserves existing mappings.
 

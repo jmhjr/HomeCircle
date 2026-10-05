@@ -204,6 +204,17 @@ def tracker_optional(source: State, attribute: str, kind: str) -> OptionalValue:
     )
 
 
+def tracker_driving(source: State, now: datetime) -> OptionalValue:
+    """Use a selected GPS tracker's driving flag only with its report freshness."""
+    value = source.attributes.get("driving") if available(source) else None
+    if not isinstance(value, bool):
+        value = None
+    return OptionalValue(
+        value,
+        location_evidence(source, None, now, None, STALE_AFTER_SECONDS),
+    )
+
+
 def optional_value(states, entity_id, now, kind, report_id=None) -> OptionalValue:
     state = states.get(entity_id)
     proof = evidence(state, states.get(report_id), now, report_id)
@@ -277,6 +288,12 @@ def normalize_member(
         "boolean",
         supporting.get("driving_reported_at"),
     )
+    if (
+        not supporting.get("driving")
+        and source is not None
+        and source.attributes.get("source_type") == "gps"
+    ):
+        driving = tracker_driving(source, now)
     battery = optional_value(states, supporting.get("battery"), now, "battery")
     charging = optional_value(states, supporting.get("charging"), now, "boolean")
     speed = optional_value(states, supporting.get("speed"), now, "speed")

@@ -12,7 +12,7 @@ Each selected person produces one immutable `Member`. Person state remains the p
 
 - Missing/unknown/unavailable person: Unavailable, no map position, never rescued by an optional tracker or sensor.
 - An unavailable selected residence that the person reports occupying: classification unavailable until that zone returns or selection is repaired. Missing ordinary-place metadata does not erase otherwise valid presence.
-- Driving requires an explicitly selected binary sensor reporting `on` and an explicit driving-report timestamp classified fresh. Driving takes precedence over Home; residence remains a separate field.
+- Driving requires a fresh positive report from either an explicitly selected binary sensor with its driving-report timestamp or the selected active GPS tracker's boolean `driving` attribute with a valid `last_seen` timestamp. A selected sensor takes priority. Driving takes precedence over Home; residence remains a separate field.
 - Otherwise, membership in primary Home or a member's additional residence means Home; other valid person presence means Away.
 - Modern HA `in_zones` identifiers are matched to selected zone IDs. Overlapping matches choose primary Home first, then additional residences in selection order, then ordinary places. All matched primary-home membership remains distinct.
 - Legacy `home` maps only to `zone.home`, never to an unrelated selected primary zone. A legacy named zone is accepted only when that name identifies exactly one zone in HA's current zone catalog, and that ID is selected. Ambiguous/unresolved labels are flagged and never guessed as a residence. Unselected zone names are read solely to detect this ambiguity; their coordinates are not read for normalization.
@@ -36,14 +36,14 @@ The optional `supporting` map is added per member without changing config-entry 
 | `battery` | sensor | Finite 0–100 with `%` unit; zero preserved |
 | `charging` | binary_sensor | `on`/`off`; other/missing values unknown |
 | `speed` | sensor | Nonnegative finite value with `m/s`, `km/h` or `mph`; unit retained, never converted by provider heuristics |
-| `driving` | binary_sensor | Explicit `on`/`off`; speed/Away never imply driving |
+| `driving` | binary_sensor | Optional explicit `on`/`off`; overrides the selected active GPS tracker's boolean driving flag. Speed/Away never imply driving. |
 | `driving_reported_at` | sensor | Timezone-aware ISO timestamp for the driving report |
 | `location_reported_at` | sensor | Timezone-aware ISO timestamp for one explicitly identified location source |
 | `location_report_source` | this person or selected tracker | Exact source described by the location timestamp; required together with it |
 
-The user is responsible for selecting sensors whose semantics match the labels. HomeCircle does not invent provider-specific report, battery, speed or driving attributes. Optional fields may all remain empty. Options preserve mappings unless the optional evidence step is opened and fields cleared. Invalid/deleted mappings or a removed bound tracker route back through evidence selection before saving.
+The user is responsible for selecting sensors whose semantics match the labels. HomeCircle reads only the selected active GPS tracker's existing boolean driving flag and valid `last_seen` report time when no driving sensor is selected; it does not infer motion from speed or unselected entities. Optional fields may all remain empty. Options preserve mappings unless the optional evidence step is opened and fields cleared. Invalid/deleted mappings or a removed bound tracker route back through evidence selection before saving.
 
-Every evidence object keeps `observed_at` (HA state observation) separate from `reported_at` (explicit report sensor), plus source entity, report sensor, freshness and report-status reason. HA `last_updated` is never converted into a GPS report timestamp. Presence evidence remains observation-only; a location timestamp is not proof of fresh authoritative person presence.
+Every evidence object keeps `observed_at` (HA state observation) separate from `reported_at` (an explicit report sensor or the selected GPS tracker's valid `last_seen`), plus source entity, report sensor, freshness and report-status reason. HA `last_updated` is never converted into a GPS report timestamp. Presence evidence remains observation-only; a location timestamp is not proof of fresh authoritative person presence.
 
 The development freshness threshold is five minutes. Timestamps more than 60 seconds in the future, naive datetimes, invalid values and unavailable sources yield unknown freshness. Small clock skew up to 60 seconds is tolerated. An explicit report older than five minutes is stale. A location timestamp is used only when its configured source matches the chosen coordinate source; switching sources cannot reuse a different source's timestamp.
 
