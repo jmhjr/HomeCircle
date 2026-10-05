@@ -264,6 +264,8 @@ def membership(
     matches = [key for key, name in zone_names.items() if name == person_state.state]
     if len(matches) == 1 and matches[0] in selected:
         return matches, ["legacy_zone_name"]
+    if person_state.state == "driving" and not matches:
+        return [], issues
     return [], ["ambiguous_zone_name" if len(matches) > 1 else "unresolved_place"]
 
 

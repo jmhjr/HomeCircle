@@ -3,6 +3,7 @@
 ## 0.1.0-beta.15 — candidate
 
 - Use the selected GPS tracker's own driving flag when no separate driving sensor is configured. Require a fresh tracker location report before showing Driving; label an old positive flag as last reported. Preserve explicitly selected driving sensors and never infer driving from speed alone.
+- Recognize a provider's `driving` Person state as travel rather than an unknown place when no selected zone matches.
 - Explain the tracker fallback in both setup and Options status-sensor screens.
 
 ## 0.1.0-beta.14 — experimental prerelease

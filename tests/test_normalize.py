@@ -333,6 +333,31 @@ def test_selected_tracker_driving_flag_uses_its_report_time(
     assert current.driving.evidence.source_entity == GPS
 
 
+def test_selected_tracker_and_person_reporting_driving(snapshot):
+    """A provider driving state is an away state, not an unknown place."""
+    _, states = snapshot
+    states[PERSON] = state(
+        PERSON,
+        "driving",
+        source=GPS,
+        in_zones=[],
+        **{ATTR_LATITUDE: 0.0, ATTR_LONGITUDE: 0.0},
+    )
+    states[GPS] = state(
+        GPS,
+        "driving",
+        source_type="gps",
+        driving=True,
+        last_seen=NOW,
+        **{ATTR_LATITUDE: 0.0, ATTR_LONGITUDE: 0.0},
+    )
+    current = member(snapshot)
+    assert current.presence == "driving"
+    assert current.driving_status == "current"
+    assert current.driving.evidence.reported_at == NOW
+    assert "unresolved_place" not in current.issues
+
+
 def test_explicit_driving_sensor_overrides_tracker_flag(snapshot):
     config, states = snapshot
     config["members"][PERSON]["supporting"] = {
