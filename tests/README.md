@@ -1,6 +1,6 @@
 # Acceptance plan
 
-Milestone 1–3 flow/lifecycle, normalization and authorization tests run against HA Core 2026.9.4. See [validation evidence](../docs/MILESTONE-3-VALIDATION.md) and [test commands](../docs/DEVELOPMENT.md). The matrix below includes future milestones; automated tests do not imply real provider or physical-display acceptance. Separate browser evidence covers the initial card.
+Flow/lifecycle, normalization, authorization, provider, and dashboard tests run against HA Core 2026.9.4. See the [stable scope audit](../docs/STABLE-SCOPE-AUDIT.md), [beta 16 validation](../docs/BETA16-VALIDATION.md), and [test commands](../docs/DEVELOPMENT.md). Automated tests do not imply real provider or physical-display acceptance; those checks have separate records.
 
 | Area | Required cases |
 |---|---|
@@ -16,7 +16,7 @@ Milestone 1–3 flow/lifecycle, normalization and authorization tests run agains
 | Packaging | Bundle registration once; upgrade/unload/removal; no damage to unrelated resources |
 | Direct Life360 recovery | Partial Circle/member denial, whole-account rejection, failed platform setup and reload, same-account reconnect, offline restart with saved trackers |
 | Privacy | No raw states in logs/diagnostics; no personal artifacts in source/release; optional network providers disclosed |
-| Display | Portrait overflow, keyboard/touch focus, missing-data labels; physical DAKboard/TouchHub later and separately |
+| Display | Portrait overflow, keyboard/touch focus, missing-data labels; physical DAKboard/TouchHub separately from automated tests |
 
 The generic fixture in `fixtures/household.example.json` matches the milestone 1 selection snapshot. Synthetic numeric coordinates used by tests are explicitly zero via HA attribute constants; they are fictional test data, never a household location. No privacy checker exception is needed.
 

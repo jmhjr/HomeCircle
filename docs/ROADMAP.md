@@ -28,20 +28,21 @@ Acceptance: new installation reaches a usable dashboard without manual YAML; key
 
 Implementation and precise validation scope are in [frontend setup](FRONTEND.md) and [milestone 3 validation](MILESTONE-3-VALIDATION.md).
 
-## 4 — V0.1 release gate
+## 4 — V0.1 stable-release gate
 
 - Real public repository identity and required manifest/HACS metadata are complete.
 - HACS custom-repository install, upgrade, removal and HA restart tested in a disposable instance.
-- Config flow and visual card editor require no provider account and no manual YAML.
+- Core config flow, automatic first dashboard, and visual card editor require no provider account and no manual YAML in storage mode. Optional direct Life360 requires an account.
 - Core works with at least two independently configured location sources, including one non-Life360 source.
 - Run integration/unit/frontend checks plus current HACS validation and HA manifest validation.
 - Audit source, generated bundle, archive and history for private data; include required licenses.
-- Confirm privacy/network disclosure and optional feature failure behavior.
+- Confirm privacy/network disclosure and optional feature failure behavior, including direct Life360's real-account failure and recovery if that feature ships in stable V0.1.
+- Observe a complete real departure and return on selected sources, genuine location-report freshness, and background iPhone behavior while away from the local network. Decide and validate the supported HA Core version range.
 - User accepts replacement separately; no automatic production V2 migration.
 - Tag `v0.1.0` and create corresponding GitHub release only after these gates pass.
 
-As of experimental beta 6, snapshot retry, the beta 5 HACS upgrade/removal path, the published beta 5-to-beta 6 HACS upgrade, controlled within-person real-source switching, allowed/denied non-admin access, and the physical additional-residence count/focus snapshot have passed in their documented scopes. A full real departure/return timeline, background iPhone updates to the disposable instance outside the LAN, sustained availability, unattended failover remain open. See [current release readiness](CURRENT-RELEASE-READINESS.md). No stable tag or production migration is approved.
+As of beta 16, the intended core setup, normalization, dashboard, and optional Life360 adapter are implemented and the published package has passed HACS and physical-display checks in their documented scopes. A full real departure/return timeline, background iPhone updates away from the local network, sustained availability, unattended provider failure/recovery, and a supported Core version decision remain open. See [stable scope audit](STABLE-SCOPE-AUDIT.md) and [current release readiness](CURRENT-RELEASE-READINESS.md). No stable tag or V2 migration is approved.
 
 ## Later milestones
 
-Beta 11 adds tracker-only pet setup, optional direct Life360 tracking, and a shared provider contract. Future candidates: address display, driving estimates, and a local distance-apart summary. Additional built in tracker providers should use the shared contract, with separate credentials, setup, ownership, polling and failure handling. Each provider needs its own real-account acceptance before release; existing HA tracker selection remains available. Later: history, traffic, weather/radar providers, full kiosk/DAKboard acceptance and landscape polish. These are planning buckets, not delivery promises. Maintain inventory status as scope changes.
+Beta 11 added tracker-only pet setup, optional direct Life360 tracking, and a shared provider contract; beta 13 then made HA Person records mandatory for newly added people and pets while preserving older tracker-only members. Beta 16 includes a kiosk view and physical DAKboard acceptance for its tested layout. Future candidates: address display, driving estimates, a local distance-apart summary, additional built in tracker providers, history, traffic, weather/radar, and broader landscape polish. Each new provider needs separate credentials, setup, ownership, polling, failure handling, and real-account acceptance. Existing HA tracker selection remains available. These are planning buckets, not V0.1 stable prerequisites.

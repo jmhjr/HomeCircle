@@ -2,7 +2,7 @@
 
 Evidence inspected at bootstrap: local production-era V2 migration notes and modules; extracted Family Map Card source and README; its September 26 beta 19 handoff; separate Life360 Family source. Historical live-test statements below come from those records and were not rerun. Production V2 and later test-clone improvements are distinct baselines. The live HA configuration mount was unavailable.
 
-V0.1 is a planned release. **This table preserves the bootstrap reference inventory. Milestones 1–3 now implement selection, normalization and the initial card; release acceptance remains separate.** See [current validation](../docs/MILESTONE-3-VALIDATION.md). “Core” means required; “optional” means absence must not block the core; “later” means preserved as a documented requirement outside V0.1.
+V0.1 is a planned stable release. **This table preserves the bootstrap reference inventory and historical targets; some rows were superseded by beta 11–16 decisions.** Use the [current product scope](../docs/PRODUCT.md) and [stable scope audit](../docs/STABLE-SCOPE-AUDIT.md) for release decisions. “Core” means required; “optional” means absence must not block the core; “later” means preserved as a documented requirement outside V0.1.
 
 | Capability | Current implementation / evidence | HomeCircle target | V0.1 |
 |---|---|---|---|
