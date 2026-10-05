@@ -28,7 +28,7 @@ Browser restart did **not** pass: the Mac CLI process exited with status `-11` (
 
 The normalized snapshot is internal runtime data. A card, authenticated frontend interface, HACS install/upgrade/removal, physical-display acceptance and real-provider tests remain later gates. Public manifest identity fields remain pending. No public repository identity was fabricated.
 
-All work is in the original repository on the unborn `feature/normalized-presence` branch. The initial scaffold and milestone 1 implementation were preserved. No commit, stage, tag, publication, deployment, production HA access or V2 modification occurred.
+All work is in the original repository on the unborn `feature/normalized-presence` branch. The initial scaffold and milestone 1 implementation were preserved. No commit, stage, tag, publication, deployment, or production HA access occurred.
 
 See [NORMALIZATION](NORMALIZATION.md) for exact data semantics and [DEVELOPMENT](DEVELOPMENT.md) for commands. Browser screenshots are separate handoff artifacts, outside the source repository; no household data was used.
 

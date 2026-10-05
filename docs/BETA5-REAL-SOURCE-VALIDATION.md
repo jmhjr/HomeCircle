@@ -1,6 +1,6 @@
 # Beta 5 real-source test validation — 2026-09-27
 
-This check used the existing disposable, real-source Home Assistant Core 2026.9.4 instance. Production HA and the existing V2 dashboard were unchanged. The HomeCircle package and selected entry settings were backed up privately in ignored local work storage before the upgrade; no account credentials, entity IDs, coordinates or screenshots are included here.
+This check used the existing disposable, real-source Home Assistant Core 2026.9.4 instance. Production HA was unchanged. The HomeCircle package and selected entry settings were backed up privately in ignored local work storage before the upgrade; no account credentials, entity IDs, coordinates or screenshots are included here.
 
 ## HACS upgrade
 

@@ -1,6 +1,6 @@
 # Beta 10 candidate validation
 
-Beta 10 is an unpublished candidate. Beta 9 remains the current public prerelease and the installed version on the production HomeCircle test dashboard. The existing V2 dashboard was not changed.
+Beta 10 is an unpublished candidate. Beta 9 remains the current public prerelease and the installed version on the production HomeCircle test dashboard.
 
 ## Changes
 

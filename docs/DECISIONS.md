@@ -9,7 +9,7 @@ ADR-001's 2026-10-04 amendment records the approved optional direct Life360 adap
 ## Bootstrap conventions
 
 - HomeCircle is the development name; public naming clearance remains open.
-- Preserve existing V2 as HomeCircle Reference Implementation v1. Freeze raw local artifacts outside Git; publish only generic descriptions/examples.
+- Keep private design artifacts outside Git; publish only generic descriptions and examples.
 - MIT for newly authored HomeCircle files. Retain upstream licenses/notices before importing any existing code.
 - Main plus short-lived feature branches; semantic version release tags.
 - A single Integration package with bundled frontend is the intended V0.1 delivery shape; published beta 4 packaging and HACS lifecycle have passed disposable-instance validation.

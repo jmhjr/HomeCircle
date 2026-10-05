@@ -1,6 +1,6 @@
 # Stable V0.1 scope audit — 2026-10-04
 
-This is a pre-release review, not approval to tag `v0.1.0` or replace the existing V2 dashboard. It compares the intended [product](PRODUCT.md) and [roadmap](ROADMAP.md) with beta 16 source, automated tests, and the [published validation record](BETA16-VALIDATION.md). Older milestone and beta validation reports are dated evidence, not current installation instructions.
+This is a pre-release review, not approval to tag `v0.1.0`. It compares the intended [product](PRODUCT.md) and [roadmap](ROADMAP.md) with beta 16 source, automated tests, and the [published validation record](BETA16-VALIDATION.md). Older milestone and beta validation reports are dated evidence, not current installation instructions.
 
 ## Intended capabilities
 
@@ -23,7 +23,7 @@ The source review found no V0.1 feature in the current product scope that is who
 3. Exercise an unattended real provider outage and recovery. Confirm that unaffected trackers continue, that HomeCircle does not mislabel stale/unavailable data, and that a recovered source returns without losing selections. The paused-integration and fictional fallback rehearsals cover narrower cases.
 4. Choose the supported HA Core version range and validate it. Tests and HACS metadata currently establish Core 2026.9.4 as the baseline, not every later release.
 5. Build the exact stable candidate, rerun automated, HACS/hassfest, package, privacy/history/license, install/upgrade/restart/removal, browser, and physical-display checks. Then review the release notes and README in the tagged snapshot before publication.
-6. Decide the stable public name and confirm that optional direct Life360, with its unsupported API and disclosed limitations, belongs in stable V0.1. Its adapter is implemented; real movement and provider failure acceptance are incomplete. Publishing stable does not require migrating or replacing V2.
+6. Decide the stable public name and confirm that optional direct Life360, with its unsupported API and disclosed limitations, belongs in stable V0.1. Its adapter is implemented; real movement and provider failure acceptance are incomplete.
 
 ## Documentation reconciliation
 

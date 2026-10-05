@@ -37,6 +37,6 @@ The broader standalone HA CLI crashed at Python interpreter shutdown with SIGSEG
 
 ## Remaining release gates
 
-Public GitHub identity/manifest metadata; reviewed HACS release archive/install/upgrade/removal; real independent provider acceptance; broader HA compatibility; real tile-service/network-failure acceptance; physical display/touch acceptance. The existing V2/reference remains unchanged. A separate production rollout and authorization are required.
+Public GitHub identity/manifest metadata; reviewed HACS release archive/install/upgrade/removal; real independent provider acceptance; broader HA compatibility; real tile-service/network-failure acceptance; physical display/touch acceptance. A separate production rollout and authorization are required.
 
-Work remains uncommitted in the original repository on unborn `feature/homecircle-card`. No staging, commit, remote, tag, publication, production HA access, V2 edit or private snapshot access occurred.
+Work remains uncommitted in the original repository on unborn `feature/homecircle-card`. No staging, commit, remote, tag, publication, production HA access, or private snapshot access occurred.

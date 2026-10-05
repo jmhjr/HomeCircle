@@ -2,11 +2,11 @@
 
 ## Current state
 
-Beta 16 implements selection flows, normalization, household counts/focus, an authenticated snapshot interface, an automatic first dashboard, and the card/editor. Public manifest metadata, published HACS installation, and the separate production beta-test installation are validated in their release records. Keep development and destructive lifecycle checks in disposable HA instances; the existing production V2 dashboard remains unchanged. See [stable scope audit](STABLE-SCOPE-AUDIT.md) before preparing `v0.1.0`.
+Beta 16 implements selection flows, normalization, household counts/focus, an authenticated snapshot interface, an automatic first dashboard, and the card/editor. Public manifest metadata, published HACS installation, and the production beta-test installation are validated in their release records. Keep development and destructive lifecycle checks in disposable HA instances. See [stable scope audit](STABLE-SCOPE-AUDIT.md) before preparing `v0.1.0`.
 
 ## Work sequence
 
-Read PRODUCT, ADR-001, feature inventory and PRIVACY first. Implement one roadmap milestone per focused branch. Use a disposable HA instance with synthetic entities and preserve the reference source. No credentials, family entities, photos or raw snapshot files belong in fixtures.
+Read PRODUCT, ADR-001, and PRIVACY first. Implement one roadmap milestone per focused branch. Use a disposable HA instance with synthetic entities. No credentials, family entities, photos or raw snapshot files belong in fixtures.
 
 Use Python 3.14.2+ with pinned Home Assistant Core 2026.9.4 and pytest-homeassistant-custom-component 0.13.367 from `requirements-test.txt`. This single version is the tested development target, not a broad compatibility claim. The frontend uses pinned Leaflet/esbuild and native custom elements. Beta release archive and HACS validation are recorded in the versioned reports; stable release validation remains open. The bootstrap privacy checker needs Python 3.10+ and Git. On a fresh clone, enable the local guard:
 

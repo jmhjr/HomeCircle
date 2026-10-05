@@ -21,4 +21,4 @@ The user confirmed on the DAKboard that the beta 7 display looked good and that 
 
 ## Still to check
 
-Any production upgrade is separate. Production beta 6 and the existing V2 dashboard were unchanged. Production HACS initially offered a newer main-branch commit by hash in its ordinary update list because HomeCircle's pre-release entity was disabled and set to "No pre-releases." The entity was enabled and switched to "Pre-releases preferred"; Settings then showed installed `v0.1.0-beta.6` and latest `v0.1.0-beta.7`. No production download or restart was performed.
+Any production upgrade is separate. Production beta 6 was unchanged. Production HACS initially offered a newer main-branch commit by hash in its ordinary update list because HomeCircle's pre-release entity was disabled and set to "No pre-releases." The entity was enabled and switched to "Pre-releases preferred"; Settings then showed installed `v0.1.0-beta.6` and latest `v0.1.0-beta.7`. No production download or restart was performed.

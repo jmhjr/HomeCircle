@@ -1,6 +1,6 @@
 # Beta 10 published validation
 
-[v0.1.0-beta.10](https://github.com/jmhjr/HomeCircle/releases/tag/v0.1.0-beta.10) is a public experimental prerelease. The separate production HomeCircle beta test dashboard and the disposable HA instance have upgraded. The existing V2 dashboard remains unchanged.
+[v0.1.0-beta.10](https://github.com/jmhjr/HomeCircle/releases/tag/v0.1.0-beta.10) is a public experimental prerelease. The separate production HomeCircle beta test dashboard and the disposable HA instance have upgraded.
 
 The release ZIP SHA-256 is `99c2478d2016aeaf212adc895b86f6dfde37e489d1861eea365f38be1aea4ab9`. The downloaded GitHub ZIP and inventory matched the locally validated files byte for byte. All 14 ZIP entries matched the inventory hashes and source files. The candidate passed 75 Python and 22 frontend tests, Ruff, Prettier, the public-file guard, and isolated Core install, upgrade, restart and removal checks. Claude Opus 5.5 returned PASS on a sanitized read-only source review; its archive-hash limitation was covered by the independent local hash check. See the [candidate record](BETA10-CANDIDATE-VALIDATION.md) for details.
 

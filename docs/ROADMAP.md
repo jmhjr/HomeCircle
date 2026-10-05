@@ -38,10 +38,9 @@ Implementation and precise validation scope are in [frontend setup](FRONTEND.md)
 - Audit source, generated bundle, archive and history for private data; include required licenses.
 - Confirm privacy/network disclosure and optional feature failure behavior, including direct Life360's real-account failure and recovery if that feature ships in stable V0.1.
 - Observe a complete real departure and return on selected sources, genuine location-report freshness, and background iPhone behavior while away from the local network. Decide and validate the supported HA Core version range.
-- User accepts replacement separately; no automatic production V2 migration.
 - Tag `v0.1.0` and create corresponding GitHub release only after these gates pass.
 
-As of beta 16, the intended core setup, normalization, dashboard, and optional Life360 adapter are implemented and the published package has passed HACS and physical-display checks in their documented scopes. A full real departure/return timeline, background iPhone updates away from the local network, sustained availability, unattended provider failure/recovery, and a supported Core version decision remain open. See [stable scope audit](STABLE-SCOPE-AUDIT.md) and [current release readiness](CURRENT-RELEASE-READINESS.md). No stable tag or V2 migration is approved.
+As of beta 16, the intended core setup, normalization, dashboard, and optional Life360 adapter are implemented and the published package has passed HACS and physical-display checks in their documented scopes. A full real departure/return timeline, background iPhone updates away from the local network, sustained availability, unattended provider failure/recovery, and a supported Core version decision remain open. See [stable scope audit](STABLE-SCOPE-AUDIT.md) and [current release readiness](CURRENT-RELEASE-READINESS.md). No stable tag is approved.
 
 ## Later milestones
 

@@ -1,6 +1,6 @@
 # Beta 9 validation — 2026-10-02
 
-Version `0.1.0-beta.9` is a published experimental prerelease. Single and grouped map markers have a pointed tip anchored at the tracked location, with each avatar above that point. The map reserves room above markers and beside zoom controls, including on narrow layouts. This changes the HomeCircle map card only; no tracking source, person selection, presence calculation, or existing V2 dashboard is changed.
+Version `0.1.0-beta.9` is a published experimental prerelease. Single and grouped map markers have a pointed tip anchored at the tracked location, with each avatar above that point. The map reserves room above markers and beside zoom controls, including on narrow layouts. This changes the HomeCircle map card only; no tracking source, person selection, or presence calculation is changed.
 
 ## Checks completed
 
@@ -14,6 +14,6 @@ Version `0.1.0-beta.9` is a published experimental prerelease. Single and groupe
 
 - The [beta 9 prerelease](https://github.com/jmhjr/HomeCircle/releases/tag/v0.1.0-beta.9) is tagged at commit `8c1c0ee`. Unauthenticated downloads of `homecircle.zip` and `inventory.json` matched the validated local files byte for byte.
 - The real-source disposable instance upgraded from beta 8 to beta 9 through HACS and restarted. All installed package files and the served card matched the published ZIP; HACS reported beta 9. The three saved members, selections, and owned dashboard resource ID survived. Its authenticated browser showed the group and single Ruby pins, grouped choices, Ruby focus, and Everyone reset.
-- The separate HomeCircle beta installation on production HA upgraded through HACS and restarted. Its authenticated browser showed Jim, Emma, Nikki, Ella, and Ruby, with a family group pin and a separate Ella pin. Ruby focus and Everyone reset passed. The user refreshed the physical DAKboard and confirmed both pointed pins and both touch actions. The V2 dashboard was unchanged.
+- The separate HomeCircle beta installation on production HA upgraded through HACS and restarted. Its authenticated browser showed Jim, Emma, Nikki, Ella, and Ruby, with a family group pin and a separate Ella pin. Ruby focus and Everyone reset passed. The user refreshed the physical DAKboard and confirmed both pointed pins and both touch actions.
 
 This prerelease does not establish stable-release readiness or behavior across all tracking sources and displays. The remaining gates are listed in [current release readiness](CURRENT-RELEASE-READINESS.md).
