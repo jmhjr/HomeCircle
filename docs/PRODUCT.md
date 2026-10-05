@@ -21,6 +21,8 @@ Pets, optional direct Life360 trackers, source labels, battery, report times, an
 
 Additional built in tracker providers, address enrichment, drive time/ETA, weather/radar, history, more map-provider choices, and distance-apart summaries follow in separate milestones. Beta 16 already includes pet onboarding and a kiosk view; their validated scope is recorded in the beta 16 reports.
 
+Planned card polish replaces the visible Home, Away, Driving, and Unavailable words on person cards with accessible status icons. Planned location identification shows a configured place name or, when enabled and available, a street and city label consistently on each person's card and map label. Missing or stale location evidence must remain clear. See the [roadmap](ROADMAP.md) for acceptance details and the pending lookup privacy decision.
+
 ## Experience and success
 
 A household with existing HA people should finish core setup without editing YAML or supplying provider credentials. A non-GPS tracker still yields presence, with an honest unavailable map position. OpenStreetMap street tiles are the default for new cards and send viewed map areas to the tile service; the editor offers a private background. HomeCircle does not rewrite HA zones or remove existing cards.
