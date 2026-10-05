@@ -339,6 +339,7 @@ def test_portraits_use_ha_or_life360_images_only():
 async def test_owned_resources_reload_unload_and_preserve_others(hass, household):
     entry = await setup(hass, household)
     resources = hass.data[LOVELACE_DATA].resources
+    assert frontend.resource_url().startswith(f"{frontend.URL}?v={frontend.VERSION}&asset=")
     unrelated = await resources.async_create_item(
         {"url": "/local/example-card.js", "res_type": "module"}
     )
@@ -350,6 +351,14 @@ async def test_owned_resources_reload_unload_and_preserve_others(hass, household
             if item["url"].startswith(frontend.URL)
         ]
         assert len(ours) == 1
+        assert ours[0]["url"] == frontend.resource_url()
+    await resources.async_update_item(
+        ours[0]["id"], {"url": f"{frontend.URL}?v=0.1.0-beta.15", "res_type": "module"}
+    )
+    await frontend.async_register(hass)
+    assert next(
+        item for item in resources.async_items() if item["id"] == ours[0]["id"]
+    )["url"] == frontend.resource_url()
     assert await hass.config_entries.async_reload(entry.entry_id)
     ours = [
         item for item in resources.async_items() if item["url"].startswith(frontend.URL)

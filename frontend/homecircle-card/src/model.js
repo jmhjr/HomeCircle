@@ -39,7 +39,7 @@ export function selection(members, mode, focusIds) {
     (member) =>
       member.focusable &&
       member.location &&
-      member.map_visible !== false &&
+      (member.map_visible !== false || mode !== "overview") &&
       listed.has(member.id),
   );
 }

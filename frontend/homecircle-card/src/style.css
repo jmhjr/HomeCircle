@@ -25,6 +25,31 @@ ha-card {
   display: flex;
   flex-direction: column;
 }
+:host([fill-screen]:not([kiosk])) ha-card {
+  min-height: 0;
+}
+:host(:not([kiosk])) .members {
+  flex: 0 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  align-content: start;
+}
+:host(:not([kiosk]):not([fill-screen])) .members {
+  max-height: clamp(180px, 36dvh, 360px);
+}
+@media (max-height: 700px) {
+  :host([fill-screen]:not([kiosk])) ha-card {
+    height: auto;
+    min-height: var(--homecircle-screen-height, 100dvh);
+  }
+  :host([fill-screen]:not([kiosk])) .map-wrap {
+    flex: none;
+  }
+  :host([fill-screen]:not([kiosk])) .members {
+    max-height: clamp(180px, 36dvh, 360px);
+  }
+}
 :host([kiosk]) {
   position: fixed;
   inset: 0;
@@ -353,6 +378,7 @@ button[aria-pressed="true"] {
 .members {
   padding: 4px 18px 18px;
   display: grid;
+  grid-auto-rows: max-content;
   gap: 8px;
 }
 .member {
