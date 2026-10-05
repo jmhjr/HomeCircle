@@ -32,6 +32,8 @@ The bootstrap initializes local `main`, enables the hook, and leaves files uncom
 
 Use semantic tags `vMAJOR.MINOR.PATCH`, beginning with `v0.1.0` after its release gates pass. Use prerelease tags such as `v0.1.0-beta.1` for tested prereleases. Keep manifest version (without the `v`) and release notes aligned. HACS release distribution also needs an actual GitHub release, not merely a Git tag.
 
+Before creating a prerelease tag, merge the version's README, changelog, setup wording, and validation notes into `main`. HACS can display README content from the tagged snapshot, so a documentation update made after tagging may leave older version text on its repository page. Attach the tested installable ZIP to the GitHub prerelease, download that asset back, and compare its checksum with the tested package. Then select the release through HACS in a disposable Home Assistant instance, restart, and verify the loaded version, saved configuration, and card resource URL.
+
 ## Packaging and checks
 
 Build the card into the integration directory; implement resource registration and a visual editor. Complete the existing development manifest with the selected public identity. English translations are included. Run full HACS and HA manifest validation at the release gate. Verify install/restart/upgrade/removal in the test instance; preserve unrelated dashboard resources. Audit generated files before release because build output is ignored during development.
