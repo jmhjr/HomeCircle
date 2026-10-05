@@ -23,6 +23,8 @@ Additional built in tracker providers, address enrichment, drive time/ETA, weath
 
 Planned card polish replaces the visible Home, Away, Driving, and Unavailable words on person cards with accessible status icons. Planned location identification shows a configured place name or, when enabled and available, a street and city label consistently on each person's card and map label. Missing or stale location evidence must remain clear. See the [roadmap](ROADMAP.md) for acceptance details and the pending lookup privacy decision.
 
+Planned interaction polish lets a long press on a person card open that person's settings over the dashboard, with equivalent keyboard and mouse access. Future traffic-aware routes and radar overlays remain optional; the [provider shortlist](FUTURE-MAP-SERVICES.md) records current free allowances and limitations without committing the product to a service.
+
 ## Experience and success
 
 A household with existing HA people should finish core setup without editing YAML or supplying provider credentials. A non-GPS tracker still yields presence, with an honest unavailable map position. OpenStreetMap street tiles are the default for new cards and send viewed map areas to the tile service; the editor offers a private background. HomeCircle does not rewrite HA zones or remove existing cards.
