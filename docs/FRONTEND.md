@@ -1,26 +1,25 @@
 # Card and frontend interface
 
-The current experimental prerelease is beta 12. Start with the [complete setup guide](SETUP.md). See [ADR-002](adr/ADR-002-map-and-frontend.md) for library, licensing, network and authorization decisions.
+The current experimental prerelease is beta 16. Start with the [complete setup guide](SETUP.md). See [ADR-002](adr/ADR-002-map-and-frontend.md) for library, licensing, network and authorization decisions.
 
 ## UI-only setup
 
-1. In the disposable HA instance, add HomeCircle in Settings → Devices & services. Select existing people, sources, primary house and additional residences.
-2. Settings → Dashboards → Add dashboard → New dashboard from scratch. Supply a title and create it.
-3. Open the dashboard, choose Edit dashboard → Add card → Browse all cards → HomeCircle.
-4. Use the visual editor for title, visible members and map background; save and choose Done. No provider account, map key, resource YAML or card YAML is required.
+1. In the disposable HA instance, add HomeCircle in Settings → Devices & services. Select or create HA People, assign their trackers, and choose the primary house and additional places.
+2. First setup creates a HomeCircle dashboard and card if none exists. Open it from the sidebar. If the card does not appear immediately after resource registration, refresh the browser once.
+3. To add another card, choose Edit dashboard → Add card → HomeCircle. Use the visual editor for title, visible members and map background; save and choose Done. No provider account, map key, resource YAML or card YAML is required for the core path.
 
-The tested automatic resource path is HA's storage mode. Existing YAML resource collections are preserved and are not covered by UI-only onboarding. A YAML-managed resource collection must add the module URL `/homecircle_static/homecircle-card.js?v=0.1.0-beta.12` for the current published release through its own configuration; use the installed version in that URL after an upgrade. Release ZIPs include the built card; source checkouts require a frontend build.
+The tested automatic resource path is HA's storage mode. Existing YAML resource collections are preserved and are not covered by UI-only onboarding. A YAML-managed resource collection must add the module URL `/homecircle_static/homecircle-card.js?v=0.1.0-beta.16` through its own configuration and update the version after an upgrade. Release ZIPs include the built card; source checkouts require a frontend build.
 
 ## Display and interaction
 
-The card is dark, responsive and uses initials rather than private photos. Every member has Home, Away, Driving or Unavailable status; counts use the same normalized records. A locationless Home member still counts. A member at another assigned residence counts Home while the Home map selection focuses only on the primary house. Everyone restores the complete usable-location subset.
+The card is dark and responsive. It uses an HA-served or allowlisted Life360 portrait when available and initials otherwise. Every member has Home, Away, Driving or Unavailable status; counts use the same normalized records. A locationless Home member still counts. A member at another assigned residence counts Home while the Home map selection focuses only on the primary house. Everyone restores usable locations except members whose Show on map setting is off; selecting one of those members or a status category can still show their position.
 
-Select member cards or map markers to focus. Markers whose screen positions overlap form a numbered group; activate it to choose an individual. All controls use native buttons, visible focus styling and keyboard activation. Each card owns its own focus and map. The visual editor can hide members from an individual card and its counts, without changing backend selections or permissions.
+Select member cards or map markers to focus. Markers whose screen positions overlap form a portrait or initials group; activate it to choose an individual. Controls use native buttons, visible focus styling and keyboard activation. Each card owns its own focus and map. The visual editor can hide members from an individual card and its counts, without changing backend selections or permissions.
 
 Beta 6 adds an optional **Fill wall display height** setting for a dedicated full-width panel view. It measures the remaining browser height below the card and lets the map expand into that space. Ordinary cards keep their previous fixed map height when the setting is off.
 On a full-height card, **Kiosk view** covers the browser viewport and hides the HA sidebar and title bar in that browser session; **Exit kiosk** restores the ordinary dashboard layout. The URL records the kiosk choice so refresh retains it. Use a dedicated view with one HomeCircle card so other cards do not sit behind the kiosk overlay. The option changes presentation only and does not change HA permissions.
 
-The default background makes no tile requests. Optional OSM tiles are disclosed in the editor and have visible attribution. Network failure retains presence and markers. There is no geocoding, routing, history, satellite view, weather, provider refresh or photo fetching.
+New cards use OpenStreetMap street tiles by default, with disclosure in the editor and visible attribution. The Private background makes no external tile requests. Tile failure retains presence and markers. The card has no geocoding, routing, history, satellite view or weather. A separately enabled built in provider can refresh its own HA trackers; the card does not refresh arbitrary providers. Allowlisted Life360 portraits may load from Life360 image hosts when available.
 
 ## Authenticated data contract
 
@@ -33,6 +32,8 @@ In beta 11, the snapshot also supplies a short, allowlisted tracker connection s
 Each connected card requests a current snapshot every 15 seconds. Requests time out after 10 seconds, clearing stale display data. Reconnection requests new data. Disconnect/unload clears retained current snapshots; late responses are discarded. No persistent browser storage is used. Unknown GPS report time is labelled explicitly, independently of HA observation times.
 
 Beta 6 also shows the HA source-state update age when no valid location-report timestamp is available. It labels that age as an HA state update and keeps the location report time unknown. Attribute-only state updates and delayed phone uploads mean the HA time cannot prove when a GPS fix was obtained.
+
+Beta 16 identifies the active location source by its tracker or HA Person name and, when useful, its registered integration. Its member list scrolls independently while the map remains visible. An administrator's cog opens the task-based HomeCircle Options flow over the dashboard; kiosk mode hides that cog.
 
 ## Resource ownership
 

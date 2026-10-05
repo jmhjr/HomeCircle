@@ -32,7 +32,7 @@ Subscribe to relevant HA state changes. Unsubscribe on unload and rebuild mappin
 
 | Field | Meaning |
 |---|---|
-| id, display_name, kind | Local member identity; person first, pet later |
+| id, display_name, kind | Local member identity; new people and pets use HA Person records |
 | person_entity, tracker_entity | Explicit runtime selection; never actual household IDs in source |
 | presence | `home`, `away`, `driving`, or `unavailable` |
 | residence, place, primary_home | Separate residence classification and displayed place |
@@ -52,7 +52,7 @@ Classification follows unavailable first, then supported driving evidence, then 
 
 One development repository, one HACS **Integration** package. Build the card from `frontend/homecircle-card/` into a packaged `custom_components/homecircle/frontend/` directory. The integration must serve/register its resource idempotently and make the card available to the visual card picker/editor. Do not assume HACS automatically installs a separate Dashboard artifact from the same integration repository. Generated output and owned resource registration are implemented; HACS upgrade/removal remain release gates.
 
-Milestone 1 includes a local development manifest, config/options/reconfigure flows, and English translations. Public documentation/issue URLs and code owners remain unset until the repository identity is supplied; the manifest is not yet release-complete.
+Milestone 1 began with a local development manifest, config/options/reconfigure flows, and English translations. Public documentation and issue URLs, code owner, and HACS release metadata are now set for the beta releases. Compatibility and field acceptance for a stable release remain separate gates.
 
 ## Data and network
 
@@ -74,7 +74,7 @@ A single household config entry stores `people`, `primary_home`, `places`, and a
 
 Setup saves one complete snapshot in entry data. Options saves a complete override in entry options, and `OptionsFlowWithReload` reloads after a successful change. Reconfigure reads the effective snapshot, replaces entry data, clears the override and reloads. In-progress drafts never mutate the entry, so Cancel is atomic. Final confirmation revalidates all selected entities. Lists can be emptied to remove mappings; removing a person removes their mappings from the effective configuration.
 
-Discovery uses HA's public `entities_in_person` helper for configured trackers and the person state's `source` attribute for the active tracker. Suggestions are displayed separately and must be confirmed. Empty trackers means person-only operation. No entity-name matching, private person storage access, source reassignment or provider refresh occurs. Unavailable but registered/enabled entities can be selected; wrong domains, missing/unregistered and disabled entities are rejected.
+Discovery uses HA's public `entities_in_person` helper for configured trackers and the person state's `source` attribute for the active tracker. Suggestions are displayed separately and must be confirmed. Empty trackers means person-only operation. No entity-name matching, private person storage access or provider refresh occurs. New tracker assignment can add an explicit link to the selected editable HA Person on final save; it does not change that Person's active-source priority. Unavailable but registered/enabled entities can be selected; wrong domains, missing/unregistered and disabled entities are rejected.
 
 2026-10-04 setup revision: New people and pet members start with an HA Person. The flow can create a storage-backed Person, then has a separate tracker assignment step before member settings. A new tracker link is staged in the HomeCircle draft and added to the selected editable HA Person only on final save. Existing tracker-only members remain readable and have a conversion path that preserves their member settings. Creating a Person itself is an HA side effect that survives cancel, like creating a zone. A tracker already linked to another Person is rejected. Older tracker-only lists are shown only while saved legacy members remain; new setup does not offer those lists.
 

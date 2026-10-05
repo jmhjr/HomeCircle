@@ -4,6 +4,8 @@
 |---|---|---|
 | [ADR-001](adr/ADR-001-provider-independence.md) | Accepted | Standard HA entities define the location-provider boundary |
 
+ADR-001's 2026-10-04 amendment records the approved optional direct Life360 adapter. It does not make a provider account necessary for core HomeCircle setup.
+
 ## Bootstrap conventions
 
 - HomeCircle is the development name; public naming clearance remains open.

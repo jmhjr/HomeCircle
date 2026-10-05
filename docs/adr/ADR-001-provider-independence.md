@@ -12,6 +12,10 @@ HomeCircle consumes standard HA `person` and `device_tracker` entities, configur
 
 No required Life360 integration, credential/token field, direct API client, bundled provider integration, provider-specific refresh loop, or account onboarding is permitted in HomeCircle core. Existing provider-specific raw units and report fields are reference details, not a universal data contract. Any future optional adapter must not be necessary for core presence and requires a separate decision.
 
+## 2026-10-04 optional-provider amendment
+
+The user approved an optional direct Life360 connection, implemented in beta 11 and retained in beta 16. It creates ordinary HA `device_tracker` entities behind the same person/tracker selection and normalization boundary. The `life360` client is a package dependency, but HomeCircle makes no provider connection unless the user enables and verifies an account. Households using existing HA trackers still require no Life360 credentials. The shared provider contract separates credentials, entity ownership, polling, health and reauthentication so future providers can be added independently. The original prohibition above continues to apply to **required core behavior**; the optional adapter is the approved exception. See [architecture](../ARCHITECTURE.md) and the [provider issue workflow](../TRACKER-PROVIDER-ISSUES.md).
+
 ## Consequences
 
 Companion and other HA sources can work without changing product identity. Device capabilities and update frequency vary; driving, battery, report time and address may be absent. Normalize missing data explicitly, preserve HA presence semantics and source provenance, and never claim continuous tracking. Extra map/routing/weather services require independent opt-in and privacy disclosures.

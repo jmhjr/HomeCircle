@@ -3,7 +3,7 @@
 ## Identity and distribution
 
 Maintainer: `@jmhjr`. Development repository: https://github.com/jmhjr/HomeCircle (public experimental development repository).
-Manifest documentation and issue URLs target this repository. The current experimental prerelease is `0.1.0-beta.6`. No stable release or production rollout is approved. This document retains dated earlier checkpoints; use [current release readiness](CURRENT-RELEASE-READINESS.md) for the current gate status and [beta 5 validation](BETA5-VALIDATION.md) for the published package.
+Manifest documentation and issue URLs target this repository. This document retains dated early checkpoints through beta 6; the current experimental prerelease and gate status are in [current release readiness](CURRENT-RELEASE-READINESS.md) and the [stable scope audit](STABLE-SCOPE-AUDIT.md). No stable release or V2 migration is approved.
 
 HACS distribution is configured for `homecircle.zip`, with default-branch downloads hidden because generated frontend files are deliberately untracked. The ZIP contains integration files at its root, including the compiled frontend, Leaflet license and project MIT license. `scripts/build_release.py` rebuilds from the npm lockfile and writes a deterministic archive plus per-file SHA256 inventory under ignored `release/`.
 

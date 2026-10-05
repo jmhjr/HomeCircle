@@ -2,13 +2,13 @@
 
 ## Current state
 
-Milestones 1–3 implement selection flows, normalization, household counts/focus, an authenticated snapshot interface, and the initial card/editor. Use a disposable HA instance only. Public manifest URLs/codeowners are pending; `hacs.json` is not evidence of HACS validation. Do not install into production.
+Beta 16 implements selection flows, normalization, household counts/focus, an authenticated snapshot interface, an automatic first dashboard, and the card/editor. Public manifest metadata, published HACS installation, and the separate production beta-test installation are validated in their release records. Keep development and destructive lifecycle checks in disposable HA instances; the existing production V2 dashboard remains unchanged. See [stable scope audit](STABLE-SCOPE-AUDIT.md) before preparing `v0.1.0`.
 
 ## Work sequence
 
 Read PRODUCT, ADR-001, feature inventory and PRIVACY first. Implement one roadmap milestone per focused branch. Use a disposable HA instance with synthetic entities and preserve the reference source. No credentials, family entities, photos or raw snapshot files belong in fixtures.
 
-Use Python 3.14.2+ with pinned Home Assistant Core 2026.9.4 and pytest-homeassistant-custom-component 0.13.367 from `requirements-test.txt`. This single version is the tested development target, not a broad compatibility claim. The frontend uses pinned Leaflet/esbuild and native custom elements. Release archive/HACS validation remains future work. The bootstrap privacy checker needs Python 3.10+ and Git. On a fresh clone, enable the local guard:
+Use Python 3.14.2+ with pinned Home Assistant Core 2026.9.4 and pytest-homeassistant-custom-component 0.13.367 from `requirements-test.txt`. This single version is the tested development target, not a broad compatibility claim. The frontend uses pinned Leaflet/esbuild and native custom elements. Beta release archive and HACS validation are recorded in the versioned reports; stable release validation remains open. The bootstrap privacy checker needs Python 3.10+ and Git. On a fresh clone, enable the local guard:
 
 ```sh
 git config core.hooksPath .githooks
@@ -19,7 +19,7 @@ If the system Git launcher is blocked by Xcode setup on this machine, the instal
 
 ## Git strategy
 
-`main` is the stable integration branch. Use short-lived branches such as `feature/entity-selection`, `feature/normalized-presence`, and `fix/missing-location`. Review a focused diff and required checks before merging; avoid long-lived release/develop branches. Keep a clear changelog under Unreleased.
+`main` is the integration branch; no stable version has been released. Use short-lived branches such as `feature/entity-selection`, `feature/normalized-presence`, and `fix/missing-location`. Review a focused diff and required checks before merging; avoid long-lived release/develop branches. Keep a clear changelog under Unreleased.
 
 ```sh
 git switch -c feature/entity-selection
@@ -28,7 +28,7 @@ git add <reviewed-files>
 git commit -m "Add person selection flow"
 ```
 
-The bootstrap initializes local `main`, enables the hook, and leaves files uncommitted for review. It creates no remote, commit, deployment, release or tag. Make the first commit after review; do not stage raw reference files.
+The original bootstrap created no remote, deployment, release or tag. The current repository has a public remote and beta releases; do not stage raw reference files.
 
 Use semantic tags `vMAJOR.MINOR.PATCH`, beginning with `v0.1.0` after its release gates pass. Use prerelease tags such as `v0.1.0-beta.1` for tested prereleases. Keep manifest version (without the `v`) and release notes aligned. HACS release distribution also needs an actual GitHub release, not merely a Git tag.
 
@@ -36,7 +36,7 @@ Before creating a prerelease tag, merge the version's README, changelog, setup w
 
 ## Packaging and checks
 
-Build the card into the integration directory; implement resource registration and a visual editor. Complete the existing development manifest with the selected public identity. English translations are included. Run full HACS and HA manifest validation at the release gate. Verify install/restart/upgrade/removal in the test instance; preserve unrelated dashboard resources. Audit generated files before release because build output is ignored during development.
+Build the card into the integration directory. Resource registration, automatic first dashboard, visual editor, public manifest identity, and English translations are implemented. Run full HACS and HA manifest validation again at the stable release gate. Verify install/restart/upgrade/removal in a test instance; preserve unrelated dashboard resources. Audit generated files before release because build output is ignored during development.
 
 Acceptance cases are in `tests/README.md`. A source check is not a physical TouchHub test. Record desktop browser, test HA instance, and physical device evidence separately. Production replacement requires a separate deliberate rollout with a backup and rollback plan.
 
