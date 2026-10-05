@@ -45,3 +45,8 @@ As of beta 16, the intended core setup, normalization, dashboard, and optional L
 ## Later milestones
 
 Beta 11 added tracker-only pet setup, optional direct Life360 tracking, and a shared provider contract; beta 13 then made HA Person records mandatory for newly added people and pets while preserving older tracker-only members. Beta 16 includes a kiosk view and physical DAKboard acceptance for its tested layout. Future candidates: address display, driving estimates, a local distance-apart summary, additional built in tracker providers, history, traffic, weather/radar, and broader landscape polish. Each new provider needs separate credentials, setup, ownership, polling, failure handling, and real-account acceptance. Existing HA tracker selection remains available. These are planning buckets, not V0.1 stable prerequisites.
+
+### Member-card and map presentation
+
+- Replace the visible Home, Away, Driving, and Unavailable words on person cards with distinct status icons. Keep the full status in each card's accessible name and provide a readable explanation on hover/focus where practical; meaning must not rely on color alone. Preserve the current state and freshness rules.
+- Show the same location identification on person cards and map labels: prefer a configured named residence or place, then a useful street and city label for a valid reported position when an address lookup is enabled. Use one consistent label for the same member on both surfaces. Keep unknown or unavailable locations explicit, avoid identifying a stale position as current, and do not show raw coordinates as a fallback. Decide lookup provider, cost, caching, and privacy controls before implementation.
