@@ -703,7 +703,11 @@ async def test_add_hide_and_remove_one_tracker_without_reconfirming_household(
         result["flow_id"], {"trackers": [tracker], "show_on_map": False}
     )
     assert result["step_id"] == "confirm"
-    assert "Map marker: hidden" in result["description_placeholders"]["members"]
+    assert (
+        "Everyone map: marker hidden; selecting this member or a status category "
+        "still shows their position"
+        in result["description_placeholders"]["members"]
+    )
     await configure_empty(options, result)
     await hass.async_block_till_done()
     assert all(

@@ -394,7 +394,11 @@ def review_summary(hass, draft: dict[str, Any]) -> dict[str, str]:
                 f"away {review_duration(member['pet_away_minutes'])}"
             )
         if member.get(CONF_SHOW_ON_MAP) is False:
-            lines.append("- Map marker: hidden; member card and presence count remain")
+            lines.append(
+                "- Everyone map: marker hidden; selecting this member or a status "
+                "category still shows their position. Member card and presence "
+                "count remain."
+            )
         current_member = current_members.get(person_id)
         if current_member and current_member.location is None:
             lines.append(f"- {position_guidance(hass, person_id, current_member)}")

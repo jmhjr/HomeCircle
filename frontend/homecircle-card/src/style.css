@@ -38,6 +38,18 @@ ha-card {
 :host(:not([kiosk]):not([fill-screen])) .members {
   max-height: clamp(180px, 36dvh, 360px);
 }
+@media (max-height: 700px) {
+  :host([fill-screen]:not([kiosk])) ha-card {
+    height: auto;
+    min-height: var(--homecircle-screen-height, 100dvh);
+  }
+  :host([fill-screen]:not([kiosk])) .map-wrap {
+    flex: none;
+  }
+  :host([fill-screen]:not([kiosk])) .members {
+    max-height: clamp(180px, 36dvh, 360px);
+  }
+}
 :host([kiosk]) {
   position: fixed;
   inset: 0;
