@@ -1,6 +1,7 @@
 """Synthetic sources, loaded ONLY by scripts/disposable_ha.py in temporary HA."""
 
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
+from homeassistant.util import dt as dt_util
 import voluptuous as vol
 
 
@@ -25,6 +26,16 @@ async def async_setup(hass, config):
         elif name == "away":
             state = "not_home"
             phone.update({ATTR_LATITUDE: 2.0, "in_zones": []})
+        elif name == "driving":
+            state = "driving"
+            phone.update(
+                {
+                    ATTR_LATITUDE: 3.0,
+                    "in_zones": [],
+                    "driving": True,
+                    "last_seen": dt_util.utcnow(),
+                }
+            )
         elif name == "unavailable":
             state = "unavailable"
         elif name == "overlap":
@@ -63,7 +74,7 @@ async def async_setup(hass, config):
         schema=vol.Schema(
             {
                 vol.Required("scenario"): vol.In(
-                    ["home", "residence", "away", "unavailable", "overlap"]
+                    ["home", "residence", "away", "driving", "unavailable", "overlap"]
                 )
             }
         ),

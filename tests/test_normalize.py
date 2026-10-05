@@ -298,6 +298,116 @@ def test_driving_evidence_precedence_and_aging(snapshot, seconds, presence, stat
         assert member(snapshot, NOW + timedelta(seconds=301)).presence == "home"
 
 
+@pytest.mark.parametrize(
+    ("report_age", "presence", "status"),
+    [
+        (0, "driving", "current"),
+        (301, "away", "last_reported"),
+        (None, "away", "unverified"),
+    ],
+)
+def test_selected_tracker_driving_flag_uses_its_report_time(
+    snapshot, report_age, presence, status
+):
+    _, states = snapshot
+    states[PERSON] = state(
+        PERSON,
+        "not_home",
+        source=GPS,
+        in_zones=[],
+        **{ATTR_LATITUDE: 0.0, ATTR_LONGITUDE: 0.0},
+    )
+    attributes = {
+        "source_type": "gps",
+        "driving": True,
+        ATTR_LATITUDE: 0.0,
+        ATTR_LONGITUDE: 0.0,
+    }
+    if report_age is not None:
+        attributes["last_seen"] = (NOW - timedelta(seconds=report_age)).isoformat()
+    states[GPS] = state(GPS, "not_home", **attributes)
+    current = member(snapshot)
+    assert current.presence == presence
+    assert current.driving.value is True
+    assert current.driving_status == status
+    assert current.driving.evidence.source_entity == GPS
+
+
+def test_selected_tracker_and_person_reporting_driving(snapshot):
+    """A provider driving state is an away state, not an unknown place."""
+    _, states = snapshot
+    states[PERSON] = state(
+        PERSON,
+        "driving",
+        source=GPS,
+        in_zones=[],
+        **{ATTR_LATITUDE: 0.0, ATTR_LONGITUDE: 0.0},
+    )
+    states[GPS] = state(
+        GPS,
+        "driving",
+        source_type="gps",
+        driving=True,
+        last_seen=NOW,
+        **{ATTR_LATITUDE: 0.0, ATTR_LONGITUDE: 0.0},
+    )
+    current = member(snapshot)
+    assert current.presence == "driving"
+    assert current.driving_status == "current"
+    assert current.driving.evidence.reported_at == NOW
+    assert "unresolved_place" not in current.issues
+
+
+def test_explicit_driving_sensor_overrides_tracker_flag(snapshot):
+    config, states = snapshot
+    config["members"][PERSON]["supporting"] = {
+        "driving": "binary_sensor.example_driving",
+        "driving_reported_at": "sensor.example_driving_report",
+    }
+    states["binary_sensor.example_driving"] = state(
+        "binary_sensor.example_driving", "off"
+    )
+    states["sensor.example_driving_report"] = state(
+        "sensor.example_driving_report", NOW.isoformat()
+    )
+    states[GPS] = state(
+        GPS,
+        "home",
+        source_type="gps",
+        driving=True,
+        last_seen=NOW.isoformat(),
+        **{ATTR_LATITUDE: 0.0, ATTR_LONGITUDE: 0.0},
+    )
+    current = member(snapshot)
+    assert current.presence == "home"
+    assert current.driving.value is False
+    assert current.driving.evidence.source_entity == "binary_sensor.example_driving"
+
+
+def test_tracker_false_driving_flag_is_not_overridden_by_speed(snapshot):
+    _, states = snapshot
+    states[PERSON] = state(
+        PERSON,
+        "not_home",
+        source=GPS,
+        in_zones=[],
+        **{ATTR_LATITUDE: 0.0, ATTR_LONGITUDE: 0.0},
+    )
+    states[GPS] = state(
+        GPS,
+        "not_home",
+        source_type="gps",
+        driving=False,
+        speed=35,
+        last_seen=NOW.isoformat(),
+        **{ATTR_LATITUDE: 0.0, ATTR_LONGITUDE: 0.0},
+    )
+    current = member(snapshot)
+    assert current.presence == "away"
+    assert current.driving.value is False
+    assert current.driving_status == "current"
+
+
 def test_optional_battery_zero_units_and_missing_data(snapshot):
     config, states = snapshot
     current = member(snapshot)
