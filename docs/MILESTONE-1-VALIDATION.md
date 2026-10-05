@@ -23,7 +23,7 @@ These checks establish selection/lifecycle behavior, not normalized household co
 
 The development manifest loads locally but has no public documentation URL, issue URL or code owner because no repository identity was supplied. No GitHub identity was invented. Full manifest/hassfest release validation and HACS installation/upgrade/removal are pending. No release, tag or production deployment is claimed.
 
-All repository files remain uncommitted on the unborn `feature/entity-selection` branch. Existing bootstrap files were preserved. Xcode settings, production HA, V2 dashboards and the private reference snapshot were not modified.
+All repository files remain uncommitted on the unborn `feature/entity-selection` branch. Existing bootstrap files were preserved. Xcode settings, production HA, and the private reference snapshot were not modified.
 
 ## Official API references
 

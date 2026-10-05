@@ -4,4 +4,4 @@
 
 After source integrations finished starting, the authenticated beta dashboard showed five map positions, Home 4 and Away 1, selected tracker battery values, Life360 report ages, and an explicit unknown report time for the phone source without a genuine report timestamp. Pet focus reduced the map to one position, Everyone restored five, and Home focus selected the four primary-house positions. Kiosk view filled the browser viewport, and Exit kiosk restored the normal Home Assistant page.
 
-The user refreshed the physical DAKboard and confirmed that five members, battery and report details, full-screen layout, member selection, and Everyone reset all passed. This physical check is separate from the authenticated browser verification. The frozen V2 dashboard was unchanged. Complete departure and return field tests remain open.
+The user refreshed the physical DAKboard and confirmed that five members, battery and report details, full-screen layout, member selection, and Everyone reset all passed. This physical check is separate from the authenticated browser verification. Complete departure and return field tests remain open.

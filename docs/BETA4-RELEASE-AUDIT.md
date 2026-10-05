@@ -35,4 +35,4 @@ The legacy timestamp/source pair and new `location_reports` map intentionally co
 
 ## Release decision
 
-Compatibility is verified against Core 2026.9.4, not other HA versions. A real non-admin account has not been checked for both allowed and denied household access in the UI. The public product name remains a release decision. Production V2 replacement requires separate user approval. These limits, the open field checks above, and the confirmed retry defect keep beta 4 experimental; a stable `v0.1.0` tag is not warranted yet.
+Compatibility is verified against Core 2026.9.4, not other HA versions. A real non-admin account has not been checked for both allowed and denied household access in the UI. The public product name remains a release decision. These limits, the open field checks above, and the confirmed retry defect keep beta 4 experimental; a stable `v0.1.0` tag is not warranted yet.

@@ -19,8 +19,8 @@ Pets, optional direct Life360 trackers, source labels, battery, report times, an
 
 ## Beyond V0.1
 
-Additional built in tracker providers, address enrichment, drive time/ETA, weather/radar, history, more map-provider choices, and distance-apart summaries follow in separate milestones. Beta 16 already includes pet onboarding and a kiosk view; their validated scope is recorded in the beta 16 reports. Preserve other reference behavior in the inventory until implemented and accepted.
+Additional built in tracker providers, address enrichment, drive time/ETA, weather/radar, history, more map-provider choices, and distance-apart summaries follow in separate milestones. Beta 16 already includes pet onboarding and a kiosk view; their validated scope is recorded in the beta 16 reports.
 
 ## Experience and success
 
-A household with existing HA people should finish core setup without editing YAML or supplying provider credentials. A non-GPS tracker still yields presence, with an honest unavailable map position. OpenStreetMap street tiles are the default for new cards and send viewed map areas to the tile service; the editor offers a private background. The reference remains usable until replacement is expressly selected. No automatic V2 migration, HA zone rewriting, or removal of existing cards is planned.
+A household with existing HA people should finish core setup without editing YAML or supplying provider credentials. A non-GPS tracker still yields presence, with an honest unavailable map position. OpenStreetMap street tiles are the default for new cards and send viewed map areas to the tile service; the editor offers a private background. HomeCircle does not rewrite HA zones or remove existing cards.

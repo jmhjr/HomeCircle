@@ -133,7 +133,7 @@ First experimental packaged prerelease for disposable HACS acceptance. Includes 
 - Reproducible disposable browser launcher; frontend missing-dependency and custom-component import-root issues resolved.
 
 ### Status at that checkpoint
-The card and authenticated frontend access were implemented. Packaged Core lifecycle validation passed; actual HACS acceptance and public release were still pending. Production V2 was unchanged.
+The card and authenticated frontend access were implemented. Packaged Core lifecycle validation passed; actual HACS acceptance and public release were still pending.
 
 ### Milestone 3 development — 0.0.3-dev1
 

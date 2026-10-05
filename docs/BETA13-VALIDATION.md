@@ -1,6 +1,6 @@
 # Beta 13 release validation
 
-HomeCircle `0.1.0-beta.13` is a published experimental prerelease. Its production installation uses the separate HomeCircle Beta Test dashboard; the frozen V2 dashboard is unchanged. Physical DAKboard acceptance remains open.
+HomeCircle `0.1.0-beta.13` is a published experimental prerelease. Its production installation uses the separate HomeCircle Beta Test dashboard. Physical DAKboard acceptance remains open.
 
 ## Candidate checks passed
 
@@ -22,4 +22,4 @@ HomeCircle `0.1.0-beta.13` is a published experimental prerelease. Its productio
 
 - Confirm the changed dashboard controls on the physical DAKboard before treating its wall display as accepted. Browser checks do not establish physical touch behavior.
 
-Real departure/return and unattended provider failure or credential-expiry checks remain outside this release's completed evidence. The frozen V2 dashboard is unchanged.
+Real departure/return and unattended provider failure or credential-expiry checks remain outside this release's completed evidence.
