@@ -1,11 +1,12 @@
 # Changelog
 
-## 0.1.0-beta.16 — candidate
+## 0.1.0-beta.16 — experimental prerelease
 
 - Keep the map visible while the member list scrolls inside a card outside kiosk mode, including full-screen cards.
 - Leave members with Show member on map off out of Everyone's map fit. Selecting their card or status category shows their position.
+- Preserve each member card's content height so details do not overlap while the list scrolls. Refresh the owned card resource URL whenever its bundle changes.
 
-## 0.1.0-beta.15 — candidate
+## 0.1.0-beta.15 — included in beta 16, not published separately
 
 - Use the selected GPS tracker's own driving flag when no separate driving sensor is configured. Require a fresh tracker location report before showing Driving; label an old positive flag as last reported. Preserve explicitly selected driving sensors and never infer driving from speed alone.
 - Recognize a provider's `driving` Person state as travel rather than an unknown place when no selected zone matches.
