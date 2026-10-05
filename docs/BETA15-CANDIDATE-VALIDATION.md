@@ -6,6 +6,8 @@ The setup and Options status-sensor descriptions both explain this fallback and 
 
 Read-only production inspection confirmed the selected GPS tracker can provide a fresh boolean driving flag while the HA Person and tracker states both read `driving`. Beta 14 displayed Away for that report. A regression test now reproduces the report shape with fictional entities and checks that beta 15 shows Driving without an unknown-place issue.
 
+In a separate disposable Home Assistant browser instance, the beta 15 integration created its own dashboard for a fictional Person and GPS tracker without a mapped driving sensor. The synthetic Driving scenario set the selected GPS tracker's boolean driving flag and current report time. The card showed Driving: 1, Home: 0, Away: 0, and a fresh reported time. Switching the same source to Away cleared Driving and showed Away: 1. This checks the rendered card and live HA state updates with fictional data; it does not substitute for a production or physical-display check.
+
 Candidate checks passed: 157 Python tests, 28 card tests, Ruff, the public-file guard, and `git diff --check`. The deterministic 21-file ZIP has SHA-256 `78b2167d8053fb77cf846d8f28638494f055d7973f90f9637fbf03eeb07f2bc6`. A disposable Home Assistant package lifecycle passed creation, upgrade, separate-process restart, removal, and post-removal resource checks.
 
 Production remains on beta 14. The provider has now produced a fresh positive report, but the beta 15 card has not yet been observed rendering that report in a live Home Assistant instance. Physical DAKboard acceptance is also pending.
