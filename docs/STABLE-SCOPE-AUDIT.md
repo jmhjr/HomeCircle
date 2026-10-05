@@ -14,7 +14,7 @@ This is a pre-release review, not approval to tag `v0.1.0`. It compares the inte
 | HACS package, setup, upgrade, restart, and normal removal | Manifest, `hacs.json`, release scripts; [beta 16 validation](BETA16-VALIDATION.md) and earlier [beta 4 removal check](BETA4-VALIDATION.md) | Implemented and checked in documented scopes; repeat full lifecycle for the stable candidate |
 | Authenticated access, privacy, licensing, and network disclosure | `api.py`, `frontend.py`, `diagnostics.py`, [privacy rules](PRIVACY.md), [map decision](adr/ADR-002-map-and-frontend.md) | Implemented for beta; repeat source, generated bundle, archive, history, and dependency/license review on the stable candidate |
 
-The source review found no V0.1 feature in the current product scope that is wholly absent from beta 16. The Python suite and 29 frontend tests passed during this audit. Automated checks and earlier field snapshots do not establish the remaining field behavior below.
+The source review found no feature in the V0.1 scope at the time of this audit that was wholly absent from beta 16. The subsequently requested HA Person source-conflict explanation is planned and not implemented in beta 16. The Python suite and 29 frontend tests passed during the original audit. Automated checks and earlier field snapshots do not establish the remaining field behavior below.
 
 ## Gates still open before a stable tag
 
