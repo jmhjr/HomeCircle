@@ -37,6 +37,7 @@ Implementation and precise validation scope are in [frontend setup](FRONTEND.md)
 - Run integration/unit/frontend checks plus current HACS validation and HA manifest validation.
 - Audit source, generated bundle, archive and history for private data; include required licenses.
 - Confirm privacy/network disclosure and optional feature failure behavior, including direct Life360's real-account failure and recovery if that feature ships in stable V0.1.
+- Detect when a linked tracker is making an HA Person appear Home while the chosen mobile tracker reports Away. Show the active Person source and an actionable, admin-only explanation during setup and settings; link to HA's Person configuration. Do not silently override the Person state or change its tracker associations. Accept multiple trackers when they agree, and verify this warning against the Friday-style conflict before closing the iPhone field test.
 - Observe a complete real departure and return on selected sources, genuine location-report freshness, and background iPhone behavior while away from the local network. Decide and validate the supported HA Core version range.
 - Tag `v0.1.0` and create corresponding GitHub release only after these gates pass.
 
@@ -47,6 +48,8 @@ As of beta 16, the intended core setup, normalization, dashboard, and optional L
 Beta 11 added tracker-only pet setup, optional direct Life360 tracking, and a shared provider contract; beta 13 then made HA Person records mandatory for newly added people and pets while preserving older tracker-only members. Beta 16 includes a kiosk view and physical DAKboard acceptance for its tested layout. Future candidates: address display, driving estimates, a local distance-apart summary, additional built in tracker providers, history, traffic, weather/radar, and broader landscape polish. Each new provider needs separate credentials, setup, ownership, polling, failure handling, and real-account acceptance. Existing HA tracker selection remains available. These are planning buckets, not V0.1 stable prerequisites.
 
 The [routes, traffic, and radar provider shortlist](FUTURE-MAP-SERVICES.md) records free allowances and license limits for future evaluation. No external service is selected yet.
+
+Optional alert setup should offer guided Home Assistant automation creation for arrivals, departures, stale or unavailable trackers, and low battery. The user chooses members, thresholds, and notification targets before saving. Use HA's existing automation and notification systems, avoid a separate HomeCircle alert service, and leave all alerts off until the user enables them.
 
 ### Member-card and map presentation
 

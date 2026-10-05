@@ -12,6 +12,7 @@ The core turns configured HA location entities into a coherent household view. A
 4. Normalize family member identity, presence, optional location, source, timestamp confidence, and optional battery/status data.
 5. Create a HomeCircle dashboard and card during first setup when none exists; also allow adding a card through the UI. The visual editor and resource registration require no manual YAML in a storage-mode dashboard.
 6. Provide member cards, a basic map, usable overlapping markers, category summaries, and member/category/overview focus in a readable portrait layout.
+7. Explain an HA Person source conflict when a linked tracker reports Home while the selected mobile tracker reports Away. Show the active source and a path to the HA Person settings without changing the Person or silently overriding HA's presence result. Multiple agreeing trackers remain valid.
 
 A member at their assigned dorm/second home counts as Home. The default At Home focus includes only members at the primary family house. An explicit future or V0.1 option may include all residences, but must not change the default. Apply the same classification to member labels and counts. Unavailable is separate from Away. Driving requires available evidence; it is not inferred from being Away.
 
@@ -24,6 +25,8 @@ Additional built in tracker providers, address enrichment, drive time/ETA, weath
 Planned card polish replaces the visible Home, Away, Driving, and Unavailable words on person cards with accessible status icons. Planned location identification shows a configured place name or, when enabled and available, a street and city label consistently on each person's card and map label. Missing or stale location evidence must remain clear. See the [roadmap](ROADMAP.md) for acceptance details and the pending lookup privacy decision.
 
 Planned interaction polish lets a long press on a person card open that person's settings over the dashboard, with equivalent keyboard and mouse access. Future traffic-aware routes and radar overlays remain optional; the [provider shortlist](FUTURE-MAP-SERVICES.md) records current free allowances and limitations without committing the product to a service.
+
+Optional alert setup can create user-approved HA automations for arrivals, departures, stale or unavailable trackers, and low battery. HomeCircle does not need a separate notification engine.
 
 ## Experience and success
 
