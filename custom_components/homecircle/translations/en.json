@@ -46,7 +46,7 @@
           "configure_reports": "Choose a genuine location report-time sensor separately for each selected source. Leave off if none is available.",
           "configure_sensors": "Choose optional battery, charging, speed and driving sensors on the next screen.",
           "configure_timing": "Only for pets. Keep the current timing when the defaults are right.",
-          "show_on_map": "Turn off to keep the member card and Home/Away count while hiding the map marker.",
+          "show_on_map": "Turn off to leave this member out of the Everyone map and its fit. Selecting the member or a status category still shows their map position.",
           "create_zone": "Create a Home Assistant zone on a map and select it for this member without losing the choices above."
         }
       },
@@ -122,7 +122,7 @@
           "configure_sensors": "Battery and charging are usually enough. Other optional device sensors are on the next screen.",
           "display_name": "Leave blank to use the tracker name. Useful when two collars have the same name.",
           "configure_timing": "Keep the default 24 h at home and 5 min away unless this pet needs different stale-location timing.",
-          "show_on_map": "Turn off to keep the member card and Home/Away count while hiding the map marker.",
+          "show_on_map": "Turn off to leave this member out of the Everyone map and its fit. Selecting the member or a status category still shows their map position.",
           "create_zone": "Create a Home Assistant zone on a map and select it for this member without losing the choices above."
         }
       },
@@ -171,7 +171,7 @@
           "additional_residences": "These zones also count as Home for this person. The Home map button still focuses the primary family home.",
           "configure_reports": "Choose a genuine report-time sensor for this tracker only if available.",
           "configure_sensors": "Choose optional battery, charging, speed and driving sensors on the next screen.",
-          "show_on_map": "Turn off to keep the member card and Home/Away count while hiding the map marker.",
+          "show_on_map": "Turn off to leave this member out of the Everyone map and its fit. Selecting the member or a status category still shows their map position.",
           "create_zone": "Create a Home Assistant zone on a map and select it for this member without losing the choices above."
         }
       },
@@ -362,7 +362,7 @@
           "configure_reports": "Choose a genuine location report-time sensor separately for each selected source. Leave off if none is available.",
           "configure_sensors": "Choose optional battery, charging, speed and driving sensors on the next screen.",
           "configure_timing": "Only for pets. Keep the current timing when the defaults are right.",
-          "show_on_map": "Turn off to keep the member card and Home/Away count while hiding the map marker.",
+          "show_on_map": "Turn off to leave this member out of the Everyone map and its fit. Selecting the member or a status category still shows their map position.",
           "create_zone": "Create a Home Assistant zone on a map and select it for this member without losing the choices above."
         }
       },
@@ -438,7 +438,7 @@
           "configure_sensors": "Battery and charging are usually enough. Other optional device sensors are on the next screen.",
           "display_name": "Leave blank to use the tracker name. Useful when two collars have the same name.",
           "configure_timing": "Keep the default 24 h at home and 5 min away unless this pet needs different stale-location timing.",
-          "show_on_map": "Turn off to keep the member card and Home/Away count while hiding the map marker.",
+          "show_on_map": "Turn off to leave this member out of the Everyone map and its fit. Selecting the member or a status category still shows their map position.",
           "create_zone": "Create a Home Assistant zone on a map and select it for this member without losing the choices above."
         }
       },
@@ -473,7 +473,7 @@
           "additional_residences": "These zones also count as Home for this person. The Home map button still focuses the primary family home.",
           "configure_reports": "Choose a genuine report-time sensor for this tracker only if available.",
           "configure_sensors": "Choose optional battery, charging, speed and driving sensors on the next screen.",
-          "show_on_map": "Turn off to keep the member card and Home/Away count while hiding the map marker.",
+          "show_on_map": "Turn off to leave this member out of the Everyone map and its fit. Selecting the member or a status category still shows their map position.",
           "create_zone": "Create a Home Assistant zone on a map and select it for this member without losing the choices above."
         }
       },

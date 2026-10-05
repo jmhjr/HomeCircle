@@ -67,7 +67,7 @@ test("hidden members stay out of map and member selection", () => {
     ["visible"],
   );
 });
-test("map-hidden members remain listed while their markers stay hidden", () => {
+test("map-hidden members are omitted from Everyone but can be focused", () => {
   const members = visibleMembers({
     members: [
       member("visible"),
@@ -84,7 +84,16 @@ test("map-hidden members remain listed while their markers stay hidden", () => {
     ),
     ["visible"],
   );
-  assert.deepEqual(selection(members, "map-hidden", {}), []);
+  assert.deepEqual(
+    selection(members, "home", { home: ["visible", "map-hidden"] }).map(
+      (item) => item.id,
+    ),
+    ["visible", "map-hidden"],
+  );
+  assert.deepEqual(
+    selection(members, "map-hidden", {}).map((item) => item.id),
+    ["map-hidden"],
+  );
 });
 test("screen overlap groups remain individually selectable", () => {
   const members = [member("one"), member("two"), member("three")];

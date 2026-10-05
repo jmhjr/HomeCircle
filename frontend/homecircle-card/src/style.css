@@ -25,6 +25,19 @@ ha-card {
   display: flex;
   flex-direction: column;
 }
+:host([fill-screen]:not([kiosk])) ha-card {
+  min-height: 0;
+}
+:host(:not([kiosk])) .members {
+  flex: 0 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  align-content: start;
+}
+:host(:not([kiosk]):not([fill-screen])) .members {
+  max-height: clamp(180px, 36dvh, 360px);
+}
 :host([kiosk]) {
   position: fixed;
   inset: 0;

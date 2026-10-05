@@ -61,6 +61,56 @@ test("default card title follows the integration beta release", async () => {
   assert.equal(value.shadowRoot.querySelector("h2").textContent, "Family Map");
   value.remove();
 });
+test("selecting a map-hidden member focuses it and Everyone omits it", async () => {
+  const fictionalOrigin = 0;
+  const data = response();
+  const member = (id, mapVisible) => ({
+    id,
+    name: id,
+    kind: "person",
+    presence: "home",
+    primary_home: true,
+    place: null,
+    focusable: true,
+    map_visible: mapVisible,
+    location: {
+      latitude: fictionalOrigin,
+      longitude: fictionalOrigin,
+      evidence: {},
+    },
+    battery: null,
+    charging: null,
+    driving: { value: null, status: "unknown" },
+  });
+  data.members = [
+    member("person.example_visible", true),
+    member("person.example_hidden", false),
+  ];
+  data.focus_ids.overview = data.members.map((item) => item.id);
+  data.focus_ids.home = data.focus_ids.overview;
+  const value = card({
+    connection: {},
+    connected: true,
+    callWS: async () => data,
+  });
+  let selected;
+  value._updateMap = (points) => {
+    selected = points.map((item) => item.id);
+  };
+  await tick();
+  assert.deepEqual(selected, ["person.example_visible"]);
+  value.shadowRoot
+    .querySelector('[data-focus="person.example_hidden"]')
+    .click();
+  assert.deepEqual(selected, ["person.example_hidden"]);
+  assert.match(
+    value.shadowRoot.querySelector(".status").textContent,
+    /1 map position/,
+  );
+  value.shadowRoot.querySelector(".overview").click();
+  assert.deepEqual(selected, ["person.example_visible"]);
+  value.remove();
+});
 test("authorization rejection clears displayed snapshot and retained signatures", async () => {
   let reject = false;
   const value = card({
