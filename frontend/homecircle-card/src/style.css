@@ -378,6 +378,7 @@ button[aria-pressed="true"] {
 .members {
   padding: 4px 18px 18px;
   display: grid;
+  grid-auto-rows: max-content;
   gap: 8px;
 }
 .member {
