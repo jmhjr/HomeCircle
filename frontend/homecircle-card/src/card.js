@@ -706,11 +706,24 @@ class HomeCircleCard extends HTMLElement {
       unchanged: "Unchanged",
       waiting: "Waiting",
       source_changed: "Tracker changed",
+      ha_updated: "HA updated; GPS report unconfirmed",
+      unsupported: "Refresh unsupported",
+      disabled: "Requests disabled",
+      unavailable: "Unavailable",
+      send_failed: "Request failed",
+      cooldown: "Cooldown",
+      limited: "Daily limit reached",
+      busy: "Provider busy",
+      not_allowed: "Permission required",
     };
     for (const member of state?.members || []) {
       if (names.has(member.id))
         messages.push(
-          `${names.get(member.id)}: ${labels[member.status] || "Unchanged"}`,
+          `${names.get(member.id)}: ${labels[member.status] || "Unavailable"}${
+            member.trackers?.length > 1
+              ? ` (${member.trackers.map((tracker) => `${tracker.provider}: ${labels[tracker.status] || "Unavailable"}`).join("; ")})`
+              : ""
+          }`,
         );
     }
     this._familyFeedback.textContent = messages.join(" · ");

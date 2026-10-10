@@ -454,8 +454,9 @@ def review_summary(hass, draft: dict[str, Any], pending_links=None) -> dict[str,
         "primary_home": review_label(hass, draft[CONF_PRIMARY_HOME]),
         "places": (places or "None")
         + (
-            "\nFamily refresh: enabled using the existing external Life360 account. "
-            "This optional unofficial action requests the whole selected Circle."
+            "\nFamily refresh: enabled for explicitly assigned supported trackers. "
+            "Phone requests require the member opt-in; a complete Life360 Circle "
+            "may use the existing external account for an unofficial Circle request."
             if draft.get(CONF_FAMILY_REFRESH_ENABLED) is True
             else "\nFamily refresh: disabled."
         ),
