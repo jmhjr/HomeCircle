@@ -28,7 +28,7 @@ This consolidates the recent HomeCircle work and all current source changes sinc
 - The isolated packaged Core install, upgrade, restart, removal and post-removal restart checks passed, preserving unrelated resources.
 - All 25 integration archive files match the current live installation. The served card hash, healthy six-member snapshot, diagnostics and location-request fields were verified after the planned restart. The recenter icon refinement required no second restart; the subsequent refresh/activity patch uses a planned backend restart.
 - HomeCircle settings and unrelated dashboard resources were preserved. Request counters were not reset. The private field recorder retained its original end time and was given a new package/card baseline; restart and recording boundaries must be treated as gaps.
-- Earlier physical-display acceptance remains attached to the builds and behaviors recorded in [release readiness](CURRENT-RELEASE-READINESS.md). Automated checks and preview inspection do not claim physical acceptance of the latest patch.
+- The participant confirmed “All pass” on the physical DAKboard for the latest feedback/activity patch. Live Safari/API checks confirmed one family request, fixed completed outcomes, automatic clearing, and bounded activity with significant events retained. Earlier physical acceptance remains attached to its dated builds in [release readiness](CURRENT-RELEASE-READINESS.md). The iPhone-only trip remains open.
 
 Current archive SHA-256: `f37e304d85aad6e302b2d37e64e4d8f20d91bdacd2c1bd3db3df709887c36359`.
 
