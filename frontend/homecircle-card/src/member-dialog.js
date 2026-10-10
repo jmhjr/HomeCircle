@@ -233,7 +233,7 @@ function details(body, member, card) {
     element(
       "p",
       "detail-note",
-      "Observed by HomeCircle; gaps and restarts do not confirm a journey. Up to 100 events per person, kept for seven days. No coordinates or routes are stored.",
+      "Observed by HomeCircle; gaps and restarts do not confirm a journey. Up to 100 events per person, kept for seven days. Freshness changes are limited to 25 entries to preserve arrivals, departures and request results. No coordinates or routes are stored.",
     ),
   );
   const events = member.activity?.events || [];

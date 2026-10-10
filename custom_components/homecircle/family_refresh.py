@@ -17,6 +17,9 @@ from .const import CONF_MEMBERS, CONF_TRACKERS
 from .location_requests import MAX_REQUESTS, async_reserve_requests
 
 
+OBSERVATION_WINDOW = timedelta(minutes=2)
+FEEDBACK_RETENTION = timedelta(minutes=5)
+
 MANUAL_INTERVAL = timedelta(minutes=1)
 MANUAL_MAX_REQUESTS = MAX_REQUESTS
 
@@ -126,8 +129,54 @@ def report_time(runtime, member, source, now):
     ).reported_at
 
 
+def observe_family_refresh(runtime, now):
+    """Latch observed outcomes within the window, never attribute late reports."""
+    saved = getattr(runtime, "family_refresh", {})
+    if not saved:
+        return
+    completed = saved.get("completed_at")
+    if completed is not None:
+        if now >= completed + FEEDBACK_RETENTION:
+            runtime.family_refresh = {}
+        return
+    started = saved.get("started")
+    if started is None or saved.get("status") != "requested":
+        return
+    deadline = started + OBSERVATION_WINDOW
+    current = {m.id: m for m in runtime.household.members}
+    members = []
+    for target in saved.get("targets", []):
+        outcome = target.get("outcome", "waiting")
+        if now < deadline and outcome == "waiting":
+            member = current.get(target["id"])
+            selected = (
+                runtime.config.get(CONF_MEMBERS, {})
+                .get(target["id"], {})
+                .get(CONF_TRACKERS, [])
+            )
+            stamp = (
+                report_time(runtime, member, target["source"], now) if member else None
+            )
+            if member is None or target["source"] not in selected:
+                outcome = "source_changed"
+            elif stamp is not None and stamp > (target["reported_at"] or started):
+                outcome = "updated"
+        if now >= deadline and outcome == "waiting":
+            outcome = "unchanged"
+        target["outcome"] = outcome
+        members.append({"id": target["id"], "status": outcome})
+    saved["members"] = members
+    if now >= deadline or all(m["status"] != "waiting" for m in members):
+        saved["status"] = "complete"
+        saved["completed_at"] = min(now, deadline)
+        if now >= saved["completed_at"] + FEEDBACK_RETENTION:
+            runtime.family_refresh = {}
+
+
 def family_status(hass, runtime, registry=None):
-    """Only same-source newer evidence counts; restart clears the observation."""
+    """Expose fixed results briefly; restart clears the observation."""
+    now = dt_util.utcnow()
+    observe_family_refresh(runtime, now)
     try:
         operation = plan(hass, runtime, registry)
         available = operation is not None
@@ -136,34 +185,7 @@ def family_status(hass, runtime, registry=None):
         operation = None
     saved = getattr(runtime, "family_refresh", {})
     status = saved.get("status", "idle")
-    members = []
-    started = saved.get("started")
-    complete = bool(started and (dt_util.utcnow() - started).total_seconds() >= 120)
-    current = {m.id: m for m in runtime.household.members}
-    for target in saved.get("targets", []):
-        member = current.get(target["id"])
-        selected = (
-            runtime.config.get(CONF_MEMBERS, {})
-            .get(target["id"], {})
-            .get(CONF_TRACKERS, [])
-        )
-        stamp = (
-            report_time(runtime, member, target["source"], dt_util.utcnow())
-            if member
-            else None
-        )
-        outcome = "waiting"
-        if member is None or target["source"] not in selected:
-            outcome = "source_changed"
-        elif stamp is not None and stamp > (target["reported_at"] or started):
-            outcome = "updated"
-        elif complete:
-            outcome = "unchanged"
-        members.append({"id": target["id"], "status": outcome})
-    if status == "requested" and (
-        complete or all(m["status"] == "updated" for m in members)
-    ):
-        status = "complete"
+    members = saved.get("members", [])
     retry = (
         next_available(runtime, key_for(*operation[:2]), dt_util.utcnow())
         if operation
@@ -235,4 +257,5 @@ async def async_refresh_family(hass, runtime, user):
     runtime.family_refresh["status"] = "requested" if accepted else "send_failed"
     if not accepted:
         runtime.family_refresh["targets"] = []
+        runtime.family_refresh["completed_at"] = dt_util.utcnow()
     return {"status": runtime.family_refresh["status"]}

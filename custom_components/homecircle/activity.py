@@ -10,6 +10,7 @@ from .selection import selected_entities
 
 RETENTION_DAYS = 7
 MAX_EVENTS = 100
+MAX_FRESHNESS_EVENTS = 25
 KINDS = {"started", "presence", "source", "freshness", "refresh", "automatic_refresh"}
 VALUES = {
     "automatic_refresh": {"requested", "send_failed"},
@@ -56,6 +57,18 @@ class ActivityLog:
                 if (time := dt_util.parse_datetime(event["observed_at"])) is not None
                 and time.tzinfo is not None
                 and cutoff <= time <= now
+            ]
+            retained = self.events[member]
+            freshness = [event for event in retained if event["kind"] == "freshness"]
+            discard = {id(event) for event in freshness[:-MAX_FRESHNESS_EVENTS]}
+            retained = [event for event in retained if id(event) not in discard]
+            excess = max(0, len(retained) - MAX_EVENTS)
+            discard = {
+                id(event)
+                for event in [e for e in retained if e["kind"] == "freshness"][:excess]
+            }
+            self.events[member] = [
+                event for event in retained if id(event) not in discard
             ][-MAX_EVENTS:]
             changed |= len(events) != len(self.events[member])
         return changed

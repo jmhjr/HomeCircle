@@ -4,6 +4,7 @@
 
 The source candidate remains based on beta 16; these changes are not in the published beta 16 HACS archive. The complete implementation and validation record is in [recent changes](docs/RECENT-CHANGES-2026-10-10.md).
 
+- Freeze family-refresh outcomes at the two-minute observation boundary, expire feedback after five minutes, and protect significant activity from freshness churn.
 - Explain HA Person/tracker conflicts using configured associations and the active source; keep report time distinct from HA update time. Simplify tracker labels to provider names, including Home Assistant.
 - Add opt-in phone location requests, bounded selected-person refresh and explicit family refresh. Retain failed attempts and limits across restarts: 50 attempts per rolling 24 hours, one-minute deliberate cooldowns, with separate per-tracker and family counters. Automatic phone attempts wait 15 minutes and pause after three unanswered automatic attempts.
 - Improve person Details, troubleshooting, source evidence and refresh feedback; add a local Recent activity timeline bounded to seven days and 100 events per member. Fix Settings cancellation and overlapping Back navigation races.

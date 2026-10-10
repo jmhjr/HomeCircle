@@ -621,6 +621,7 @@ class HomeCircleCard extends HTMLElement {
       return;
     const connection = this._hass.connection;
     this._familyBusy = true;
+    this._familyMessageUntil = null;
     this._familyMessage = "Sending family refresh request…";
     this._updateFamilyFeedback();
     try {
@@ -650,6 +651,7 @@ class HomeCircleCard extends HTMLElement {
       if (this.isConnected && connection === this._hass.connection)
         this._familyMessage = "Family refresh is temporarily unavailable.";
     } finally {
+      this._familyMessageUntil = Date.now() + 5 * 60_000;
       this._familyBusy = false;
       this._updateFamilyFeedback();
     }
@@ -665,7 +667,10 @@ class HomeCircleCard extends HTMLElement {
   }
   _updateFamilyFeedback() {
     if (!this._familyBar) return;
-    if (this._familyRetryAt && Date.now() >= Date.parse(this._familyRetryAt)) {
+    if (
+      (this._familyMessageUntil && Date.now() >= this._familyMessageUntil) ||
+      (this._familyRetryAt && Date.now() >= Date.parse(this._familyRetryAt))
+    ) {
       this._familyMessage = "";
       this._familyRetryAt = null;
     }

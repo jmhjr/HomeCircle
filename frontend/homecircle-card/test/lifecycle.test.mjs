@@ -2033,6 +2033,40 @@ test("family refresh makes one explicit request and reports same-source outcomes
   value.remove();
 });
 
+test("failed family request feedback expires without unlocking a current limit", async (t) => {
+  const retry = new Date(Date.now() + 24 * 60 * 60_000).toISOString();
+  const value = card({
+    connection: {},
+    callWS: async (message) =>
+      message.type === "homecircle/refresh_family"
+        ? { status: "send_failed" }
+        : {
+            ...response(),
+            family_refresh: {
+              available: true,
+              status: "idle",
+              members: [],
+              next_available_at: retry,
+            },
+          },
+  });
+  t.after(() => value.remove());
+  await tick();
+  await value._refreshFamily();
+  assert.match(value._familyFeedback.textContent, /request failed/);
+  const expires = value._familyMessageUntil;
+  const originalNow = Date.now;
+  Date.now = () => expires;
+  try {
+    value._updateFamilyFeedback();
+    assert.doesNotMatch(value._familyFeedback.textContent, /request failed/);
+    assert.match(value._familyFeedback.textContent, /Next family refresh:/);
+    assert.equal(value._familyButton.disabled, true);
+  } finally {
+    Date.now = originalNow;
+  }
+});
+
 test("family control stays hidden when the provider cannot refresh the full Circle", async () => {
   const value = card({ connection: {}, callWS: async () => response() });
   await tick();

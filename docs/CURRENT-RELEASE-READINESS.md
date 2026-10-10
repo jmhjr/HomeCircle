@@ -1,6 +1,6 @@
 # Current release readiness — through 2026-10-10
 
-Current development candidate: [October 8–10 consolidated changes](RECENT-CHANGES-2026-10-10.md). Published HACS beta 16 is unchanged. Current checks: 230 backend tests, 85 frontend tests, formatting/lint/privacy checks and isolated package install/upgrade/restart/removal passed. The current 25-file archive matches the live installation; the served bundle and six-member snapshot were verified after activation. Older dated sections below describe their own historical builds and limits; the latest policy supersedes them.
+Current development candidate: [October 8–10 consolidated changes](RECENT-CHANGES-2026-10-10.md). Published HACS beta 16 is unchanged. Current checks: 234 backend tests, 86 frontend tests, formatting/lint/privacy checks and isolated package install/upgrade/restart/removal passed. The current 25-file archive matches the live installation; the served bundle and six-member snapshot were verified after activation. Older dated sections below describe their own historical builds and limits; the latest policy supersedes them.
 
 A combined-source departure/return was observed using retained Life360 times as reference. Recording gaps prevent exact HomeCircle latency claims, and the iPhone-only field test remains open. Source settings and the capture deadline were preserved through the planned restart. Adaptive stale thresholds remain a proposal.
 
@@ -423,3 +423,9 @@ Live Safari verification passed for observed clock time, HRRR forecast playback 
 - Temporary snapshot/startup errors and same-user reconnects retain the last data and map with a visible warning and bounded retry spacing. Permission errors clear retained data.
 - Radar metadata failures fall back to untimed current imagery, on/off clears cached times, visibility resume refreshes immediately, and playback rechecks stale metadata and rebuilds future times. Opacity changes retain the base radar until an animation frame is ready.
 - Adaptive stale thresholds remain deferred; the five-minute people cutoff is unchanged.
+
+## October 10 — fixed refresh outcomes and protected activity history
+
+Family results now latch during their two-minute window through state/periodic observers, freeze at completion, and expire after five minutes. Late or backdated reports first observed after the boundary cannot rewrite outcomes. Error feedback also expires, while daily counters and cooldowns remain intact. Activity limits freshness entries to 25 and evicts them first at the 100-event cap, preserving other observations where possible; seven-day expiry and restart persistence are unchanged. Validation: 234 backend and 86 frontend tests passed, including late-report, exact-expiry, budget-preservation and churn/reload regressions. Physical-display and iPhone-only trip acceptance remain pending.
+
+The patch was deployed with a backup and planned HA restart. Verified all installed archive files, the served card, healthy six-member snapshot, saved HomeCircle settings and unrelated resources. The private recorder baseline was updated without extending its original deadline.

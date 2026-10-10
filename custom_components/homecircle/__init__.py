@@ -146,6 +146,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeCircleEntry) -> bool
             {item.entity_id: item.name for item in hass.states.async_all("zone")},
         )
         runtime.activity.observe(runtime.household, dt_util.utcnow())
+        from .family_refresh import observe_family_refresh
+
+        observe_family_refresh(runtime, dt_util.utcnow())
         if runtime.missing:
             ir.async_create_issue(
                 hass,

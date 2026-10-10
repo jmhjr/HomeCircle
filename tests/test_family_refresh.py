@@ -151,6 +151,7 @@ async def test_feedback_new_report_same_source_only_and_observation_expires():
         "waiting",
     ]
     r.household.members[0].location.evidence.reported_at = datetime.now(UTC)
+    family_status(h, r, reg)  # Latch the report while the observation is open.
     r.family_refresh["started"] -= timedelta(seconds=121)
     status = family_status(h, r, reg)
     assert status["status"] == "complete"
@@ -158,7 +159,7 @@ async def test_feedback_new_report_same_source_only_and_observation_expires():
     r.config["members"][r.household.members[0].id]["trackers"] = [
         "device_tracker.example_other"
     ]
-    assert family_status(h, r, reg)["members"][0]["status"] == "source_changed"
+    assert family_status(h, r, reg)["members"][0]["status"] == "updated"
 
 
 async def test_saved_limits_survive_new_runtime_and_enforce_daily_cap():
@@ -318,3 +319,75 @@ async def test_family_allows_fiftieth_attempt_and_one_minute_boundary():
         assert len(r.location_request_times[key]) == 50
         assert (await async_refresh_family(h, r, u))["status"] == "limited"
         assert send.await_count == 2
+
+
+async def test_late_reports_cannot_rewrite_results_and_feedback_expires():
+    h, r, u, reg, _ = fixture()
+    now = datetime.now(UTC)
+    with (
+        patch(
+            "custom_components.homecircle.family_refresh.er.async_get", return_value=reg
+        ),
+        patch(
+            "custom_components.homecircle.family_refresh.async_send",
+            new_callable=AsyncMock,
+            return_value=True,
+        ),
+        patch(
+            "custom_components.homecircle.family_refresh.dt_util.utcnow",
+            return_value=now,
+        ),
+    ):
+        await async_refresh_family(h, r, u)
+    # No open dashboard is required: the state observer latches a timely report.
+    from custom_components.homecircle.family_refresh import observe_family_refresh
+
+    r.household.members[0].location.evidence.reported_at = now + timedelta(seconds=10)
+    observe_family_refresh(r, now + timedelta(seconds=15))
+    r.household.members[1].location.evidence.reported_at = now + timedelta(seconds=30)
+    # Even a backdated report first observed at the deadline is too late.
+    with patch(
+        "custom_components.homecircle.family_refresh.dt_util.utcnow",
+        return_value=now + timedelta(minutes=2),
+    ):
+        result = family_status(h, r, reg)
+    assert result["status"] == "complete"
+    assert [m["status"] for m in result["members"]] == ["updated", "unchanged"]
+    with patch(
+        "custom_components.homecircle.family_refresh.dt_util.utcnow",
+        return_value=now + timedelta(minutes=6, seconds=59),
+    ):
+        assert family_status(h, r, reg)["members"] == result["members"]
+    with patch(
+        "custom_components.homecircle.family_refresh.dt_util.utcnow",
+        return_value=now + timedelta(minutes=7),
+    ):
+        result = family_status(h, r, reg)
+    assert result["status"] == "idle"
+    assert not result["members"]
+    assert r.location_request_times  # Expiry never resets the request budget.
+
+
+async def test_failed_family_feedback_also_expires():
+    h, r, u, reg, _ = fixture()
+    now = datetime.now(UTC)
+    with (
+        patch(
+            "custom_components.homecircle.family_refresh.er.async_get", return_value=reg
+        ),
+        patch(
+            "custom_components.homecircle.family_refresh.async_send",
+            new_callable=AsyncMock,
+            return_value=False,
+        ),
+        patch(
+            "custom_components.homecircle.family_refresh.dt_util.utcnow",
+            return_value=now,
+        ),
+    ):
+        assert (await async_refresh_family(h, r, u))["status"] == "send_failed"
+    with patch(
+        "custom_components.homecircle.family_refresh.dt_util.utcnow",
+        return_value=now + timedelta(minutes=5),
+    ):
+        assert family_status(h, r, reg)["status"] == "idle"

@@ -183,3 +183,50 @@ async def test_close_ignores_late_request_results_and_state_callbacks():
     log.observe(household("away"), NOW)
     assert len(log.events[MEMBER]) == count
     store.async_delay_save.assert_not_called()
+
+
+async def test_freshness_churn_preserves_arrivals_requests_and_reload():
+    from custom_components.homecircle.activity import MAX_FRESHNESS_EVENTS
+
+    log = ActivityLog(CONFIG)
+    log.append(MEMBER, "presence", "away", NOW)
+    log.append(MEMBER, "refresh", "requested", NOW + timedelta(seconds=1))
+    log.append(MEMBER, "presence", "home", NOW + timedelta(seconds=2))
+    for index in range(200):
+        log.append(
+            MEMBER,
+            "freshness",
+            "fresh" if index % 2 else "stale",
+            NOW + timedelta(seconds=3 + index),
+        )
+    assert [e["kind"] for e in log.events[MEMBER][:3]] == [
+        "presence",
+        "refresh",
+        "presence",
+    ]
+    assert (
+        sum(e["kind"] == "freshness" for e in log.events[MEMBER])
+        == MAX_FRESHNESS_EVENTS
+    )
+    with patch(
+        "custom_components.homecircle.activity.dt_util.utcnow",
+        return_value=NOW + timedelta(minutes=5),
+    ):
+        saved = log.payload()
+        store = SimpleNamespace(async_load=AsyncMock(return_value=saved))
+        restored = ActivityLog(CONFIG, store)
+        await restored.load()
+    assert restored.events == log.events
+    restored.prune(NOW + timedelta(days=8))
+    assert not restored.events[MEMBER]
+
+
+def test_total_cap_evicts_freshness_before_significant_events():
+    log = ActivityLog(CONFIG)
+    log.append(MEMBER, "presence", "away", NOW)
+    log.append(MEMBER, "freshness", "stale", NOW)
+    for index in range(MAX_EVENTS - 1):
+        log.append(MEMBER, "refresh", "requested", NOW + timedelta(seconds=index))
+    assert len(log.events[MEMBER]) == MAX_EVENTS
+    assert log.events[MEMBER][0]["kind"] == "presence"
+    assert not any(e["kind"] == "freshness" for e in log.events[MEMBER])
