@@ -122,42 +122,52 @@ test("pin fit padding leaves positive map area on narrow cards", () => {
     paddingBottomRight: [48, 48],
   });
 });
-test("unknown report time is never a live claim; stale remains explicit", () => {
+test("a source report time is shown without claiming current movement", () => {
   const value = member("one");
-  assert.match(reportLabel(value), /unknown/);
+  assert.match(reportLabel(value), /Update time unavailable/);
   value.location.evidence = {
     reported_at: "2026-01-01T00:00:00Z",
     freshness: "stale",
   };
   assert.match(
     reportLabel(value, Date.parse("2026-01-01T00:20:00Z")),
-    /Stale.*20 min/,
+    /Stale report.*Location reported 20 min ago/,
   );
   assert.match(reportLabel(member("none", "home", false)), /No usable/);
 });
-test("HA observation time is labeled separately when report time is unknown", () => {
+test("selected tracker update time is the card fallback when no source report exists", () => {
   const value = member("phone");
   const now = Date.parse("2026-01-01T01:00:00Z");
   value.location.evidence.source_label = "Tracker: Example Phone";
   value.location.evidence.observed_at = "2026-01-01T00:26:00Z";
   assert.equal(
     reportLabel(value, now),
-    "Tracker: Example Phone · HA state updated 34 min ago · Location report time unknown",
+    "Tracker: Example Phone · HA tracker updated 34 min ago",
   );
   value.location.evidence.reported_at = "2026-01-01T00:50:00Z";
   value.location.evidence.freshness = "fresh";
   assert.equal(
     reportLabel(value, now),
-    "Tracker: Example Phone · Reported 10 min ago",
+    "Tracker: Example Phone · Location reported 10 min ago",
   );
   value.location.evidence.reported_at = null;
+  value.location.evidence.observed_at = "2025-12-31T14:00:00Z";
+  assert.equal(
+    reportLabel(value, now),
+    "Tracker: Example Phone · HA tracker updated 11 hours ago",
+  );
   value.location.evidence.observed_at = "2026-01-01T01:10:00Z";
   assert.equal(
     reportLabel(value, now),
-    "Tracker: Example Phone · Location report time unknown",
+    "Tracker: Example Phone · Update time unavailable",
+  );
+  value.issues = ["tracker_presence_conflict"];
+  assert.equal(
+    reportLabel(value, now),
+    "HA Person and selected tracker disagree · Map position withheld",
   );
 });
-test("street tiles default on, private choice persists, and invalid choices are rejected", () => {
+test("street tiles default on, satellite and private choices persist, and invalid choices are rejected", () => {
   assert.equal(
     validateConfig({ type: "custom:homecircle-card" }).map_tiles,
     "osm",
@@ -166,6 +176,11 @@ test("street tiles default on, private choice persists, and invalid choices are 
     validateConfig({ type: "custom:homecircle-card", map_tiles: "none" })
       .map_tiles,
     "none",
+  );
+  assert.equal(
+    validateConfig({ type: "custom:homecircle-card", map_tiles: "satellite" })
+      .map_tiles,
+    "satellite",
   );
   assert.throws(() =>
     validateConfig({ type: "custom:homecircle-card", map_tiles: "unapproved" }),
@@ -189,9 +204,26 @@ test("report ages use readable units without disguising stale or invalid evidenc
   ]) {
     assert.equal(
       reportLabel(value, stamp + minutes * 60000),
-      `Stale · Reported ${label} ago`,
+      `Stale report · Location reported ${label} ago`,
     );
   }
   value.location.evidence.reported_at = "invalid";
-  assert.match(reportLabel(value), /unknown/);
+  assert.match(reportLabel(value), /Update time unavailable/);
+});
+
+test("card provider label replaces full tracker identity and preserves legacy fallback", () => {
+  const value = member("example");
+  value.location.evidence = {
+    source_label: "Tracker: Example phone · Mobile App",
+    card_source_label: "Tracker: Home Assistant",
+  };
+  assert.equal(
+    reportLabel(value),
+    "Tracker: Home Assistant · Update time unavailable",
+  );
+  delete value.location.evidence.card_source_label;
+  assert.equal(
+    reportLabel(value),
+    "Tracker: Example phone · Mobile App · Update time unavailable",
+  );
 });

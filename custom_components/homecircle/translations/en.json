@@ -37,6 +37,7 @@
           "configure_reports": "Set up location report times",
           "configure_timing": "Adjust pet location timing",
           "show_on_map": "Show this member on the map",
+          "auto_request_location": "Request a location when this member’s phone is quiet",
           "create_zone": "Create another home zone"
         },
         "data_description": {
@@ -47,6 +48,7 @@
           "configure_sensors": "Choose optional battery, charging, speed and driving sensors on the next screen.",
           "configure_timing": "Only for pets. Keep the current timing when the defaults are right.",
           "show_on_map": "Turn off to leave this member out of the Everyone map and its fit. Selecting the member or a status category still shows their map position.",
+          "auto_request_location": "For a selected Home Assistant phone tracker, ask for a location after 15 quiet minutes. Automatic attempts are at least 15 minutes apart and pause after three unanswered attempts until the tracker reports again. Deliberate requests keep a one-minute cooldown. All attempts share the 50-per-24-hour limit. Off by default.",
           "create_zone": "Create a Home Assistant zone on a map and select it for this member without losing the choices above."
         }
       },
@@ -114,6 +116,7 @@
           "display_name": "Name shown on the dashboard (optional)",
           "configure_timing": "Adjust pet location timing",
           "show_on_map": "Show this member on the map",
+          "auto_request_location": "Request a location when this member’s phone is quiet",
           "create_zone": "Create another home zone"
         },
         "data_description": {
@@ -123,6 +126,7 @@
           "display_name": "Leave blank to use the tracker name. Useful when two collars have the same name.",
           "configure_timing": "Keep the default 24 h at home and 5 min away unless this pet needs different stale-location timing.",
           "show_on_map": "Turn off to leave this member out of the Everyone map and its fit. Selecting the member or a status category still shows their map position.",
+          "auto_request_location": "For a selected Home Assistant phone tracker, ask for a location after 15 quiet minutes. Automatic attempts are at least 15 minutes apart and pause after three unanswered attempts until the tracker reports again. Deliberate requests keep a one-minute cooldown. All attempts share the 50-per-24-hour limit. Off by default.",
           "create_zone": "Create a Home Assistant zone on a map and select it for this member without losing the choices above."
         }
       },
@@ -164,6 +168,7 @@
           "configure_reports": "Set up location report time",
           "display_name": "Name shown on the dashboard (optional)",
           "show_on_map": "Show this member on the map",
+          "auto_request_location": "Request a location when this member’s phone is quiet",
           "create_zone": "Create another home zone"
         },
         "data_description": {
@@ -172,6 +177,7 @@
           "configure_reports": "Choose a genuine report-time sensor for this tracker only if available.",
           "configure_sensors": "Choose optional battery, charging, speed and driving sensors on the next screen.",
           "show_on_map": "Turn off to leave this member out of the Everyone map and its fit. Selecting the member or a status category still shows their map position.",
+          "auto_request_location": "For a selected Home Assistant phone tracker, ask for a location after 15 quiet minutes. Automatic attempts are at least 15 minutes apart and pause after three unanswered attempts until the tracker reports again. Deliberate requests keep a one-minute cooldown. All attempts share the 50-per-24-hour limit. Off by default.",
           "create_zone": "Create a Home Assistant zone on a map and select it for this member without losing the choices above."
         }
       },
@@ -239,6 +245,8 @@
       "tracker_already_in_person": "This tracker is already linked to a selected Home Assistant Person. Keep that Person or choose the tracker as a separate member, not both.",
       "invalid_display_name": "Enter a name of 1–60 characters without line breaks, or leave this field empty.",
       "invalid_map_visibility": "Choose whether this member appears on the map.",
+      "invalid_auto_request_location": "Choose whether HomeCircle may request a location from this member’s HA Mobile App tracker.",
+      "mobile_app_notify_required": "Choose a tracker from the HA Mobile App on a phone with a working notify entity before enabling requests.",
       "shortcut_conflict": "Choose one quick action at a time. Save other household changes separately.",
       "invalid_zone_name": "Enter a zone name of 1–60 characters.",
       "zone_already_exists": "A zone with this name already exists. Select the existing zone instead.",
@@ -353,6 +361,7 @@
           "configure_reports": "Set up location report times",
           "configure_timing": "Adjust pet location timing",
           "show_on_map": "Show this member on the map",
+          "auto_request_location": "Request a location when this member’s phone is quiet",
           "create_zone": "Create another home zone"
         },
         "data_description": {
@@ -363,6 +372,7 @@
           "configure_sensors": "Choose optional battery, charging, speed and driving sensors on the next screen.",
           "configure_timing": "Only for pets. Keep the current timing when the defaults are right.",
           "show_on_map": "Turn off to leave this member out of the Everyone map and its fit. Selecting the member or a status category still shows their map position.",
+          "auto_request_location": "For a selected Home Assistant phone tracker, ask for a location after 15 quiet minutes. Automatic attempts are at least 15 minutes apart and pause after three unanswered attempts until the tracker reports again. Deliberate requests keep a one-minute cooldown. All attempts share the 50-per-24-hour limit. Off by default.",
           "create_zone": "Create a Home Assistant zone on a map and select it for this member without losing the choices above."
         }
       },
@@ -430,6 +440,7 @@
           "display_name": "Name shown on the dashboard (optional)",
           "configure_timing": "Adjust pet location timing",
           "show_on_map": "Show this member on the map",
+          "auto_request_location": "Request a location when this member’s phone is quiet",
           "create_zone": "Create another home zone"
         },
         "data_description": {
@@ -439,6 +450,7 @@
           "display_name": "Leave blank to use the tracker name. Useful when two collars have the same name.",
           "configure_timing": "Keep the default 24 h at home and 5 min away unless this pet needs different stale-location timing.",
           "show_on_map": "Turn off to leave this member out of the Everyone map and its fit. Selecting the member or a status category still shows their map position.",
+          "auto_request_location": "For a selected Home Assistant phone tracker, ask for a location after 15 quiet minutes. Automatic attempts are at least 15 minutes apart and pause after three unanswered attempts until the tracker reports again. Deliberate requests keep a one-minute cooldown. All attempts share the 50-per-24-hour limit. Off by default.",
           "create_zone": "Create a Home Assistant zone on a map and select it for this member without losing the choices above."
         }
       },
@@ -466,6 +478,7 @@
           "configure_reports": "Set up location report time",
           "display_name": "Name shown on the dashboard (optional)",
           "show_on_map": "Show this member on the map",
+          "auto_request_location": "Request a location when this member’s phone is quiet",
           "create_zone": "Create another home zone"
         },
         "data_description": {
@@ -474,6 +487,7 @@
           "configure_reports": "Choose a genuine report-time sensor for this tracker only if available.",
           "configure_sensors": "Choose optional battery, charging, speed and driving sensors on the next screen.",
           "show_on_map": "Turn off to leave this member out of the Everyone map and its fit. Selecting the member or a status category still shows their map position.",
+          "auto_request_location": "For a selected Home Assistant phone tracker, ask for a location after 15 quiet minutes. Automatic attempts are at least 15 minutes apart and pause after three unanswered attempts until the tracker reports again. Deliberate requests keep a one-minute cooldown. All attempts share the 50-per-24-hour limit. Off by default.",
           "create_zone": "Create a Home Assistant zone on a map and select it for this member without losing the choices above."
         }
       },
@@ -551,6 +565,8 @@
       "tracker_already_in_person": "This tracker is already linked to a selected Home Assistant Person. Keep that Person or choose the tracker as a separate member, not both.",
       "invalid_display_name": "Enter a name of 1–60 characters without line breaks, or leave this field empty.",
       "invalid_map_visibility": "Choose whether this member appears on the map.",
+      "invalid_auto_request_location": "Choose whether HomeCircle may request a location from this member’s HA Mobile App tracker.",
+      "mobile_app_notify_required": "Choose a tracker from the HA Mobile App on a phone with a working notify entity before enabling requests.",
       "shortcut_conflict": "Choose one quick action at a time. Save other household changes separately.",
       "invalid_zone_name": "Enter a zone name of 1–60 characters.",
       "zone_already_exists": "A zone with this name already exists. Select the existing zone instead.",

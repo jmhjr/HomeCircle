@@ -1,5 +1,20 @@
 # Changelog
 
+## Unreleased reconciled candidate — October 8–10, 2026
+
+The source candidate remains based on beta 16; these changes are not in the published beta 16 HACS archive. The complete implementation and validation record is in [recent changes](docs/RECENT-CHANGES-2026-10-10.md).
+
+- Explain HA Person/tracker conflicts using configured associations and the active source; keep report time distinct from HA update time. Simplify tracker labels to provider names, including Home Assistant.
+- Add opt-in phone location requests, bounded selected-person refresh and explicit family refresh. Retain failed attempts and limits across restarts: 50 attempts per rolling 24 hours, one-minute deliberate cooldowns, with separate per-tracker and family counters. Automatic phone attempts wait 15 minutes and pause after three unanswered automatic attempts.
+- Improve person Details, troubleshooting, source evidence and refresh feedback; add a local Recent activity timeline bounded to seven days and 100 events per member. Fix Settings cancellation and overlapping Back navigation races.
+- Improve overview counts, low-battery warnings, card spacing, place labels and reported addresses. Use an outlined kiosk icon button.
+- Add Street/Satellite controls, a compact three-part Street/Radar/Satellite pill, a dark-blue zoom pill, draggable map height and a tighter footer. Zoom centers visible pins; empty categories and views with no visible pins retain their current view. Person selection zooms three levels above Everyone.
+- Add opt-in IEM observed radar and HRRR forecasts with dated frame times, model-run labels, animation, 40% opacity and optional browser-local opacity/legend controls. Correct Leaflet radar removal to prevent blank tiles after zooming.
+- Preserve manual map views and radar playback during coordinate updates; provide an explicit recenter icon. Preserve the last snapshot through temporary failures with a visible warning, while permission errors clear it.
+- Reset radar metadata on toggle, fall back honestly when time lookup fails, refresh on visibility resume, rebuild future frame times, and retain visible radar while animation buffers.
+- Prevent Person Details saves from silently linking selected trackers to HA Persons. Keep explicit Assign/Add links and disclose them before save; allow unlinked selections for YAML-managed Persons.
+- Add private field-state capture, offline transition analysis and synthetic capture-to-report rehearsal. Recording gaps remain explicit; combined-source field evidence does not prove an iPhone-only cycle or exact app response latency.
+
 ## 0.1.0-beta.16 — experimental prerelease
 
 - Keep the map visible while the member list scrolls inside a card outside kiosk mode, including full-screen cards.

@@ -10,6 +10,8 @@ Use a disposable or test Home Assistant dashboard. Published beta 16 keeps the m
 
 HomeCircle consumes standard HA `person` and `device_tracker` entities, with optional explicitly selected supporting sensors. An optional direct Life360 connection uses a built in tracker provider contract designed for more providers in later releases. Existing HA trackers remain selectable without a HomeCircle provider account.
 
+The development branch also contains an **unreleased reconciled candidate** with improved person details, location refresh, map controls and radar. Its current status, validation and remaining gaps are recorded in [October 8–10 changes](docs/RECENT-CHANGES-2026-10-10.md). This is separate from the published beta 16 archive.
+
 ## Start here
 
 - [Per-source report times](docs/PER-SOURCE-REPORTS.md)

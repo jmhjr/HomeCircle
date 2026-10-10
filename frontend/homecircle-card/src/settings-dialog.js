@@ -28,7 +28,31 @@ function translate(hass, key, fallback, placeholders) {
   return hass.localize?.(key, placeholders) || fallback;
 }
 
-export async function openSettingsDialog(card, hass) {
+function appendDescription(node, description) {
+  description = description.replaceAll("**", "");
+  const marker = "[Home Assistant People settings](/config/person)";
+  const index = description.indexOf(marker);
+  if (index < 0) {
+    node.textContent = description;
+    return;
+  }
+  node.append(document.createTextNode(description.slice(0, index)));
+  const link = document.createElement("a");
+  link.href = "/config/person";
+  link.textContent = "Home Assistant People settings";
+  node.append(
+    link,
+    document.createTextNode(description.slice(index + marker.length)),
+  );
+}
+
+export async function openSettingsDialog(
+  card,
+  hass,
+  memberId = null,
+  returnToMember = null,
+) {
+  if (!hass?.user?.is_admin) return;
   const host =
     document.querySelector("home-assistant")?.shadowRoot || document.body;
   if (host.querySelector("dialog.homecircle-settings")) return;
@@ -41,6 +65,8 @@ export async function openSettingsDialog(card, hass) {
     .homecircle-settings * { box-sizing: border-box; }
     .homecircle-settings header { display: flex; align-items: center; gap: 12px; padding: 20px 24px 12px; border-bottom: 1px solid var(--divider-color, #ddd); }
     .homecircle-settings h2 { flex: 1; margin: 0; font: 600 20px/1.3 system-ui, sans-serif; }
+    .homecircle-settings .heading { flex: 1; min-width: 0; }
+    .homecircle-settings .version { margin-top: 4px; color: var(--secondary-text-color, #666); font: 12px/1.4 system-ui, sans-serif; }
     .homecircle-settings button { font: inherit; cursor: pointer; }
     .homecircle-settings .close { border: 0; background: transparent; color: inherit; font-size: 25px; line-height: 1; min-width: 36px; min-height: 36px; }
     .homecircle-settings .body { padding: 16px 24px 22px; overflow-y: auto; max-height: calc(min(85vh, 850px) - 75px); }
@@ -55,20 +81,44 @@ export async function openSettingsDialog(card, hass) {
     .homecircle-settings .actions { display: flex; justify-content: flex-end; gap: 10px; padding-top: 18px; }
     .homecircle-settings .actions button { padding: 9px 15px; border-radius: 9px; border: 1px solid var(--divider-color, #ccc); background: var(--card-background-color, #fff); color: inherit; }
     .homecircle-settings .actions .primary { background: var(--primary-color, #03a9f4); color: white; border-color: transparent; }
-  </style><header><h2></h2><button type="button" class="close" aria-label="Close">×</button></header><div class="body"></div>`;
+  </style><header><div class="heading"><h2></h2><div class="version"></div></div><button type="button" class="close" aria-label="Close">×</button></header><div class="body"></div>`;
   host.append(dialog);
+  dialog.querySelector(".version").textContent = card._integrationVersion
+    ? `Version ${card._integrationVersion}`
+    : "";
   const title = dialog.querySelector("h2");
   const body = dialog.querySelector(".body");
   let step;
   let busy = false;
-  let selectedMember;
+  let selectedMember = memberId;
+  const cancelledFlows = new Set();
+  const cancelFlow = (flow) => {
+    if (
+      !flow?.flow_id ||
+      ["create_entry", "abort"].includes(flow.type) ||
+      cancelledFlows.has(flow.flow_id)
+    )
+      return;
+    cancelledFlows.add(flow.flow_id);
+    hass.callApi("DELETE", `${FLOW_PATH}/${flow.flow_id}`).catch(() => {});
+  };
+  const receiveFlow = (flow) => {
+    if (!dialog.isConnected) {
+      cancelFlow(flow);
+      return false;
+    }
+    step = flow;
+    return true;
+  };
   const close = () => dialog.close();
   dialog.querySelector(".close").addEventListener("click", close);
   dialog.addEventListener("close", () => {
-    if (step?.flow_id && !["create_entry", "abort"].includes(step.type))
-      hass.callApi("DELETE", `${FLOW_PATH}/${step.flow_id}`).catch(() => {});
+    cancelFlow(step);
     dialog.remove();
     card._settingsButton?.focus();
+  });
+  dialog.addEventListener("click", (event) => {
+    if (event.target.closest?.('a[href="/config/person"]')) close();
   });
   dialog.showModal();
 
@@ -89,7 +139,7 @@ export async function openSettingsDialog(card, hass) {
     );
 
   const advance = async (data) => {
-    if (busy || !step) return;
+    if (busy || !step || !dialog.isConnected) return;
     busy = true;
     try {
       const next = await hass.callApi(
@@ -97,7 +147,6 @@ export async function openSettingsDialog(card, hass) {
         `${FLOW_PATH}/${step.flow_id}`,
         data,
       );
-      if (!dialog.isConnected) return;
       render(next);
     } catch {
       message(
@@ -117,16 +166,20 @@ export async function openSettingsDialog(card, hass) {
     return control;
   };
   const restartFlow = async (targetStep) => {
+    if (busy || !dialog.isConnected) return;
+    busy = true;
     try {
       const entries = await hass.callWS({
         type: "config_entries/get",
         domain: "homecircle",
       });
-      if (!entries?.length) return;
-      const oldFlow = step.flow_id;
+      if (!dialog.isConnected || !entries?.length) return;
+      const oldStep = step;
       const initial = await hass.callApi("POST", FLOW_PATH, {
         handler: entries[0].entry_id,
       });
+      cancelFlow(oldStep);
+      if (!receiveFlow(initial)) return;
       render(
         targetStep
           ? await hass.callApi("POST", `${FLOW_PATH}/${initial.flow_id}`, {
@@ -134,14 +187,15 @@ export async function openSettingsDialog(card, hass) {
             })
           : initial,
       );
-      if (oldFlow)
-        hass.callApi("DELETE", `${FLOW_PATH}/${oldFlow}`).catch(() => {});
     } catch {
-      message("Could not return to settings choices.", true);
+      if (dialog.isConnected)
+        message("Could not return to settings choices.", true);
+    } finally {
+      busy = false;
     }
   };
   const render = (next) => {
-    step = next;
+    if (!receiveFlow(next)) return;
     body.replaceChildren();
     if (next.type === "create_entry") {
       close();
@@ -163,6 +217,26 @@ export async function openSettingsDialog(card, hass) {
         p.className = "description";
         p.textContent = description.replaceAll("**", "");
         body.append(p);
+      }
+      if (!memberId && card._radarController) {
+        const label = document.createElement("label");
+        label.style.cssText =
+          "display:flex;align-items:center;gap:10px;padding:12px";
+        const check = document.createElement("input");
+        check.type = "checkbox";
+        check.checked = card._radarController.showControls;
+        check.addEventListener("change", () =>
+          card._radarController.setShowControls(check.checked),
+        );
+        label.append(
+          check,
+          document.createTextNode("Show radar opacity and color guide"),
+        );
+        const hint = document.createElement("p");
+        hint.className = "description";
+        hint.textContent =
+          "For this browser. Controls appear on the map when Radar is on.";
+        body.append(label, hint);
       }
       const options = Array.isArray(next.menu_options)
         ? next.menu_options.map((key) => [
@@ -186,7 +260,7 @@ export async function openSettingsDialog(card, hass) {
       if (description) {
         const p = document.createElement("p");
         p.className = "description";
-        p.textContent = description;
+        appendDescription(p, description);
         body.append(p);
       }
       if (next.errors?.base) {
@@ -267,7 +341,12 @@ export async function openSettingsDialog(card, hass) {
       const buttons = document.createElement("div");
       buttons.className = "actions";
       buttons.append(
-        action("Back", () =>
+        action("Back", () => {
+          if (trackerChoice && memberId && returnToMember) {
+            close();
+            returnToMember(selectedMember || memberId);
+            return;
+          }
           restartFlow(
             next.step_id === "add_tracker_assign"
               ? "add_tracker_choice"
@@ -277,8 +356,8 @@ export async function openSettingsDialog(card, hass) {
                   )
                 ? "tracker_member_choice"
                 : undefined,
-          ),
-        ),
+          );
+        }),
         ...(trackerChoice
           ? []
           : [action("Continue", () => advance(form.data || {}), true)]),
@@ -305,8 +384,17 @@ export async function openSettingsDialog(card, hass) {
       hass.loadBackendTranslation?.("options", "homecircle"),
       hass.loadBackendTranslation?.("selector", "homecircle"),
     ]);
+    if (!dialog.isConnected) return;
+    const initial = await hass.callApi("POST", FLOW_PATH, {
+      handler: entries[0].entry_id,
+    });
+    if (!receiveFlow(initial)) return;
     render(
-      await hass.callApi("POST", FLOW_PATH, { handler: entries[0].entry_id }),
+      memberId
+        ? await hass.callApi("POST", `${FLOW_PATH}/${initial.flow_id}`, {
+            next_step_id: "tracker_member_choice",
+          })
+        : initial,
     );
   } catch {
     if (dialog.isConnected)

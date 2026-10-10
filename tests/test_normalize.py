@@ -7,7 +7,7 @@ import pytest
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
 from homeassistant.core import State
 
-from custom_components.homecircle.normalize import normalize_household
+from custom_components.homecircle.normalize import membership, normalize_household
 
 NOW = datetime(2026, 1, 1, 12, tzinfo=UTC)
 PERSON = "person.example_member"
@@ -97,6 +97,81 @@ def test_residence_counts_home_but_house_focus_excludes_it(snapshot):
     assert result.focus_ids["overview"] == (PERSON,)
     config["members"][PERSON]["additional_residences"] = []
     assert member(snapshot).presence == "away"
+
+
+def test_recent_gps_well_inside_new_zone_counts_as_home_while_ha_is_behind():
+    tracker = state(
+        GPS,
+        "not_home",
+        source_type="gps",
+        in_zones=[],
+        **{ATTR_LATITUDE: 0.0, ATTR_LONGITUDE: 0.0},
+        gps_accuracy=15,
+        last_seen=NOW,
+    )
+    zone = state(
+        RESIDENCE,
+        "0",
+        **{ATTR_LATITUDE: 0.0001, ATTR_LONGITUDE: 0.0},
+        radius=100,
+    )
+    states = {GPS: tracker, RESIDENCE: zone}
+    expected = ([RESIDENCE], ["gps_inside_zone_ha_pending"])
+    assert membership(tracker, [RESIDENCE], states, {}, tracker, NOW) == expected
+
+    stale = state(
+        GPS,
+        "not_home",
+        source_type="gps",
+        in_zones=[],
+        **{ATTR_LATITUDE: 0.0, ATTR_LONGITUDE: 0.0},
+        gps_accuracy=15,
+        last_seen=NOW - timedelta(minutes=16),
+    )
+    assert membership(stale, [RESIDENCE], {GPS: stale, RESIDENCE: zone}, {}, stale, NOW) == ([], [])
+    small_zone = state(
+        RESIDENCE,
+        "0",
+        radius=20,
+        **{ATTR_LATITUDE: 0.0001, ATTR_LONGITUDE: 0.0},
+    )
+    assert membership(tracker, [RESIDENCE], {GPS: tracker, RESIDENCE: small_zone}, {}, tracker, NOW) == ([], [])
+
+
+def test_tracker_only_member_at_new_residence_counts_home_and_remains_focusable(snapshot):
+    config, states = snapshot
+    config["people"].append(GPS)
+    config["members"][GPS] = {
+        "trackers": [GPS],
+        "additional_residences": [RESIDENCE],
+        "kind": "person",
+    }
+    states[GPS] = state(
+        GPS,
+        "not_home",
+        source_type="gps",
+        in_zones=[],
+        **{ATTR_LATITUDE: 0.0, ATTR_LONGITUDE: 0.0},
+        gps_accuracy=15,
+        last_seen=NOW,
+    )
+    states[RESIDENCE] = state(
+        RESIDENCE,
+        "0",
+        friendly_name="Example Residence",
+        **{ATTR_LATITUDE: 0.0001, ATTR_LONGITUDE: 0.0},
+        radius=100,
+    )
+    result = normalize_household(config, states, NOW)
+    added = result.members[-1]
+    assert added.presence == "home"
+    assert added.residence == RESIDENCE
+    assert added.focusable
+    assert "gps_inside_zone_ha_pending" in added.issues
+    assert "tracker_presence_conflict" not in added.issues
+    assert result.counts["home"] == 3
+    assert GPS not in result.focus_ids["home"]
+    assert GPS in result.focus_ids["all_residences"]
 
 
 def test_ordinary_place_and_overlap_precedence(snapshot):
@@ -204,6 +279,27 @@ def test_supplemental_gps_keeps_person_authority_and_exposes_conflict(snapshot):
     assert "tracker_presence_conflict" in current.issues
     assert not current.focusable
     assert normalize_household(*snapshot, NOW).focus_ids["home"] == ()
+
+
+def test_borrowed_home_coordinates_do_not_hide_selected_phone_conflict(snapshot):
+    config, states = snapshot
+    states[PERSON] = state(
+        PERSON,
+        "home",
+        source=ROUTER,
+        in_zones=["zone.home"],
+        **{ATTR_LATITUDE: 0.0, ATTR_LONGITUDE: 0.0},
+    )
+    states[GPS] = gps(value="not_home", zones=[WORK], coords=(2.0, 0.0))
+    current = member(snapshot)
+    assert current.presence == "home"
+    assert current.active_source_entity == ROUTER
+    assert "tracker_presence_conflict" in current.issues
+    assert not current.focusable
+    assert normalize_household(config, states, NOW).focus_ids["home"] == ()
+
+    states[GPS] = gps(value="home", coords=(0.0, 0.0))
+    assert "tracker_presence_conflict" not in member(snapshot).issues
 
 
 def test_ambiguous_fallback_does_not_guess_tracker_priority(snapshot):
@@ -637,3 +733,81 @@ def test_invalid_tracker_last_seen_does_not_claim_gps_report(snapshot, stamp):
     assert current.location.evidence.reported_at is None
     assert current.battery.value is None
     assert current.charging.value is None
+
+
+def test_restart_person_fallback_restores_old_report_as_stale(snapshot):
+    """Restart state writes must not turn a retained GPS report into a new fix."""
+    config, states = snapshot
+    config["members"][PERSON]["trackers"] = [GPS, OTHER_GPS]
+    stamp = NOW - timedelta(minutes=20)
+    states[GPS] = state(
+        GPS,
+        "home",
+        source_type="gps",
+        last_seen=stamp.isoformat(),
+        in_zones=["zone.home"],
+        **{ATTR_LATITUDE: 0.0, ATTR_LONGITUDE: 0.0},
+    )
+    states[OTHER_GPS] = gps(OTHER_GPS, coords=(0.0, 0.0001))
+    before = member(snapshot)
+    assert before.location.evidence.source_entity == GPS
+    assert before.location.evidence.reported_at == stamp
+    assert before.location.evidence.freshness == "stale"
+
+    restart_at = NOW + timedelta(minutes=1)
+    states[PERSON] = State(
+        PERSON,
+        "home",
+        {"source": PERSON, "in_zones": ["zone.home"],
+         ATTR_LATITUDE: 0.0, ATTR_LONGITUDE: 0.0},
+        last_updated=restart_at,
+    )
+    fallback = member(snapshot, restart_at)
+    assert fallback.presence == "home"
+    assert fallback.focusable
+    assert fallback.location.evidence.source_entity == PERSON
+    assert fallback.location.evidence.observed_at == restart_at
+    assert fallback.location.evidence.reported_at is None
+    assert fallback.location.evidence.freshness == "unknown"
+
+    recovered_at = NOW + timedelta(minutes=3)
+    states[GPS] = State(
+        GPS, "home", dict(states[GPS].attributes), last_updated=recovered_at
+    )
+    states[PERSON] = State(
+        PERSON, "home", {**states[PERSON].attributes, "source": GPS},
+        last_updated=recovered_at,
+    )
+    recovered = normalize_household(config, states, recovered_at)
+    current = recovered.members[0]
+    assert current.presence == "home"
+    assert current.focusable
+    assert recovered.counts == {"home": 2, "away": 0, "driving": 0, "unavailable": 0}
+    assert current.location.evidence.source_entity == GPS
+    assert current.location.evidence.observed_at == recovered_at
+    assert current.location.evidence.reported_at == stamp
+    assert current.location.evidence.freshness == "stale"
+
+
+
+
+def test_departure_return_flips_follow_person_without_conflicting_map(snapshot):
+    """Anonymized state ordering observed around departure and return."""
+    config, states = snapshot
+    # The phone briefly toggles near the boundary while Person remains authoritative.
+    for person_value, phone_value in [
+        ("home", "not_home"), ("home", "home"), ("not_home", "not_home"),
+        ("not_home", "home"), ("not_home", "not_home"), ("home", "home"),
+    ]:
+        states[PERSON] = state(PERSON, person_value, source=GPS,
+                               in_zones=["zone.home"] if person_value == "home" else [WORK])
+        states[GPS] = gps(value=phone_value,
+                          zones=["zone.home"] if phone_value == "home" else [WORK],
+                          coords=(0.0, 0.0) if phone_value == "home" else (2.0, 0.0))
+        current = normalize_household(config, states, NOW).members[0]
+        assert current.presence == ("home" if person_value == "home" else "away")
+        if person_value == "home" and phone_value == "not_home":
+            assert "tracker_presence_conflict" in current.issues
+            assert not current.focusable
+        if person_value == phone_value:
+            assert "tracker_presence_conflict" not in current.issues
