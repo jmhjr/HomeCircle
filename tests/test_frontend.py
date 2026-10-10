@@ -1,6 +1,7 @@
 """HA websocket authorization and owned-resource lifecycle acceptance."""
 
-from unittest.mock import patch
+from dataclasses import replace
+from unittest.mock import AsyncMock, patch
 from types import SimpleNamespace
 
 from homeassistant.components.lovelace.const import LOVELACE_DATA
@@ -14,6 +15,7 @@ from custom_components.homecircle import dashboard_setup, frontend
 from custom_components.homecircle.api import (
     allowed_picture,
     location_source_label,
+    member_diagnostics,
     snapshot,
 )
 from custom_components.homecircle.tracker_providers import ProviderHealth
@@ -123,9 +125,18 @@ async def test_snapshot_authorization_and_projection(
     result = await client.receive_json()
     assert result["success"]
     data = result["result"]
+    assert data["members"][0]["activity"]["events"]
+    assert all(
+        "source_entity" not in event and "latitude" not in event
+        for event in data["members"][0]["activity"]["events"]
+    )
     assert data["schema_version"] == 1
     assert data["counts"]["home"] == 2
     assert data["members"][0]["location"]["evidence"]["reported_at"] is None
+    assert (
+        data["members"][0]["location"]["evidence"]["report_status"] == "not_configured"
+    )
+    assert data["members"][0]["location_request"]["status"] == "disabled"
     assert data["members"][0]["location"]["evidence"]["source_label"].startswith(
         "Tracker:"
     )
@@ -209,6 +220,53 @@ async def test_location_source_label_follows_actual_map_source(hass, household):
     assert location_source_label(
         entry.runtime_data, "person.example_member"
     ).startswith("HA Person:")
+
+
+async def test_member_details_project_selected_sources_and_coordinates(hass, household):
+    entry = await setup(hass, household)
+    phone_id = "device_tracker.example_phone"
+    example_latitude = 1.25
+    example_longitude = -2.5
+    hass.states.async_set(
+        phone_id,
+        "not_home",
+        {
+            "friendly_name": "Example Phone",
+            "source_type": "gps",
+            ATTR_LATITUDE: example_latitude,
+            ATTR_LONGITUDE: example_longitude,
+        },
+    )
+    await hass.async_block_till_done()
+    member = snapshot(entry.runtime_data)["members"][0]
+    details = member["diagnostics"]
+    assert details["person_entity"] == "person.example_member"
+    assert details["selected_trackers"] == [
+        {
+            "entity_id": phone_id,
+            "label": "Tracker: Example Phone",
+            "state": "not_home",
+            "updated_at": hass.states.get(phone_id).last_updated.isoformat(),
+            "position": {
+                "latitude": example_latitude,
+                "longitude": example_longitude,
+                "accuracy": None,
+            },
+            "active": True,
+        }
+    ]
+    assert details["person_updated_at"] is not None
+    unselected = replace(
+        entry.runtime_data.household.members[0],
+        active_source_entity="device_tracker.example_router",
+    )
+    assert member_diagnostics(unselected, entry.runtime_data)["active_source"] == (
+        "other"
+    )
+    assert (
+        member_diagnostics(unselected, entry.runtime_data, admin=True)["active_source"]
+        == "device_tracker.example_router"
+    )
 
 
 async def test_tracker_label_uses_registered_integration_not_friendly_name(
@@ -339,7 +397,9 @@ def test_portraits_use_ha_or_life360_images_only():
 async def test_owned_resources_reload_unload_and_preserve_others(hass, household):
     entry = await setup(hass, household)
     resources = hass.data[LOVELACE_DATA].resources
-    assert frontend.resource_url().startswith(f"{frontend.URL}?v={frontend.VERSION}&asset=")
+    assert frontend.resource_url().startswith(
+        f"{frontend.URL}?v={frontend.VERSION}&asset="
+    )
     unrelated = await resources.async_create_item(
         {"url": "/local/example-card.js", "res_type": "module"}
     )
@@ -356,9 +416,12 @@ async def test_owned_resources_reload_unload_and_preserve_others(hass, household
         ours[0]["id"], {"url": f"{frontend.URL}?v=0.1.0-beta.15", "res_type": "module"}
     )
     await frontend.async_register(hass)
-    assert next(
-        item for item in resources.async_items() if item["id"] == ours[0]["id"]
-    )["url"] == frontend.resource_url()
+    assert (
+        next(item for item in resources.async_items() if item["id"] == ours[0]["id"])[
+            "url"
+        ]
+        == frontend.resource_url()
+    )
     assert await hass.config_entries.async_reload(entry.entry_id)
     ours = [
         item for item in resources.async_items() if item["url"].startswith(frontend.URL)
@@ -462,3 +525,136 @@ async def test_per_source_report_sensor_requires_read_permission(
         result = await client.receive_json()
         assert result["error"]["code"] == "unauthorized"
         assert "result" not in result
+
+
+def test_compact_tracker_label_preserves_full_detail_identity():
+    from types import SimpleNamespace
+    from custom_components.homecircle.api import proof
+    from custom_components.homecircle.normalize import Evidence
+
+    registry = SimpleNamespace(
+        async_get=lambda entity_id: SimpleNamespace(platform="mobile_app")
+    )
+    runtime = SimpleNamespace(
+        states={"device_tracker.example_phone": SimpleNamespace(name="Example Phone")}
+    )
+    value = Evidence(source_entity="device_tracker.example_phone", observed_at=None)
+    result = proof(value, runtime, registry)
+    assert result["card_source_label"] == "Tracker: Home Assistant"
+    assert result["source_label"] == "Tracker: Example Phone · Mobile App"
+
+
+async def test_selection_refresh_authorizes_before_requesting(
+    hass, household, hass_ws_client, hass_admin_user
+):
+    entry = await setup(hass, household)
+    client = await hass_ws_client(hass)
+    with patch(
+        "custom_components.homecircle.selection_refresh.async_refresh_selected",
+        new_callable=AsyncMock,
+    ) as refresh:
+        refresh.return_value = {"status": "checked"}
+        await client.send_json(
+            {
+                "id": 1,
+                "type": "homecircle/refresh_location",
+                "member_id": "person.example_member",
+            }
+        )
+        assert (await client.receive_json())["result"]["status"] == "checked"
+        assert refresh.await_count == 1
+        assert (
+            snapshot(entry.runtime_data)["members"][0]["selection_refresh"]["trigger"]
+            == "card_selection"
+        )
+        with patch.object(
+            type(hass_admin_user.permissions), "check_entity", return_value=False
+        ):
+            await client.send_json(
+                {
+                    "id": 2,
+                    "type": "homecircle/refresh_location",
+                    "member_id": "person.example_member",
+                }
+            )
+            assert (await client.receive_json())["error"]["code"] == "unauthorized"
+        await client.send_json(
+            {
+                "id": 3,
+                "type": "homecircle/refresh_location",
+                "member_id": "person.example_missing",
+            }
+        )
+        assert (await client.receive_json())["error"]["code"] == "not_found"
+        assert refresh.await_count == 1
+        refresh.side_effect = RuntimeError("private provider failure")
+        await client.send_json(
+            {
+                "id": 4,
+                "type": "homecircle/refresh_location",
+                "member_id": "person.example_member",
+            }
+        )
+        result = await client.receive_json()
+        assert result["result"] == {"status": "unavailable"}
+    await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_family_command_denied_before_provider_access(
+    hass, household, hass_ws_client, hass_admin_user
+):
+    await setup(hass, household)
+    client = await hass_ws_client(hass)
+    with (
+        patch.object(
+            type(hass_admin_user.permissions), "check_entity", return_value=False
+        ),
+        patch(
+            "custom_components.homecircle.family_refresh.async_refresh_family",
+            new_callable=AsyncMock,
+        ) as refresh,
+    ):
+        await client.send_json({"id": 1, "type": "homecircle/refresh_family"})
+        result = await client.receive_json()
+        assert result["error"]["code"] == "unauthorized"
+        refresh.assert_not_awaited()
+
+
+async def test_noop_refresh_spam_does_not_evict_activity(
+    hass, household, hass_ws_client
+):
+    entry = await setup(hass, household)
+    client = await hass_ws_client(hass)
+    events = {
+        key: list(value) for key, value in entry.runtime_data.activity.events.items()
+    }
+    with patch(
+        "custom_components.homecircle.selection_refresh.async_refresh_selected",
+        return_value={"status": "cooldown"},
+    ):
+        for identifier in range(1, 121):
+            await client.send_json(
+                {
+                    "id": identifier,
+                    "type": "homecircle/refresh_location",
+                    "member_id": household["people"][0],
+                }
+            )
+            assert (await client.receive_json())["success"]
+    assert entry.runtime_data.activity.events == events
+    with patch(
+        "custom_components.homecircle.selection_refresh.async_refresh_selected",
+        return_value={"status": "requested"},
+    ):
+        await client.send_json(
+            {
+                "id": 121,
+                "type": "homecircle/refresh_location",
+                "member_id": household["people"][0],
+            }
+        )
+        assert (await client.receive_json())["success"]
+    assert (
+        entry.runtime_data.activity.events[household["people"][0]][-1]["value"]
+        == "requested"
+    )

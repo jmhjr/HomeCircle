@@ -12,6 +12,7 @@ from typing import Any
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
 from homeassistant.core import State
 from homeassistant.util import dt as dt_util
+from homeassistant.util.location import distance
 
 from .const import (
     CONF_MEMBERS,
@@ -246,7 +247,7 @@ def optional_value(states, entity_id, now, kind, report_id=None) -> OptionalValu
 
 
 def membership(
-    person_state: State, selected: list[str], states, zone_names
+    person_state: State, selected: list[str], states, zone_names, source, now
 ) -> tuple[list[str], list[str]]:
     """Resolve IDs first; legacy names only if globally unique in HA's zone catalog."""
     issues = []
@@ -260,6 +261,40 @@ def membership(
             "legacy_home_membership"
         ]
     if person_state.state == "not_home":
+        # A newly added zone does not reclassify an existing GPS state until
+        # that tracker reports again. Use a recent, well-inside position only.
+        if source is not None and source.attributes.get("source_type") == "gps":
+            point = coordinates(source)
+            person_point = coordinates(person_state)
+            raw_report = source.attributes.get("last_seen")
+            reported = (
+                raw_report
+                if isinstance(raw_report, datetime)
+                else dt_util.parse_datetime(raw_report)
+                if isinstance(raw_report, str)
+                else None
+            )
+            observed = reported if reported and reported.tzinfo else source.last_updated
+            if (
+                point is not None
+                and point[2] is not None
+                and person_point is not None
+                and person_point[:2] == point[:2]
+                and observed.tzinfo is not None
+                and 0 <= (now - observed).total_seconds() <= 900
+            ):
+                geometric = []
+                for zone_id in selected:
+                    zone = states.get(zone_id)
+                    zone_point = coordinates(zone)
+                    radius = number(zone.attributes.get("radius")) if zone else None
+                    if zone_point is None or radius is None or radius <= 0:
+                        continue
+                    meters = distance(point[0], point[1], zone_point[0], zone_point[1])
+                    if meters is not None and meters + point[2] <= radius:
+                        geometric.append(zone_id)
+                if len(geometric) == 1:
+                    return geometric, ["gps_inside_zone_ha_pending"]
         return [], issues
     matches = [key for key, name in zone_names.items() if name == person_state.state]
     if len(matches) == 1 and matches[0] in selected:
@@ -314,7 +349,7 @@ def normalize_member(
         residences = [config[CONF_PRIMARY_HOME], *member_config[CONF_RESIDENCES]]
         selected_zones = list(dict.fromkeys([*residences, *config[CONF_PLACES]]))
         matched, zone_issues = membership(
-            person_state, selected_zones, states, zone_names
+            person_state, selected_zones, states, zone_names, source, now
         )
         issues.extend(zone_issues)
         valid = [item for item in matched if available(states.get(item))]
@@ -322,6 +357,16 @@ def normalize_member(
         primary_home = config[CONF_PRIMARY_HOME] in valid
         place = residence or next(iter(valid), None)
         presence = "home" if residence else "away"
+        # A Person may inherit Home from a stationary linked tracker while an
+        # explicitly selected mobile GPS tracker reports Away. Detect this even
+        # when HA supplies borrowed Home coordinates for the Person.
+        if residence and "gps_inside_zone_ha_pending" not in zone_issues and any(
+            available(states.get(tracker_id))
+            and states[tracker_id].attributes.get("source_type") == "gps"
+            and states[tracker_id].state == "not_home"
+            for tracker_id in selected_trackers
+        ):
+            issues.append("tracker_presence_conflict")
         if not residence and any(
             item in residences for item in matched if item not in valid
         ):
@@ -384,7 +429,8 @@ def normalize_member(
                     and set(candidate.attributes["in_zones"])
                     != set(person_state.attributes["in_zones"])
                 ):
-                    issues.append("tracker_presence_conflict")
+                    if "tracker_presence_conflict" not in issues:
+                        issues.append("tracker_presence_conflict")
             elif len(candidates) > 1:
                 issues.append("ambiguous_gps_sources")
         if point is not None and presence != "unavailable":

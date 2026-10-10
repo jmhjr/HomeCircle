@@ -4,11 +4,13 @@ Family location and presence for Home Assistant, independent of the tracking pro
 
 **Experimental development software — not a stable release.**
 
-Use a disposable or test Home Assistant dashboard. Published beta 16 keeps the map visible while the member list scrolls, prevents member details from overlapping, and includes the beta 15 driving-report improvement. Beta 14 added tracker source labels; beta 13 added Person-first setup and dashboard improvements. Existing tracker-only members remain supported. See the [changelog](CHANGELOG.md) for the other changes. Beta 16 passed the physical DAKboard check; broader field testing remains open. No stable release is approved.
+Use a test Home Assistant dashboard. Beta 17 adds clearer tracker evidence and person details, bounded location requests, Recent activity, improved map controls, and opt-in IEM radar with observed/forecast animation. It includes fixes from independent code review and passed the physical DAKboard check in its documented scope. Background iPhone departure/return testing remains open. See the [changelog](CHANGELOG.md).
 
-**Status: beta 16 prerelease; stable release gates remain open.** HomeCircle is a working name; public naming remains a release decision.
+**Status: beta 17 prerelease; stable release gates remain open.** HomeCircle is a working name; public naming remains a release decision.
 
 HomeCircle consumes standard HA `person` and `device_tracker` entities, with optional explicitly selected supporting sensors. An optional direct Life360 connection uses a built in tracker provider contract designed for more providers in later releases. Existing HA trackers remain selectable without a HomeCircle provider account.
+
+Beta 17 packages the reviewed work recorded in [October 8–10 changes](docs/RECENT-CHANGES-2026-10-10.md). See [beta 17 validation](docs/BETA17-VALIDATION.md) for release checks and remaining gaps.
 
 ## Start here
 
@@ -32,7 +34,7 @@ HomeCircle consumes standard HA `person` and `device_tracker` entities, with opt
 
 ## Release preparation
 
-Maintainer: [@jmhjr](https://github.com/jmhjr). The repository is public for development review and HACS custom-repository testing. The current experimental prerelease is [v0.1.0-beta.16](https://github.com/jmhjr/HomeCircle/releases/tag/v0.1.0-beta.16). See [beta 16 validation](docs/BETA16-VALIDATION.md) and the [historical release preparation record](docs/RELEASE-VALIDATION.md).
+Maintainer: [@jmhjr](https://github.com/jmhjr). The repository is public for development review and HACS custom-repository testing. The current experimental prerelease is [v0.1.0-beta.17](https://github.com/jmhjr/HomeCircle/releases/tag/v0.1.0-beta.17). See [beta 17 validation](docs/BETA17-VALIDATION.md) and the [historical release preparation record](docs/RELEASE-VALIDATION.md).
 
 ## Repository
 
@@ -55,4 +57,6 @@ Install through HACS; add HomeCircle in HA; select or create an HA Person for ea
 
 MIT licensed. No upstream implementation is copied into the new runtime. Any future code reuse must retain its original license and third-party notices.
 
-The card and authenticated snapshot interface began in beta 4 and have continued through beta 16. See [frontend setup](docs/FRONTEND.md), [beta 16 validation](docs/BETA16-VALIDATION.md), and the [historical milestone 3 validation](docs/MILESTONE-3-VALIDATION.md).
+The card and authenticated snapshot interface began in beta 4 and have continued through beta 17. See [frontend setup](docs/FRONTEND.md), [beta 16 validation](docs/BETA16-VALIDATION.md), and the [historical milestone 3 validation](docs/MILESTONE-3-VALIDATION.md).
+
+External Life360 family refresh is off by default, including after upgrade. An administrator can enable **Allow Life360 family refresh** in HomeCircle Options after reviewing the saved-account and household-control disclosure in the [setup guide](docs/SETUP.md).

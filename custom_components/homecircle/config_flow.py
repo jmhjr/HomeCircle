@@ -26,6 +26,8 @@ from .const import (
     CONF_TRACKERS,
     CONF_DISPLAY_NAME,
     CONF_SHOW_ON_MAP,
+    CONF_AUTO_REQUEST_LOCATION,
+    CONF_FAMILY_REFRESH_ENABLED,
 )
 from .normalize import normalize_household, normalize_member
 from .selection import (
@@ -308,8 +310,36 @@ def current_position(hass, draft, person_id, member):
     )
 
 
-def position_guidance(hass, person_id, current) -> str:
+def position_guidance(hass, person_id, current, member) -> str:
     """Explain the current effective position source without guessing associations."""
+    if "tracker_presence_conflict" in current.issues and current.residence:
+        away_trackers = [
+            tracker_id
+            for tracker_id in member[CONF_TRACKERS]
+            if (tracker := hass.states.get(tracker_id)) is not None
+            and tracker.attributes.get("source_type") == "gps"
+            and tracker.state == "not_home"
+        ]
+        if away_trackers:
+            active = current.active_source_entity
+            active_text = (
+                f" Active HA Person source: {review_label(hass, active)}."
+                if active
+                else " The active HA Person source is unknown."
+            )
+            trackers = ", ".join(review_label(hass, item) for item in away_trackers)
+            return (
+                f"Tracker conflict: {review_label(hass, person_id)} is at a "
+                "configured residence, "
+                f"but the last HA state for selected GPS tracker {trackers} says "
+                f"Away.{active_text} "
+                "HomeCircle follows the HA Person for Home/Away and omits this "
+                "conflicting map position. Review linked devices in "
+                "[Home Assistant People settings](/config/person). "
+                "Keep trackers that travel with this Person; HomeCircle will not "
+                "change HA links automatically. Check update times because "
+                "either state may be old; the GPS report time may be unknown."
+            )
     if current.location is None:
         return (
             "No usable map position right now. Check this tracker's GPS state "
@@ -333,7 +363,7 @@ def position_guidance(hass, person_id, current) -> str:
     return f"Current map position comes from {review_label(hass, source)}."
 
 
-def review_summary(hass, draft: dict[str, Any]) -> dict[str, str]:
+def review_summary(hass, draft: dict[str, Any], pending_links=None) -> dict[str, str]:
     """Describe the exact unsaved household selections in the final form."""
     places = ", ".join(review_label(hass, place) for place in draft[CONF_PLACES])
     current = normalize_household(
@@ -387,6 +417,11 @@ def review_summary(hass, draft: dict[str, Any]) -> dict[str, str]:
             f"- Status sensors: {status or 'None mapped'}",
             f"- Location report times: {report_text or 'None mapped'}",
         ]
+        if links := (pending_links or {}).get(person_id):
+            lines.append(
+                "- Will link to this HA Person: "
+                + ", ".join(review_label(hass, tracker) for tracker in links)
+            )
         if member.get("kind") == "pet":
             lines.append(
                 "- Pet timing: "
@@ -401,10 +436,14 @@ def review_summary(hass, draft: dict[str, Any]) -> dict[str, str]:
             )
         current_member = current_members.get(person_id)
         if current_member and current_member.location is None:
-            lines.append(f"- {position_guidance(hass, person_id, current_member)}")
+            lines.append(
+                f"- {position_guidance(hass, person_id, current_member, member)}"
+            )
         elif current_member and current_member.location:
             source = current_member.location.evidence.source_entity
-            lines.append(f"- {position_guidance(hass, person_id, current_member)}")
+            lines.append(
+                f"- {position_guidance(hass, person_id, current_member, member)}"
+            )
             if reports and source not in reports:
                 lines.append(
                     "- Current location report time: no sensor mapped for the "
@@ -413,7 +452,13 @@ def review_summary(hass, draft: dict[str, Any]) -> dict[str, str]:
         members.append("\n".join(lines))
     return {
         "primary_home": review_label(hass, draft[CONF_PRIMARY_HOME]),
-        "places": places or "None",
+        "places": (places or "None")
+        + (
+            "\nFamily refresh: enabled using the existing external Life360 account. "
+            "This optional unofficial action requests the whole selected Circle."
+            if draft.get(CONF_FAMILY_REFRESH_ENABLED) is True
+            else "\nFamily refresh: disabled."
+        ),
         "members": "\n\n".join(members)
         or "No members selected yet. After connecting a tracker account, reopen Options when its trackers appear.",
     }
@@ -477,6 +522,7 @@ class SelectionFlow:
                     CONF_PETS,
                     CONF_PRIMARY_HOME,
                     CONF_PLACES,
+                    CONF_FAMILY_REFRESH_ENABLED,
                     *(
                         provider.enabled_key
                         for provider in tracker_providers.TRACKER_PROVIDERS
@@ -565,6 +611,10 @@ class SelectionFlow:
                 ),
                 CONF_PETS: user_input.get(CONF_PETS, self.draft.get(CONF_PETS, [])),
                 CONF_PLACES: user_input.get(CONF_PLACES, []),
+                CONF_FAMILY_REFRESH_ENABLED: user_input.get(
+                    CONF_FAMILY_REFRESH_ENABLED,
+                    self.draft.get(CONF_FAMILY_REFRESH_ENABLED, False),
+                ),
                 **{
                     provider.enabled_key: bool(user_input.get(provider.enabled_key))
                     for provider in tracker_providers.TRACKER_PROVIDERS
@@ -675,6 +725,10 @@ class SelectionFlow:
                     if isinstance(self, HomeCircleOptionsFlow)
                     else {}
                 ),
+                vol.Optional(
+                    CONF_FAMILY_REFRESH_ENABLED,
+                    default=self.draft.get(CONF_FAMILY_REFRESH_ENABLED, False),
+                ): selector.BooleanSelector(),
                 vol.Optional(CONF_PEOPLE): entity_selector("person"),
                 **(
                     {vol.Optional(CONF_TRACKER_PEOPLE): tracker_selector(self.hass)}
@@ -924,7 +978,7 @@ class SelectionFlow:
             ),
             errors=errors,
             description_placeholders={
-                "person": entity_label(self.hass, person_id),
+                "person": review_label(self.hass, person_id),
                 "tracker_guidance": guidance,
             },
         )
@@ -1016,6 +1070,8 @@ class SelectionFlow:
                 is False
             ):
                 values[CONF_SHOW_ON_MAP] = False
+            if user_input.get(CONF_AUTO_REQUEST_LOCATION, False) is True:
+                values[CONF_AUTO_REQUEST_LOCATION] = True
             if tracker_only_member:
                 name = user_input.get(CONF_DISPLAY_NAME)
                 if isinstance(name, str) and name.strip():
@@ -1053,16 +1109,6 @@ class SelectionFlow:
             if person_id in self.draft.get(CONF_PEOPLE, []) and has_person_entity(
                 self.hass, person_id
             ):
-                added_trackers = set(values[CONF_TRACKERS]) - set(
-                    previous.get(CONF_TRACKERS, [])
-                )
-                linked, _ = person_tracker_references(self.hass, person_id)
-                for tracker_id in added_trackers - set(linked):
-                    if link_error := tracker_link_error(
-                        self.hass, person_id, tracker_id
-                    ):
-                        errors[CONF_TRACKERS] = link_error
-                        break
                 if (
                     not values[CONF_TRACKERS]
                     and not previous
@@ -1071,13 +1117,14 @@ class SelectionFlow:
                     errors[CONF_TRACKERS] = "tracker_required"
             if not errors:
                 self.draft[CONF_MEMBERS][person_id] = values
-                if person_id in self.draft.get(CONF_PEOPLE, []) and has_person_entity(
-                    self.hass, person_id
-                ):
-                    linked, _ = person_tracker_references(self.hass, person_id)
-                    self.pending_person_links[person_id] = list(
-                        set(values[CONF_TRACKERS]) - set(linked)
-                    )
+                # Details changes only HomeCircle's selection. Retain links
+                # explicitly requested by Assign/Add, unless deselected here.
+                if person_id in self.pending_person_links:
+                    self.pending_person_links[person_id] = [
+                        tracker
+                        for tracker in self.pending_person_links[person_id]
+                        if tracker in values[CONF_TRACKERS]
+                    ]
                 self.zone_member_prefill = None
                 self.zone_created_hint = ""
                 self.edit_sensors = bool(user_input.get("configure_sensors")) or bool(
@@ -1145,6 +1192,10 @@ class SelectionFlow:
                     CONF_SHOW_ON_MAP, default=True
                 ): selector.BooleanSelector(),
                 vol.Optional(
+                    CONF_AUTO_REQUEST_LOCATION,
+                    default=defaults.get(CONF_AUTO_REQUEST_LOCATION, False),
+                ): selector.BooleanSelector(),
+                vol.Optional(
                     "configure_sensors", default=False
                 ): selector.BooleanSelector(),
                 vol.Optional(
@@ -1168,12 +1219,17 @@ class SelectionFlow:
                 user_input if user_input is not None else defaults,
             ),
             description_placeholders={
-                "person": entity_label(self.hass, person_id),
+                "person": review_label(self.hass, person_id),
                 "number": str(self.member_index + 1),
                 "total": str(len(self.member_ids())),
-                "active": entity_label(self.hass, active),
+                "active": review_label(self.hass, active),
                 "tracker_guidance": guidance,
-                "position_guidance": position_guidance(self.hass, person_id, position),
+                "position_guidance": position_guidance(
+                    self.hass,
+                    person_id,
+                    position,
+                    values if user_input is not None else defaults,
+                ),
                 "new_zone_hint": self.zone_created_hint,
             },
         )
@@ -1220,7 +1276,7 @@ class SelectionFlow:
             data_schema=self.add_suggested_values_to_schema(
                 schema, user_input if user_input is not None else member
             ),
-            description_placeholders={"person": entity_label(self.hass, person_id)},
+            description_placeholders={"person": review_label(self.hass, person_id)},
         )
 
     async def after_member(self):
@@ -1317,7 +1373,7 @@ class SelectionFlow:
             ),
             errors=errors,
             description_placeholders={
-                "source": entity_label(self.hass, source),
+                "source": review_label(self.hass, source),
                 "number": str(self.report_index + 1),
                 "total": str(len(self.report_sources)),
                 "purpose": (
@@ -1367,7 +1423,7 @@ class SelectionFlow:
         return self.async_show_form(
             step_id="supporting",
             errors=errors,
-            description_placeholders={"person": entity_label(self.hass, person_id)},
+            description_placeholders={"person": review_label(self.hass, person_id)},
             data_schema=self.add_suggested_values_to_schema(
                 schema,
                 user_input if user_input is not None else member.get("supporting", {}),
@@ -1384,7 +1440,9 @@ class SelectionFlow:
                 if self.remove_before_draft is not None
                 else ["confirm_back", "confirm_edit_member", "confirm_save"]
             ),
-            description_placeholders=review_summary(self.hass, self.draft),
+            description_placeholders=review_summary(
+                self.hass, self.draft, self.pending_person_links
+            ),
         )
 
     async def async_step_confirm_remove(self, user_input=None):
@@ -1787,7 +1845,7 @@ class HomeCircleOptionsFlow(SelectionFlow, config_entries.OptionsFlowWithReload)
                 user_input or {},
             ),
             errors=errors,
-            description_placeholders={"person": entity_label(self.hass, person_id)},
+            description_placeholders={"person": review_label(self.hass, person_id)},
         )
 
     async def async_step_convert_legacy_member(self, user_input=None):

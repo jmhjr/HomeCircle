@@ -43,6 +43,17 @@ export function selection(members, mode, focusIds) {
       listed.has(member.id),
   );
 }
+export function addressLabel(member) {
+  if (member.place || !member.focusable || !member.location) return null;
+  const address = member.reported_address;
+  if (typeof address !== "string" || !address.trim())
+    return ["away", "driving"].includes(member.presence)
+      ? "Address unavailable"
+      : null;
+  return member.location.evidence?.freshness === "fresh"
+    ? `At ${address}`
+    : `Last reported: ${address}`;
+}
 function ageLabel(stamp, now) {
   const minutes = Math.max(0, Math.floor((now - stamp) / 60000));
   return minutes < 1
@@ -54,21 +65,30 @@ function ageLabel(stamp, now) {
         : `${Math.floor(minutes / 1440)} day${minutes < 2880 ? "" : "s"}`;
 }
 export function reportParts(member, now = Date.now()) {
+  if (member.issues?.includes("tracker_presence_conflict"))
+    return [
+      { kind: "unverified", text: "HA Person and selected tracker disagree" },
+      { kind: "missing", text: "Map position withheld" },
+    ];
   if (!member.location)
     return [{ kind: "missing", text: "No usable map position" }];
   const proof = member.location.evidence;
+  const cardSource = proof?.card_source_label ?? proof?.source_label;
   const source =
-    typeof proof?.source_label === "string" && proof.source_label.trim()
-      ? [{ kind: "source", text: proof.source_label }]
+    typeof cardSource === "string" && cardSource.trim()
+      ? [{ kind: "source", text: cardSource }]
       : [];
   const reported = proof?.reported_at ? Date.parse(proof.reported_at) : NaN;
   if (Number.isFinite(reported) && reported <= now + 60000)
     return [
       ...source,
       ...(proof.freshness === "stale"
-        ? [{ kind: "stale", text: "Stale" }]
+        ? [{ kind: "stale", text: "Stale report" }]
         : []),
-      { kind: "reported", text: `Reported ${ageLabel(reported, now)} ago` },
+      {
+        kind: "reported",
+        text: `Location reported ${ageLabel(reported, now)} ago`,
+      },
     ];
   const observed = proof?.observed_at ? Date.parse(proof.observed_at) : NaN;
   if (Number.isFinite(observed) && observed <= now + 60000)
@@ -76,11 +96,10 @@ export function reportParts(member, now = Date.now()) {
       ...source,
       {
         kind: "observed",
-        text: `HA state updated ${ageLabel(observed, now)} ago`,
+        text: `${member.location.origin === "ha_person" ? "HA Person" : "HA tracker"} updated ${ageLabel(observed, now)} ago`,
       },
-      { kind: "unknown", text: "Location report time unknown" },
     ];
-  return [...source, { kind: "unknown", text: "Location report time unknown" }];
+  return [...source, { kind: "unknown", text: "Update time unavailable" }];
 }
 export function reportLabel(member, now = Date.now()) {
   return reportParts(member, now)
@@ -115,7 +134,10 @@ export function pinFitPadding(size) {
 export function validateConfig(config) {
   if (!config || config.type !== "custom:homecircle-card")
     throw new Error("Use the HomeCircle card type.");
-  if (config.map_tiles && !["none", "osm"].includes(config.map_tiles))
+  if (
+    config.map_tiles &&
+    !["none", "osm", "satellite"].includes(config.map_tiles)
+  )
     throw new Error("Choose a supported map background.");
   if (
     config.hidden_members &&

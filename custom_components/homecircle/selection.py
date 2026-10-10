@@ -18,7 +18,9 @@ from .const import (
     CONF_TRACKERS,
     CONF_DISPLAY_NAME,
     CONF_SHOW_ON_MAP,
+    CONF_AUTO_REQUEST_LOCATION,
 )
+from .location_requests import available_notification_entity
 from .tracker_providers import connection_requested
 
 
@@ -170,6 +172,18 @@ def member_errors(
             errors[CONF_DISPLAY_NAME] = "invalid_display_name"
     if CONF_SHOW_ON_MAP in values and not isinstance(values[CONF_SHOW_ON_MAP], bool):
         errors[CONF_SHOW_ON_MAP] = "invalid_map_visibility"
+    if CONF_AUTO_REQUEST_LOCATION in values and not isinstance(
+        values[CONF_AUTO_REQUEST_LOCATION], bool
+    ):
+        errors[CONF_AUTO_REQUEST_LOCATION] = "invalid_auto_request_location"
+    elif values.get(CONF_AUTO_REQUEST_LOCATION) is True and (
+        not hass.services.has_service("notify", "send_message")
+        or not any(
+            available_notification_entity(hass, er.async_get(hass), tracker_id)
+            for tracker_id in values.get(CONF_TRACKERS, [])
+        )
+    ):
+        errors[CONF_AUTO_REQUEST_LOCATION] = "mobile_app_notify_required"
     if person_id and person_id.startswith("device_tracker."):
         if values.get(CONF_TRACKERS) != [person_id]:
             errors["base"] = "invalid_tracker_source"

@@ -5,11 +5,13 @@ This checks Core lifecycle/persistence; it is not browser or HACS acceptance.
 """
 
 import asyncio
+import hashlib
 import json
 from pathlib import Path
 import subprocess
 import sys
 import tempfile
+from urllib.parse import parse_qs, urlsplit
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -134,6 +136,23 @@ async def run_phase(
         assert len(entries) == 1
         entry = entries[0]
         assert entry.state == ConfigEntryState.LOADED
+        activity = entry.runtime_data.activity
+        if phase in ("create", "install"):
+            from homeassistant.util import dt as dt_util
+
+            activity.append(
+                "person.example_member", "refresh", "checked", dt_util.utcnow()
+            )
+            await activity.save()
+        else:
+            assert any(
+                event.get("value") == "checked"
+                for event in activity.events["person.example_member"]
+            )
+        assert any(
+            event["kind"] == "started"
+            for event in activity.events["person.example_member"]
+        )
         dashboards = hass.data[LOVELACE_DATA].dashboards
         assert "dashboard-homecircle" in dashboards
         dashboard_config = await dashboards["dashboard-homecircle"].async_load(False)
@@ -161,7 +180,14 @@ async def run_phase(
                 item for item in items if item["url"].startswith("/homecircle_static/")
             ]
             assert len(owned) == 1
-            assert owned[0]["url"].endswith("?v=" + package_version)
+            resource = urlsplit(owned[0]["url"])
+            assert resource.path == "/homecircle_static/homecircle-card.js"
+            query = parse_qs(resource.query)
+            assert query.get("v") == [package_version]
+            digest = hashlib.sha256(
+                (expected / "frontend/homecircle-card.js").read_bytes()
+            ).hexdigest()[:12]
+            assert query.get("asset") == [digest]
             assert any(item["url"] == "/local/example_unrelated.js" for item in items)
             async with aiohttp.ClientSession() as session:
                 async with session.get(
@@ -215,6 +241,14 @@ async def run_phase(
         if remove:
             assert await hass.config_entries.async_remove(entry.entry_id)
             assert not hass.config_entries.async_entries("homecircle")
+            from homeassistant.helpers.storage import Store
+
+            assert (
+                await Store(
+                    hass, 1, f"homecircle.activity.{entry.entry_id}"
+                ).async_load()
+                is None
+            )
             items = resources.async_items()
             assert not any(
                 item["url"].startswith("/homecircle_static/") for item in items

@@ -302,6 +302,18 @@ class DirectLife360:
             if task is not None:
                 self._interval_tasks.discard(task)
 
+    async def async_refresh_on_selection(self) -> str:
+        """Read cloud reports without promising a phone request or bypassing backoff."""
+        if self._stopping or self._auth_blocked:
+            return "unavailable"
+        if self._lock.locked():
+            return "busy"
+        if datetime.now(timezone.utc) < self._retry_at:
+            return "cooldown"
+        before = self._last_api_success
+        await self.async_refresh()
+        return "checked" if self._last_api_success != before else "unavailable"
+
     async def async_refresh(self) -> None:
         if self._stopping or self._lock.locked():
             return
