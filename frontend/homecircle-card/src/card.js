@@ -394,7 +394,7 @@ class HomeCircleCard extends HTMLElement {
       "family-refresh-button",
     );
     this._familyButton.title =
-      "Requests reports from all selected Life360 family members. Once every minute; up to 50 requests per rolling 24 hours.";
+      "Refreshes explicitly assigned supported trackers. Phone requests need member opt-in; unsupported trackers are skipped. One-minute cooldown and rolling daily limits apply.";
     this._familyFeedback = el("div", "family-refresh-feedback");
     this._familyFeedback.setAttribute("role", "status");
     this._familyFeedback.setAttribute("aria-live", "polite");

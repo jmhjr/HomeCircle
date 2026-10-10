@@ -2008,6 +2008,8 @@ test("family refresh makes one explicit request and reports same-source outcomes
   await tick();
   const control = value.shadowRoot.querySelector(".family-refresh-button");
   assert.equal(control.closest(".family-refresh").hidden, false);
+  assert.match(control.title, /explicitly assigned supported trackers/);
+  assert.doesNotMatch(control.title, /all selected Life360/);
   control.click();
   control.click();
   assert.equal(requests, 1);
