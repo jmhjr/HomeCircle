@@ -31,7 +31,7 @@ Experimental prerelease incorporating the reconciled beta 16 candidate. The comp
 
 ## 0.1.0-beta.14 — experimental prerelease
 
-- Show the registered tracker integration beside a location source when the tracker's name alone does not identify it. A Life360 Pet GPS tracker named Ruby now reads `Tracker: Ruby · Life360 Pet GPS`.
+- Show the registered tracker integration beside a location source when the tracker's name alone does not identify it. A Life360 Pet GPS tracker named the pet now reads `Tracker: the pet · Life360 Pet GPS`.
 
 ## 0.1.0-beta.13 — experimental prerelease
 
