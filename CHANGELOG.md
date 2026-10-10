@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Align the recenter control with the zoom pill and give it a centered crosshair, circular hit area and matching dark blue outline.
+
 - Family refresh now uses explicitly assigned supported trackers across providers, including sources that are not currently driving the map. Opted-in Home Assistant phones use same-device notification targets; external Life360 uses a complete selected Circle or a supported targeted action, and managed connections check cloud reports.
 - Report unsupported/disabled/failed/limited trackers individually and distinguish an HA receipt from a confirmed GPS report. Preserve persisted budgets, permissions, provider backoff and bounded report observation.
 

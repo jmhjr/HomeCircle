@@ -995,12 +995,21 @@ class HomeCircleCard extends HTMLElement {
         );
         path.setAttribute(
           "d",
-          "M12 2v4m0 12v4M2 12h4m12 0h4M19 12a7 7 0 1 1-14 0 7 7 0 0 1 14 0M14 12a2 2 0 1 1-4 0 2 2 0 0 1 4 0",
+          "M12 3v3m0 12v3M3 12h3m12 0h3M18 12a6 6 0 1 1-12 0 6 6 0 0 1 12 0",
         );
         path.setAttribute("fill", "none");
         path.setAttribute("stroke", "currentColor");
         path.setAttribute("stroke-width", "2");
-        icon.append(path);
+        path.setAttribute("stroke-linecap", "round");
+        const center = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "circle",
+        );
+        center.setAttribute("cx", "12");
+        center.setAttribute("cy", "12");
+        center.setAttribute("r", "2");
+        center.setAttribute("fill", "currentColor");
+        icon.append(path, center);
         this._recenterButton.append(icon);
         this._recenterButton.setAttribute(
           "aria-label",
