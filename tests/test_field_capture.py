@@ -120,3 +120,15 @@ async def test_missing_tracker_and_failed_snapshot_keep_other_source_evidence(mo
     assert result["sources"]["phone"]["state"] == "home"
     assert result["sources"]["cloud"]["capture_status"] == "not_found"
     assert result["homecircle"]["capture_status"] == "snapshot_failed"
+
+
+def test_family_projection_retains_only_tested_member_fixed_outcomes():
+    result = capture.project_family({"family_refresh": {
+        "available": True, "status": "requested", "authorization": "secret",
+        "members": [
+            {"id": "person.example_member", "status": "ha_updated", "name": "Private", "trackers": [{"status": "ha_updated", "provider": "Private"}, {"status": "raw secret"}]},
+            {"id": "person.example_other", "status": "updated"},
+        ],
+    }}, "person.example_member")
+    assert result == {"available": True, "status": "requested", "member_status": "ha_updated", "tracker_statuses": ["ha_updated", None]}
+    assert not any(value in json.dumps(result) for value in ("secret", "Private", "person.example_member", "person.example_other"))

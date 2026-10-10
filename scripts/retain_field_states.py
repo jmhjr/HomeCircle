@@ -66,6 +66,21 @@ def project_state(state, entities, include_coordinates=False, zones=None):
     }
 
 
+def project_family(snapshot, member_id):
+    """Keep fixed family outcomes for the tested member without household identifiers."""
+    family = snapshot.get("family_refresh") or {}
+    member = next((m for m in family.get("members", []) if m.get("id") == member_id), {})
+    statuses = {"idle", "checking", "requested", "complete", "waiting", "updated", "ha_updated", "unchanged", "source_changed", "unsupported", "disabled", "unavailable", "send_failed", "cooldown", "limited", "busy", "not_allowed"}
+    def status(value):
+        return value if isinstance(value, str) and value in statuses else None
+    return {
+        "available": family.get("available") is True,
+        "status": status(family.get("status")),
+        "member_status": status(member.get("status")),
+        "tracker_statuses": [status(t.get("status")) for t in member.get("trackers", [])],
+    }
+
+
 def project_member(snapshot, member_id, include_coordinates=False, entities=None):
     member = next((m for m in snapshot.get("members", []) if m.get("id") == member_id), None)
     if member is None:
@@ -86,6 +101,7 @@ def project_member(snapshot, member_id, include_coordinates=False, entities=None
         "battery_percent": finite(member.get("battery"), 0),
         "charging": member.get("charging"),
         "speed": member.get("speed"),
+        "family_refresh": project_family(snapshot, member_id),
         "selection_refresh": {key: selection_refresh.get(key) for key in ("status", "checked_at", "trigger")},
         "location_request": {key: request.get(key) for key in ("enabled", "status", "requested_at", "next_request_at")},
         **({"coordinates": point(member.get("location") or {})} if include_coordinates else {}),

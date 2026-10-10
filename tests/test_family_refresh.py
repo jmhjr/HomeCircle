@@ -412,3 +412,310 @@ async def test_family_refresh_requires_explicit_opt_in_before_credentials_or_sen
             assert (await async_refresh_family(h, r, u))["status"] == "unsupported"
             assert not r.location_request_times
             send.assert_not_awaited()
+
+
+def mixed_fixture():
+    h, r, u, reg, circle = fixture()
+    phone = "device_tracker.example_phone"
+    notify = "notify.example_phone"
+    registry = {
+        source: reg.async_get(source)
+        for source in r.config["members"][r.household.members[0].id]["trackers"]
+        + r.config["members"][r.household.members[1].id]["trackers"]
+    }
+    for entry in registry.values():
+        entry.device_id = None
+    registry[phone] = NS(
+        platform="mobile_app",
+        disabled=False,
+        config_entry_id="phone-entry",
+        unique_id="phone",
+        device_id="phone-device",
+        domain="device_tracker",
+    )
+    registry[notify] = NS(
+        platform="mobile_app",
+        disabled=False,
+        domain="notify",
+        device_id="phone-device",
+        entity_id=notify,
+    )
+    reg.entities = registry
+    reg.async_get = registry.get
+    r.config["members"][r.household.members[0].id].update(
+        trackers=[phone], auto_request_location=True
+    )
+    h.states = NS(get=lambda entity: NS(state="unknown") if entity == notify else None)
+    h.services = NS(has_service=lambda *_: True, async_call=AsyncMock())
+    r.selection_refresh_times = {}
+    return h, r, u, reg, circle, phone, notify
+
+
+async def test_mixed_assigned_sources_refresh_without_map_source_or_full_circle():
+    h, r, u, reg, _, phone, notify = mixed_fixture()
+    # The phone is assigned even though the normalized map still uses another source.
+    with (
+        patch(
+            "custom_components.homecircle.family_refresh.er.async_get", return_value=reg
+        ),
+        patch(
+            "custom_components.homecircle.family_refresh.async_send",
+            new_callable=AsyncMock,
+        ) as circle_send,
+    ):
+        assert family_status(h, r, reg)["available"]
+        assert (await async_refresh_family(h, r, u))["status"] == "requested"
+    assert h.services.async_call.await_args_list[0].args == (
+        "notify",
+        "send_message",
+        {"entity_id": notify, "message": "request_location_update"},
+    )
+    assert h.services.async_call.await_args_list[1].args == (
+        "life360",
+        "update_location",
+        {"entity_id": ["device_tracker.example_member1"]},
+    )
+    circle_send.assert_not_awaited()
+    assert {t["source"] for t in r.family_refresh["targets"]} == {
+        phone,
+        "device_tracker.example_member1",
+    }
+
+
+async def test_mixed_concurrency_and_individual_phone_budget_are_shared():
+    h, r, u, reg, _, phone, _ = mixed_fixture()
+    with patch(
+        "custom_components.homecircle.family_refresh.er.async_get", return_value=reg
+    ):
+        results = await asyncio.gather(
+            async_refresh_family(h, r, u), async_refresh_family(h, r, u)
+        )
+    assert sorted(result["status"] for result in results) == ["cooldown", "requested"]
+    assert h.services.async_call.await_count == 2
+    assert await async_reserve_request(r, phone, datetime.now(UTC)) == "cooldown"
+
+
+async def test_one_limited_or_failed_source_does_not_block_other_provider():
+    h, r, u, reg, _, phone, _ = mixed_fixture()
+    r.location_request_times[phone] = [
+        datetime.now(UTC) - timedelta(hours=2, seconds=i) for i in range(MAX_REQUESTS)
+    ]
+    with patch(
+        "custom_components.homecircle.family_refresh.er.async_get", return_value=reg
+    ):
+        assert (await async_refresh_family(h, r, u))["status"] == "requested"
+    assert h.services.async_call.await_count == 1
+    assert h.services.async_call.await_args.args[0] == "life360"
+    assert r.family_refresh["members"][0]["status"] == "limited"
+    h, r, u, reg, _, phone, _ = mixed_fixture()
+    h.services.async_call.side_effect = [OSError(), None]
+    with patch(
+        "custom_components.homecircle.family_refresh.er.async_get", return_value=reg
+    ):
+        assert (await async_refresh_family(h, r, u))["status"] == "requested"
+    assert r.family_refresh["members"][0]["status"] == "send_failed"
+    assert len(r.location_request_times[phone]) == 1
+
+
+async def test_disabled_phone_and_unknown_provider_are_explicitly_skipped():
+    h, r, u, reg, _, phone, _ = mixed_fixture()
+    r.config["members"][r.household.members[0].id]["auto_request_location"] = False
+    reg.async_get("device_tracker.example_member1").platform = "unsupported_provider"
+    # Keep one supported target and show disabled/unsupported results alongside it.
+    extra = "device_tracker.example_extra"
+    reg.entities[extra] = NS(
+        platform="life360",
+        disabled=False,
+        config_entry_id="external",
+        unique_id="extra",
+    )
+    r.config["members"][r.household.members[1].id]["trackers"].append(extra)
+    with patch(
+        "custom_components.homecircle.family_refresh.er.async_get", return_value=reg
+    ):
+        assert (await async_refresh_family(h, r, u))["status"] == "requested"
+    assert h.services.async_call.await_count == 1
+    assert h.services.async_call.await_args.args[2] == {"entity_id": [extra]}
+    assert r.family_refresh["members"][0]["status"] == "disabled"
+    assert [t["outcome"] for t in r.family_refresh["targets"]] == [
+        "disabled",
+        "unsupported",
+        "waiting",
+    ]
+
+
+async def test_phone_notification_permission_prevents_every_dispatch():
+    h, r, u, reg, _, _, notify = mixed_fixture()
+    u.permissions.check_entity = lambda entity, *_: entity != notify
+    with patch(
+        "custom_components.homecircle.family_refresh.er.async_get", return_value=reg
+    ):
+        assert (await async_refresh_family(h, r, u))["status"] == "not_allowed"
+    assert not r.location_request_times
+    h.services.async_call.assert_not_awaited()
+
+
+async def test_config_change_during_second_reservation_never_sends_removed_phone():
+    h, r, u, reg, _, phone, _ = mixed_fixture()
+    saves = 0
+
+    async def save(_):
+        nonlocal saves
+        saves += 1
+        if saves == 2:
+            r.config["members"][r.household.members[0].id]["trackers"] = []
+
+    r.location_request_store.async_save.side_effect = save
+    with patch(
+        "custom_components.homecircle.family_refresh.er.async_get", return_value=reg
+    ):
+        assert (await async_refresh_family(h, r, u))["status"] == "requested"
+    assert h.services.async_call.await_count == 1
+    assert h.services.async_call.await_args.args[0] == "life360"
+    assert r.family_refresh["members"][0]["status"] == "source_changed"
+
+
+async def test_ha_receipt_is_not_a_gps_report_and_late_receipts_do_not_count():
+    from homeassistant.core import State
+    from custom_components.homecircle.family_refresh import observe_family_refresh
+
+    h, r, u, reg, _, phone, _ = mixed_fixture()
+    now = datetime.now(UTC)
+    r.states = {
+        phone: State(
+            phone,
+            "home",
+            {"source_type": "gps"},
+            last_updated=now - timedelta(minutes=20),
+            last_reported=now - timedelta(minutes=20),
+        )
+    }
+    with (
+        patch(
+            "custom_components.homecircle.family_refresh.er.async_get", return_value=reg
+        ),
+        patch(
+            "custom_components.homecircle.family_refresh.dt_util.utcnow",
+            return_value=now,
+        ),
+    ):
+        await async_refresh_family(h, r, u)
+    r.states[phone] = State(
+        phone,
+        "home",
+        {"source_type": "gps"},
+        last_updated=now + timedelta(seconds=10),
+        last_reported=now + timedelta(seconds=10),
+    )
+    observe_family_refresh(r, now + timedelta(seconds=11))
+    observe_family_refresh(r, now + timedelta(minutes=2))
+    assert r.family_refresh["members"][0]["status"] == "ha_updated"
+    assert r.family_refresh["members"][1]["status"] == "unchanged"
+    r.states[phone] = State(phone, "away", {}, last_updated=now + timedelta(minutes=3))
+    observe_family_refresh(r, now + timedelta(minutes=3))
+    assert r.family_refresh["members"][0]["status"] == "ha_updated"
+
+
+async def test_complete_circle_and_phone_are_combined_without_duplicate_circle_calls():
+    h, r, u, reg, _, phone, _ = mixed_fixture()
+    r.config["members"][r.household.members[0].id]["trackers"].append(
+        "device_tracker.example_member0"
+    )
+    with (
+        patch(
+            "custom_components.homecircle.family_refresh.er.async_get", return_value=reg
+        ),
+        patch(
+            "custom_components.homecircle.family_refresh.async_send",
+            new_callable=AsyncMock,
+            return_value=True,
+        ) as send,
+    ):
+        assert (await async_refresh_family(h, r, u))["status"] == "requested"
+    assert send.await_count == 1
+    assert h.services.async_call.await_count == 1
+    assert h.services.async_call.await_args.args[0] == "notify"
+    assert len(r.family_refresh["members"][0]["trackers"]) == 2
+
+
+async def test_managed_cloud_connection_checks_once_for_multiple_assigned_sources():
+    h, r, u, reg, _, _, _ = mixed_fixture()
+    r.config["members"][r.household.members[0].id]["trackers"] = [
+        "device_tracker.example_member0"
+    ]
+    client = NS(
+        entry_id="owned-entry",
+        async_refresh_on_selection=AsyncMock(return_value="checked"),
+    )
+    r.managed_trackers = {"life360": client}
+    for i in range(2):
+        registered = reg.async_get(f"device_tracker.example_member{i}")
+        registered.platform = "homecircle"
+        registered.unique_id = f"homecircle_life360_{i}"
+        registered.config_entry_id = "owned-entry"
+    with patch(
+        "custom_components.homecircle.family_refresh.er.async_get", return_value=reg
+    ):
+        assert (await async_refresh_family(h, r, u))["status"] == "requested"
+    assert client.async_refresh_on_selection.await_count == 1
+    h.services.async_call.assert_not_awaited()
+    assert all(t["request_status"] == "checked" for t in r.family_refresh["targets"])
+
+
+async def test_mixed_button_daily_limit_exact_expiry_and_storage_failure():
+    h, r, u, reg, _, _, _ = mixed_fixture()
+    now = datetime.now(UTC)
+    r.location_request_times["family:assigned"] = [
+        now - timedelta(hours=23, seconds=i) for i in range(MAX_REQUESTS)
+    ]
+    with (
+        patch(
+            "custom_components.homecircle.family_refresh.er.async_get", return_value=reg
+        ),
+        patch(
+            "custom_components.homecircle.family_refresh.dt_util.utcnow",
+            return_value=now,
+        ),
+    ):
+        result = await async_refresh_family(h, r, u)
+        assert result["status"] == "limited"
+        assert datetime.fromisoformat(result["retry_at"]) == min(
+            r.location_request_times["family:assigned"]
+        ) + timedelta(days=1)
+        h.services.async_call.assert_not_awaited()
+        r.location_request_times.clear()
+        r.location_request_store.async_save.side_effect = OSError()
+        assert (await async_refresh_family(h, r, u))["status"] == "unavailable"
+        h.services.async_call.assert_not_awaited()
+        assert not any(r.location_request_times.values())
+
+
+async def test_all_skipped_sources_still_explain_results_without_spending_budget():
+    h, r, u, reg, _, _, _ = mixed_fixture()
+    r.config["members"][r.household.members[0].id]["auto_request_location"] = False
+    reg.async_get("device_tracker.example_member1").platform = "unsupported_provider"
+    with patch(
+        "custom_components.homecircle.family_refresh.er.async_get", return_value=reg
+    ):
+        assert family_status(h, r, reg)["available"]
+        assert (await async_refresh_family(h, r, u))["status"] == "unsupported"
+        assert [m["status"] for m in family_status(h, r, reg)["members"]] == [
+            "disabled",
+            "unsupported",
+        ]
+    h.services.async_call.assert_not_awaited()
+    assert not r.location_request_times
+
+
+async def test_registry_rebinding_during_save_cannot_redirect_phone_request():
+    h, r, u, reg, _, phone, _ = mixed_fixture()
+
+    async def save(_):
+        reg.async_get(phone).unique_id = "different-phone"
+
+    r.location_request_store.async_save.side_effect = save
+    with patch(
+        "custom_components.homecircle.family_refresh.er.async_get", return_value=reg
+    ):
+        assert (await async_refresh_family(h, r, u))["status"] == "unsupported"
+    h.services.async_call.assert_not_awaited()

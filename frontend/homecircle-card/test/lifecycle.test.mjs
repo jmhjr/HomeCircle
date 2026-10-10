@@ -2008,6 +2008,8 @@ test("family refresh makes one explicit request and reports same-source outcomes
   await tick();
   const control = value.shadowRoot.querySelector(".family-refresh-button");
   assert.equal(control.closest(".family-refresh").hidden, false);
+  assert.match(control.title, /explicitly assigned supported trackers/);
+  assert.doesNotMatch(control.title, /all selected Life360/);
   control.click();
   control.click();
   assert.equal(requests, 1);
@@ -2565,4 +2567,55 @@ test("radar resets stale labels, recovers metadata failures, and refreshes futur
     window.fetch = oldFetch;
     delete document.hidden;
   }
+});
+
+test("family feedback distinguishes HA receipt from GPS and explains skipped assigned trackers", async (t) => {
+  const value = card({
+    connection: {},
+    callWS: async () => ({
+      ...response(),
+      members: [
+        {
+          id: "person.example_member",
+          name: "Example",
+          presence: "home",
+          location: null,
+          focusable: false,
+          kind: "person",
+          trackers: [],
+          driving: { value: null, status: "unknown" },
+          battery: null,
+        },
+      ],
+      family_refresh: {
+        available: true,
+        status: "complete",
+        members: [
+          {
+            id: "person.example_member",
+            status: "ha_updated",
+            trackers: [
+              { provider: "Home Assistant", status: "ha_updated" },
+              { provider: "Other tracker", status: "unsupported" },
+              { provider: "Life360", status: "limited" },
+            ],
+          },
+        ],
+      },
+    }),
+  });
+  t.after(() => value.remove());
+  await tick();
+  assert.match(
+    value._familyFeedback.textContent,
+    /HA updated; GPS report unconfirmed/,
+  );
+  assert.match(
+    value._familyFeedback.textContent,
+    /Other tracker: Refresh unsupported/,
+  );
+  assert.match(
+    value._familyFeedback.textContent,
+    /Life360: Daily limit reached/,
+  );
 });
