@@ -14,3 +14,5 @@ CONF_RESIDENCES = "additional_residences"
 CONF_DISPLAY_NAME = "display_name"
 CONF_SHOW_ON_MAP = "show_on_map"
 CONF_AUTO_REQUEST_LOCATION = "auto_request_location"
+
+CONF_FAMILY_REFRESH_ENABLED = "family_refresh_enabled"

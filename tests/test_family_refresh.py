@@ -51,9 +51,10 @@ def fixture():
     runtime = NS(
         household=NS(members=members),
         config={
+            "family_refresh_enabled": True,
             "members": {
                 m.id: {"trackers": [m.location.evidence.source_entity]} for m in members
-            }
+            },
         },
         location_request_store=NS(async_save=AsyncMock()),
         location_request_times={},
@@ -391,3 +392,23 @@ async def test_failed_family_feedback_also_expires():
         return_value=now + timedelta(minutes=5),
     ):
         assert family_status(h, r, reg)["status"] == "idle"
+
+
+async def test_family_refresh_requires_explicit_opt_in_before_credentials_or_send():
+    h, r, u, reg, _ = fixture()
+    for enabled in (None, False, "true"):
+        r.config["family_refresh_enabled"] = enabled
+        with (
+            patch(
+                "custom_components.homecircle.family_refresh.er.async_get",
+                return_value=reg,
+            ),
+            patch(
+                "custom_components.homecircle.family_refresh.async_send",
+                new_callable=AsyncMock,
+            ) as send,
+        ):
+            assert family_status(h, r, reg)["available"] is False
+            assert (await async_refresh_family(h, r, u))["status"] == "unsupported"
+            assert not r.location_request_times
+            send.assert_not_awaited()

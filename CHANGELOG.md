@@ -1,9 +1,10 @@
 # Changelog
 
-## Unreleased reconciled candidate — October 8–10, 2026
+## 0.1.0-beta.17 — October 10, 2026
 
-The source candidate remains based on beta 16; these changes are not in the published beta 16 HACS archive. The complete implementation and validation record is in [recent changes](docs/RECENT-CHANGES-2026-10-10.md).
+Experimental prerelease incorporating the reconciled beta 16 candidate. The complete implementation and validation record is in [recent changes](docs/RECENT-CHANGES-2026-10-10.md).
 
+- Require administrator opt-in for external Life360 family refresh, disclose saved-account use and viewer control permissions, escape setup description names, and prevent no-op selection requests from evicting activity.
 - Freeze family-refresh outcomes at the two-minute observation boundary, expire feedback after five minutes, and protect significant activity from freshness churn.
 - Explain HA Person/tracker conflicts using configured associations and the active source; keep report time distinct from HA update time. Simplify tracker labels to provider names, including Home Assistant.
 - Add opt-in phone location requests, bounded selected-person refresh and explicit family refresh. Retain failed attempts and limits across restarts: 50 attempts per rolling 24 hours, one-minute deliberate cooldowns, with separate per-tracker and family counters. Automatic phone attempts wait 15 minutes and pause after three unanswered automatic attempts.

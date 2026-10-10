@@ -2118,7 +2118,7 @@ async def test_duplicate_tracker_names_are_distinct_in_hint_and_review(hass, hou
     ):
         result = await start(hass, household)
     assert result["description_placeholders"]["active"] == (
-        "Example Phone (device_tracker.example_phone)"
+        r"Example Phone (device\_tracker.example\_phone)"
     )
     tracker_field = next(
         field for field in result["data_schema"].schema if str(field) == "trackers"
@@ -2489,3 +2489,42 @@ async def test_details_never_link_trackers_or_block_yaml_person(
     assert entities_in_person(hass, person_id) == [linked]
     assert entry.options["members"][person_id]["trackers"] == [linked, unlinked]
     assert entry.options["members"][person_id]["show_on_map"] is False
+
+
+async def test_family_refresh_opt_in_is_explicit_and_persisted(hass, household):
+    entry = await create(hass, household)
+    assert entry.data["family_refresh_enabled"] is False
+    manager = hass.config_entries.options
+    flow = await start_options(manager, entry)
+    flow = await manager.async_configure(
+        flow["flow_id"], {**household, "family_refresh_enabled": True}
+    )
+    result = await finish(hass, flow, manager)
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    await hass.async_block_till_done()
+    assert entry.options["family_refresh_enabled"] is True
+    flow = await start_options(manager, entry)
+    flow = await manager.async_configure(flow["flow_id"], household)
+    result = await finish(hass, flow, manager)
+    await hass.async_block_till_done()
+    assert entry.options["family_refresh_enabled"] is True
+    flow = await start_options(manager, entry)
+    flow = await manager.async_configure(
+        flow["flow_id"], {**household, "family_refresh_enabled": False}
+    )
+    await finish(hass, flow, manager)
+    await hass.async_block_till_done()
+    assert entry.options["family_refresh_enabled"] is False
+
+
+async def test_member_description_escapes_entity_name(hass, household):
+    from custom_components.homecircle.config_flow import markdown_label
+
+    name = "[Example](https://example.invalid) <b>Member</b>"
+    state = hass.states.get(household["people"][0])
+    hass.states.async_set(
+        state.entity_id, state.state, {**state.attributes, "friendly_name": name}
+    )
+    flow = await start(hass, household)
+    assert flow["description_placeholders"]["person"] == markdown_label(name)
+    hass.config_entries.flow.async_abort(flow["flow_id"])

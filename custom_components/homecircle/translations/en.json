@@ -14,7 +14,8 @@
           "life360_direct": "Connect a Life360 account directly",
           "replace_life360_login": "Replace saved Life360 sign-in",
           "create_zone": "Create a new home or place zone",
-          "create_person": "Create a new Home Assistant Person"
+          "create_person": "Create a new Home Assistant Person",
+          "family_refresh_enabled": "Allow Life360 family refresh"
         },
         "data_description": {
           "pets": "Select existing device trackers for pets without Home Assistant Person records. This is a role you assign; the picker can also show people devices. Select each tracker in only one list. The tracker remains this pet’s location source.",
@@ -23,7 +24,8 @@
           "replace_life360_login": "Use this if the password or token changed for the same Life360 account. Existing member selections are kept.",
           "places": "Examples: work, school, or a favorite park. These zones label a location but do not count as Home. Add a dorm or second home under Other homes for the appropriate member.",
           "create_zone": "Open a map to create a missing Home Assistant zone, then return here with your selections intact.",
-          "create_person": "Creates an editable Person in Home Assistant; the Person remains there if you later cancel HomeCircle setup."
+          "create_person": "Creates an editable Person in Home Assistant; the Person remains there if you later cancel HomeCircle setup.",
+          "family_refresh_enabled": "Off by default. Allows an explicit family button to use the existing external Life360 integration’s saved account connection for an unofficial Circle-wide request. Only a complete selected Circle with one enabled account is supported. Household viewers with control permission for every target can request reports; this does not guarantee new GPS fixes. No credentials are sent to the card."
         }
       },
       "member": {
@@ -336,7 +338,8 @@
           "replace_life360_login": "Replace saved Life360 sign-in",
           "remove_tracker": "Remove one tracker",
           "create_zone": "Create a new home or place zone",
-          "create_person": "Create a new Home Assistant Person"
+          "create_person": "Create a new Home Assistant Person",
+          "family_refresh_enabled": "Allow Life360 family refresh"
         },
         "data_description": {
           "edit_member": "Open just this member’s details. Other members stay as saved.",
@@ -347,7 +350,8 @@
           "remove_tracker": "Remove just this tracker from HomeCircle after review. A tracker-only member disappears; a Home Assistant Person remains. Removing a tracker from a Person does not unlink it in Home Assistant.",
           "places": "Examples: work, school, or a favorite park. These zones label a location but do not count as Home. Add a dorm or second home under Other homes for the appropriate member.",
           "create_zone": "Open a map to create a missing Home Assistant zone, then return here with your selections intact.",
-          "create_person": "Creates an editable Person in Home Assistant; the Person remains there if you later cancel HomeCircle setup."
+          "create_person": "Creates an editable Person in Home Assistant; the Person remains there if you later cancel HomeCircle setup.",
+          "family_refresh_enabled": "Off by default. Allows an explicit family button to use the existing external Life360 integration’s saved account connection for an unofficial Circle-wide request. Only a complete selected Circle with one enabled account is supported. Household viewers with control permission for every target can request reports; this does not guarantee new GPS fixes. No credentials are sent to the card."
         }
       },
       "member": {

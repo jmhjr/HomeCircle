@@ -13,7 +13,7 @@ from homeassistant.auth.permissions.const import POLICY_CONTROL
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_MEMBERS, CONF_TRACKERS
+from .const import CONF_MEMBERS, CONF_TRACKERS, CONF_FAMILY_REFRESH_ENABLED
 from .location_requests import MAX_REQUESTS, async_reserve_requests
 
 
@@ -45,7 +45,12 @@ def key_for(entry_id, cid):
 
 def plan(hass, runtime, registry):
     """Require a single loaded Circle whose complete membership is selected."""
-    if hass is None or registry is None or runtime.household is None:
+    if (
+        hass is None
+        or registry is None
+        or runtime.household is None
+        or runtime.config.get(CONF_FAMILY_REFRESH_ENABLED) is not True
+    ):
         return None
     targets = []
     for member in runtime.household.members:

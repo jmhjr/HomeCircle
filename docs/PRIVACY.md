@@ -45,3 +45,11 @@ The optional Radar map toggle is off on initial load and does not persist its en
 Radar animation additionally fetches public IEM mosaic and HRRR model metadata, without credentials or referrer. Opt-in playback requests up to seven observed or nine forecast tile layers for the viewed area. These layers are removed when playback stops; no family names, tracker identities or HA tokens are sent. Private map mode prevents both metadata and tile requests.
 
 Family-refresh results reflect reports observed within its two-minute window and remain fixed afterward. Completed or failed feedback clears after five minutes; request limits remain intact. Recent activity retains at most 25 freshness entries, evicting freshness before other events at the 100-event cap. All entries still expire after seven days.
+
+## Explicit Life360 family refresh
+
+The family button is an optional, user-initiated exception to the ordinary HA-state boundary. For a compatible external Life360 integration, HomeCircle reads that integration's existing saved authorization in server memory and sends one authenticated HTTPS request to Life360's API for the selected Circle. It does not ask for a second account login, copy that authorization into HomeCircle storage, or send it to the browser, diagnostics or logs. This operation is unofficial and can stop working if the upstream layout/API changes.
+
+It is offered only when the complete Circle membership is explicitly selected and a single enabled account can be resolved. The caller must be able to read the configured household and control every targeted Life360 tracker. The operation is Circle-wide; it is not substituted for an individual member request and is never sent automatically. Persisted Circle limits apply. Dispatch does not prove delivery or a new phone GPS fix. Other provider integrations and Circle members outside that exact selected scope are not requested.
+
+Family refresh is off by default, including for existing households after upgrade. Only an administrator can enable **Allow Life360 family refresh** in Options. After opt-in, any viewer with the required household read and target control permissions may use the button; the standard Home Assistant user group normally grants control.

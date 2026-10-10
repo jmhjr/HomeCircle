@@ -392,7 +392,11 @@ async def websocket_refresh_location(hass, connection, msg):
         "checked_at": checked_at,
         "trigger": "card_selection",
     }
-    if getattr(runtime, "activity", None) is not None:
+    if getattr(runtime, "activity", None) is not None and result["status"] in {
+        "requested",
+        "checked",
+        "send_failed",
+    }:
         runtime.activity.append(
             member.id, "refresh", result["status"], dt_util.utcnow()
         )

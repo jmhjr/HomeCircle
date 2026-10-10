@@ -1,6 +1,6 @@
 # Current candidate and October 8–10 change record
 
-This consolidates the recent HomeCircle work and all current source changes since the last committed baseline. The dated implementation log begins October 9; no separate October 8 milestone is asserted. The candidate retains the beta 16 version while the published HACS beta 16 archive remains unchanged. Historical checks in other documents apply to their dated builds.
+This consolidates the recent HomeCircle work and all current source changes since the last committed baseline. The dated implementation log begins October 9; no separate October 8 milestone is asserted. This candidate is packaged as beta 17; the previously published beta 16 archive remains unchanged. Historical checks in other documents apply to their dated builds.
 
 ## Implementation inventory
 

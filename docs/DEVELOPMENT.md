@@ -5,7 +5,7 @@ Current development state is documented in [recent changes](RECENT-CHANGES-2026-
 
 ## Current state
 
-Beta 16 implements selection flows, normalization, household counts/focus, an authenticated snapshot interface, an automatic first dashboard, and the card/editor. Public manifest metadata, published HACS installation, and the production beta-test installation are validated in their release records. Keep development and destructive lifecycle checks in disposable HA instances. See [stable scope audit](STABLE-SCOPE-AUDIT.md) before preparing `v0.1.0`.
+Beta 17 packages the reconciled dashboard and privacy hardening; it implements selection flows, normalization, household counts/focus, an authenticated snapshot interface, an automatic first dashboard, and the card/editor. Public manifest metadata, published HACS installation, and the production beta-test installation are validated in their release records. Keep development and destructive lifecycle checks in disposable HA instances. See [stable scope audit](STABLE-SCOPE-AUDIT.md) before preparing `v0.1.0`.
 
 ## Work sequence
 

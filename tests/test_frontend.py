@@ -618,3 +618,43 @@ async def test_family_command_denied_before_provider_access(
         result = await client.receive_json()
         assert result["error"]["code"] == "unauthorized"
         refresh.assert_not_awaited()
+
+
+async def test_noop_refresh_spam_does_not_evict_activity(
+    hass, household, hass_ws_client
+):
+    entry = await setup(hass, household)
+    client = await hass_ws_client(hass)
+    events = {
+        key: list(value) for key, value in entry.runtime_data.activity.events.items()
+    }
+    with patch(
+        "custom_components.homecircle.selection_refresh.async_refresh_selected",
+        return_value={"status": "cooldown"},
+    ):
+        for identifier in range(1, 121):
+            await client.send_json(
+                {
+                    "id": identifier,
+                    "type": "homecircle/refresh_location",
+                    "member_id": household["people"][0],
+                }
+            )
+            assert (await client.receive_json())["success"]
+    assert entry.runtime_data.activity.events == events
+    with patch(
+        "custom_components.homecircle.selection_refresh.async_refresh_selected",
+        return_value={"status": "requested"},
+    ):
+        await client.send_json(
+            {
+                "id": 121,
+                "type": "homecircle/refresh_location",
+                "member_id": household["people"][0],
+            }
+        )
+        assert (await client.receive_json())["success"]
+    assert (
+        entry.runtime_data.activity.events[household["people"][0]][-1]["value"]
+        == "requested"
+    )

@@ -1571,6 +1571,6 @@ if (!window.customCards.some((card) => card.type === "homecircle-card"))
     type: "homecircle-card",
     name: "HomeCircle",
     description:
-      "Household presence, residences, and a private-by-default map.",
+      "Household presence and map controls, with a Private background option.",
     preview: true,
   });

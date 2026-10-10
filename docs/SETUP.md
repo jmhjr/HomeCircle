@@ -1,6 +1,6 @@
 # Set up HomeCircle
 
-Use a test Home Assistant instance running the validated Core 2026.9.4 baseline. Published beta 16 is an experimental prerelease; broader Core compatibility has not been established. New people and pets use the Person-first screens below; existing tracker-only members remain supported. HomeCircle can use existing Home Assistant trackers or optionally connect to Life360 directly.
+Use a test Home Assistant instance running the validated Core 2026.9.4 baseline. Published beta 17 is an experimental prerelease; broader Core compatibility has not been established. New people and pets use the Person-first screens below; existing tracker-only members remain supported. HomeCircle can use existing Home Assistant trackers or optionally connect to Life360 directly.
 
 ## 1. Get a working source into Home Assistant
 
@@ -37,7 +37,7 @@ A member at an additional residence can count Home while being outside the Home 
 
 1. With HACS already configured on the test instance, open its custom repositories menu.
 2. Add `https://github.com/jmhjr/HomeCircle` with type **Integration**. See [HACS custom repositories](https://www.hacs.dev/docs/faq/custom_repositories/).
-3. Open HomeCircle in HACS. In Download or Redownload, open **Need a different version?**, choose **Release**, select **v0.1.0-beta.16**, and download it. If HACS already offers beta 16 in the dialog, confirm that version before downloading. A branch commit is not the versioned release. Every HomeCircle release is currently a prerelease, so HACS can show the branch commit as its available version while beta updates are off. For future beta update checks, enable and turn on HACS's **HomeCircle pre-release** switch in Home Assistant's Entities settings; it is disabled by default. [HACS explains this switch](https://www.hacs.dev/docs/use/entities/switch/).
+3. Open HomeCircle in HACS. In Download or Redownload, open **Need a different version?**, choose **Release**, select **v0.1.0-beta.17**, and download it. If HACS already offers beta 17 in the dialog, confirm that version before downloading. A branch commit is not the versioned release. Every HomeCircle release is currently a prerelease, so HACS can show the branch commit as its available version while beta updates are off. For future beta update checks, enable and turn on HACS's **HomeCircle pre-release** switch in Home Assistant's Entities settings; it is disabled by default. [HACS explains this switch](https://www.hacs.dev/docs/use/entities/switch/).
 4. Restart Home Assistant.
 5. Open Settings → Devices & services → Add integration → HomeCircle.
 
@@ -143,4 +143,11 @@ HACS upgrades require a restart. To uninstall from a test instance, first remove
 
 ## Validation scope
 
-See [beta 16 validation](BETA16-VALIDATION.md) for this release's tested scope. The physical DAKboard check passed on the exact beta 16 package before publication. Full real departure/return and unattended provider failure/recovery tests remain open before a stable release.
+See [beta 17 validation](BETA17-VALIDATION.md) for this release's tested scope. The reconciled behavior candidate passed physical DAKboard acceptance; the versioned package and HACS checks are recorded separately. Full real departure/return and unattended provider failure/recovery tests remain open before a stable release.
+
+
+## Optional external Life360 family refresh
+
+This feature is off by default, including after an upgrade. An administrator can open HomeCircle Options → household settings and enable **Allow Life360 family refresh**, then review and save. This allows a manual family button to use the compatible external Life360 integration's existing saved account authorization in server memory for an unofficial, Circle-wide HTTPS request. No second login is needed and the credential is not copied into HomeCircle storage or sent to the card.
+
+The button appears only for a complete explicitly selected Circle with one enabled account. Each caller needs read access to all household inputs and control permission for every target. Home Assistant's standard user group normally has control permission; enabling this option therefore allows those household viewers to send requests, not only administrators. Fifty attempts per rolling 24 hours and a one-minute deliberate cooldown apply. Successful dispatch does not guarantee delivery or a new GPS fix. Disable the option to stop this action. Individual tracker actions and the optional direct HomeCircle account connection have separate settings.

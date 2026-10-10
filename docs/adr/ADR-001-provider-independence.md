@@ -14,7 +14,7 @@ No required Life360 integration, credential/token field, direct API client, bund
 
 ## 2026-10-04 optional-provider amendment
 
-The user approved an optional direct Life360 connection, implemented in beta 11 and retained in beta 16. It creates ordinary HA `device_tracker` entities behind the same person/tracker selection and normalization boundary. The `life360` client is a package dependency, but HomeCircle makes no provider connection unless the user enables and verifies an account. Households using existing HA trackers still require no Life360 credentials. The shared provider contract separates credentials, entity ownership, polling, health and reauthentication so future providers can be added independently. The original prohibition above continues to apply to **required core behavior**; the optional adapter is the approved exception. See [architecture](../ARCHITECTURE.md) and the [provider issue workflow](../TRACKER-PROVIDER-ISSUES.md).
+The user approved an optional direct Life360 connection, implemented in beta 11 and retained in beta 16. It creates ordinary HA `device_tracker` entities behind the same person/tracker selection and normalization boundary. The `life360` client is a package dependency, but the optional direct adapter makes no provider connection unless the user enables and verifies its account. Households using existing HA trackers still require no Life360 credentials. The shared provider contract separates credentials, entity ownership, polling, health and reauthentication so future providers can be added independently. The original prohibition above continues to apply to **required core behavior**; the optional adapter is the approved exception. See [architecture](../ARCHITECTURE.md) and the [provider issue workflow](../TRACKER-PROVIDER-ISSUES.md).
 
 ## Consequences
 
@@ -27,3 +27,9 @@ A direct Life360 product would couple onboarding and availability to one provide
 ## Verification
 
 V0.1 must function with Life360 absent. Exercise two independent sources, locationless trackers, source switching, and missing optional attributes. Audit dependencies, configuration forms and network calls for provider coupling.
+
+### Beta 17 amendment — explicit external Life360 family refresh
+
+The authorized family-refresh feature is a second optional exception: a deliberate Circle-wide action may use the compatible external Life360 integration's saved server-side authorization. It requires a complete explicitly selected Circle, one enabled account, household read permission and control permission for all targets. It sends an unofficial authenticated HTTPS operation to Life360 only after an explicit click; it does not enable a polling loop or copy credentials to HomeCircle storage or the frontend. Core normalization and other tracker providers do not depend on this action. See [privacy](../PRIVACY.md) for disclosure and limits.
+
+Family refresh is off by default, including for existing households after upgrade. Only an administrator can enable **Allow Life360 family refresh** in Options. After opt-in, any viewer with the required household read and target control permissions may use the button; the standard Home Assistant user group normally grants control.

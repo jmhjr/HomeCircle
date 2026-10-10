@@ -27,6 +27,7 @@ from .const import (
     CONF_DISPLAY_NAME,
     CONF_SHOW_ON_MAP,
     CONF_AUTO_REQUEST_LOCATION,
+    CONF_FAMILY_REFRESH_ENABLED,
 )
 from .normalize import normalize_household, normalize_member
 from .selection import (
@@ -451,7 +452,13 @@ def review_summary(hass, draft: dict[str, Any], pending_links=None) -> dict[str,
         members.append("\n".join(lines))
     return {
         "primary_home": review_label(hass, draft[CONF_PRIMARY_HOME]),
-        "places": places or "None",
+        "places": (places or "None")
+        + (
+            "\nFamily refresh: enabled using the existing external Life360 account. "
+            "This optional unofficial action requests the whole selected Circle."
+            if draft.get(CONF_FAMILY_REFRESH_ENABLED) is True
+            else "\nFamily refresh: disabled."
+        ),
         "members": "\n\n".join(members)
         or "No members selected yet. After connecting a tracker account, reopen Options when its trackers appear.",
     }
@@ -515,6 +522,7 @@ class SelectionFlow:
                     CONF_PETS,
                     CONF_PRIMARY_HOME,
                     CONF_PLACES,
+                    CONF_FAMILY_REFRESH_ENABLED,
                     *(
                         provider.enabled_key
                         for provider in tracker_providers.TRACKER_PROVIDERS
@@ -603,6 +611,10 @@ class SelectionFlow:
                 ),
                 CONF_PETS: user_input.get(CONF_PETS, self.draft.get(CONF_PETS, [])),
                 CONF_PLACES: user_input.get(CONF_PLACES, []),
+                CONF_FAMILY_REFRESH_ENABLED: user_input.get(
+                    CONF_FAMILY_REFRESH_ENABLED,
+                    self.draft.get(CONF_FAMILY_REFRESH_ENABLED, False),
+                ),
                 **{
                     provider.enabled_key: bool(user_input.get(provider.enabled_key))
                     for provider in tracker_providers.TRACKER_PROVIDERS
@@ -713,6 +725,10 @@ class SelectionFlow:
                     if isinstance(self, HomeCircleOptionsFlow)
                     else {}
                 ),
+                vol.Optional(
+                    CONF_FAMILY_REFRESH_ENABLED,
+                    default=self.draft.get(CONF_FAMILY_REFRESH_ENABLED, False),
+                ): selector.BooleanSelector(),
                 vol.Optional(CONF_PEOPLE): entity_selector("person"),
                 **(
                     {vol.Optional(CONF_TRACKER_PEOPLE): tracker_selector(self.hass)}
@@ -962,7 +978,7 @@ class SelectionFlow:
             ),
             errors=errors,
             description_placeholders={
-                "person": entity_label(self.hass, person_id),
+                "person": review_label(self.hass, person_id),
                 "tracker_guidance": guidance,
             },
         )
@@ -1203,10 +1219,10 @@ class SelectionFlow:
                 user_input if user_input is not None else defaults,
             ),
             description_placeholders={
-                "person": entity_label(self.hass, person_id),
+                "person": review_label(self.hass, person_id),
                 "number": str(self.member_index + 1),
                 "total": str(len(self.member_ids())),
-                "active": entity_label(self.hass, active),
+                "active": review_label(self.hass, active),
                 "tracker_guidance": guidance,
                 "position_guidance": position_guidance(
                     self.hass,
@@ -1260,7 +1276,7 @@ class SelectionFlow:
             data_schema=self.add_suggested_values_to_schema(
                 schema, user_input if user_input is not None else member
             ),
-            description_placeholders={"person": entity_label(self.hass, person_id)},
+            description_placeholders={"person": review_label(self.hass, person_id)},
         )
 
     async def after_member(self):
@@ -1357,7 +1373,7 @@ class SelectionFlow:
             ),
             errors=errors,
             description_placeholders={
-                "source": entity_label(self.hass, source),
+                "source": review_label(self.hass, source),
                 "number": str(self.report_index + 1),
                 "total": str(len(self.report_sources)),
                 "purpose": (
@@ -1407,7 +1423,7 @@ class SelectionFlow:
         return self.async_show_form(
             step_id="supporting",
             errors=errors,
-            description_placeholders={"person": entity_label(self.hass, person_id)},
+            description_placeholders={"person": review_label(self.hass, person_id)},
             data_schema=self.add_suggested_values_to_schema(
                 schema,
                 user_input if user_input is not None else member.get("supporting", {}),
@@ -1829,7 +1845,7 @@ class HomeCircleOptionsFlow(SelectionFlow, config_entries.OptionsFlowWithReload)
                 user_input or {},
             ),
             errors=errors,
-            description_placeholders={"person": entity_label(self.hass, person_id)},
+            description_placeholders={"person": review_label(self.hass, person_id)},
         )
 
     async def async_step_convert_legacy_member(self, user_input=None):
