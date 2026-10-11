@@ -31,6 +31,7 @@ def test_direct_report_projection_keeps_only_needed_fields():
             ATTR_LONGITUDE: str(2),
             "accuracy": "10",
             "timestamp": "1760000000",
+            "since": "1759999000",
             "battery": "42",
             "charge": "1",
             "isDriving": "0",
@@ -40,6 +41,10 @@ def test_direct_report_projection_keeps_only_needed_fields():
     }
     assert member_name(raw) == "Example Member"
     projected = parse_location(raw)
+    assert (
+        projected["at_loc_since"]
+        == datetime.fromtimestamp(1759999000, timezone.utc).isoformat()
+    )
     assert projected["latitude"] == 1
     assert projected["longitude"] == 2
     assert projected["accuracy"] == 3.048
@@ -375,7 +380,10 @@ async def test_one_failed_member_becomes_unavailable_independently(hass):
     "changed_reply",
     [
         ["changed response shape"],
-        {"id": "example-first", "location": {ATTR_LATITUDE: "invalid", ATTR_LONGITUDE: "2"}},
+        {
+            "id": "example-first",
+            "location": {ATTR_LATITUDE: "invalid", ATTR_LONGITUDE: "2"},
+        },
         {"id": "example-first", "location": {ATTR_LATITUDE: True, ATTR_LONGITUDE: "2"}},
     ],
 )

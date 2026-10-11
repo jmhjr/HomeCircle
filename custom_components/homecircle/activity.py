@@ -46,6 +46,17 @@ class ActivityLog:
         ).hexdigest()
         self.events = {member: [] for member in self.members}
         self.previous = {}
+        self.arrivals = {}
+        self.places = {
+            member: set(
+                [
+                    config["primary_home"],
+                    *config.get("places", []),
+                    *config["members"][member].get("additional_residences", []),
+                ]
+            )
+            for member in self.members
+        }
 
     def prune(self, now):
         changed = False
@@ -77,6 +88,10 @@ class ActivityLog:
         self.prune(dt_util.utcnow())
         return {
             "fingerprint": self.fingerprint,
+            "arrival_version": 1,
+            "arrivals": {
+                member: dict(value) for member, value in self.arrivals.items()
+            },
             "events": {
                 member: [dict(event) for event in events]
                 for member, events in self.events.items()
@@ -94,6 +109,34 @@ class ActivityLog:
             return
         if not isinstance(saved, dict) or saved.get("fingerprint") != self.fingerprint:
             return
+        arrivals = (
+            saved.get("arrivals", {}) if saved.get("arrival_version") == 1 else {}
+        )
+        if isinstance(arrivals, dict):
+            for member in self.members:
+                raw = arrivals.get(member)
+                if not isinstance(raw, dict):
+                    continue
+                place = raw.get("place")
+                if place is not None and (
+                    not isinstance(place, str) or place not in self.places[member]
+                ):
+                    continue
+                since = raw.get("since")
+                parsed = (
+                    dt_util.parse_datetime(since) if isinstance(since, str) else None
+                )
+                if since is not None and (
+                    parsed is None or parsed.tzinfo is None or parsed > dt_util.utcnow()
+                ):
+                    continue
+                if place is None and since is not None:
+                    continue
+                self.arrivals[member] = {
+                    "place": place,
+                    "since": parsed.isoformat() if parsed else None,
+                    "gap": True,
+                }
         groups = saved.get("events", {})
         if not isinstance(groups, dict):
             return
@@ -149,12 +192,56 @@ class ActivityLog:
         if self.store is not None:
             self.store.async_delay_save(self.payload, 5)
 
+    def observe_arrival(self, member, now):
+        """Keep the current named-place checkpoint outside bounded event history."""
+        old = self.arrivals.get(member.id)
+        place = getattr(member, "place", None)
+        usable = (
+            member.focusable
+            and member.location is not None
+            and member.presence != "unavailable"
+        )
+        if not usable:
+            if old and not old["gap"]:
+                old["gap"] = True
+                return True
+            return False
+        if place is not None and place not in self.places[member.id]:
+            return False
+        if old and old["place"] == place:
+            if place is None and old["gap"]:
+                old["gap"] = False
+                return True
+            return False
+        since = None
+        gap = bool(old and old["gap"])
+        if place and old is not None and not gap:
+            since = now.isoformat()
+        self.arrivals[member.id] = {
+            "place": place,
+            "since": since,
+            "gap": gap and place is not None,
+        }
+        return True
+
+    def arrival(self, member, place):
+        value = self.arrivals.get(member)
+        return {
+            "since": value["since"]
+            if value and place is not None and value["place"] == place
+            else None,
+            "continuity_unconfirmed": bool(value and value["gap"]),
+            "persistent": self.store is not None,
+        }
+
     def observe(self, household, now):
         if self.closed:
             return
         if self.prune(now) and self.store is not None:
             self.store.async_delay_save(self.payload, 5)
         for member in household.members:
+            if self.observe_arrival(member, now) and self.store is not None:
+                self.store.async_delay_save(self.payload, 5)
             evidence = (
                 member.location.evidence
                 if member.location and member.focusable

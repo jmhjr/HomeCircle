@@ -2,7 +2,8 @@
 
 ## Unreleased
 
-- Show “Since” on person cards using Home Assistant’s current named-place state transition, with earlier dates and an unknown fallback when no reliable arrival time is available; startup timestamps are excluded.
+- Prefer genuine Life360 arrival timestamps for Since; retain observed named-place arrivals across HA restarts with observation-gap disclosure. Exclude pet report times masquerading as arrivals.
+
 
 - Render person-card information buttons with a clean circled inline SVG so the icon remains visible on DAKboard devices whose fonts lack the information glyph.
 
