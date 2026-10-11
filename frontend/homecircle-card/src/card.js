@@ -929,10 +929,36 @@ class HomeCircleCard extends HTMLElement {
       details.append(report);
       node.append(memberAvatar(member, "avatar"), details);
       const detailsButton = button(
-        "ⓘ",
+        "",
         () => this._openMemberDetails(member.id, detailsButton),
         "member-details-button",
       );
+      const infoIcon = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "svg",
+      );
+      infoIcon.setAttribute("viewBox", "0 0 24 24");
+      infoIcon.setAttribute("aria-hidden", "true");
+      infoIcon.setAttribute("focusable", "false");
+      const infoPath = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "path",
+      );
+      infoPath.setAttribute("d", "M12 10v7M10 17h4");
+      infoPath.setAttribute("fill", "none");
+      infoPath.setAttribute("stroke", "currentColor");
+      infoPath.setAttribute("stroke-width", "2.5");
+      infoPath.setAttribute("stroke-linecap", "round");
+      const infoDot = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "circle",
+      );
+      infoDot.setAttribute("cx", "12");
+      infoDot.setAttribute("cy", "6.5");
+      infoDot.setAttribute("r", "1.5");
+      infoDot.setAttribute("fill", "currentColor");
+      infoIcon.append(infoPath, infoDot);
+      detailsButton.append(infoIcon);
       detailsButton.setAttribute("aria-label", `Details for ${member.name}`);
       detailsButton.title = `Details for ${member.name}`;
       entry.append(node, detailsButton);

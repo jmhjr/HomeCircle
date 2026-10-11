@@ -255,7 +255,18 @@ test("holding a member opens details without focusing the map", async () => {
     assert.equal(dialog.textContent.includes("Manage member settings"), false);
     member.click();
     assert.equal(value._mode, "person.example_member");
-    value.shadowRoot.querySelector(".member-details-button").click();
+    const detailsButton = value.shadowRoot.querySelector(
+      ".member-details-button",
+    );
+    assert.equal(detailsButton.textContent, "");
+    assert.match(detailsButton.getAttribute("aria-label"), /^Details for /);
+    assert.equal(
+      detailsButton.querySelector("svg").getAttribute("aria-hidden"),
+      "true",
+    );
+    assert.ok(detailsButton.querySelector("svg path"));
+    assert.ok(detailsButton.querySelector("svg circle"));
+    detailsButton.click();
     dialog = document.querySelector("dialog.homecircle-member-details");
     assert.ok(dialog?.open);
     value.remove();

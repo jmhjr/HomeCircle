@@ -487,6 +487,8 @@ button[aria-pressed="true"] {
   touch-action: pan-y;
 }
 .member-details-button {
+  display: grid;
+  place-items: center;
   position: absolute;
   top: 10px;
   right: 8px;
@@ -496,8 +498,13 @@ button[aria-pressed="true"] {
   border-radius: 50%;
   background: #263947;
   color: #c8e6ec;
-  font-size: 21px;
   line-height: 1;
+}
+.member-details-button svg {
+  display: block;
+  width: 24px;
+  height: 24px;
+  pointer-events: none;
 }
 .avatar {
   width: 40px;
