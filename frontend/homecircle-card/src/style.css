@@ -546,6 +546,7 @@ button[aria-pressed="true"] {
   gap: 4px 9px;
   margin-top: 4px;
 }
+.location-since,
 .place,
 .report-part,
 .driving-note {
@@ -925,4 +926,8 @@ button[aria-pressed="true"] {
 }
 .connection-warning {
   color: #ffd27a;
+}
+
+.location-since {
+  margin-top: 4px;
 }

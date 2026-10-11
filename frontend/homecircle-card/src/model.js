@@ -54,6 +54,75 @@ export function addressLabel(member) {
     ? `At ${address}`
     : `Last reported: ${address}`;
 }
+// HA state transitions describe arrival at a named place, not GPS report freshness.
+export function locationSince(member, states = {}, timeZone, now = Date.now()) {
+  const unknown = {
+    text: "Since unknown",
+    title: "No reliable arrival time for this location.",
+  };
+  if (
+    !member.place ||
+    !member.focusable ||
+    !member.location ||
+    member.presence === "driving"
+  )
+    return unknown;
+  const state = states[member.id];
+  const place = member.place.trim().toLowerCase();
+  const statePlace =
+    typeof state?.state === "string" ? state.state.trim().toLowerCase() : "";
+  if (
+    !statePlace ||
+    ["unknown", "unavailable", "not_home"].includes(statePlace)
+  )
+    return unknown;
+  if (
+    !(
+      statePlace === place ||
+      (statePlace === "home" && member.primary_home === true)
+    )
+  )
+    return unknown;
+  if (member.issues?.includes("gps_inside_zone_ha_pending")) return unknown;
+  const stamp =
+    typeof state.last_changed === "string" &&
+    /(?:Z|[+-]\d{2}:\d{2})$/.test(state.last_changed)
+      ? Date.parse(state.last_changed)
+      : NaN;
+  if (!Number.isFinite(stamp) || stamp > now) return unknown;
+  // Startup re-creates HA states; do not present that timestamp as an arrival.
+  const starts = (member.activity?.events || [])
+    .filter((event) => event.kind === "started")
+    .map((event) => Date.parse(event.observed_at))
+    .filter(Number.isFinite);
+  const started = starts.length ? Math.max(...starts) : NaN;
+  if (!Number.isFinite(started) || stamp <= started + 5000) return unknown;
+
+  const options = timeZone ? { timeZone } : {};
+  try {
+    const day = (value) =>
+      new Intl.DateTimeFormat(undefined, {
+        ...options,
+        year: "numeric",
+        month: "numeric",
+        day: "numeric",
+      }).format(value);
+    const sameDay = day(stamp) === day(now);
+    const formatted = new Intl.DateTimeFormat(undefined, {
+      ...options,
+      hour: "numeric",
+      minute: "2-digit",
+      ...(sameDay ? {} : { month: "short", day: "numeric", year: "numeric" }),
+    }).format(stamp);
+    return {
+      text: `Since ${formatted}`,
+      title:
+        "Home Assistant recorded the current place at this time. Arrival may precede detection. Startup timestamps are excluded.",
+    };
+  } catch {
+    return unknown;
+  }
+}
 function ageLabel(stamp, now) {
   const minutes = Math.max(0, Math.floor((now - stamp) / 60000));
   return minutes < 1

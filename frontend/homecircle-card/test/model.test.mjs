@@ -6,6 +6,7 @@ import {
   markerGroups,
   pinFitPadding,
   reportLabel,
+  locationSince,
   validateConfig,
   providerAlertText,
 } from "../src/model.js";
@@ -225,5 +226,115 @@ test("card provider label replaces full tracker identity and preserves legacy fa
   assert.equal(
     reportLabel(value),
     "Tracker: Example phone · Mobile App · Update time unavailable",
+  );
+});
+
+test("location Since uses the place transition rather than refresh or report time", () => {
+  const current = {
+    ...member("person.example_member"),
+    place: "Home",
+    primary_home: true,
+    activity: {
+      events: [{ kind: "started", observed_at: "2026-10-08T12:00:00Z" }],
+    },
+  };
+  const now = Date.parse("2026-10-10T18:00:00Z");
+  const states = {
+    "person.example_member": {
+      state: "home",
+      last_changed: "2026-10-10T15:30:00Z",
+      last_updated: "2026-10-10T17:59:00Z",
+    },
+  };
+  const result = locationSince(current, states, "UTC", now);
+  assert.match(result.text, /Since .*3:30|Since .*15:30/);
+  assert.match(result.title, /Arrival may precede detection/);
+  states["person.example_member"].last_updated = "2026-10-10T18:00:00Z";
+  assert.equal(locationSince(current, states, "UTC", now).text, result.text);
+  states["person.example_member"].last_changed = "2026-10-09T15:30:00Z";
+  assert.match(locationSince(current, states, "UTC", now).text, /Oct.*9.*2026/);
+  for (const changed of [
+    "bad",
+    "2026-10-11T15:30:00Z",
+    "2026-10-10T15:30:00",
+  ]) {
+    states["person.example_member"].last_changed = changed;
+    assert.equal(
+      locationSince(current, states, "UTC", now).text,
+      "Since unknown",
+    );
+  }
+});
+test("location Since does not invent an arrival for a moving, mismatched or unavailable place", () => {
+  const current = {
+    ...member("person.example_member"),
+    place: "Library",
+    activity: {
+      events: [{ kind: "started", observed_at: "2026-10-10T12:00:00Z" }],
+    },
+  };
+  const now = Date.parse("2026-10-10T18:00:00Z");
+  const states = {
+    "person.example_member": {
+      state: "Library",
+      last_changed: "2026-10-10T15:30:00Z",
+    },
+  };
+  assert.notEqual(
+    locationSince(current, states, "UTC", now).text,
+    "Since unknown",
+  );
+  for (const fields of [
+    { place: null },
+    { place: "Office" },
+    { focusable: false },
+    { location: null },
+    { presence: "driving" },
+    { issues: ["gps_inside_zone_ha_pending"] },
+  ])
+    assert.equal(
+      locationSince({ ...current, ...fields }, states, "UTC", now).text,
+      "Since unknown",
+    );
+  assert.equal(locationSince(current, {}, "UTC", now).text, "Since unknown");
+  assert.equal(
+    locationSince(current, states, "bad zone", now).text,
+    "Since unknown",
+  );
+  states["person.example_member"].state = "not_home";
+  assert.equal(
+    locationSince(current, states, "UTC", now).text,
+    "Since unknown",
+  );
+});
+
+test("Since excludes restart timestamps and missing observation boundaries", () => {
+  const now = Date.parse("2026-10-10T18:00:00Z");
+  const current = {
+    ...member("person.example_member"),
+    place: "Home",
+    primary_home: true,
+    activity: {
+      events: [{ kind: "started", observed_at: "2026-10-10T15:30:02Z" }],
+    },
+  };
+  const states = {
+    "person.example_member": {
+      state: "home",
+      last_changed: "2026-10-10T15:30:00Z",
+    },
+  };
+  assert.equal(
+    locationSince(current, states, "UTC", now).text,
+    "Since unknown",
+  );
+  states["person.example_member"].last_changed = "2026-10-10T16:00:00Z";
+  assert.notEqual(
+    locationSince(current, states, "UTC", now).text,
+    "Since unknown",
+  );
+  assert.equal(
+    locationSince({ ...current, activity: null }, states, "UTC", now).text,
+    "Since unknown",
   );
 });
