@@ -2630,3 +2630,59 @@ test("family feedback distinguishes HA receipt from GPS and explains skipped ass
     /Life360: Daily limit reached/,
   );
 });
+
+test("selected member coordinate updates follow at the chosen zoom; other updates and missing positions do not move the map", (t) => {
+  const value = document.createElement("homecircle-card");
+  value.setConfig({ type: "custom:homecircle-card", map_tiles: "none" });
+  document.body.append(value);
+  t.after(() => value.remove());
+  Object.defineProperty(value._mapNode, "clientWidth", { value: 640 });
+  Object.defineProperty(value._mapNode, "clientHeight", { value: 300 });
+  const fictionalOther = 1,
+    fictionalFirst = 0.02,
+    fictionalSecond = 0.03,
+    fictionalRecovered = 0.04,
+    fictionalRecoveredLongitude = 0.05,
+    fictionalOverviewMove = 0.08;
+  const data = response();
+  data.members = [homeMember("moving"), homeMember("other")];
+  data.focus_ids.overview = data.members.map((member) => member.id);
+  value._data = data;
+  value._render();
+  value._choose(data.members[0].id);
+  const map = value._map;
+  map.setZoom(12, { animate: false });
+  map.panBy([100, 50], { animate: false });
+  const manuallyPanned = map.getCenter();
+  data.members[1].location.latitude = fictionalOther;
+  value._render();
+  assert.deepEqual(map.getCenter(), manuallyPanned);
+  data.members[0].location = {
+    ...data.members[0].location,
+    latitude: fictionalFirst,
+    longitude: fictionalSecond,
+  };
+  value._render();
+  assert.ok(map.getCenter().equals([0.02, 0.03], 0.001));
+  assert.equal(map.getZoom(), 12);
+  const center = map.getCenter();
+  data.members[0].location = null;
+  data.members[0].focusable = false;
+  value._render();
+  assert.deepEqual(map.getCenter(), center);
+  data.members[0].location = {
+    latitude: fictionalRecovered,
+    longitude: fictionalRecoveredLongitude,
+    evidence: { freshness: "fresh" },
+  };
+  data.members[0].focusable = true;
+  value._render();
+  assert.ok(map.getCenter().equals([0.04, 0.05], 0.001));
+  assert.equal(map.getZoom(), 12);
+  value._choose("overview");
+  const overviewCenter = map.getCenter();
+  data.members[0].location.latitude = fictionalOverviewMove;
+  value._render();
+  assert.deepEqual(map.getCenter(), overviewCenter);
+  value.remove();
+});

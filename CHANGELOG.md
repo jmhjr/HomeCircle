@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Follow new location coordinates for a selected person while retaining the chosen zoom. Keep Everyone/category views steady on background updates.
+
 - Accept explicitly mapped phone battery-state sensors for charging, alongside existing binary sensors. Charging is true; Not Charging and Full are false; unavailable or unrecognized reports remain unknown.
 
 - Prefer genuine Life360 arrival timestamps for Since; retain observed named-place arrivals across HA restarts with observation-gap disclosure. Exclude pet report times masquerading as arrivals.

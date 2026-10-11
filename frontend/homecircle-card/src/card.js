@@ -1090,7 +1090,17 @@ class HomeCircleCard extends HTMLElement {
       this._updateTiles();
       this._radarController?.sync();
     }
-    // Updates move markers; only selection changes or recentering fit the view.
+    // Follow coordinate changes for one selected member without resetting zoom.
+    // Overview and category updates continue to preserve the chosen viewport.
+    const selected = points.find((member) => member.id === this._mode);
+    const follow = selected
+      ? [selected.id, selected.location.latitude, selected.location.longitude]
+      : null;
+    const followChanged =
+      follow &&
+      (!this._followLocation ||
+        follow.some((value, index) => value !== this._followLocation[index]));
+    this._followLocation = follow;
     if (points.length && !this._hasMapView) this._fit = true;
     if (this._recenterButton) this._recenterButton.disabled = !points.length;
     this._points = points;
@@ -1140,6 +1150,8 @@ class HomeCircleCard extends HTMLElement {
         this._fit = false;
         if (points.length) this._hasMapView = true;
       }
+    } else if (followChanged) {
+      this._map.panTo(follow.slice(1), { animate: false });
     }
     this._markers();
   }
