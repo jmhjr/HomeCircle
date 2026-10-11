@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Show “Since” on person cards using Home Assistant’s current named-place state transition, with earlier dates and an unknown fallback when no reliable arrival time is available; startup timestamps are excluded.
+
 - Render person-card information buttons with a clean circled inline SVG so the icon remains visible on DAKboard devices whose fonts lack the information glyph.
 
 - Align the recenter control with the zoom pill and give it a centered crosshair, circular hit area and matching dark blue outline.

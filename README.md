@@ -60,3 +60,5 @@ MIT licensed. No upstream implementation is copied into the new runtime. Any fut
 The card and authenticated snapshot interface began in beta 4 and have continued through beta 17. See [frontend setup](docs/FRONTEND.md), [beta 16 validation](docs/BETA16-VALIDATION.md), and the [historical milestone 3 validation](docs/MILESTONE-3-VALIDATION.md).
 
 Family location refresh uses explicitly assigned supported trackers and is off by default, including after upgrade. An administrator can enable **Allow family location refresh** in HomeCircle Options after reviewing the saved-account and household-control disclosure in the [setup guide](docs/SETUP.md).
+
+Person cards show **Since** for Home Assistant’s observed transition into a matching named place. Times use Home Assistant’s time zone; earlier days include the date. Startup timestamps and missing or mismatched evidence show **Since unknown**, including moving positions outside named places. Detection may follow the actual arrival. This time is separate from the latest tracker report.

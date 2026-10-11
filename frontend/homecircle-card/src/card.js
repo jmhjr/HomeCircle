@@ -12,6 +12,7 @@ import {
   selection,
   reportParts,
   addressLabel,
+  locationSince,
   markerGroups,
   pinFitPadding,
   validateConfig,
@@ -905,6 +906,14 @@ class HomeCircleCard extends HTMLElement {
         );
       }
       if (facts.childElementCount) details.append(facts);
+      const since = locationSince(
+        member,
+        this._hass?.states,
+        this._hass?.config?.time_zone,
+      );
+      const sinceLine = el("div", "location-since", since.text);
+      sinceLine.title = since.title;
+      details.append(sinceLine);
       if (member.driving.value === true && member.driving.status !== "current")
         details.append(
           el(
