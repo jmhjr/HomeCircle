@@ -83,7 +83,7 @@
         },
         "data_description": {
           "battery": "Select a sensor with a numeric percentage and % unit.",
-          "charging": "Select a binary sensor that says whether this member’s device is charging.",
+          "charging": "Select an on/off charging sensor or a battery-state sensor reporting Charging, Not Charging or Full.",
           "speed": "Select a speed sensor in m/s, km/h or mph.",
           "driving": "Optional. If empty, HomeCircle reads the selected GPS tracker's driving flag. A fresh location report is required to show Driving. A selected binary sensor takes priority.",
           "driving_reported_at": "For a selected driving sensor, choose its actual report time. The tracker fallback uses the tracker's location report time."
@@ -409,7 +409,7 @@
         },
         "data_description": {
           "battery": "Select a sensor with a numeric percentage and % unit.",
-          "charging": "Select a binary sensor that says whether this member’s device is charging.",
+          "charging": "Select an on/off charging sensor or a battery-state sensor reporting Charging, Not Charging or Full.",
           "speed": "Select a speed sensor in m/s, km/h or mph.",
           "driving": "Optional. If empty, HomeCircle reads the selected GPS tracker's driving flag. A fresh location report is required to show Driving. A selected binary sensor takes priority.",
           "driving_reported_at": "For a selected driving sensor, choose its actual report time. The tracker fallback uses the tracker's location report time."

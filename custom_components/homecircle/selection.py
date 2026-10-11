@@ -220,7 +220,7 @@ def member_errors(
 
 SUPPORTING_DOMAINS = {
     "battery": "sensor",
-    "charging": "binary_sensor",
+    "charging": ["binary_sensor", "sensor"],
     "speed": "sensor",
     "driving": "binary_sensor",
     "driving_reported_at": "sensor",
@@ -233,7 +233,10 @@ def supporting_errors(hass, values, person_id, trackers):
     """Mappings are explicit; timestamps must be bound to their actual source."""
     errors = {}
     for key, domain in SUPPORTING_DOMAINS.items():
-        if key in values and not selectable(hass, values[key], domain):
+        domains = domain if isinstance(domain, list) else [domain]
+        if key in values and not any(
+            selectable(hass, values[key], item) for item in domains
+        ):
             errors[key] = "invalid_entity"
     if bool(values.get("location_reported_at")) != bool(
         values.get("location_report_source")
