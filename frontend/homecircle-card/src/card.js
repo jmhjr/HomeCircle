@@ -944,20 +944,30 @@ class HomeCircleCard extends HTMLElement {
         "http://www.w3.org/2000/svg",
         "path",
       );
-      infoPath.setAttribute("d", "M12 10v7M10 17h4");
+      infoPath.setAttribute("d", "M12 11v5");
       infoPath.setAttribute("fill", "none");
       infoPath.setAttribute("stroke", "currentColor");
-      infoPath.setAttribute("stroke-width", "2.5");
+      infoPath.setAttribute("stroke-width", "2");
       infoPath.setAttribute("stroke-linecap", "round");
       const infoDot = document.createElementNS(
         "http://www.w3.org/2000/svg",
         "circle",
       );
       infoDot.setAttribute("cx", "12");
-      infoDot.setAttribute("cy", "6.5");
-      infoDot.setAttribute("r", "1.5");
+      infoDot.setAttribute("cy", "8");
+      infoDot.setAttribute("r", "1");
       infoDot.setAttribute("fill", "currentColor");
-      infoIcon.append(infoPath, infoDot);
+      const infoRing = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "circle",
+      );
+      infoRing.setAttribute("cx", "12");
+      infoRing.setAttribute("cy", "12");
+      infoRing.setAttribute("r", "9");
+      infoRing.setAttribute("fill", "none");
+      infoRing.setAttribute("stroke", "currentColor");
+      infoRing.setAttribute("stroke-width", "1.8");
+      infoIcon.append(infoRing, infoPath, infoDot);
       detailsButton.append(infoIcon);
       detailsButton.setAttribute("aria-label", `Details for ${member.name}`);
       detailsButton.title = `Details for ${member.name}`;
