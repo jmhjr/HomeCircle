@@ -2184,6 +2184,7 @@ async def test_supporting_flow_validation_persistence_and_clear(hass, household)
         "2026-01-01T00:00:00+00:00",
         {"friendly_name": "Example Report"},
     )
+    hass.states.async_set("sensor.example_battery_state", "Charging")
     result = await start(hass, household)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -2208,7 +2209,7 @@ async def test_supporting_flow_validation_persistence_and_clear(hass, household)
         )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"battery": "sensor.example_battery"},
+        {"battery": "sensor.example_battery", "charging": "sensor.example_battery_state"},
     )
     assert result["step_id"] == "source_report"
     assert result["description_placeholders"]["number"] == "1"
@@ -2226,6 +2227,8 @@ async def test_supporting_flow_validation_persistence_and_clear(hass, household)
     result = await configure_empty(hass.config_entries.flow, result)
     entry = result["result"]
     await hass.async_block_till_done()
+    assert entry.runtime_data.household.members[0].charging.value is True
+    assert entry.data["members"]["person.example_member"]["supporting"]["charging"] == "sensor.example_battery_state"
     assert entry.runtime_data.household.members[0].battery.value == 0
     assert "sensor.example_battery" in entry.runtime_data.states
     assert entry.data["members"]["person.example_member"]["location_reports"] == {
@@ -2245,6 +2248,8 @@ async def test_supporting_flow_validation_persistence_and_clear(hass, household)
     result = await configure_empty(options, result)
     await configure_empty(options, result)
     await hass.async_block_till_done()
+    assert entry.runtime_data.household.members[0].charging.value is None
+    assert "sensor.example_battery_state" not in entry.runtime_data.states
     assert entry.runtime_data.household.members[0].battery.value is None
     assert "sensor.example_battery" not in entry.runtime_data.states
     assert entry.options["members"]["person.example_member"]["location_reports"] == {

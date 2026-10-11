@@ -224,6 +224,11 @@ def optional_value(states, entity_id, now, kind, report_id=None) -> OptionalValu
     if available(state):
         if kind == "boolean":
             value = {"on": True, "off": False}.get(state.state)
+        elif kind == "charging":
+            value = {
+                "on": True, "off": False, "charging": True,
+                "not charging": False, "full": False,
+            }.get(state.state.strip().lower())
         else:
             unit = state.attributes.get("unit_of_measurement")
             parsed = number(state.state)
@@ -332,7 +337,7 @@ def normalize_member(
     ):
         driving = tracker_driving(source, now)
     battery = optional_value(states, supporting.get("battery"), now, "battery")
-    charging = optional_value(states, supporting.get("charging"), now, "boolean")
+    charging = optional_value(states, supporting.get("charging"), now, "charging")
     speed = optional_value(states, supporting.get("speed"), now, "speed")
     driving_status = "unknown"
     if driving.value is not None:

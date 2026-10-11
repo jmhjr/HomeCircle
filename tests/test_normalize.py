@@ -811,3 +811,30 @@ def test_departure_return_flips_follow_person_without_conflicting_map(snapshot):
             assert not current.focusable
         if person_value == phone_value:
             assert "tracker_presence_conflict" not in current.issues
+
+
+@pytest.mark.parametrize(
+    "reported, expected",
+    [
+        ("Charging", True),
+        ("Not Charging", False),
+        ("Full", False),
+        ("charging", True),
+        ("on", True),
+        ("off", False),
+        ("unknown", None),
+        ("unavailable", None),
+        ("unexpected", None),
+    ],
+)
+def test_phone_battery_state_charging(snapshot, reported, expected):
+    config, states = snapshot
+    config["members"][PERSON]["supporting"] = {
+        "charging": "sensor.example_battery_state"
+    }
+    states["sensor.example_battery_state"] = state(
+        "sensor.example_battery_state", reported
+    )
+    current = member(snapshot)
+    assert current.charging.value is expected
+    assert current.charging.evidence.source_entity == "sensor.example_battery_state"
