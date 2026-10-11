@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Render person-card information buttons with an inline SVG so the icon remains visible on DAKboard devices whose fonts lack the information glyph.
+- Render person-card information buttons with a clean circled inline SVG so the icon remains visible on DAKboard devices whose fonts lack the information glyph.
 
 - Align the recenter control with the zoom pill and give it a centered crosshair, circular hit area and matching dark blue outline.
 
