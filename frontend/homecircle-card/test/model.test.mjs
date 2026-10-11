@@ -248,7 +248,7 @@ test("location Since uses the place transition rather than refresh or report tim
   };
   const result = locationSince(current, states, "UTC", now);
   assert.match(result.text, /Since .*3:30|Since .*15:30/);
-  assert.match(result.title, /Arrival may precede detection/);
+  assert.match(result.title, /detection may follow/);
   states["person.example_member"].last_updated = "2026-10-10T18:00:00Z";
   assert.equal(locationSince(current, states, "UTC", now).text, result.text);
   states["person.example_member"].last_changed = "2026-10-09T15:30:00Z";
@@ -335,6 +335,28 @@ test("Since excludes restart timestamps and missing observation boundaries", () 
   );
   assert.equal(
     locationSince({ ...current, activity: null }, states, "UTC", now).text,
+    "Since unknown",
+  );
+});
+
+test("persisted Since survives HA state recreation and remains honest about gaps", () => {
+  const now = Date.parse("2026-10-10T18:00:00Z");
+  const current = {
+    ...member("person.example_member"),
+    place: "Home",
+    primary_home: true,
+    arrival: {
+      since: "2026-10-09T15:30:00Z",
+      continuity_unconfirmed: true,
+      persistent: true,
+    },
+  };
+  const result = locationSince(current, {}, "UTC", now);
+  assert.match(result.text, /Oct.*9.*2026/);
+  assert.match(result.title, /uninterrupted presence is unconfirmed/);
+  assert.equal(
+    locationSince({ ...current, arrival: { since: null } }, {}, "UTC", now)
+      .text,
     "Since unknown",
   );
 });

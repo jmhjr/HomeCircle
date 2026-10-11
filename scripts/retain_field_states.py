@@ -39,6 +39,16 @@ def slot(entity_id, entities):
     return next((name for name, entity in entities.items() if entity == entity_id), "other" if entity_id else None)
 
 
+def arrival_stamp(value):
+    if not isinstance(value, str):
+        return None
+    try:
+        parsed = datetime.fromisoformat(value)
+    except ValueError:
+        return None
+    return parsed.isoformat() if parsed.tzinfo is not None else None
+
+
 def project_state(state, entities, include_coordinates=False, zones=None):
     if not isinstance(state, dict):
         return {"state": "missing"}
@@ -50,6 +60,7 @@ def project_state(state, entities, include_coordinates=False, zones=None):
             (slot for slot, entity in entities.items() if entity == attrs.get("source")),
             "other" if attrs.get("source") else None,
         ),
+        "arrival_reported_at": arrival_stamp(attrs.get("at_loc_since")),
         "ha_changed_at": state.get("last_changed"),
         "ha_updated_at": state.get("last_updated"),
         "ha_reported_at": state.get("last_reported"),
@@ -85,6 +96,8 @@ def project_member(snapshot, member_id, include_coordinates=False, entities=None
     member = next((m for m in snapshot.get("members", []) if m.get("id") == member_id), None)
     if member is None:
         return {"status": "missing"}
+    arrival = member.get("arrival")
+    arrival = arrival if isinstance(arrival, dict) else {}
     evidence = (member.get("location") or {}).get("evidence") or {}
     diagnostics = member.get("diagnostics") or {}
     request = member.get("location_request") or {}
@@ -102,6 +115,12 @@ def project_member(snapshot, member_id, include_coordinates=False, entities=None
         "charging": member.get("charging"),
         "speed": member.get("speed"),
         "family_refresh": project_family(snapshot, member_id),
+        "arrival": {
+            "since": arrival_stamp(arrival.get("since")),
+            "source": "tracker" if arrival.get("source") == "tracker" else None,
+            "continuity_unconfirmed": arrival.get("continuity_unconfirmed") if isinstance(arrival.get("continuity_unconfirmed"), bool) else None,
+            "persistent": arrival.get("persistent") if isinstance(arrival.get("persistent"), bool) else None,
+        },
         "selection_refresh": {key: selection_refresh.get(key) for key in ("status", "checked_at", "trigger")},
         "location_request": {key: request.get(key) for key in ("enabled", "status", "requested_at", "next_request_at")},
         **({"coordinates": point(member.get("location") or {})} if include_coordinates else {}),

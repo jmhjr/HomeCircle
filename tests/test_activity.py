@@ -230,3 +230,168 @@ def test_total_cap_evicts_freshness_before_significant_events():
     assert len(log.events[MEMBER]) == MAX_EVENTS
     assert log.events[MEMBER][0]["kind"] == "presence"
     assert not any(e["kind"] == "freshness" for e in log.events[MEMBER])
+
+
+async def test_arrival_survives_reload_retention_and_detects_gap_changes():
+    store = SimpleNamespace(
+        async_load=AsyncMock(), async_save=AsyncMock(), async_delay_save=Mock()
+    )
+    log = ActivityLog(CONFIG, store)
+    moving = household("away")
+    moving.members[0].place = None
+    log.observe(moving, NOW)
+    arrived = household()
+    arrived.members[0].place = "zone.example_residence"
+    arrival_time = NOW + timedelta(minutes=1)
+    log.observe(arrived, arrival_time)
+    assert (
+        log.arrival(MEMBER, arrived.members[0].place)["since"]
+        == arrival_time.isoformat()
+    )
+    log.observe(arrived, NOW + timedelta(minutes=3))
+    log.prune(NOW + timedelta(days=8))
+    assert (
+        log.arrival(MEMBER, arrived.members[0].place)["since"]
+        == arrival_time.isoformat()
+    )
+    store.async_load.return_value = log.payload()
+    restored = ActivityLog(CONFIG, store)
+    with patch(
+        "custom_components.homecircle.activity.dt_util.utcnow",
+        return_value=NOW + timedelta(minutes=4),
+    ):
+        await restored.load()
+    restored.observe(arrived, NOW + timedelta(minutes=4))
+    assert (
+        restored.arrival(MEMBER, arrived.members[0].place)["since"]
+        == arrival_time.isoformat()
+    )
+    assert restored.arrival(MEMBER, arrived.members[0].place)["continuity_unconfirmed"]
+    restored.observe(moving, NOW + timedelta(minutes=5))
+    assert restored.arrival(MEMBER, None)["since"] is None
+    restored.observe(arrived, NOW + timedelta(minutes=6))
+    assert (
+        restored.arrival(MEMBER, arrived.members[0].place)["since"]
+        == (NOW + timedelta(minutes=6)).isoformat()
+    )
+    assert not restored.arrival(MEMBER, arrived.members[0].place)[
+        "continuity_unconfirmed"
+    ]
+
+
+async def test_arrival_unknown_initial_place_and_changed_place_during_restart():
+    config = {**CONFIG, "places": ["zone.example_library"]}
+    first = ActivityLog(config)
+    at_home = household()
+    at_home.members[0].place = "zone.example_residence"
+    first.observe(at_home, NOW)
+    assert first.arrival(MEMBER, at_home.members[0].place)["since"] is None
+    store = SimpleNamespace(
+        async_load=AsyncMock(return_value=first.payload()), async_delay_save=Mock()
+    )
+    restored = ActivityLog(config, store)
+    await restored.load()
+    elsewhere = household("away")
+    elsewhere.members[0].place = "zone.example_library"
+    restored.observe(elsewhere, NOW + timedelta(minutes=5))
+    assert restored.arrival(MEMBER, elsewhere.members[0].place)["since"] is None
+
+
+async def test_arrival_load_allowlists_private_fields_and_rejects_invalid_state():
+    log = ActivityLog(CONFIG)
+    for raw in [
+        {"place": "zone.example_other", "since": NOW.isoformat()},
+        {"place": "zone.example_residence", "since": "invalid"},
+        {
+            "place": "zone.example_residence",
+            "since": (NOW + timedelta(days=1)).isoformat(),
+        },
+        {"place": None, "since": NOW.isoformat()},
+    ]:
+        log.store = SimpleNamespace(
+            async_load=AsyncMock(
+                return_value={
+                    "fingerprint": log.fingerprint,
+                    "arrival_version": 1,
+                    "arrivals": {MEMBER: raw},
+                }
+            )
+        )
+        await log.load()
+        assert not log.arrivals
+    raw = {
+        "place": "zone.example_residence",
+        "since": (NOW - timedelta(minutes=1)).isoformat(),
+        "latitude": "discarded",
+        "token": "secret",
+    }
+    log.store.async_load.return_value = {
+        "fingerprint": log.fingerprint,
+        "arrival_version": 1,
+        "arrivals": {MEMBER: raw, "person.example_other": raw},
+    }
+    await log.load()
+    assert set(log.arrivals) == {MEMBER}
+    assert set(log.arrivals[MEMBER]) == {"place", "since", "gap"}
+    assert not any(
+        key in log.arrival(MEMBER, raw["place"])
+        for key in ["latitude", "token", "place"]
+    )
+
+
+def test_unavailable_gap_preserves_checkpoint_but_does_not_invent_new_arrival():
+    log = ActivityLog(CONFIG)
+    moving = household("away")
+    moving.members[0].place = None
+    arrived = household()
+    arrived.members[0].place = "zone.example_residence"
+    log.observe(moving, NOW)
+    log.observe(arrived, NOW + timedelta(minutes=1))
+    unavailable = household("unavailable")
+    unavailable.members[0].focusable = False
+    log.observe(unavailable, NOW + timedelta(minutes=2))
+    log.observe(arrived, NOW + timedelta(minutes=3))
+    assert (
+        log.arrival(MEMBER, arrived.members[0].place)["since"]
+        == (NOW + timedelta(minutes=1)).isoformat()
+    )
+    assert log.arrival(MEMBER, arrived.members[0].place)["continuity_unconfirmed"]
+
+
+async def test_reload_away_baseline_allows_the_next_observed_arrival():
+    first = ActivityLog(CONFIG)
+    moving = household("away")
+    moving.members[0].place = None
+    first.observe(moving, NOW)
+    store = SimpleNamespace(
+        async_load=AsyncMock(return_value=first.payload()), async_delay_save=Mock()
+    )
+    restored = ActivityLog(CONFIG, store)
+    await restored.load()
+    restored.observe(moving, NOW + timedelta(minutes=1))
+    arrived = household()
+    arrived.members[0].place = "zone.example_residence"
+    restored.observe(arrived, NOW + timedelta(minutes=2))
+    assert (
+        restored.arrival(MEMBER, arrived.members[0].place)["since"]
+        == (NOW + timedelta(minutes=2)).isoformat()
+    )
+
+
+async def test_unversioned_startup_checkpoints_are_not_treated_as_arrivals():
+    log = ActivityLog(CONFIG)
+    log.store = SimpleNamespace(
+        async_load=AsyncMock(
+            return_value={
+                "fingerprint": log.fingerprint,
+                "arrivals": {
+                    MEMBER: {
+                        "place": "zone.example_residence",
+                        "since": NOW.isoformat(),
+                    }
+                },
+            }
+        )
+    )
+    await log.load()
+    assert not log.arrivals

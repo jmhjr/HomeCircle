@@ -61,42 +61,52 @@ export function locationSince(member, states = {}, timeZone, now = Date.now()) {
     title: "No reliable arrival time for this location.",
   };
   if (
-    !member.place ||
+    (!member.place &&
+      !(member.arrival?.source === "tracker" && member.reported_address)) ||
     !member.focusable ||
     !member.location ||
     member.presence === "driving"
   )
     return unknown;
-  const state = states[member.id];
-  const place = member.place.trim().toLowerCase();
-  const statePlace =
-    typeof state?.state === "string" ? state.state.trim().toLowerCase() : "";
-  if (
-    !statePlace ||
-    ["unknown", "unavailable", "not_home"].includes(statePlace)
-  )
-    return unknown;
-  if (
-    !(
-      statePlace === place ||
-      (statePlace === "home" && member.primary_home === true)
+  let stamp;
+  if (member.arrival) {
+    stamp =
+      typeof member.arrival.since === "string"
+        ? Date.parse(member.arrival.since)
+        : NaN;
+  } else {
+    const state = states[member.id];
+    const place = member.place.trim().toLowerCase();
+    const statePlace =
+      typeof state?.state === "string" ? state.state.trim().toLowerCase() : "";
+    if (
+      !statePlace ||
+      ["unknown", "unavailable", "not_home"].includes(statePlace)
     )
-  )
-    return unknown;
-  if (member.issues?.includes("gps_inside_zone_ha_pending")) return unknown;
-  const stamp =
-    typeof state.last_changed === "string" &&
-    /(?:Z|[+-]\d{2}:\d{2})$/.test(state.last_changed)
-      ? Date.parse(state.last_changed)
-      : NaN;
+      return unknown;
+    if (
+      !(
+        statePlace === place ||
+        (statePlace === "home" && member.primary_home === true)
+      )
+    )
+      return unknown;
+    if (member.issues?.includes("gps_inside_zone_ha_pending")) return unknown;
+    stamp =
+      typeof state.last_changed === "string" &&
+      /(?:Z|[+-]\d{2}:\d{2})$/.test(state.last_changed)
+        ? Date.parse(state.last_changed)
+        : NaN;
+    if (!Number.isFinite(stamp) || stamp > now) return unknown;
+    // Startup re-creates HA states; do not present that timestamp as an arrival.
+    const starts = (member.activity?.events || [])
+      .filter((event) => event.kind === "started")
+      .map((event) => Date.parse(event.observed_at))
+      .filter(Number.isFinite);
+    const started = starts.length ? Math.max(...starts) : NaN;
+    if (!Number.isFinite(started) || stamp <= started + 5000) return unknown;
+  }
   if (!Number.isFinite(stamp) || stamp > now) return unknown;
-  // Startup re-creates HA states; do not present that timestamp as an arrival.
-  const starts = (member.activity?.events || [])
-    .filter((event) => event.kind === "started")
-    .map((event) => Date.parse(event.observed_at))
-    .filter(Number.isFinite);
-  const started = starts.length ? Math.max(...starts) : NaN;
-  if (!Number.isFinite(started) || stamp <= started + 5000) return unknown;
 
   const options = timeZone ? { timeZone } : {};
   try {
@@ -117,7 +127,15 @@ export function locationSince(member, states = {}, timeZone, now = Date.now()) {
     return {
       text: `Since ${formatted}`,
       title:
-        "Home Assistant recorded the current place at this time. Arrival may precede detection. Startup timestamps are excluded.",
+        (member.arrival?.source === "tracker"
+          ? "Arrival time reported by the selected tracker."
+          : "HomeCircle observed this arrival; detection may follow the actual arrival.") +
+        (member.arrival?.continuity_unconfirmed
+          ? " Saved across an observation gap; uninterrupted presence is unconfirmed."
+          : "") +
+        (member.arrival?.persistent === false
+          ? " Persistence is unavailable; this time may be lost after restart."
+          : ""),
     };
   } catch {
     return unknown;

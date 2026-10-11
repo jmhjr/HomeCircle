@@ -130,6 +130,12 @@ def parse_location(raw: dict[str, Any]) -> dict[str, Any] | None:
         if timestamp is not None
         else None
     )
+    since = number(location.get("since"), 0, 4102444800)
+    at_loc_since = (
+        datetime.fromtimestamp(since, timezone.utc).isoformat()
+        if since is not None and timestamp is not None and since <= timestamp
+        else None
+    )
     accuracy_feet = number(location.get("accuracy"), 0, 1000000)
     battery = number(location.get("battery"), 0, 100)
     speed = number(location.get("speed"), 0, 10000)
@@ -138,6 +144,7 @@ def parse_location(raw: dict[str, Any]) -> dict[str, Any] | None:
         "longitude": longitude,
         "accuracy": accuracy_feet * 0.3048 if accuracy_feet is not None else 0,
         "last_seen": last_seen,
+        "at_loc_since": at_loc_since,
         "battery_level": battery,
         "battery_charging": boolean_flag(location.get("charge")),
         "driving": boolean_flag(location.get("isDriving")),

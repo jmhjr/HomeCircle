@@ -1,6 +1,9 @@
 """Authenticated, permission-checked snapshots and bounded activity."""
 
 from urllib.parse import unquote, urlsplit
+from datetime import datetime
+
+from homeassistant.util import dt as dt_util
 
 from homeassistant.auth.permissions.const import POLICY_READ
 from homeassistant.components import websocket_api
@@ -79,6 +82,67 @@ def proof(value, runtime, registry=None):
         "report_status": value.report_status,
         "source_label": location_source_label(runtime, value.source_entity, registry),
         "card_source_label": card_label,
+    }
+
+
+def member_arrival(member, runtime, registry=None):
+    """Prefer actual provider arrival evidence from the exact selected map tracker."""
+    fallback = (
+        runtime.activity.arrival(member.id, member.place)
+        if getattr(runtime, "activity", None) and member.focusable
+        else None
+    )
+    if (
+        not member.focusable
+        or not member.location
+        or member.presence == "driving"
+        or registry is None
+    ):
+        return fallback
+    source = member.location.evidence.source_entity
+    if source not in runtime.config[CONF_MEMBERS][member.id][CONF_TRACKERS]:
+        return fallback
+    entity = registry.async_get(source)
+    genuine = entity and (
+        entity.platform == "life360"
+        or any(
+            provider.id == "life360" and provider.owns_entity(registry, source)
+            for provider in TRACKER_PROVIDERS
+        )
+    )
+    state = runtime.states.get(source)
+    if not genuine or state is None or state.state in {"unknown", "unavailable"}:
+        return fallback
+    raw = state.attributes.get("at_loc_since")
+    since = (
+        raw
+        if isinstance(raw, datetime)
+        else dt_util.parse_datetime(raw)
+        if isinstance(raw, str)
+        else None
+    )
+    raw_report = state.attributes.get("last_seen")
+    report = (
+        raw_report
+        if isinstance(raw_report, datetime)
+        else dt_util.parse_datetime(raw_report)
+        if isinstance(raw_report, str)
+        else None
+    )
+    if (
+        since is None
+        or since.tzinfo is None
+        or since > dt_util.utcnow()
+        or report is None
+        or report.tzinfo is None
+        or since > report
+    ):
+        return fallback
+    return {
+        "since": since.isoformat(),
+        "source": "tracker",
+        "continuity_unconfirmed": False,
+        "persistent": True,
     }
 
 
@@ -258,6 +322,7 @@ def snapshot(
                 },
                 "issues": list(member.issues),
                 "diagnostics": member_diagnostics(member, runtime, registry, admin),
+                "arrival": member_arrival(member, runtime, registry),
                 "activity": runtime.activity.project(
                     member.id,
                     lambda source: location_source_label(runtime, source, registry),

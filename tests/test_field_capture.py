@@ -132,3 +132,13 @@ def test_family_projection_retains_only_tested_member_fixed_outcomes():
     }}, "person.example_member")
     assert result == {"available": True, "status": "requested", "member_status": "ha_updated", "tracker_statuses": ["ha_updated", None]}
     assert not any(value in json.dumps(result) for value in ("secret", "Private", "person.example_member", "person.example_other"))
+
+
+def test_capture_retains_arrival_evidence_without_place_or_extra_fields():
+    member = {"id": "person.example_member", "arrival": {"since": "2026-01-01T12:00:00Z", "source": "tracker", "continuity_unconfirmed": True, "persistent": True, "place": "Private place", "token": "secret"}}
+    arrival = capture.project_member({"members": [member]}, member["id"])["arrival"]
+    assert arrival["since"] == "2026-01-01T12:00:00+00:00"
+    assert arrival["source"] == "tracker" and arrival["continuity_unconfirmed"] is True
+    assert not any(value in json.dumps(arrival) for value in ["Private", "secret", "place"])
+    for value in ["secret", "2026-01-01T12:00:00", {}, True]:
+        assert capture.arrival_stamp(value) is None
