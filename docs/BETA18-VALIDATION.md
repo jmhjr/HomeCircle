@@ -26,10 +26,18 @@ No personal location data, screenshots, faces, credentials, raw replies or provi
 
 ## Published-HACS acceptance
 
-A separate disposable instance installed published beta 17 through HACS and configured two fictional members. Publication, download-back checksum and actual beta 17 → 18 HACS upgrade results will be recorded after publication; this does not authorize or imply a production upgrade.
+A separate disposable instance installed published beta 17 through HACS and configured two fictional members. The actual published beta 17 → 18 HACS upgrade passed after publication; this does not authorize or imply a production upgrade.
 
 ## Final independent sign-off
 
 Claude completed the full recheck and then a focused check of the last fixes before publication. Final verdict: no blockers, cleared for beta 18. It verified Primary Home draft cleanup, HA accuracy/passive matching, GPS-only transmission, cached-street validation, rollback-resistant budgets and shielded-save unload/removal ordering. All reviews were read-only static reviews; the maintainer ran the suites and real Core checks separately. The review transcripts remain in the private local release evidence.
 
 Nonblocking follow-ups: passive-zone consistency in the older HA-Person pending-zone fallback; cached address projection for a non-GPS source at an already cached cell (no new transmission); and cancellation of a native save task during HA shutdown. These are recorded in the roadmap.
+
+## Publication and download-back verification
+
+Published from merged main commit `9c6535f`, via [PR 31](https://github.com/jmhjr/HomeCircle/pull/31), as [v0.1.0-beta.18](https://github.com/jmhjr/HomeCircle/releases/tag/v0.1.0-beta.18). The release is a non-draft prerelease with the tested `homecircle.zip` attached. Download-back matched both the checksum above and every byte of the tested archive. The tag and package were not rewritten.
+
+Official HACS 2.0.5 in a separate disposable HA Core 2026.9.4 instance selected and downloaded published beta 18 over published beta 17, then restarted. All 28 installed files matched the release ZIP; the served card bytes and owned resource version/hash matched beta 18. Saved data/options, the two fictional members, their presence/focusable flags and an unrelated Lovelace resource survived. HACS recorded `v0.1.0-beta.18` installed. The check harness initially still targeted beta 17; correcting its target produced the passing beta 18 result.
+
+Final disposable browser navigation was blocked by the browser client, so final-package browser rendering was not re-certified. Installed development browser evidence remains separately scoped above; HTTP-served bytes, authenticated snapshots and HACS restart were verified directly. The temporary instance/configuration was cleaned up. Production was not upgraded by publication. Physical acceptance of the final package remains pending.
