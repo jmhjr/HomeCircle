@@ -1700,7 +1700,7 @@ test("unsupported or failed selection checks show fixed feedback without provide
   value.remove();
 });
 
-test("person selection zooms three levels above the default and Everyone restores it", () => {
+test("person selection uses fixed zoom 17 and Everyone dynamically fits members", () => {
   const fictionalOrigin = 0;
   const fictionalOffset = 2;
   const value = document.createElement("homecircle-card");
@@ -1732,20 +1732,26 @@ test("person selection zooms three levels above the default and Everyone restore
       .click();
   for (const member of [data.members[0], data.members[1], data.members[1]]) {
     select(member);
-    assert.equal(map.getZoom(), defaultZoom + 3);
+    assert.equal(map.getZoom(), 17);
     assert.equal(map.getCenter().lat, member.location.latitude);
     assert.equal(map.getCenter().lng, member.location.longitude);
     value._render();
-    assert.equal(map.getZoom(), defaultZoom + 3);
+    assert.equal(map.getZoom(), 17);
   }
   map.setZoom(18, { animate: false });
   select(data.members[0]);
-  assert.equal(map.getZoom(), defaultZoom + 3);
+  assert.equal(map.getZoom(), 17);
   select(data.members[2]);
-  assert.equal(map.getZoom(), defaultZoom + 3);
+  assert.equal(map.getZoom(), 17);
   value._overview.click();
   assert.equal(map.getZoom(), defaultZoom);
   assert.deepEqual(map.getCenter(), defaultCenter);
+  data.members[1].location.longitude = fictionalOffset * 10;
+  value._fit = true;
+  value._render();
+  assert.ok(map.getZoom() < defaultZoom);
+  select(data.members[0]);
+  assert.equal(map.getZoom(), 17);
   value.remove();
 });
 
@@ -2159,7 +2165,7 @@ test("radar is opt-in and preserves selection, zoom, markers and base layers", (
   value.shadowRoot
     .querySelector(`.member[data-focus="${data.members[0].id}"]`)
     .click();
-  assert.equal(map.getZoom(), zoom + 3);
+  assert.equal(map.getZoom(), 17);
   assert.equal(radar.layer, overlay);
   value._overview.click();
   assert.equal(map.getZoom(), zoom);
@@ -2684,5 +2690,319 @@ test("selected member coordinate updates follow at the chosen zoom; other update
   data.members[0].location.latitude = fictionalOverviewMove;
   value._render();
   assert.deepEqual(map.getCenter(), overviewCenter);
+  value.remove();
+});
+
+test("place importer supports independent checks, select all and clearing with a filter", async () => {
+  const { openSettingsDialog } = await import("../src/settings-dialog.js");
+  const prototype = dom.window.HTMLDialogElement.prototype;
+  const originalShow = prototype.showModal;
+  const originalClose = prototype.close;
+  prototype.showModal = function () {
+    this.open = true;
+  };
+  prototype.close = function () {
+    this.open = false;
+    this.dispatchEvent(new window.Event("close"));
+  };
+  const calls = [];
+  const hass = {
+    user: { is_admin: true },
+    callWS: async () => [{ entry_id: "example-entry" }],
+    loadBackendTranslation: async () => {},
+    localize: () => "",
+    callApi: async (method, path, data) => {
+      calls.push({ method, data });
+      if (method === "DELETE") return {};
+      return {
+        type: "form",
+        flow_id: "example-flow",
+        step_id: "import_place_select",
+        data_schema: [
+          {
+            name: "places",
+            required: true,
+            default: [],
+            selector: {
+              select: {
+                multiple: true,
+                options: [
+                  { value: "a", label: "Example Park · 152.4 m" },
+                  { value: "b", label: "Example School" },
+                  { value: "c", label: "Example Work" },
+                ],
+              },
+            },
+          },
+        ],
+        errors: {},
+      };
+    },
+  };
+  try {
+    await openSettingsDialog({ _hass: hass }, hass);
+    const dialog = document.querySelector("dialog.homecircle-settings");
+    const panel = dialog.querySelector(".place-selection");
+    const checks = [...panel.querySelectorAll('input[type="checkbox"]')];
+    const button = (name) =>
+      [...dialog.querySelectorAll("button")].find(
+        (b) => b.textContent === name,
+      );
+    assert.equal(checks.length, 3);
+    assert.ok(panel.textContent.includes("Example Park"));
+    assert.ok(!panel.textContent.includes("152.4 m"));
+    assert.ok(checks.every((c) => !c.checked));
+    checks[0].checked = true;
+    checks[0].dispatchEvent(new window.Event("change"));
+    checks[1].checked = true;
+    checks[1].dispatchEvent(new window.Event("change"));
+    assert.match(panel.textContent, /2 of 3 places selected/);
+    const search = panel.querySelector('input[type="search"]');
+    search.value = "Park";
+    search.dispatchEvent(new window.Event("input"));
+    assert.equal(checks[1].parentElement.style.display, "none");
+    button("Select all").click();
+    assert.ok(checks.every((c) => c.checked));
+    assert.match(panel.textContent, /3 of 3 places selected/);
+    button("Continue").click();
+    await tick();
+    assert.deepEqual(calls.at(-1).data, { places: ["a", "b", "c"] });
+    const nextPanel = dialog.querySelector(".place-selection");
+    button("Select all").click();
+    button("Clear selection").click();
+    assert.ok(
+      [...nextPanel.querySelectorAll('input[type="checkbox"]')].every(
+        (c) => !c.checked,
+      ),
+    );
+    dialog.close();
+  } finally {
+    prototype.showModal = originalShow;
+    prototype.close = originalClose;
+    document.querySelector("dialog.homecircle-settings")?.remove();
+  }
+});
+
+test("Skip this place submits only skip and bypasses incomplete review fields", async () => {
+  const { openSettingsDialog } = await import("../src/settings-dialog.js");
+  const prototype = dom.window.HTMLDialogElement.prototype;
+  const show = prototype.showModal;
+  const close = prototype.close;
+  prototype.showModal = function () {
+    this.open = true;
+  };
+  prototype.close = function () {
+    this.open = false;
+    this.dispatchEvent(new window.Event("close"));
+  };
+  const calls = [];
+  const hass = {
+    user: { is_admin: true },
+    callWS: async () => [{ entry_id: "example-entry" }],
+    loadBackendTranslation: async () => {},
+    localize: () => "",
+    callApi: async (method, path, data) => {
+      calls.push({ method, data });
+      return {
+        type: "form",
+        flow_id: "example-flow",
+        step_id: "import_place_edit",
+        errors: {},
+        data_schema: [
+          { name: "skip", default: false, selector: { boolean: {} } },
+          { name: "name", selector: { text: {} } },
+          { name: "location", selector: { location: { radius: true } } },
+        ],
+      };
+    },
+  };
+  try {
+    await openSettingsDialog({ _hass: hass }, hass);
+    const dialog = document.querySelector("dialog.homecircle-settings");
+    assert.ok(
+      !dialog.querySelector("ha-form").schema.some((f) => f.name === "skip"),
+    );
+    [...dialog.querySelectorAll("button")]
+      .find((b) => b.textContent === "Skip this place")
+      .click();
+    await tick();
+    assert.deepEqual(calls.at(-1).data, { skip: true });
+    dialog.close();
+  } finally {
+    prototype.showModal = show;
+    prototype.close = close;
+    document.querySelector("dialog.homecircle-settings")?.remove();
+  }
+});
+
+test("tracker picture upload previews a local HA image and saves or removes only the reference", async () => {
+  const { openSettingsDialog } = await import("../src/settings-dialog.js");
+  const prototype = dom.window.HTMLDialogElement.prototype;
+  const show = prototype.showModal,
+    close = prototype.close;
+  prototype.showModal = function () {
+    this.open = true;
+  };
+  prototype.close = function () {
+    this.open = false;
+    this.dispatchEvent(new window.Event("close"));
+  };
+  const uploadedId = "a".repeat(32),
+    originalId = "b".repeat(32);
+  const submissions = [],
+    uploads = [];
+  const hass = {
+    user: { is_admin: true },
+    callWS: async () => [{ entry_id: "example-entry" }],
+    loadBackendTranslation: async () => {},
+    localize: () => "",
+    callApi: async (method, path, data) => {
+      submissions.push({ method, data });
+      return {
+        type: "form",
+        flow_id: "example-flow",
+        step_id: "tracker_picture",
+        errors: {},
+        data_schema: [
+          { name: "picture_id", default: originalId, selector: { text: {} } },
+        ],
+      };
+    },
+    fetchWithAuth: async (path, request) => {
+      uploads.push({ path, request });
+      return { ok: true, json: async () => ({ id: uploadedId }) };
+    },
+  };
+  const pick = (input, file) => {
+    Object.defineProperty(input, "files", {
+      value: [file],
+      configurable: true,
+    });
+    input.dispatchEvent(new window.Event("change"));
+  };
+  const oldReader = globalThis.FileReader,
+    oldImage = globalThis.Image;
+  const canvasPrototype = dom.window.HTMLCanvasElement.prototype;
+  const oldContext = canvasPrototype.getContext,
+    oldBlob = canvasPrototype.toBlob;
+  const draws = [];
+  globalThis.FileReader = class {
+    readAsDataURL() {
+      this.result = "data:image/png;base64,c3ludGhldGlj";
+      this.onload();
+    }
+  };
+  globalThis.Image = class {
+    naturalWidth = 800;
+    naturalHeight = 400;
+    set src(value) {
+      this.onload();
+    }
+  };
+  canvasPrototype.getContext = () => ({
+    fillRect() {},
+    drawImage(...args) {
+      draws.push(args);
+    },
+  });
+  canvasPrototype.toBlob = (callback) =>
+    callback(new Blob(["cropped"], { type: "image/jpeg" }));
+  try {
+    await openSettingsDialog({ _hass: hass }, hass);
+    const dialog = document.querySelector("dialog.homecircle-settings");
+    const button = (name) =>
+      [...dialog.querySelectorAll("button")].find(
+        (b) => b.textContent === name,
+      );
+    let input = dialog.querySelector('input[type="file"]');
+    assert.equal(dialog.querySelector("ha-form").schema.length, 0);
+    pick(input, new File(["bad"], "example.txt", { type: "text/plain" }));
+    await tick();
+    assert.equal(uploads.length, 0);
+    assert.ok(dialog.querySelector("img").src.includes(originalId));
+    pick(input, new File(["synthetic"], "example.png", { type: "image/png" }));
+    await tick();
+    assert.equal(uploads.length, 0, "choosing a file stays local");
+    const zoom = dialog.querySelector('input[aria-label="Zoom"]');
+    zoom.value = "2";
+    zoom.dispatchEvent(new window.Event("input"));
+    assert.deepEqual(draws.at(-1).slice(1, 5), [200, 0, 400, 400]);
+    button("Reset crop").click();
+    assert.equal(zoom.value, "1");
+    button("Save picture").click();
+    await tick();
+    assert.equal(uploads[0].path, "/api/image/upload");
+    assert.equal(uploads[0].request.method, "POST");
+    assert.equal(
+      uploads[0].request.body.get("file").name,
+      "homecircle-picture.jpg",
+    );
+    assert.equal(uploads[0].request.body.get("file").type, "image/jpeg");
+    assert.deepEqual(submissions.at(-1).data, { picture_id: uploadedId });
+    button("Remove picture").click();
+    assert.equal(dialog.querySelector("img").hidden, true);
+    assert.equal(dialog.querySelector("img").style.display, "none");
+    button("Save picture").click();
+    await tick();
+    assert.deepEqual(submissions.at(-1).data, { picture_id: "" });
+    input = dialog.querySelector('input[type="file"]');
+    hass.fetchWithAuth = async () => ({ ok: false });
+    pick(input, new File(["synthetic"], "example.png", { type: "image/png" }));
+    await tick();
+    button("Save picture").click();
+    await tick();
+    assert.match(dialog.textContent, /Could not upload this picture/);
+    assert.equal(dialog.querySelector('input[aria-label="Zoom"]').value, "1");
+    assert.ok(dialog.querySelector("img").src.includes(originalId));
+    let finishUpload;
+    hass.fetchWithAuth = () =>
+      new Promise((resolve) => {
+        finishUpload = resolve;
+      });
+    button("Save picture").click();
+    await tick();
+    button("Back").click();
+    await tick();
+    const beforeFinish = submissions.length;
+    finishUpload({ ok: true, json: async () => ({ id: uploadedId }) });
+    await tick();
+    assert.equal(
+      submissions.length,
+      beforeFinish,
+      "an upload completing after Back must not submit to a different flow step",
+    );
+    dialog.close();
+  } finally {
+    globalThis.FileReader = oldReader;
+    globalThis.Image = oldImage;
+    canvasPrototype.getContext = oldContext;
+    canvasPrototype.toBlob = oldBlob;
+    prototype.showModal = show;
+    prototype.close = close;
+    document.querySelector("dialog.homecircle-settings")?.remove();
+  }
+});
+
+test("tracker cards show coarse battery warnings without synthesizing a percentage", async () => {
+  const data = response();
+  data.members = ["low", "full"].map((status) => ({
+    id: `device_tracker.example_${status}`,
+    name: `Example ${status}`,
+    kind: "person",
+    presence: "home",
+    focusable: false,
+    location: null,
+    battery: null,
+    charging: null,
+    battery_status: { value: status, reported_at: "2026-01-01T10:00:00+00:00" },
+    driving: { value: null, status: "unknown" },
+  }));
+  const value = card({ connection: {}, callWS: async () => data });
+  await tick();
+  const batteries = value.shadowRoot.querySelectorAll(".member .battery");
+  assert.equal(batteries[0].textContent, "Battery Low (last report)");
+  assert.equal(batteries[0].classList.contains("low"), true);
+  assert.equal(batteries[1].textContent, "Battery Full (last report)");
+  assert.equal(batteries[1].classList.contains("low"), false);
   value.remove();
 });

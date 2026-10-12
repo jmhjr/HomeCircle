@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+No additional changes queued.
+
+## 0.1.0-beta.18 — October 11, 2026
+
+Experimental prerelease; see the [change record](docs/RECENT-CHANGES-2026-10-11.md) and [validation](docs/BETA18-VALIDATION.md).
+
+- Default Person members to the freshest verified report among explicitly selected GPS trackers, with HA active-source preference within 60 seconds and an opt-out to Follow HA Person. Derive HomeCircle zones from the chosen position; preserve report provenance and stale labels.
+- Import saved Life360 places through an existing saved account. Add multi-selection, Select all, filtering, per-place map review and Skip, final confirmation, duplicate protection and partial-failure retry. Imported zones are ordinary places until separately assigned as homes.
+- Add native HA picture upload for tracker-only members with local crop, zoom and positioning; show pictures in cards and Details. Preserve Person picture management and do not delete native uploaded images when removing a reference.
+- Show coarse tracker battery categories and actual battery report times without inventing percentages.
+- Use Street, City address labels across providers. Add optional server-side Photon lookup, off by default, with explicit coordinate disclosure, bounded persisted budgets/cache, cancellation and attribution.
+- Use fixed zoom 17 on member selection and align member cards within rows.
+- Harden fragmented geocoder response handling and cache cleanup; preserve limits on clock rollback. Repair Primary Home changes, include GPS accuracy in zone matching, and guard uploads completing after navigation.
+
 - Follow new location coordinates for a selected person while retaining the chosen zoom. Keep Everyone/category views steady on background updates.
 
 - Accept explicitly mapped phone battery-state sensors for charging, alongside existing binary sensors. Charging is true; Not Charging and Full are false; unavailable or unrecognized reports remain unknown.

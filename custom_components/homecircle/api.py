@@ -11,6 +11,8 @@ from homeassistant.core import callback
 from homeassistant.helpers import entity_registry as er
 import voluptuous as vol
 
+from .city_lookup import address_parts
+from .pictures import picture_url
 from .const import CONF_MEMBERS, CONF_SHOW_ON_MAP, CONF_TRACKERS, DOMAIN
 from .normalize import coordinates
 from .location_requests import available_notification_entity, request_status
@@ -157,6 +159,16 @@ def reported_address(member, runtime):
     if state is None or state.state in {"unknown", "unavailable"}:
         return None
     value = state.attributes.get("address")
+    lookup = getattr(runtime, "city_lookup", None)
+    if (
+        runtime.config.get("city_lookup_enabled")
+        and lookup
+        and not address_parts(value)[1]
+    ):
+        found = lookup.cached(member.location.latitude, member.location.longitude)
+        if found:
+            street = address_parts(value)[0] or found.get("street")
+            return f"{street}, {found['city']}" if street else found["city"]
     if not isinstance(value, str) or len(value) > 240:
         return None
     if any(ord(char) < 32 and char not in "\r\n\t" for char in value):
@@ -165,6 +177,20 @@ def reported_address(member, runtime):
     if not value or value.casefold() in {"unknown", "unavailable", "none", "null"}:
         return None
     return value
+
+
+def reported_city(member, runtime):
+    """Retain a structured lookup city even when its name also names a region."""
+    if not reported_address(member, runtime):
+        return None
+    lookup = getattr(runtime, "city_lookup", None)
+    if not runtime.config.get("city_lookup_enabled") or not lookup:
+        return None
+    state = runtime.states.get(member.location.evidence.source_entity)
+    if state and not address_parts(state.attributes.get("address"))[1]:
+        found = lookup.cached(member.location.latitude, member.location.longitude)
+        return found.get("city") if found else None
+    return None
 
 
 def member_diagnostics(member, runtime, registry=None, admin=False):
@@ -182,6 +208,7 @@ def member_diagnostics(member, runtime, registry=None, admin=False):
     person_state = runtime.states.get(member.id)
     active = member.active_source_entity
     return {
+        "source_selection_reason": member.source_selection_reason,
         "person_entity": member.person_entity,
         "person_state": person_state.state if person_state else None,
         "person_updated_at": (
@@ -276,10 +303,16 @@ def snapshot(
         place = runtime.states.get(member.place)
         person_state = runtime.states.get(member.id)
         picture = (
-            allowed_picture(person_state.attributes.get("entity_picture"))
-            if person_state
+            picture_url(runtime.config[CONF_MEMBERS][member.id].get("picture_id"))
+            if member.id.startswith("device_tracker.")
             else None
         )
+        if picture is None:
+            picture = (
+                allowed_picture(person_state.attributes.get("entity_picture"))
+                if person_state
+                else None
+            )
         if picture is None:
             for tracker_id in runtime.config[CONF_MEMBERS][member.id][CONF_TRACKERS]:
                 tracker_state = runtime.states.get(tracker_id)
@@ -300,6 +333,7 @@ def snapshot(
                 "primary_home": member.primary_home,
                 "place": place.name if place else None,
                 "reported_address": reported_address(member, runtime),
+                "reported_city": reported_city(member, runtime),
                 "focusable": member.focusable,
                 "map_visible": runtime.config[CONF_MEMBERS][member.id].get(
                     CONF_SHOW_ON_MAP, True
@@ -314,6 +348,14 @@ def snapshot(
                 if location and member.focusable
                 else None,
                 "battery": member.battery.value,
+                "battery_status": {
+                    "value": member.battery_status.value,
+                    "reported_at": member.battery_status.evidence.reported_at.isoformat()
+                    if member.battery_status.evidence.reported_at
+                    else None,
+                }
+                if member.battery_status
+                else None,
                 "charging": member.charging.value,
                 "speed": {"value": member.speed.value, "unit": member.speed.unit},
                 "driving": {
@@ -355,6 +397,7 @@ def snapshot(
     return {
         "family_refresh": family_status(hass, runtime, registry),
         "schema_version": 1,
+        "city_lookup_enabled": bool(runtime.config.get("city_lookup_enabled")),
         "members": members,
         "counts": household.counts,
         "focus_ids": household.focus_ids,
@@ -388,6 +431,9 @@ def websocket_snapshot(hass, connection, msg):
             msg["id"], "unauthorized", "Household access is not allowed."
         )
         return
+    lookup = getattr(runtime, "city_lookup", None)
+    if lookup:
+        lookup.schedule(runtime)
     connection.send_result(
         msg["id"],
         snapshot(

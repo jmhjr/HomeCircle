@@ -8,6 +8,7 @@
   "dependencies": [
     "frontend",
     "http",
+    "image_upload",
     "lovelace",
     "person",
     "websocket_api",
@@ -17,7 +18,9 @@
   "integration_type": "service",
   "iot_class": "calculated",
   "issue_tracker": "https://github.com/jmhjr/HomeCircle/issues",
-  "requirements": ["life360==7.2.0"],
+  "requirements": [
+    "life360==7.2.0"
+  ],
   "single_config_entry": true,
-  "version": "0.1.0-beta.17"
+  "version": "0.1.0-beta.18"
 }

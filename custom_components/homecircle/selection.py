@@ -159,6 +159,11 @@ def member_errors(
 ) -> dict[str, str]:
     """An ordinary place may be a residence for one member only."""
     errors = {}
+    if values.get("tracker_selection", "freshest_gps") not in (
+        "freshest_gps",
+        "ha_person",
+    ):
+        errors["tracker_selection"] = "invalid_tracker_selection"
     if values.get("kind", "person") not in ("person", "pet"):
         errors["kind"] = "invalid_kind"
     if CONF_DISPLAY_NAME in values:

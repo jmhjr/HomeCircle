@@ -41,6 +41,10 @@ from .selection import (
     selectable,
     selected_entities,
 )
+from homeassistant.components.image_upload.const import DOMAIN as IMAGE_UPLOAD_DOMAIN
+
+from .pictures import picture_url
+from .place_import import PlaceImportFlow
 from . import frontend
 from .life360_direct import validate_account
 from .tracker_providers import disconnected_owned_entities
@@ -55,11 +59,14 @@ from .person_setup import (
 )
 
 
-def entity_selector(domain: str, multiple: bool = True):
+def entity_selector(
+    domain: str, multiple: bool = True, *, exclude_entities: list[str] | None = None
+):
     return selector.EntitySelector(
         selector.EntitySelectorConfig(
             domain=domain,
             multiple=multiple,
+            **({"exclude_entities": exclude_entities} if exclude_entities else {}),
         )
     )
 
@@ -274,11 +281,12 @@ def tracker_advice(
     elif best_rank == 0:
         headline = "No linked tracker is available right now; review the choices below."
     else:
-        headline = "Several linked trackers look equally suitable; choose the one you trust most."
+        headline = "Several linked trackers are available; select the sources you want HomeCircle to compare."
     lines = [
         headline,
-        "Choose one tracker for a clear location source. This is a suggestion based on "
-        "the current HA state, not a measure of update reliability or GPS report time.",
+        "You can select several trackers. The location selection mode decides which "
+        "selected tracker supplies the map. This suggestion reflects HA's current "
+        "state rather than comparing location report times.",
         "Linked trackers:",
         *(
             f"- {review_label(hass, entity_id)} — {capability}"
@@ -633,6 +641,7 @@ class SelectionFlow:
                 self.draft = {
                     **values,
                     **saved_connections,
+                    "city_lookup_enabled": self.draft.get("city_lookup_enabled", False),
                     CONF_MEMBERS: {
                         person_id: previous[person_id]
                         for person_id in [
@@ -643,6 +652,12 @@ class SelectionFlow:
                         if person_id in previous
                     },
                 }
+                for member in self.draft[CONF_MEMBERS].values():
+                    member[CONF_RESIDENCES] = [
+                        zone
+                        for zone in member.get(CONF_RESIDENCES, [])
+                        if zone != self.draft[CONF_PRIMARY_HOME]
+                    ]
                 self.zone_household_prefill = None
                 self.zone_created_hint = ""
                 self.person_household_prefill = None
@@ -1079,6 +1094,13 @@ class SelectionFlow:
                     values[CONF_DISPLAY_NAME] = name.strip()
                 elif name is not None and not isinstance(name, str):
                     values[CONF_DISPLAY_NAME] = name
+            selection_mode = user_input.get(
+                "tracker_selection", previous.get("tracker_selection", "freshest_gps")
+            )
+            if selection_mode != "freshest_gps":
+                values["tracker_selection"] = selection_mode
+            if previous.get("picture_id"):
+                values["picture_id"] = previous["picture_id"]
             previous_reports = previous.get("location_reports", {})
             if previous_reports:
                 values["location_reports"] = deepcopy(previous_reports)
@@ -1156,16 +1178,39 @@ class SelectionFlow:
             ),
             **(self.zone_member_prefill or {}),
         }
+        defaults[CONF_RESIDENCES] = [
+            zone
+            for zone in defaults.get(CONF_RESIDENCES, [])
+            if zone != self.draft[CONF_PRIMARY_HOME]
+        ]
         position = current_position(
             self.hass,
             self.draft,
             person_id,
             values if user_input is not None else defaults,
         )
-        fields = {vol.Optional(CONF_RESIDENCES): entity_selector("zone")}
+        fields = {
+            vol.Optional(CONF_RESIDENCES): entity_selector(
+                "zone", exclude_entities=[self.draft[CONF_PRIMARY_HOME]]
+            )
+        }
         if not tracker_only_member:
             fields = {
                 vol.Optional(CONF_TRACKERS): tracker_selector(self.hass),
+                vol.Optional(
+                    "tracker_selection",
+                    default=defaults.get("tracker_selection", "freshest_gps"),
+                ): selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        options=[
+                            {
+                                "value": "freshest_gps",
+                                "label": "Freshest reliable GPS (default)",
+                            },
+                            {"value": "ha_person", "label": "Follow HA Person"},
+                        ]
+                    )
+                ),
                 **fields,
                 vol.Optional(
                     "kind", default=defaults.get("kind", "person")
@@ -1624,12 +1669,19 @@ class HomeCircleConfigFlow(SelectionFlow, config_entries.ConfigFlow, domain=DOMA
         return HomeCircleOptionsFlow()
 
 
-class HomeCircleOptionsFlow(SelectionFlow, config_entries.OptionsFlowWithReload):
+class HomeCircleOptionsFlow(
+    PlaceImportFlow, SelectionFlow, config_entries.OptionsFlowWithReload
+):
     """Persist a complete selection snapshot; reload only after saving."""
 
     async def async_step_init(self, user_input=None):
         self.start(self.config_entry.options or self.config_entry.data)
-        menu_options = ["add_tracker_choice", "household"]
+        menu_options = [
+            "add_tracker_choice",
+            "import_places",
+            "city_lookup",
+            "household",
+        ]
         if self.member_ids():
             menu_options.insert(0, "tracker_member_choice")
         if self.draft.get(CONF_TRACKER_PEOPLE) or self.draft.get(CONF_PETS):
@@ -1637,6 +1689,24 @@ class HomeCircleOptionsFlow(SelectionFlow, config_entries.OptionsFlowWithReload)
         return self.async_show_menu(
             step_id="init",
             menu_options=menu_options,
+        )
+
+    async def async_step_city_lookup(self, user_input=None):
+        if user_input is not None:
+            self.draft["city_lookup_enabled"] = bool(
+                user_input.get("city_lookup_enabled", False)
+            )
+            return self.save()
+        return self.async_show_form(
+            step_id="city_lookup",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        "city_lookup_enabled",
+                        default=self.draft.get("city_lookup_enabled", False),
+                    ): selector.BooleanSelector()
+                }
+            ),
         )
 
     async def async_step_tracker_member_choice(self, user_input=None):
@@ -1647,12 +1717,17 @@ class HomeCircleOptionsFlow(SelectionFlow, config_entries.OptionsFlowWithReload)
             if member_id in self.member_ids() and setting in (
                 "details",
                 "sensors",
+                "picture",
                 "remove",
             ):
                 self.member_index = self.member_ids().index(member_id)
                 self.single_edit = True
                 if setting == "details":
                     return await self.async_step_member()
+                if setting == "picture":
+                    if member_id.startswith("device_tracker."):
+                        return await self.async_step_tracker_picture()
+                    return self.async_abort(reason="tracker_picture_only")
                 if setting == "remove":
                     if not self.draft[CONF_MEMBERS][member_id][CONF_TRACKERS]:
                         return self.async_show_form(
@@ -1670,7 +1745,51 @@ class HomeCircleOptionsFlow(SelectionFlow, config_entries.OptionsFlowWithReload)
             step_id="tracker_member_choice",
             data_schema=self.tracker_member_settings_schema(),
             errors={"base": "invalid_entity"} if user_input is not None else {},
-            description_placeholders={"removable_members": self.removable_member_ids()},
+            description_placeholders={
+                "removable_members": self.removable_member_ids(),
+                "picture_members": ",".join(
+                    m for m in self.member_ids() if m.startswith("device_tracker.")
+                ),
+            },
+        )
+
+    async def async_step_tracker_picture(self, user_input=None):
+        """Apply an existing HA image only to this tracker-only member."""
+        member_id = self.member_ids()[self.member_index]
+        if not member_id.startswith("device_tracker."):
+            return self.async_abort(reason="tracker_picture_only")
+        member = self.draft[CONF_MEMBERS][member_id]
+        errors = {}
+        if user_input is not None:
+            image_id = user_input.get("picture_id", "")
+            collection = self.hass.data.get(IMAGE_UPLOAD_DOMAIN)
+            if image_id and (
+                picture_url(image_id) is None
+                or collection is None
+                or image_id not in collection.data
+            ):
+                errors["base"] = "invalid_tracker_picture"
+            else:
+                if image_id:
+                    member["picture_id"] = image_id
+                else:
+                    member.pop("picture_id", None)
+                return self.save()
+        return self.async_show_form(
+            step_id="tracker_picture",
+            errors=errors,
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        "picture_id", default=member.get("picture_id", "")
+                    ): selector.TextSelector()
+                }
+            ),
+            description_placeholders={
+                "member": markdown_label(
+                    member.get(CONF_DISPLAY_NAME) or entity_label(self.hass, member_id)
+                )
+            },
         )
 
     def removable_member_ids(self):
@@ -1692,6 +1811,7 @@ class HomeCircleOptionsFlow(SelectionFlow, config_entries.OptionsFlowWithReload)
                                 "label": "Details, homes, and map visibility",
                             },
                             {"value": "sensors", "label": "Battery and status sensors"},
+                            {"value": "picture", "label": "Change picture"},
                             {"value": "remove", "label": "Remove a tracker"},
                         ],
                         custom_value=False,

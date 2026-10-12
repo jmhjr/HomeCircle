@@ -40,10 +40,11 @@
           "configure_timing": "Adjust pet location timing",
           "show_on_map": "Show this member on the map",
           "auto_request_location": "Request a location when this member’s phone is quiet",
-          "create_zone": "Create another home zone"
+          "create_zone": "Create another home zone",
+          "tracker_selection": "Location tracker selection"
         },
         "data_description": {
-          "trackers": "Select a tracker you own. Home Assistant Person remains the position source while it has a usable location; a selected GPS tracker can supplement it when needed. Changing this selection does not change the trackers linked to the HA Person.",
+          "trackers": "Select one or more trackers you own. Freshest reliable GPS compares verified report times from these selected GPS sources. Follow HA Person uses HA’s position with a selected GPS fallback. Changing this selection does not change the trackers linked to HA Person.",
           "additional_residences": "These zones also count as Home for this member. The Home map button still focuses the primary family home.",
           "kind": "Choose Pet for a pet record. Pet timing can be adjusted when needed; this does not create a tracker.",
           "configure_reports": "Choose a genuine location report-time sensor separately for each selected source. Leave off if none is available.",
@@ -51,7 +52,8 @@
           "configure_timing": "Only for pets. Keep the current timing when the defaults are right.",
           "show_on_map": "Turn off to leave this member out of the Everyone map and its fit. Selecting the member or a status category still shows their map position.",
           "auto_request_location": "For a selected Home Assistant phone tracker, ask for a location after 15 quiet minutes. Automatic attempts are at least 15 minutes apart and pause after three unanswered attempts until the tracker reports again. Deliberate requests keep a one-minute cooldown. All attempts share the 50-per-24-hour limit. Off by default.",
-          "create_zone": "Create a Home Assistant zone on a map and select it for this member without losing the choices above."
+          "create_zone": "Create a Home Assistant zone on a map and select it for this member without losing the choices above.",
+          "tracker_selection": "Default: use the freshest verified report from explicitly selected GPS trackers. HA entity update times alone do not prove a newer location. Reports within 60 seconds prefer HA’s active selected GPS tracker. HomeCircle classifies the chosen coordinates against your HA zones without changing HA Person. If no selected GPS tracker has a verified report within five minutes, follow HA Person."
         }
       },
       "confirm": {
@@ -260,7 +262,8 @@
       "person_creation_unavailable": "Home Assistant People is unavailable. Check the Person integration and try again.",
       "person_not_editable": "This Person is managed outside the Home Assistant interface. Assign the tracker in its source configuration first.",
       "tracker_linked_elsewhere": "This tracker already belongs to another Home Assistant Person. Choose that Person or a different tracker.",
-      "tracker_required": "Choose at least one tracker for this Person before saving."
+      "tracker_required": "Choose at least one tracker for this Person before saving.",
+      "invalid_tracker_selection": "Choose a supported location selection mode."
     },
     "abort": {
       "already_configured": "HomeCircle is already configured. Use Options to edit the household.",
@@ -279,7 +282,9 @@
           "tracker_member_choice": "Person and tracker settings",
           "add_tracker_choice": "Add a tracker",
           "household": "Manage the whole household and tracker accounts",
-          "convert_legacy_member": "Move a tracker-only member to a Person"
+          "convert_legacy_member": "Move a tracker-only member to a Person",
+          "import_places": "Import places from Life360",
+          "city_lookup": "City lookup"
         }
       },
       "status_member": {
@@ -366,10 +371,11 @@
           "configure_timing": "Adjust pet location timing",
           "show_on_map": "Show this member on the map",
           "auto_request_location": "Request a location when this member’s phone is quiet",
-          "create_zone": "Create another home zone"
+          "create_zone": "Create another home zone",
+          "tracker_selection": "Location tracker selection"
         },
         "data_description": {
-          "trackers": "Select a tracker you own. Home Assistant Person remains the position source while it has a usable location; a selected GPS tracker can supplement it when needed. Changing this selection does not change the trackers linked to the HA Person.",
+          "trackers": "Select one or more trackers you own. Freshest reliable GPS compares verified report times from these selected GPS sources. Follow HA Person uses HA’s position with a selected GPS fallback. Changing this selection does not change the trackers linked to HA Person.",
           "additional_residences": "These zones also count as Home for this member. The Home map button still focuses the primary family home.",
           "kind": "Choose Pet for a pet record. Pet timing can be adjusted when needed; this does not create a tracker.",
           "configure_reports": "Choose a genuine location report-time sensor separately for each selected source. Leave off if none is available.",
@@ -377,7 +383,8 @@
           "configure_timing": "Only for pets. Keep the current timing when the defaults are right.",
           "show_on_map": "Turn off to leave this member out of the Everyone map and its fit. Selecting the member or a status category still shows their map position.",
           "auto_request_location": "For a selected Home Assistant phone tracker, ask for a location after 15 quiet minutes. Automatic attempts are at least 15 minutes apart and pause after three unanswered attempts until the tracker reports again. Deliberate requests keep a one-minute cooldown. All attempts share the 50-per-24-hour limit. Off by default.",
-          "create_zone": "Create a Home Assistant zone on a map and select it for this member without losing the choices above."
+          "create_zone": "Create a Home Assistant zone on a map and select it for this member without losing the choices above.",
+          "tracker_selection": "Default: use the freshest verified report from explicitly selected GPS trackers. HA entity update times alone do not prove a newer location. Reports within 60 seconds prefer HA’s active selected GPS tracker. HomeCircle classifies the chosen coordinates against your HA zones without changing HA Person. If no selected GPS tracker has a verified report within five minutes, follow HA Person."
         }
       },
       "confirm": {
@@ -541,6 +548,56 @@
         "data": {
           "tracker": "Location tracker"
         }
+      },
+      "import_places": {
+        "title": "Import places from Life360",
+        "description": "Choose an existing Life360 connection. This reads saved places without changing Life360. Imported places become editable Home Assistant zones.",
+        "data": {
+          "account": "Life360 connection"
+        }
+      },
+      "import_place_circle": {
+        "title": "Choose a Life360 circle",
+        "data": {
+          "circle": "Circle"
+        }
+      },
+      "import_place_select": {
+        "title": "Choose places to import",
+        "description": "{available} places available. {existing} places match existing zone centers or Primary Home and are excluded. {invalid} invalid places are excluded. Select only the places you want; nothing is selected automatically. Each selected place is reviewed on a map before import. Repeated names can refer to different locations.",
+        "data": {
+          "places": "Saved places"
+        }
+      },
+      "import_place_edit": {
+        "title": "Review a place",
+        "description": "Place {number} of {total}. Review its name, map position, and radius in meters. Repeated names have a suggested suffix. No zones are created until final confirmation. Choose Skip this place to leave it out and continue reviewing the remaining places.",
+        "data": {
+          "name": "Zone name",
+          "location": "Location and radius",
+          "skip": "Do not import this place"
+        }
+      },
+      "import_place_confirm": {
+        "title": "Create these Home Assistant zones?",
+        "description": "{summary}\n\nPrimary Home and existing zones stay unchanged. New zones are added as HomeCircle place labels; they do not count as additional homes unless you assign them separately. This is a one-time import, with no automatic synchronization. Created zones remain in HA if HomeCircle is removed. If an import fails partway, successfully created zones remain; retry completes the remaining places.",
+        "data": {
+          "confirm": "Create the reviewed zones and add them as place labels"
+        }
+      },
+      "tracker_picture": {
+        "title": "Picture for {member}",
+        "description": "Upload a JPG, PNG, or GIF picture stored locally in Home Assistant. Save applies it to this tracker only. Remove picture restores the tracker’s original picture or initials. Uploaded images remain in HA if you cancel or remove the custom picture. Anyone holding the opaque native HA image link can view it without login; keep image links private.",
+        "data": {
+          "picture_id": "Home Assistant image ID"
+        }
+      },
+      "city_lookup": {
+        "title": "City lookup",
+        "description": "Enable city lookup with Photon when a selected tracker outside your named places does not supply a city. This sends its GPS coordinates to photon.komoot.io; names and account credentials stay local. Results are cached in HA for seven days. Requests run while HomeCircle is viewed, with limits of 20 per hour and 200 per day. Photon is a public demo service without an availability guarantee. City and street names use OpenStreetMap data. Disable this switch to stop lookups. This covers selected usable trackers even when excluded from Everyone; Private map background only blocks tiles. Cached addresses remain local on disable and are deleted when HomeCircle is removed.",
+        "data": {
+          "city_lookup_enabled": "Enable Photon city lookup"
+        }
       }
     },
     "error": {
@@ -582,7 +639,20 @@
       "person_creation_unavailable": "Home Assistant People is unavailable. Check the Person integration and try again.",
       "person_not_editable": "This Person is managed outside the Home Assistant interface. Assign the tracker in its source configuration first.",
       "tracker_linked_elsewhere": "This tracker already belongs to another Home Assistant Person. Choose that Person or a different tracker.",
-      "tracker_required": "Choose at least one tracker for this Person before saving."
+      "tracker_required": "Choose at least one tracker for this Person before saving.",
+      "place_import_fetch": "Could not read Life360 places. Check the connection in its integration and try again.",
+      "place_import_empty": "Select at least one place, or close this window.",
+      "place_import_confirm": "Confirm creation, or close this window without importing.",
+      "place_import_changed": "A reviewed place now conflicts with an existing zone. Close and restart the import to review current zones.",
+      "place_import_create": "Some zones could not be created. Successfully created zones remain in HA. Retry to complete the remaining places.",
+      "invalid_tracker_selection": "Choose a supported location selection mode.",
+      "invalid_tracker_picture": "Choose a valid picture uploaded to Home Assistant."
+    },
+    "abort": {
+      "place_import_no_account": "No saved Life360 connection is available. Connect Life360 first, then try again.",
+      "place_import_none": "No new valid places are available to import. Existing zones and Primary Home are excluded.",
+      "place_import_skipped": "All selected places were skipped. No zones were created.",
+      "tracker_picture_only": "Use Home Assistant People settings to change a Person picture."
     }
   },
   "issues": {
