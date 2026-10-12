@@ -43,9 +43,60 @@ export function selection(members, mode, focusIds) {
       listed.has(member.id),
   );
 }
+// Keep provider-reported text local; do not infer a city from coordinates.
+const stateNames = new Set(
+  `Alabama|Alaska|Arizona|Arkansas|California|Colorado|Connecticut|Delaware|Florida|Georgia|Hawaii|Idaho|Illinois|Indiana|Iowa|Kansas|Kentucky|Louisiana|Maine|Maryland|Massachusetts|Michigan|Minnesota|Mississippi|Missouri|Montana|Nebraska|Nevada|New Hampshire|New Jersey|New Mexico|New York|North Carolina|North Dakota|Ohio|Oklahoma|Oregon|Pennsylvania|Rhode Island|South Carolina|South Dakota|Tennessee|Texas|Utah|Vermont|Virginia|Washington|West Virginia|Wisconsin|Wyoming|District of Columbia|Puerto Rico`
+    .toLowerCase()
+    .split("|"),
+);
+const stateCodes = new Set(
+  "AL AK AZ AR CA CO CT DE FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY DC PR".split(
+    " ",
+  ),
+);
+function isState(value) {
+  const region = value.replace(/\s+\d{5}(?:-\d{4})?$/, "").trim();
+  return (
+    stateNames.has(region.toLowerCase()) || stateCodes.has(region.toUpperCase())
+  );
+}
+export function streetCityAddress(value, verifiedCity = null) {
+  if (typeof value !== "string") return null;
+  const parts = value
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean);
+  if (typeof verifiedCity === "string" && verifiedCity) {
+    if (parts.length === 1 && parts[0] === verifiedCity) return verifiedCity;
+    if (parts[1] === verifiedCity) return `${parts[0]}, ${verifiedCity}`;
+  }
+  const ambiguousCities = new Set(["new york", "washington"]);
+  if (
+    !parts.length ||
+    (isState(parts[0]) && !ambiguousCities.has(parts[0].toLowerCase()))
+  )
+    return null;
+  const street = parts[0];
+  let city = parts[1];
+  if (
+    !city ||
+    (isState(city) &&
+      !ambiguousCities.has(city.toLowerCase()) &&
+      !(parts.length > 2 && isState(parts[2])))
+  )
+    return street;
+  // Some providers combine city and state code in the second component.
+  city = city.replace(/\s+\d{5}(?:-\d{4})?$/, "").trim();
+  const match = city.match(/^(.*)\s+([A-Z]{2})$/);
+  if (match && stateCodes.has(match[2])) city = match[1].trim();
+  return city ? `${street}, ${city}` : street;
+}
 export function addressLabel(member) {
   if (member.place || !member.focusable || !member.location) return null;
-  const address = member.reported_address;
+  const address = streetCityAddress(
+    member.reported_address,
+    member.reported_city,
+  );
   if (typeof address !== "string" || !address.trim())
     return ["away", "driving"].includes(member.presence)
       ? "Address unavailable"
@@ -244,4 +295,14 @@ export function validateConfig(config) {
     fill_screen: config.fill_screen || false,
     hidden_members: config.hidden_members || [],
   };
+}
+
+export function batteryStatusLabel(member) {
+  const value = {
+    full: "Full",
+    medium: "Medium",
+    low: "Low",
+    very_low: "Very Low",
+  }[member.battery_status?.value];
+  return value ? `${value} (last report)` : "Unknown";
 }

@@ -260,3 +260,62 @@ test("empty activity and unavailable persistence are explained without raw marku
   assert.equal(unsafe.dialog.querySelector(".recent-activity img"), null);
   unsafe.dialog.close();
 });
+
+test("tracker details shows its saved picture, refreshes it, and falls back on image failure", async () => {
+  const picture = "/api/image/serve/" + "a".repeat(32) + "/512x512";
+  const member = fixture({
+    id: "device_tracker.example_item",
+    name: "Example Item",
+    picture,
+  });
+  const { card, dialog, refresh } = open(member, {
+    _load: async () => {
+      card._data.members = [{ ...member, picture: "/local/example.jpg" }];
+    },
+  });
+  assert.equal(dialog.querySelector("header img").getAttribute("src"), picture);
+  assert.equal(dialog.querySelector("header img").alt, "");
+  refresh.click();
+  await new Promise((resolve) => setImmediate(resolve));
+  const image = dialog.querySelector("header img");
+  assert.equal(image.getAttribute("src"), "/local/example.jpg");
+  image.dispatchEvent(new dom.window.Event("error"));
+  assert.equal(dialog.querySelector("header img"), null);
+  assert.equal(dialog.querySelector(".details-avatar").textContent, "EI");
+  dialog.close();
+});
+
+for (const [category, label] of [
+  ["full", "Full"],
+  ["medium", "Medium"],
+  ["low", "Low"],
+  ["very_low", "Very Low"],
+]) {
+  test(`coarse battery ${category} shows its category and report time without a percentage`, () => {
+    const { dialog } = open(
+      fixture({
+        battery: null,
+        battery_status: {
+          value: category,
+          reported_at: "2026-01-01T10:00:00+00:00",
+        },
+      }),
+    );
+    const rows = [...dialog.querySelectorAll(".detail-row")];
+    assert.equal(
+      rows
+        .find((row) => row.querySelector("dt").textContent === "Battery")
+        .querySelector("dd").textContent,
+      `${label} (last report)`,
+    );
+    assert.notEqual(
+      rows
+        .find(
+          (row) => row.querySelector("dt").textContent === "Battery reported",
+        )
+        .querySelector("dd").textContent,
+      "Unknown",
+    );
+    dialog.close();
+  });
+}

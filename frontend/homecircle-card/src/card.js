@@ -1,3 +1,4 @@
+import { memberAvatar } from "./member-avatar.js";
 import * as L from "leaflet";
 import leafletCSS from "leaflet/dist/leaflet.css";
 import css from "./style.css";
@@ -6,6 +7,7 @@ import { openSettingsDialog } from "./settings-dialog.js";
 import { openMemberDialog } from "./member-dialog.js";
 import { RadarOverlay } from "./radar.js";
 import {
+  batteryStatusLabel,
   categories,
   labels,
   visibleMembers,
@@ -36,47 +38,6 @@ function button(text, action, className) {
   node.type = "button";
   node.addEventListener("click", action);
   return node;
-}
-function initials(name) {
-  return name
-    .split(/\s+/)
-    .map((word) => word[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-}
-function allowedPicture(value) {
-  if (typeof value !== "string" || /[\x00-\x1f\\]/.test(value)) return false;
-  if (value.includes("/../") || /%2e/i.test(value)) return false;
-  if (value.startsWith("/api/image/serve/") || value.startsWith("/local/"))
-    return true;
-  try {
-    const url = new URL(value);
-    const path = decodeURIComponent(url.pathname);
-    if (path.split("/").some((part) => part === "." || part === ".."))
-      return false;
-    const life360Image =
-      (url.host === "www.life360.com" &&
-        path.startsWith("/img/user_images/")) ||
-      (url.host === "life360-images-pub.life360.com" &&
-        /\.(jpeg|jpg|png|webp)$/.test(path));
-    return url.protocol === "https:" && life360Image && !url.hash;
-  } catch {
-    return false;
-  }
-}
-function memberAvatar(member, className = "marker-avatar") {
-  const avatar = el("span", className, initials(member.name));
-  avatar.setAttribute("aria-hidden", "true");
-  if (allowedPicture(member.picture)) {
-    const picture = el("img");
-    picture.alt = "";
-    picture.referrerPolicy = "no-referrer";
-    picture.src = member.picture;
-    picture.addEventListener("error", () => picture.remove(), { once: true });
-    avatar.append(picture);
-  }
-  return avatar;
 }
 
 class HomeCircleCard extends HTMLElement {
@@ -388,6 +349,16 @@ class HomeCircleCard extends HTMLElement {
     this._expanded = el("div", "expanded");
     this._categories = el("div", "categories");
     this._members = el("div", "members");
+    this._cityCredit = el("div", "city-credit");
+    const credit = el(
+      "a",
+      null,
+      "City lookup: Photon · © OpenStreetMap contributors",
+    );
+    credit.href = "https://www.openstreetmap.org/copyright";
+    credit.target = "_blank";
+    credit.rel = "noopener noreferrer";
+    this._cityCredit.append(credit);
     this._familyBar = el("div", "family-refresh");
     this._familyButton = button(
       "Refresh family locations",
@@ -410,6 +381,7 @@ class HomeCircleCard extends HTMLElement {
       this._expanded,
       this._categories,
       this._members,
+      this._cityCredit,
     );
     this.shadowRoot.append(style, this._shell);
   }
@@ -741,6 +713,7 @@ class HomeCircleCard extends HTMLElement {
     );
     this._categories.replaceChildren();
     this._members.replaceChildren();
+    this._cityCredit.hidden = !this._data?.city_lookup_enabled;
     this._providerAlerts.replaceChildren();
     if (!this._data) {
       this._status.textContent = this._error || "Connecting to HomeCircle…";
@@ -902,6 +875,16 @@ class HomeCircleCard extends HTMLElement {
             "span",
             `battery${low ? (member.battery <= 10 ? " low critical" : " low") : ""}`,
             `${low ? "Low battery" : "Battery"} ${member.battery}%${member.charging === true ? " · charging" : ""}`,
+          ),
+        );
+      }
+      if (member.battery == null && batteryStatusLabel(member) !== "Unknown") {
+        const low = ["low", "very_low"].includes(member.battery_status?.value);
+        facts.append(
+          el(
+            "span",
+            `battery${low ? " low" : ""}`,
+            `Battery ${batteryStatusLabel(member)}`,
           ),
         );
       }
@@ -1113,33 +1096,10 @@ class HomeCircleCard extends HTMLElement {
           this._data &&
           !["overview", ...categories].includes(this._mode)
         ) {
-          const overview = selection(
-            visibleMembers(this._data, this._config.hidden_members),
-            "overview",
-            this._data.focus_ids,
-          );
-          const padding = pinFitPadding(size);
-          const defaultZoom = overview.length
-            ? Math.min(
-                14,
-                this._map.getBoundsZoom(
-                  L.latLngBounds(
-                    overview.map((m) => [
-                      m.location.latitude,
-                      m.location.longitude,
-                    ]),
-                  ),
-                  false,
-                  L.point(padding.paddingTopLeft).add(
-                    padding.paddingBottomRight,
-                  ),
-                ),
-              )
-            : 14;
           const location = points[0].location;
           this._map.setView(
             [location.latitude, location.longitude],
-            Math.min(this._map.getMaxZoom(), defaultZoom + 3),
+            Math.min(this._map.getMaxZoom(), 17),
             { animate: false },
           );
         } else if (points.length)

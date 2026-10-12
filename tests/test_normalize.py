@@ -40,7 +40,11 @@ def snapshot():
         "primary_home": "zone.home",
         "places": [WORK],
         "members": {
-            PERSON: {"trackers": [GPS], "additional_residences": [RESIDENCE]},
+            PERSON: {
+                "trackers": [GPS],
+                "additional_residences": [RESIDENCE],
+                "tracker_selection": "ha_person",
+            },
             SECOND: {"trackers": [ROUTER], "additional_residences": []},
         },
     }
@@ -128,17 +132,23 @@ def test_recent_gps_well_inside_new_zone_counts_as_home_while_ha_is_behind():
         gps_accuracy=15,
         last_seen=NOW - timedelta(minutes=16),
     )
-    assert membership(stale, [RESIDENCE], {GPS: stale, RESIDENCE: zone}, {}, stale, NOW) == ([], [])
+    assert membership(
+        stale, [RESIDENCE], {GPS: stale, RESIDENCE: zone}, {}, stale, NOW
+    ) == ([], [])
     small_zone = state(
         RESIDENCE,
         "0",
         radius=20,
         **{ATTR_LATITUDE: 0.0001, ATTR_LONGITUDE: 0.0},
     )
-    assert membership(tracker, [RESIDENCE], {GPS: tracker, RESIDENCE: small_zone}, {}, tracker, NOW) == ([], [])
+    assert membership(
+        tracker, [RESIDENCE], {GPS: tracker, RESIDENCE: small_zone}, {}, tracker, NOW
+    ) == ([], [])
 
 
-def test_tracker_only_member_at_new_residence_counts_home_and_remains_focusable(snapshot):
+def test_tracker_only_member_at_new_residence_counts_home_and_remains_focusable(
+    snapshot,
+):
     config, states = snapshot
     config["people"].append(GPS)
     config["members"][GPS] = {
@@ -758,8 +768,12 @@ def test_restart_person_fallback_restores_old_report_as_stale(snapshot):
     states[PERSON] = State(
         PERSON,
         "home",
-        {"source": PERSON, "in_zones": ["zone.home"],
-         ATTR_LATITUDE: 0.0, ATTR_LONGITUDE: 0.0},
+        {
+            "source": PERSON,
+            "in_zones": ["zone.home"],
+            ATTR_LATITUDE: 0.0,
+            ATTR_LONGITUDE: 0.0,
+        },
         last_updated=restart_at,
     )
     fallback = member(snapshot, restart_at)
@@ -775,7 +789,9 @@ def test_restart_person_fallback_restores_old_report_as_stale(snapshot):
         GPS, "home", dict(states[GPS].attributes), last_updated=recovered_at
     )
     states[PERSON] = State(
-        PERSON, "home", {**states[PERSON].attributes, "source": GPS},
+        PERSON,
+        "home",
+        {**states[PERSON].attributes, "source": GPS},
         last_updated=recovered_at,
     )
     recovered = normalize_household(config, states, recovered_at)
@@ -789,21 +805,29 @@ def test_restart_person_fallback_restores_old_report_as_stale(snapshot):
     assert current.location.evidence.freshness == "stale"
 
 
-
-
 def test_departure_return_flips_follow_person_without_conflicting_map(snapshot):
     """Anonymized state ordering observed around departure and return."""
     config, states = snapshot
     # The phone briefly toggles near the boundary while Person remains authoritative.
     for person_value, phone_value in [
-        ("home", "not_home"), ("home", "home"), ("not_home", "not_home"),
-        ("not_home", "home"), ("not_home", "not_home"), ("home", "home"),
+        ("home", "not_home"),
+        ("home", "home"),
+        ("not_home", "not_home"),
+        ("not_home", "home"),
+        ("not_home", "not_home"),
+        ("home", "home"),
     ]:
-        states[PERSON] = state(PERSON, person_value, source=GPS,
-                               in_zones=["zone.home"] if person_value == "home" else [WORK])
-        states[GPS] = gps(value=phone_value,
-                          zones=["zone.home"] if phone_value == "home" else [WORK],
-                          coords=(0.0, 0.0) if phone_value == "home" else (2.0, 0.0))
+        states[PERSON] = state(
+            PERSON,
+            person_value,
+            source=GPS,
+            in_zones=["zone.home"] if person_value == "home" else [WORK],
+        )
+        states[GPS] = gps(
+            value=phone_value,
+            zones=["zone.home"] if phone_value == "home" else [WORK],
+            coords=(0.0, 0.0) if phone_value == "home" else (2.0, 0.0),
+        )
         current = normalize_household(config, states, NOW).members[0]
         assert current.presence == ("home" if person_value == "home" else "away")
         if person_value == "home" and phone_value == "not_home":
@@ -838,3 +862,225 @@ def test_phone_battery_state_charging(snapshot, reported, expected):
     current = member(snapshot)
     assert current.charging.value is expected
     assert current.charging.evidence.source_entity == "sensor.example_battery_state"
+
+
+def freshest_snapshot(snapshot):
+    config, states = snapshot
+    config["members"][PERSON].pop("tracker_selection", None)
+    config["members"][PERSON]["trackers"] = [GPS, OTHER_GPS]
+    states["zone.home"] = state(
+        "zone.home", "0", radius=100, **{ATTR_LATITUDE: 0.0, ATTR_LONGITUDE: 0.0}
+    )
+    states[GPS] = state(
+        GPS,
+        "home",
+        source_type="gps",
+        last_seen=(NOW - timedelta(minutes=18)).isoformat(),
+        battery_level=10,
+        **{ATTR_LATITUDE: 0.0, ATTR_LONGITUDE: 0.0},
+    )
+    states[OTHER_GPS] = state(
+        OTHER_GPS,
+        "not_home",
+        source_type="gps",
+        last_seen=(NOW - timedelta(minutes=1)).isoformat(),
+        battery_level=80,
+        **{ATTR_LATITUDE: 1.0, ATTR_LONGITUDE: 1.0},
+    )
+    return config, states
+
+
+def test_default_freshest_gps_beats_stale_ha_source_and_keeps_person_identity(snapshot):
+    config, states = freshest_snapshot(snapshot)
+    result = member((config, states))
+    assert result.location.evidence.source_entity == OTHER_GPS
+    assert result.location.origin == "freshest_gps"
+    assert result.location.evidence.freshness == "fresh"
+    assert result.location.latitude == 1.0
+    assert result.presence == "away"
+    assert result.battery.value == 80
+    assert result.active_source_entity == GPS
+    assert result.display_name == states[PERSON].name
+    assert result.focusable
+    assert "Freshest" in result.source_selection_reason
+    assert states[PERSON].attributes["source"] == GPS
+
+
+def test_freshest_gps_ignores_poll_updates_unknown_age_unselected_and_non_gps(snapshot):
+    config, states = freshest_snapshot(snapshot)
+    states[GPS] = state(
+        GPS, "home", source_type="gps", **{ATTR_LATITUDE: 0.0, ATTR_LONGITUDE: 0.0}
+    )
+    # Recently updated HA entity without last_seen cannot displace a verified report.
+    assert member((config, states)).location.evidence.source_entity == OTHER_GPS
+    config["members"][PERSON]["trackers"] = [GPS]
+    assert member((config, states)).location.evidence.source_entity != OTHER_GPS
+    config["members"][PERSON]["trackers"] = [GPS, OTHER_GPS]
+    states[OTHER_GPS] = state(
+        OTHER_GPS,
+        "home",
+        source_type="router",
+        last_seen=NOW.isoformat(),
+        **{ATTR_LATITUDE: 1.0, ATTR_LONGITUDE: 1.0},
+    )
+    assert member((config, states)).location.evidence.source_entity != OTHER_GPS
+
+
+def test_freshest_gps_all_stale_follows_person_without_claiming_freshness(snapshot):
+    config, states = freshest_snapshot(snapshot)
+    states[OTHER_GPS] = state(
+        OTHER_GPS,
+        "not_home",
+        source_type="gps",
+        last_seen=(NOW - timedelta(minutes=9)).isoformat(),
+        **{ATTR_LATITUDE: 1.0, ATTR_LONGITUDE: 1.0},
+    )
+    result = member((config, states))
+    assert result.location.evidence.source_entity == GPS
+    assert result.location.evidence.freshness == "stale"
+    assert result.presence == "home"
+    assert "following Home Assistant Person" in result.source_selection_reason
+
+
+def test_freshest_gps_near_tie_prefers_selected_ha_source(snapshot):
+    config, states = freshest_snapshot(snapshot)
+    states[GPS] = state(
+        GPS,
+        "home",
+        source_type="gps",
+        last_seen=(NOW - timedelta(seconds=90)).isoformat(),
+        **{ATTR_LATITUDE: 0.0, ATTR_LONGITUDE: 0.0},
+    )
+    result = member((config, states))
+    assert result.location.evidence.source_entity == GPS
+    assert result.presence == "home"
+    assert "60 seconds" in result.source_selection_reason
+    assert (
+        result.focusable
+    )  # Another tracker's stale zone state does not hide the winning map source.
+
+
+def test_freshest_gps_uses_per_source_timestamp_sensor_and_rejects_future_time(
+    snapshot,
+):
+    config, states = freshest_snapshot(snapshot)
+    report = "sensor.example_new_report"
+    config["members"][PERSON]["location_reports"] = {GPS: report}
+    states[report] = state(report, NOW.isoformat())
+    assert member((config, states)).location.evidence.source_entity == GPS
+    states[report] = state(report, (NOW + timedelta(hours=1)).isoformat())
+    assert member((config, states)).location.evidence.source_entity == OTHER_GPS
+
+
+def test_follow_ha_person_remains_explicit_option(snapshot):
+    config, states = freshest_snapshot(snapshot)
+    config["members"][PERSON]["tracker_selection"] = "ha_person"
+    result = member((config, states))
+    assert result.location.evidence.source_entity == GPS
+    assert result.presence == "home"
+    assert result.location.evidence.freshness == "stale"
+
+
+def test_default_freshest_can_use_selected_gps_while_person_unavailable(snapshot):
+    config, states = freshest_snapshot(snapshot)
+    states[PERSON] = state(PERSON, "unavailable", source=GPS)
+    result = member((config, states))
+    assert result.location.evidence.source_entity == OTHER_GPS
+    assert result.focusable
+    states[OTHER_GPS] = state(
+        OTHER_GPS, "unavailable", source_type="gps", last_seen=NOW.isoformat()
+    )
+    assert member((config, states)).location is None
+
+
+def test_default_freshest_respects_pet_home_freshness_threshold(snapshot):
+    config, states = freshest_snapshot(snapshot)
+    config["members"][PERSON]["kind"] = "pet"
+    config["members"][PERSON]["pet_home_minutes"] = 1440
+    config["members"][PERSON]["pet_away_minutes"] = 5
+    config["members"][PERSON]["trackers"] = [GPS]
+
+    result = member((config, states))
+    assert result.location.evidence.source_entity == GPS
+    assert result.presence == "home"
+    assert result.location.evidence.freshness == "fresh"
+
+
+@pytest.mark.parametrize("category", ["full", "medium", "low", "very_low"])
+def test_selected_tracker_coarse_battery_preserves_report_time(snapshot, category):
+    config, states = snapshot
+    reported = (NOW - timedelta(hours=2)).isoformat()
+    states[GPS] = state(
+        GPS,
+        "home",
+        source_type="gps",
+        **{ATTR_LATITUDE: 0.0, ATTR_LONGITUDE: 0.0},
+        battery_status=category,
+        battery_status_reported_at=reported,
+    )
+    member = normalize_household(config, states, NOW).members[0]
+    assert member.battery.value is None
+    assert member.battery_status.value == category
+    assert member.battery_status.evidence.reported_at.isoformat() == reported
+
+
+def test_unselected_tracker_cannot_supply_coarse_battery(snapshot):
+    config, states = snapshot
+    states[OTHER_GPS] = state(OTHER_GPS, "home", battery_status="low")
+    assert normalize_household(config, states, NOW).members[0].battery_status is None
+
+
+def test_stale_verified_source_cannot_replace_unverified_person_source(snapshot):
+    config, states = freshest_snapshot(snapshot)
+    states[GPS] = state(
+        GPS, "home", source_type="gps", **{ATTR_LATITUDE: 0.0, ATTR_LONGITUDE: 0.0}
+    )
+    states[OTHER_GPS] = state(
+        OTHER_GPS,
+        "not_home",
+        source_type="gps",
+        last_seen=(NOW - timedelta(days=2)).isoformat(),
+        **{ATTR_LATITUDE: 1.0, ATTR_LONGITUDE: 1.0},
+    )
+    result = member((config, states))
+    assert result.presence == "home"
+    assert result.location.evidence.source_entity == GPS
+    assert result.location.evidence.freshness == "unknown"
+
+
+def test_default_selected_other_source_does_not_flag_shared_report_mismatch(snapshot):
+    config, states = freshest_snapshot(snapshot)
+    config["members"][PERSON]["supporting"] = {
+        "location_reported_at": "sensor.example_bound_report",
+        "location_report_source": GPS,
+    }
+    states["sensor.example_bound_report"] = state(
+        "sensor.example_bound_report", (NOW - timedelta(minutes=18)).isoformat()
+    )
+    result = member((config, states))
+    assert result.location.evidence.source_entity == OTHER_GPS
+    assert "location_report_source_mismatch" not in result.issues
+
+
+def test_default_gps_zone_matching_uses_ha_accuracy_and_skips_passive(snapshot):
+    from unittest.mock import patch
+
+    config, states = freshest_snapshot(snapshot)
+    states[OTHER_GPS] = state(
+        OTHER_GPS,
+        "home",
+        source_type="gps",
+        gps_accuracy=120,
+        last_seen=NOW.isoformat(),
+        **{ATTR_LATITUDE: 1.0, ATTR_LONGITUDE: 1.0},
+    )
+    with patch("custom_components.homecircle.normalize.distance", return_value=150):
+        assert member((config, states)).presence == "home"
+        states["zone.home"] = state(
+            "zone.home",
+            "0",
+            radius=100,
+            passive=True,
+            **{ATTR_LATITUDE: 0.0, ATTR_LONGITUDE: 0.0},
+        )
+        assert member((config, states)).presence == "away"

@@ -18,6 +18,7 @@ from homeassistant.helpers.event import (
 from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
 
+from .city_lookup import CityLookup
 from .activity import ActivityLog
 from .normalize import Household, normalize_household
 from .location_requests import async_request_quiet_locations, restore_automatic_requests
@@ -38,6 +39,7 @@ class HomeCircleRuntime:
     """Selected state references and bounded local activity."""
 
     config: dict[str, Any]
+    city_lookup: CityLookup | None = None
     activity: ActivityLog | None = None
     household: Household | None = None
     states: dict[str, State | None] = field(default_factory=dict)
@@ -77,6 +79,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeCircleEntry) -> bool
         # must still work when Lovelace storage cannot be changed.
         _LOGGER.exception("Could not create the optional HomeCircle dashboard")
     runtime = entry.runtime_data = HomeCircleRuntime(dict(entry.options or entry.data))
+    runtime.city_lookup = CityLookup(
+        hass, Store(hass, 1, f"{DOMAIN}.city_lookup.{entry.entry_id}")
+    )
+    await runtime.city_lookup.load()
     runtime.activity = ActivityLog(
         runtime.config, Store(hass, 1, f"{DOMAIN}.activity.{entry.entry_id}")
     )
@@ -222,6 +228,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeCircleEntry) -> bool
 async def async_unload_entry(hass: HomeAssistant, entry: HomeCircleEntry) -> bool:
     """HA removes registered listeners after this successful unload."""
     runtime = entry.runtime_data
+    if runtime.city_lookup is not None:
+        await runtime.city_lookup.close()
     if runtime.activity is not None:
         await runtime.activity.close()
     if runtime.location_request_task is not None:
@@ -266,3 +274,4 @@ async def async_remove_entry(hass: HomeAssistant, entry: HomeCircleEntry) -> Non
     await dashboard_setup.async_remove_untouched_dashboard(hass)
     await Store(hass, 1, f"{DOMAIN}.location_requests.{entry.entry_id}").async_remove()
     await Store(hass, 1, f"{DOMAIN}.activity.{entry.entry_id}").async_remove()
+    await Store(hass, 1, f"{DOMAIN}.city_lookup.{entry.entry_id}").async_remove()

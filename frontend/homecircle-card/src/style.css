@@ -477,14 +477,18 @@ button[aria-pressed="true"] {
 }
 .member {
   width: 100%;
+  height: 100%;
   display: grid;
   grid-template-columns: 42px minmax(0, 1fr);
-  align-items: center;
+  align-items: start;
   text-align: left;
   gap: 10px;
   background: #172331;
   padding: 10px 56px 10px 12px;
   touch-action: pan-y;
+}
+.member > .avatar {
+  align-self: center;
 }
 .member-details-button {
   display: grid;
@@ -930,4 +934,12 @@ button[aria-pressed="true"] {
 
 .location-since {
   margin-top: 4px;
+}
+
+.city-credit {
+  padding: 0 18px 12px;
+  font-size: 11px;
+}
+.city-credit a {
+  color: #9bb1c3;
 }

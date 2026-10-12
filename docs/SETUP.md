@@ -155,3 +155,13 @@ Home Assistant phone requests use the registered notification target on the same
 Each caller needs read access to the configured household and control permission for every planned tracker and phone notification target. Home Assistant's standard user group normally has control permission, so this option permits those viewers to use the button, not only administrators. Fifty attempts per rolling 24 hours and a one-minute cooldown apply. Phone/targeted requests share their source's persisted budget with individual and automatic requests. Existing Circle requests retain their separate persisted Circle budget; mixed-source button use has its own persisted budget. Failed sends count as attempts. Provider backoff remains in effect.
 
 Feedback distinguishes newer tracker-supplied reports from HA state receipts with an unconfirmed GPS report, and observes for two minutes. Successful dispatch does not guarantee delivery, a new fix or causality. Disable the family option to stop this button. Per-member automatic requests and the direct account connection retain their separate settings.
+
+## Beta 18 location and picture options
+
+Person members default to **Freshest reliable GPS**: select the trackers to compare and map genuine report-time sensors where needed. Set **Follow HA Person** to preserve Person-based source selection. HA update times are not location fix times. Member selection centers at zoom 17; Everyone still fits its included members dynamically.
+
+Open HomeCircle settings → **Import places from Life360** to use an existing enabled connection, choose a Circle, select several places or **Select all**, and review each map position. **Skip this place** excludes one item. Nothing is created before final confirmation. Imported zones are ordinary places; assign a zone under a member's **Other homes** separately to count it as Home. Cancelling after a partial failure leaves already created zones in HA.
+
+For a tracker-only member, choose **Change picture**, select JPG/PNG/GIF (up to 10 MB), adjust the crop/zoom, and save. Person pictures remain in HA People settings. Uploaded images remain in HA when references are cleared. The current file picker may display “No file chosen” while a selected crop remains visible; the preview is the current selection.
+
+**City lookup** is off by default. Enabling it sends selected tracker coordinates to Photon to fill missing cities without a key; the form discloses caching and limits. Private map background does not override this separate option. See [privacy](PRIVACY.md) and [frontend guide](FRONTEND.md).

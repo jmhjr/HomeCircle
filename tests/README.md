@@ -21,3 +21,5 @@ Flow/lifecycle, normalization, authorization, provider, and dashboard tests run 
 The generic fixture in `fixtures/household.example.json` matches the milestone 1 selection snapshot. Synthetic numeric coordinates used by tests are explicitly zero via HA attribute constants; they are fictional test data, never a household location. No privacy checker exception is needed.
 
 Run `scripts/validate_life360_offline_restart.py` with the pinned test Python to check a saved direct tracker across two disposable Core processes. Its provider replies and credential are fictional, and its storage is removed afterward.
+
+Beta 18 adds source-ranking regressions (all-stale fallback, per-source reports, near ties, HA accuracy/passive zones), native upload/reference persistence, crop/Back races, coarse battery categories, saved-place selection/Skip/partial retry/concurrent changes, and Photon authorization boundary, transport fragmentation, bounded cache/budgets, failure, unload/remove and pending-write checks. Synthetic requests and images contain no private data. See [beta 18 validation](../docs/BETA18-VALIDATION.md).

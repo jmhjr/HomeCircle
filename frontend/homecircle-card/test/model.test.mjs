@@ -1,6 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
+  streetCityAddress,
+  addressLabel,
   selection,
   visibleMembers,
   markerGroups,
@@ -359,4 +361,61 @@ test("persisted Since survives HA state recreation and remains honest about gaps
       .text,
     "Since unknown",
   );
+});
+
+test("all trackers use street and city without state or ZIP, with a truthful missing-city fallback", () => {
+  for (const [input, expected] of [
+    ["Example street, Example city", "Example street, Example city"],
+    ["Example street, Example city, Wisconsin", "Example street, Example city"],
+    ["Example street, Example city WI 00000", "Example street, Example city"],
+    ["Example street, Wisconsin", "Example street"],
+    ["Example street, WI 00000", "Example street"],
+    ["Example street", "Example street"],
+    ["Wisconsin", null],
+  ])
+    assert.equal(streetCityAddress(input), expected);
+  for (const id of [
+    "device_tracker.example_phone",
+    "device_tracker.example_item",
+  ]) {
+    const value = {
+      ...member(id, "away"),
+      reported_address: "Example street, Example city, Wisconsin",
+    };
+    value.location.evidence.freshness = "stale";
+    assert.equal(
+      addressLabel(value),
+      "Last reported: Example street, Example city",
+    );
+    value.location.evidence.freshness = "fresh";
+    assert.equal(addressLabel(value), "At Example street, Example city");
+  }
+});
+
+test("city names matching states remain visible with a region component or lookup text", () => {
+  assert.equal(
+    streetCityAddress("Example street, New York, NY"),
+    "Example street, New York",
+  );
+  assert.equal(
+    streetCityAddress("Example street, Washington, DC"),
+    "Example street, Washington",
+  );
+  assert.equal(
+    streetCityAddress("Example street, Georgia, VT"),
+    "Example street, Georgia",
+  );
+  assert.equal(
+    streetCityAddress("Example street, New York"),
+    "Example street, New York",
+  );
+  assert.equal(streetCityAddress("Washington"), "Washington");
+});
+
+test("structured lookup cities are not interpreted as regions", () => {
+  assert.equal(
+    streetCityAddress("Example street, Georgia", "Georgia"),
+    "Example street, Georgia",
+  );
+  assert.equal(streetCityAddress("Georgia", "Georgia"), "Georgia");
 });

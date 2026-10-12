@@ -1,11 +1,11 @@
 """Pure normalization of selected HA person and tracker state snapshots.
 
-No I/O, history, provider credentials, or HA tracker priority emulation.
+No I/O, history, or provider credentials. GPS selection uses report evidence.
 """
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from math import isfinite
 from typing import Any
 
@@ -76,6 +76,8 @@ class Member:
     charging: OptionalValue
     speed: OptionalValue
     issues: tuple[str, ...]
+    battery_status: OptionalValue | None = None
+    source_selection_reason: str = "Following Home Assistant Person."
 
     @property
     def focusable(self) -> bool:
@@ -205,6 +207,29 @@ def tracker_optional(source: State, attribute: str, kind: str) -> OptionalValue:
     )
 
 
+def tracker_battery_status(source: State | None, now: datetime) -> OptionalValue | None:
+    """Keep coarse battery categories and their actual report time separate from percent."""
+    if not available(source):
+        return None
+    value = source.attributes.get("battery_status")
+    if value not in ("full", "medium", "low", "very_low"):
+        return None
+    raw = source.attributes.get("battery_status_reported_at")
+    reported = dt_util.parse_datetime(raw) if isinstance(raw, str) else None
+    if reported is not None and (
+        reported.tzinfo is None or reported > now + timedelta(seconds=60)
+    ):
+        reported = None
+    return OptionalValue(
+        value,
+        Evidence(
+            source_entity=source.entity_id,
+            observed_at=source.last_updated,
+            reported_at=reported,
+        ),
+    )
+
+
 def tracker_driving(source: State, now: datetime) -> OptionalValue:
     """Use a selected GPS tracker's driving flag only with its report freshness."""
     value = source.attributes.get("driving") if available(source) else None
@@ -226,8 +251,11 @@ def optional_value(states, entity_id, now, kind, report_id=None) -> OptionalValu
             value = {"on": True, "off": False}.get(state.state)
         elif kind == "charging":
             value = {
-                "on": True, "off": False, "charging": True,
-                "not charging": False, "full": False,
+                "on": True,
+                "off": False,
+                "charging": True,
+                "not charging": False,
+                "full": False,
             }.get(state.state.strip().lower())
         else:
             unit = state.attributes.get("unit_of_measurement")
@@ -309,11 +337,75 @@ def membership(
     return [], ["ambiguous_zone_name" if len(matches) > 1 else "unresolved_place"]
 
 
+def freshest_gps(member_config, states, active, now):
+    """Rank selected GPS reports; HA update times never establish freshness."""
+    candidates = []
+    supporting = member_config.get("supporting", {})
+    reports = member_config.get("location_reports", {})
+    for tracker_id in member_config[CONF_TRACKERS]:
+        tracker = states.get(tracker_id)
+        if (
+            not available(tracker)
+            or tracker.attributes.get("source_type") != "gps"
+            or coordinates(tracker) is None
+        ):
+            continue
+        report_id = reports.get(tracker_id)
+        if report_id is None and supporting.get("location_report_source") == tracker_id:
+            report_id = supporting.get("location_reported_at")
+        proof = location_evidence(
+            tracker, states.get(report_id), now, report_id, STALE_AFTER_SECONDS
+        )
+        if proof.reported_at is not None:
+            candidates.append((tracker, proof))
+    if not candidates:
+        return None, "No verified GPS report times; following Home Assistant Person."
+    fresh = [item for item in candidates if item[1].freshness == "fresh"]
+    if not fresh:
+        return None, "No fresh verified GPS reports; following Home Assistant Person."
+    pool = fresh
+    newest = max(pool, key=lambda item: item[1].reported_at)
+    # Prefer HA's selected GPS source only when its report is nearly as recent.
+    close = [
+        item
+        for item in pool
+        if (newest[1].reported_at - item[1].reported_at).total_seconds() <= 60
+    ]
+    chosen = next((item for item in close if item[0].entity_id == active), newest)
+    reason = "Freshest verified GPS report."
+    if chosen != newest:
+        reason += " HA's active selected GPS tracker is within 60 seconds of the newest report."
+    return chosen[0], reason
+
+
+def gps_zone_membership(source, selected, states):
+    """Classify the chosen GPS position against HA zone geometry."""
+    point = coordinates(source)
+    matched = []
+    for zone_id in selected:
+        zone = states.get(zone_id)
+        zone_point = coordinates(zone)
+        radius = number(zone.attributes.get("radius")) if available(zone) else None
+        if (
+            zone_point is None
+            or radius is None
+            or radius <= 0
+            or zone.attributes.get("passive")
+        ):
+            continue
+        meters = distance(point[0], point[1], zone_point[0], zone_point[1])
+        accuracy = point[2] or 0
+        if meters is not None and meters - radius < accuracy:
+            matched.append(zone_id)
+    return matched
+
+
 def normalize_member(
     person_id, member_config, config, states, zone_names, now
 ) -> Member:
     tracker_only_member = person_id.startswith("device_tracker.")
     person_state = states.get(person_id)
+    original_person_state = person_state
     selected_trackers = member_config[CONF_TRACKERS]
     supporting = member_config.get("supporting", {})
     issues = []
@@ -322,6 +414,19 @@ def normalize_member(
         active = person_state.attributes.get("source")
     if not isinstance(active, str) or not active.startswith("device_tracker."):
         active = None
+    ha_active = active
+    chosen_gps = None
+    selection_reason = "Following Home Assistant Person."
+    if (
+        not tracker_only_member
+        and member_config.get("tracker_selection", "freshest_gps") == "freshest_gps"
+    ):
+        chosen_gps, selection_reason = freshest_gps(member_config, states, active, now)
+        if chosen_gps is not None:
+            person_state = chosen_gps
+            active = chosen_gps.entity_id
+    elif tracker_only_member:
+        selection_reason = "Using this member's explicitly selected tracker."
     source = states.get(active) if active in selected_trackers else None
     driving = optional_value(
         states,
@@ -353,9 +458,13 @@ def normalize_member(
     if available(person_state):
         residences = [config[CONF_PRIMARY_HOME], *member_config[CONF_RESIDENCES]]
         selected_zones = list(dict.fromkeys([*residences, *config[CONF_PLACES]]))
-        matched, zone_issues = membership(
-            person_state, selected_zones, states, zone_names, source, now
-        )
+        if chosen_gps is not None:
+            matched = gps_zone_membership(chosen_gps, selected_zones, states)
+            zone_issues = []
+        else:
+            matched, zone_issues = membership(
+                person_state, selected_zones, states, zone_names, source, now
+            )
         issues.extend(zone_issues)
         valid = [item for item in matched if available(states.get(item))]
         residence = next((item for item in residences if item in valid), None)
@@ -365,11 +474,16 @@ def normalize_member(
         # A Person may inherit Home from a stationary linked tracker while an
         # explicitly selected mobile GPS tracker reports Away. Detect this even
         # when HA supplies borrowed Home coordinates for the Person.
-        if residence and "gps_inside_zone_ha_pending" not in zone_issues and any(
-            available(states.get(tracker_id))
-            and states[tracker_id].attributes.get("source_type") == "gps"
-            and states[tracker_id].state == "not_home"
-            for tracker_id in selected_trackers
+        if (
+            chosen_gps is None
+            and residence
+            and "gps_inside_zone_ha_pending" not in zone_issues
+            and any(
+                available(states.get(tracker_id))
+                and states[tracker_id].attributes.get("source_type") == "gps"
+                and states[tracker_id].state == "not_home"
+                for tracker_id in selected_trackers
+            )
         ):
             issues.append("tracker_presence_conflict")
         if not residence and any(
@@ -448,7 +562,7 @@ def normalize_member(
                 and supporting.get("location_report_source")
                 != location_source.entity_id
             ):
-                if report_id:
+                if report_id and chosen_gps is None:
                     issues.append("location_report_source_mismatch")
                 report_id = None
             stale_after = STALE_AFTER_SECONDS
@@ -460,6 +574,8 @@ def normalize_member(
             proof = location_evidence(
                 location_source, states.get(report_id), now, report_id, stale_after
             )
+            if chosen_gps is not None:
+                origin = "freshest_gps"
             location = Location(*point, origin=origin, evidence=proof)
             if location_source.entity_id in selected_trackers:
                 if not supporting.get("battery"):
@@ -477,11 +593,11 @@ def normalize_member(
     return Member(
         id=person_id,
         display_name=member_config.get(CONF_DISPLAY_NAME)
-        or (person_state.name if person_state else person_id),
+        or (original_person_state.name if original_person_state else person_id),
         kind=member_config.get("kind", "person"),
         person_entity=None if tracker_only_member else person_id,
         source_entity=person_id,
-        active_source_entity=active,
+        active_source_entity=ha_active,
         presence=presence,
         presence_evidence=evidence(person_state, None, now),
         residence=residence,
@@ -491,9 +607,13 @@ def normalize_member(
         driving=driving,
         driving_status=driving_status,
         battery=battery,
+        battery_status=tracker_battery_status(
+            states.get(location.evidence.source_entity) if location else source, now
+        ),
         charging=charging,
         speed=speed,
         issues=tuple(issues),
+        source_selection_reason=selection_reason,
     )
 
 

@@ -4,7 +4,7 @@ Internal Python data contract, tested against HA 2026.9.4. No public WebSocket A
 
 ## Sources and authority
 
-Each selected person produces one immutable `Member`. Person state remains the presence authority; selected device trackers can supply optional coordinates. HomeCircle does not reimplement HA tracker priorities, infer relationships from entity names, refresh providers, or read unselected tracker/sensor states. It may retain the active tracker ID reported by the person as provenance.
+Each selected person produces one immutable `Member`. Person members default to freshest verified GPS selection among explicitly selected trackers. When a fresh verified candidate exists, its coordinates determine HomeCircle presence against selected HA zone geometry. Follow HA Person mode and the no-verified-candidate fallback retain Person presence authority and coordinate supplementation. HomeCircle does not change HA tracker priorities or Person associations, infer relationships from entity names, or read unselected tracker/sensor states. It may retain the active tracker ID reported by the person as provenance.
 
 `HomeCircleRuntime.household` contains normalized members, category counts, primary-home member IDs and map-focus ID sets. Runtime is recomputed on selected state/registry changes, zone-catalog changes, and a local 30-second clock tick. The clock is needed to age explicit timestamps even when the source stays silent. All listeners, clock callbacks, current state references and the normalized snapshot are cleared on unload. There is no history store.
 
@@ -25,7 +25,7 @@ Coordinates must be finite, non-boolean numbers in latitude/longitude range. Zer
 
 A person coordinate corroborated by the explicitly selected active GPS tracker is marked `active_gps`, with tracker provenance. Other person coordinates are marked `ha_person`; when the active source was not selected, they carry `location_source_unverified`, not a GPS-report claim. A known selected active tracker without coordinates suppresses HA's synthesized legacy Home point. This keeps locationless Home truthful.
 
-If person coordinates are absent/unusable, an available selected active GPS tracker is preferred; otherwise exactly one eligible selected GPS tracker can supplement coordinates. Multiple fallback GPS candidates yield no position and an ambiguity flag. Tracker presence never overrides person presence. Disagreeing person/active-tracker coordinates, or supplemental GPS presence/zone membership conflicts, are exposed as issues and excluded from focus sets. A stale but valid position can remain as explicitly stale evidence; coordinate validity is not a freshness guarantee.
+If person coordinates are absent/unusable, an available selected active GPS tracker is preferred; otherwise exactly one eligible selected GPS tracker can supplement coordinates. Multiple fallback GPS candidates yield no position and an ambiguity flag. In Follow HA Person mode, tracker presence never overrides person presence. Disagreeing person/active-tracker coordinates, or supplemental GPS presence/zone membership conflicts, are exposed as issues and excluded from focus sets. A stale but valid position can remain as explicitly stale evidence; coordinate validity is not a freshness guarantee.
 
 ## Explicit evidence and optional fields
 
@@ -54,3 +54,9 @@ Driving status is `current`, `last_reported`, `unverified`, or `unknown`. A stal
 All state reads are local to HA. Normalization adds no provider clients, outbound calls, telemetry, or precise-location recorder entities. The runtime exposes only selected normalized fields; raw source state references remain internal and are not logged or exported. Milestone 3 exposes an explicit permission-checked display projection; see [FRONTEND](FRONTEND.md).
 
 Normalization tests use only synthetic sources and deliberately fictional coordinates. They do not establish real-provider freshness, real GPS accuracy, physical dashboard usability or release readiness.
+
+## Default verified GPS ranking (beta 18)
+
+Only available, selected GPS trackers with valid coordinates and genuine timestamps participate. Explicit source-bound report sensors take precedence over `last_seen`; HA observation times never rank a position. Reports within five minutes outrank stale reports. The newest report wins, except HA's active selected GPS source wins a tie within 60 seconds in the same freshness pool. All-stale or unverified candidates fall back to HA Person, with any remaining last-known position labelled honestly. Pet-specific display cutoffs remain independent of ranking. The selected source supplies address and fallback battery/charging/driving values, while explicit sensors retain priority. HA's active source remains separately visible in diagnostics.
+
+Default GPS geometry uses HA’s accuracy margin (distance minus zone radius below GPS accuracy) and skips passive zones. The explicit Primary Home/residence/place priority remains HomeCircle’s configured classification rule.

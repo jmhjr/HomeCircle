@@ -1,3 +1,5 @@
+import { createPictureCrop } from "./picture-crop.js";
+
 const FLOW_PATH = "config/config_entries/options/flow";
 
 function initialData(schema) {
@@ -29,7 +31,9 @@ function translate(hass, key, fallback, placeholders) {
 }
 
 function appendDescription(node, description) {
-  description = description.replaceAll("**", "");
+  description = description
+    .replaceAll("**", "")
+    .replace(/\\([\\`*_{}\[\]<>])/g, "$1");
   const marker = "[Home Assistant People settings](/config/person)";
   const index = description.indexOf(marker);
   if (index < 0) {
@@ -271,13 +275,24 @@ export async function openSettingsDialog(
       }
       const form = document.createElement("ha-form");
       const trackerChoice = next.step_id === "tracker_member_choice";
+      const placeSelection = next.step_id === "import_place_select";
+      const placeReview = next.step_id === "import_place_edit";
+      const pictureTask = next.step_id === "tracker_picture";
+      let pictureUploading = false;
+      let commitPicture = async () => true;
+
       const settingField = next.data_schema?.find(
         (field) => field.name === "setting",
       );
       form.hass = card._hass || hass;
-      form.schema = trackerChoice
-        ? next.data_schema?.filter((field) => field.name === "member") || []
-        : next.data_schema || [];
+      form.schema =
+        placeSelection || pictureTask
+          ? []
+          : trackerChoice
+            ? next.data_schema?.filter((field) => field.name === "member") || []
+            : placeReview
+              ? next.data_schema?.filter((field) => field.name !== "skip") || []
+              : next.data_schema || [];
       const memberOptions = form.schema[0]?.selector?.select?.options || [];
       const restoreMember =
         trackerChoice &&
@@ -286,7 +301,9 @@ export async function openSettingsDialog(
         ? restoreMember
           ? { member: selectedMember }
           : {}
-        : initialData(form.schema);
+        : initialData(
+            placeSelection || pictureTask ? next.data_schema : form.schema,
+          );
       form.error = next.errors || {};
       form.context = { handler: next.handler, domain: "homecircle" };
       form.computeLabel = (field) =>
@@ -307,6 +324,12 @@ export async function openSettingsDialog(
           .split(",")
           .filter(Boolean),
       );
+      const pictureMembers = new Set(
+        (next.description_placeholders?.picture_members || "")
+          .split(",")
+          .filter(Boolean),
+      );
+      let pictureControl;
       let removeControl;
       if (trackerChoice) {
         const label = document.createElement("h3");
@@ -323,6 +346,10 @@ export async function openSettingsDialog(
           control.className = "choice";
           if (option.value === "remove")
             control.hidden = !removableMembers.has(form.data?.member);
+          if (option.value === "picture") {
+            control.hidden = !pictureMembers.has(form.data?.member);
+            pictureControl = control;
+          }
           choices.append(control);
           if (option.value === "remove") removeControl = control;
         }
@@ -333,10 +360,185 @@ export async function openSettingsDialog(
           selectedMember = form.data?.member;
           choices.hidden = !selectedMember;
         }
+        if (pictureControl)
+          pictureControl.hidden = !pictureMembers.has(form.data?.member);
         if (removeControl)
           removeControl.hidden = !removableMembers.has(form.data?.member);
       });
       body.append(form);
+      if (pictureTask) {
+        const panel = document.createElement("div");
+        panel.className = "tracker-picture";
+        const preview = document.createElement("img");
+        preview.alt = "Custom tracker picture preview";
+        preview.style.cssText =
+          "display:block;width:128px;height:128px;object-fit:cover;border-radius:50%;margin:16px auto";
+        const status = document.createElement("p");
+        status.setAttribute("aria-live", "polite");
+        const label = document.createElement("label");
+        label.textContent = "Upload picture (JPG, PNG, or GIF; up to 10 MB)";
+        const input = document.createElement("input");
+        input.type = "file";
+        input.accept = "image/jpeg,image/png,image/gif";
+        input.setAttribute("aria-label", "Upload picture");
+        input.style.cssText = "display:block;margin:12px 0;width:100%";
+        label.append(input);
+        const crop = createPictureCrop((active) => {
+          preview.style.display =
+            active || preview.hidden || crop.active ? "none" : "block";
+        });
+        dialog.addEventListener("close", () => crop.clear(), { once: true });
+        const refresh = () => {
+          const id = form.data.picture_id || "";
+          preview.hidden = !/^[0-9a-f]{32}$/.test(id);
+          preview.style.display =
+            preview.hidden || crop.active ? "none" : "block";
+          if (!preview.hidden) preview.src = `/api/image/serve/${id}/512x512`;
+          else preview.removeAttribute("src");
+          remove.disabled = !id || pictureUploading;
+        };
+        const remove = action("Remove picture", () => {
+          crop.clear();
+          form.data = { ...form.data, picture_id: "" };
+          status.textContent =
+            "Save to restore the tracker’s original picture or initials.";
+          refresh();
+        });
+        input.addEventListener("change", async () => {
+          const file = input.files?.[0];
+          if (!file) return;
+          if (
+            !["image/jpeg", "image/png", "image/gif"].includes(file.type) ||
+            file.size > 10 * 1024 * 1024
+          ) {
+            status.textContent =
+              "Choose a JPG, PNG, or GIF picture no larger than 10 MB.";
+            input.value = "";
+            return;
+          }
+          pictureUploading = true;
+          input.disabled = true;
+          remove.disabled = true;
+          status.textContent = "Preparing picture…";
+          try {
+            await crop.load(file);
+            status.textContent =
+              "Adjust the crop and zoom, then save your picture.";
+          } catch {
+            crop.clear();
+            status.textContent =
+              "Could not open this picture. Try another JPG, PNG, or GIF file.";
+          } finally {
+            pictureUploading = false;
+            input.disabled = false;
+            input.value = "";
+            refresh();
+          }
+        });
+        commitPicture = async () => {
+          if (pictureUploading) return false;
+          if (!crop.active) return true;
+          pictureUploading = true;
+          input.disabled = true;
+          remove.disabled = true;
+          status.textContent = "Uploading cropped picture…";
+          try {
+            const data = new FormData();
+            data.append("file", await crop.file());
+            const response = await (card._hass || hass).fetchWithAuth(
+              "/api/image/upload",
+              { method: "POST", body: data },
+            );
+            if (!response.ok) throw new Error("Upload failed");
+            const uploaded = await response.json();
+            if (!/^[0-9a-f]{32}$/.test(uploaded.id))
+              throw new Error("Invalid picture response");
+            if (!dialog.isConnected || busy || step !== next) return false;
+            form.data = { ...form.data, picture_id: uploaded.id };
+            crop.clear();
+            return true;
+          } catch {
+            status.textContent =
+              "Could not upload this picture. Your crop is kept; try saving again.";
+            return false;
+          } finally {
+            pictureUploading = false;
+            input.disabled = false;
+            refresh();
+          }
+        };
+        refresh();
+        panel.append(preview, label, crop.panel, remove, status);
+        body.append(panel);
+      }
+      if (placeSelection) {
+        const options =
+          next.data_schema?.find((field) => field.name === "places")?.selector
+            ?.select?.options || [];
+        const panel = document.createElement("div");
+        panel.className = "place-selection";
+        const tools = document.createElement("div");
+        tools.className = "actions";
+        const count = document.createElement("p");
+        count.setAttribute("aria-live", "polite");
+        const search = document.createElement("input");
+        search.type = "search";
+        search.placeholder = "Search saved places";
+        search.setAttribute("aria-label", "Search saved places");
+        search.style.cssText =
+          "width:100%;padding:10px;margin:12px 0;font:inherit";
+        const list = document.createElement("div");
+        list.style.cssText =
+          "max-height:340px;overflow-y:auto;border:1px solid var(--divider-color,#ddd);border-radius:10px";
+        list.setAttribute("role", "group");
+        list.setAttribute("aria-label", "Saved places");
+        const checks = [];
+        const update = () => {
+          form.data = {
+            ...form.data,
+            places: checks
+              .filter(({ check }) => check.checked)
+              .map(({ value }) => value),
+          };
+          count.textContent = `${form.data.places.length} of ${options.length} places selected`;
+        };
+        tools.append(
+          action("Select all", () => {
+            for (const { check } of checks) check.checked = true;
+            update();
+          }),
+          action("Clear selection", () => {
+            for (const { check } of checks) check.checked = false;
+            update();
+          }),
+        );
+        for (const option of options) {
+          const value = typeof option === "string" ? option : option.value;
+          const labelText = (
+            typeof option === "string" ? option : option.label
+          ).replace(/ · [\d.]+ m(?= · |$)/, "");
+          const row = document.createElement("label");
+          row.style.cssText =
+            "display:flex;align-items:center;gap:12px;padding:12px;cursor:pointer";
+          const check = document.createElement("input");
+          check.type = "checkbox";
+          check.checked = (form.data.places || []).includes(value);
+          check.addEventListener("change", update);
+          row.append(check, document.createTextNode(labelText));
+          list.append(row);
+          checks.push({ check, value, row, labelText });
+        }
+        search.addEventListener("input", () => {
+          const query = search.value.toLocaleLowerCase().trim();
+          for (const { row, labelText } of checks)
+            row.style.display = labelText.toLocaleLowerCase().includes(query)
+              ? "flex"
+              : "none";
+        });
+        update();
+        panel.append(tools, count, search, list);
+        body.append(panel);
+      }
       if (trackerChoice) body.append(choices);
       const buttons = document.createElement("div");
       buttons.className = "actions";
@@ -358,9 +560,22 @@ export async function openSettingsDialog(
                 : undefined,
           );
         }),
+        ...(placeReview
+          ? [action("Skip this place", () => advance({ skip: true }))]
+          : []),
         ...(trackerChoice
           ? []
-          : [action("Continue", () => advance(form.data || {}), true)]),
+          : [
+              action(
+                pictureTask ? "Save picture" : "Continue",
+                async () => {
+                  if (pictureUploading) return;
+                  if (!pictureTask || (await commitPicture()))
+                    advance(form.data || {});
+                },
+                true,
+              ),
+            ]),
       );
       body.append(buttons);
       return;

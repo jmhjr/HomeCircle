@@ -1,4 +1,5 @@
-import { labels, reportParts } from "./model.js";
+import { memberAvatar } from "./member-avatar.js";
+import { labels, reportParts, batteryStatusLabel } from "./model.js";
 import { openSettingsDialog } from "./settings-dialog.js";
 
 const issueMessages = {
@@ -108,9 +109,16 @@ function details(body, member, card) {
     current,
     "Battery",
     member.battery == null
-      ? "Unknown"
+      ? batteryStatusLabel(member)
       : `${member.battery}%${member.charging === true ? " · charging" : ""}`,
   );
+  if (member.battery == null && member.battery_status) {
+    row(
+      current,
+      "Battery reported",
+      timestamp(member.battery_status.reported_at, true),
+    );
+  }
   row(
     current,
     "Driving",
@@ -331,6 +339,11 @@ function details(body, member, card) {
   body.append(technical);
   const map = section(technicalBody, "Map evidence");
   const mapRows = element("dl");
+  row(
+    mapRows,
+    "Selection reason",
+    diagnostic.source_selection_reason || "Following Home Assistant Person.",
+  );
   row(mapRows, "Map coordinates", position(member.location));
   row(
     mapRows,
@@ -435,6 +448,8 @@ export function openMemberDialog(card, hass, memberId, trigger) {
     dialog.homecircle-member-details[open] { display: flex; flex-direction: column; overflow: hidden; font: 14px/1.5 system-ui, sans-serif; }
     .homecircle-member-details * { box-sizing: border-box; }
     .homecircle-member-details header { display: flex; align-items: center; gap: 12px; padding: 18px 22px; border-bottom: 1px solid var(--divider-color, #ddd); }
+    .homecircle-member-details .details-avatar { width: 64px; height: 64px; flex: 0 0 64px; border-radius: 50%; background: var(--secondary-background-color, #eee); display: grid; place-items: center; position: relative; overflow: hidden; font-weight: 600; font-size: 20px; }
+    .homecircle-member-details .details-avatar img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
     .homecircle-member-details h2 { flex: 1; margin: 0; font: 650 21px/1.3 system-ui, sans-serif; }
     .homecircle-member-details h3 { margin: 0 0 10px; font: 650 16px/1.3 system-ui, sans-serif; }
     .homecircle-member-details h4 { margin: 14px 0 6px; font: 600 14px/1.3 system-ui, sans-serif; }
@@ -472,7 +487,8 @@ export function openMemberDialog(card, hass, memberId, trigger) {
   const header = element("header");
   const heading = element("h2", null, member.name);
   heading.tabIndex = -1;
-  header.append(heading);
+  let avatar = memberAvatar(member, "details-avatar");
+  header.append(avatar, heading);
   const closeButton = element("button", null, "Close");
   closeButton.type = "button";
   closeButton.addEventListener("click", () => dialog.close());
@@ -508,6 +524,11 @@ export function openMemberDialog(card, hass, memberId, trigger) {
         feedback.textContent = "Could not refresh details. Try again.";
         return;
       }
+      const updatedAvatar = memberAvatar(current, "details-avatar");
+      avatar.replaceWith(updatedAvatar);
+      avatar = updatedAvatar;
+      heading.textContent = current.name;
+      dialog.setAttribute("aria-label", `${current.name} details`);
       details(body, current, card);
       const previousReport =
         before?.location?.evidence?.reported_at ||
