@@ -78,6 +78,6 @@ Passwords, verification codes and device passcodes remain transient. See
 [privacy](PRIVACY.md#apple-find-my-connection).
 
 The detailed [packaging record](FINDMY-BETA19-PACKAGING-VALIDATION.md) separates
-earlier research, synthetic controls and actual package acceptance. GitHub asset
-download and HACS distribution checks follow prerelease creation; they are
-recorded separately from these pre-tag checks.
+earlier research, synthetic controls and actual package acceptance. The [publication record](BETA19-PUBLICATION-VALIDATION.md) records verified
+GitHub asset downloads and the status of disposable HACS distribution checks
+separately from these pre-tag checks.
