@@ -114,9 +114,11 @@ export async function openSettingsDialog(
     step = flow;
     return true;
   };
+  let progressTimer;
   const close = () => dialog.close();
   dialog.querySelector(".close").addEventListener("click", close);
   dialog.addEventListener("close", () => {
+    clearTimeout(progressTimer);
     cancelFlow(step);
     dialog.remove();
     card._settingsButton?.focus();
@@ -200,7 +202,34 @@ export async function openSettingsDialog(
   };
   const render = (next) => {
     if (!receiveFlow(next)) return;
+    clearTimeout(progressTimer);
     body.replaceChildren();
+    if (next.type === "progress" || next.type === "progress_done") {
+      message(text(`progress.${next.progress_action}`, "Connecting to Apple…"));
+      progressTimer = setTimeout(
+        () => {
+          if (step !== next || !dialog.isConnected || busy) return;
+          busy = true;
+          hass
+            .callApi("GET", `${FLOW_PATH}/${next.flow_id}`)
+            .then((current) => {
+              if (dialog.isConnected && step === next) render(current);
+            })
+            .catch(() => {
+              if (dialog.isConnected)
+                message(
+                  "Could not check Apple setup progress. Close and try again.",
+                  true,
+                );
+            })
+            .finally(() => {
+              busy = false;
+            });
+        },
+        next.type === "progress_done" ? 0 : 2000,
+      );
+      return;
+    }
     if (next.type === "create_entry") {
       close();
       card._load();
@@ -222,7 +251,7 @@ export async function openSettingsDialog(
         p.textContent = description.replaceAll("**", "");
         body.append(p);
       }
-      if (!memberId && card._radarController) {
+      if (next.step_id === "init" && !memberId && card._radarController) {
         const label = document.createElement("label");
         label.style.cssText =
           "display:flex;align-items:center;gap:10px;padding:12px";
@@ -275,7 +304,10 @@ export async function openSettingsDialog(
       }
       const form = document.createElement("ha-form");
       const trackerChoice = next.step_id === "tracker_member_choice";
-      const placeSelection = next.step_id === "import_place_select";
+      const itemSelection = next.step_id === "findmy_select";
+      const placeSelection =
+        next.step_id === "import_place_select" || itemSelection;
+      const selectionField = itemSelection ? "items" : "places";
       const placeReview = next.step_id === "import_place_edit";
       const pictureTask = next.step_id === "tracker_picture";
       let pictureUploading = false;
@@ -307,7 +339,12 @@ export async function openSettingsDialog(
       form.error = next.errors || {};
       form.context = { handler: next.handler, domain: "homecircle" };
       form.computeLabel = (field) =>
-        text(`step.${next.step_id}.data.${field.name}`, field.name);
+        text(
+          `step.${next.step_id}.data.${field.name}`,
+          next.step_id === "findmy_types" && field.name.startsWith("type_")
+            ? `Item ${Number(field.name.slice(5)) + 1} type`
+            : field.name,
+        );
       form.computeHelper = (field) =>
         text(`step.${next.step_id}.data_description.${field.name}`, "");
       form.computeError = (error) => text(`error.${error}`, error);
@@ -473,8 +510,8 @@ export async function openSettingsDialog(
       }
       if (placeSelection) {
         const options =
-          next.data_schema?.find((field) => field.name === "places")?.selector
-            ?.select?.options || [];
+          next.data_schema?.find((field) => field.name === selectionField)
+            ?.selector?.select?.options || [];
         const panel = document.createElement("div");
         panel.className = "place-selection";
         const tools = document.createElement("div");
@@ -483,24 +520,32 @@ export async function openSettingsDialog(
         count.setAttribute("aria-live", "polite");
         const search = document.createElement("input");
         search.type = "search";
-        search.placeholder = "Search saved places";
-        search.setAttribute("aria-label", "Search saved places");
+        search.placeholder = itemSelection
+          ? "Search Find My items"
+          : "Search saved places";
+        search.setAttribute(
+          "aria-label",
+          itemSelection ? "Search Find My items" : "Search saved places",
+        );
         search.style.cssText =
           "width:100%;padding:10px;margin:12px 0;font:inherit";
         const list = document.createElement("div");
         list.style.cssText =
           "max-height:340px;overflow-y:auto;border:1px solid var(--divider-color,#ddd);border-radius:10px";
         list.setAttribute("role", "group");
-        list.setAttribute("aria-label", "Saved places");
+        list.setAttribute(
+          "aria-label",
+          itemSelection ? "Find My items" : "Saved places",
+        );
         const checks = [];
         const update = () => {
           form.data = {
             ...form.data,
-            places: checks
+            [selectionField]: checks
               .filter(({ check }) => check.checked)
               .map(({ value }) => value),
           };
-          count.textContent = `${form.data.places.length} of ${options.length} places selected`;
+          count.textContent = `${form.data[selectionField].length} of ${options.length} ${itemSelection ? "items" : "places"} selected`;
         };
         tools.append(
           action("Select all", () => {
@@ -522,7 +567,7 @@ export async function openSettingsDialog(
             "display:flex;align-items:center;gap:12px;padding:12px;cursor:pointer";
           const check = document.createElement("input");
           check.type = "checkbox";
-          check.checked = (form.data.places || []).includes(value);
+          check.checked = (form.data[selectionField] || []).includes(value);
           check.addEventListener("change", update);
           row.append(check, document.createTextNode(labelText));
           list.append(row);

@@ -5,6 +5,7 @@ export const labels = {
   driving: "Driving",
   unavailable: "Unavailable",
   overview: "Everyone",
+  items: "Items",
 };
 const providerMessages = {
   selection_needed:
@@ -33,7 +34,7 @@ export function visibleMembers(snapshot, hidden = []) {
   );
 }
 export function selection(members, mode, focusIds) {
-  const category = ["overview", ...categories].includes(mode);
+  const category = ["overview", "items", ...categories].includes(mode);
   const listed = category ? new Set(focusIds?.[mode] || []) : new Set([mode]);
   return members.filter(
     (member) =>

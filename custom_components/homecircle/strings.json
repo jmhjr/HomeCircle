@@ -4,7 +4,7 @@
     "step": {
       "household": {
         "title": "Choose your household and places",
-        "description": "Select or create a Home Assistant Person for each household member, including pets. Then HomeCircle will ask you to assign a location tracker and configure that member. A new tracker is linked to the selected Home Assistant Person when you save. To connect Life360 directly, turn on its connection; after its trackers appear, add members from Options. Primary family home and each member’s other homes count as Home. Places such as work label Away locations. Create a missing Person or zone here without losing your choices.\n\n{new_person_hint}\n{new_zone_hint}\n{tracker_status}",
+        "description": "Select or create a Home Assistant Person for each household member, including pets. Then HomeCircle will ask you to assign a location tracker and configure that member. A new tracker is linked to the selected Home Assistant Person when you save. To connect Life360 directly, turn on its connection; after its trackers appear, add members from Options. Primary family home and each member\u2019s other homes count as Home. Places such as work label Away locations. Create a missing Person or zone here without losing your choices.\n\n{new_person_hint}\n{new_zone_hint}\n{tracker_status}",
         "data": {
           "people": "Home Assistant People",
           "primary_home": "Primary family home",
@@ -15,22 +15,25 @@
           "replace_life360_login": "Replace saved Life360 sign-in",
           "create_zone": "Create a new home or place zone",
           "create_person": "Create a new Home Assistant Person",
-          "family_refresh_enabled": "Allow family location refresh"
+          "family_refresh_enabled": "Allow family location refresh",
+          "findmy_enabled": "Connect Apple Find My accounts",
+          "manage_findmy_accounts": "Manage Apple Find My accounts"
         },
         "data_description": {
-          "pets": "Select existing device trackers for pets without Home Assistant Person records. This is a role you assign; the picker can also show people devices. Select each tracker in only one list. The tracker remains this pet’s location source.",
+          "pets": "Select existing device trackers for pets without Home Assistant Person records. This is a role you assign; the picker can also show people devices. Select each tracker in only one list. The tracker remains this pet\u2019s location source.",
           "people_trackers": "Select existing device trackers for people without Home Assistant Person records. This is a role you assign; the picker can also show pet devices. Select each tracker in only one list. A connected Life360 tracker can be chosen here after it appears.",
           "life360_direct": "Optional. HomeCircle will connect to Life360 itself and create device trackers in Home Assistant. Turn this off after replacing any selected HomeCircle-owned Life360 trackers.",
           "replace_life360_login": "Use this if the password or token changed for the same Life360 account. Existing member selections are kept.",
           "places": "Examples: work, school, or a favorite park. These zones label a location but do not count as Home. Add a dorm or second home under Other homes for the appropriate member.",
           "create_zone": "Open a map to create a missing Home Assistant zone, then return here with your selections intact.",
           "create_person": "Creates an editable Person in Home Assistant; the Person remains there if you later cancel HomeCircle setup.",
-          "family_refresh_enabled": "Off by default. Allows a manual family button to refresh explicitly assigned trackers using supported provider actions. Phone requests also require that member’s quiet-phone request opt-in. Unsupported trackers are skipped. A complete selected Life360 Circle with one enabled account can use the external integration’s saved authorization for an unofficial Circle-wide request; otherwise only a supported targeted action is used. HomeCircle-managed connections check cloud reports. Household viewers need control permission for each target. Requests and HA updates do not guarantee new GPS fixes. No credentials are sent to the card."
+          "family_refresh_enabled": "Off by default. Allows a manual family button to refresh explicitly assigned trackers using supported provider actions. Phone requests also require that member\u2019s quiet-phone request opt-in. Unsupported trackers are skipped. A complete selected Life360 Circle with one enabled account can use the external integration\u2019s saved authorization for an unofficial Circle-wide request; otherwise only a supported targeted action is used. HomeCircle-managed connections check cloud reports. Household viewers need control permission for each target. Requests and HA updates do not guarantee new GPS fixes. No credentials are sent to the card.",
+          "findmy_enabled": "Optional. Each Apple account has its own selected item trackers. Items appear separately and do not count as people."
         }
       },
       "member": {
         "title": "Choose trackers and places",
-        "description": "Member {number} of {total}: {person}.\n\n{tracker_guidance}\n\n{position_guidance}\n\nThen choose this member’s other homes and type.\n\nThe map source note reflects the selections when this screen opened; the review updates after you submit.\n\nTo add a missing other-home zone, choose Create another home zone. {new_zone_hint}",
+        "description": "Member {number} of {total}: {person}.\n\n{tracker_guidance}\n\n{position_guidance}\n\nThen choose this member\u2019s other homes and type.\n\nThe map source note reflects the selections when this screen opened; the review updates after you submit.\n\nTo add a missing other-home zone, choose Create another home zone. {new_zone_hint}",
         "data": {
           "trackers": "Location and presence trackers",
           "additional_residences": "Other homes for this member",
@@ -39,12 +42,12 @@
           "configure_reports": "Set up location report times",
           "configure_timing": "Adjust pet location timing",
           "show_on_map": "Show this member on the map",
-          "auto_request_location": "Request a location when this member’s phone is quiet",
+          "auto_request_location": "Request a location when this member\u2019s phone is quiet",
           "create_zone": "Create another home zone",
           "tracker_selection": "Location tracker selection"
         },
         "data_description": {
-          "trackers": "Select one or more trackers you own. Freshest reliable GPS compares verified report times from these selected GPS sources. Follow HA Person uses HA’s position with a selected GPS fallback. Changing this selection does not change the trackers linked to HA Person.",
+          "trackers": "Select one or more trackers you own. Freshest reliable GPS compares verified report times from these selected GPS sources. Follow HA Person uses HA\u2019s position with a selected GPS fallback. Changing this selection does not change the trackers linked to HA Person.",
           "additional_residences": "These zones also count as Home for this member. The Home map button still focuses the primary family home.",
           "kind": "Choose Pet for a pet record. Pet timing can be adjusted when needed; this does not create a tracker.",
           "configure_reports": "Choose a genuine location report-time sensor separately for each selected source. Leave off if none is available.",
@@ -53,7 +56,7 @@
           "show_on_map": "Turn off to leave this member out of the Everyone map and its fit. Selecting the member or a status category still shows their map position.",
           "auto_request_location": "For a selected Home Assistant phone tracker, ask for a location after 15 quiet minutes. Automatic attempts are at least 15 minutes apart and pause after three unanswered attempts until the tracker reports again. Deliberate requests keep a one-minute cooldown. All attempts share the 50-per-24-hour limit. Off by default.",
           "create_zone": "Create a Home Assistant zone on a map and select it for this member without losing the choices above.",
-          "tracker_selection": "Default: use the freshest verified report from explicitly selected GPS trackers. HA entity update times alone do not prove a newer location. Reports within 60 seconds prefer HA’s active selected GPS tracker. HomeCircle classifies the chosen coordinates against your HA zones without changing HA Person. If no selected GPS tracker has a verified report within five minutes, follow HA Person."
+          "tracker_selection": "Default: use the freshest verified report from explicitly selected GPS trackers. HA entity update times alone do not prove a newer location. Reports within 60 seconds prefer HA\u2019s active selected GPS tracker. HomeCircle classifies the chosen coordinates against your HA zones without changing HA Person. If no selected GPS tracker has a verified report within five minutes, follow HA Person."
         }
       },
       "confirm": {
@@ -106,7 +109,7 @@
           "pet_away_minutes": "Away: mark location stale after"
         },
         "data_description": {
-          "pet_home_minutes": "Default: 24 hours. Applies at the primary home and this pet’s other homes.",
+          "pet_home_minutes": "Default: 24 hours. Applies at the primary home and this pet\u2019s other homes.",
           "pet_away_minutes": "Default: 5 minutes. Applies when this pet is away from its homes."
         }
       },
@@ -120,7 +123,7 @@
           "display_name": "Name shown on the dashboard (optional)",
           "configure_timing": "Adjust pet location timing",
           "show_on_map": "Show this member on the map",
-          "auto_request_location": "Request a location when this member’s phone is quiet",
+          "auto_request_location": "Request a location when this member\u2019s phone is quiet",
           "create_zone": "Create another home zone"
         },
         "data_description": {
@@ -172,7 +175,7 @@
           "configure_reports": "Set up location report time",
           "display_name": "Name shown on the dashboard (optional)",
           "show_on_map": "Show this member on the map",
-          "auto_request_location": "Request a location when this member’s phone is quiet",
+          "auto_request_location": "Request a location when this member\u2019s phone is quiet",
           "create_zone": "Create another home zone"
         },
         "data_description": {
@@ -211,16 +214,123 @@
       },
       "create_person": {
         "title": "Create a Home Assistant Person",
-        "description": "Enter the member’s name. HomeCircle creates an editable Home Assistant Person, then returns to your selections so you can assign a tracker. A created Person remains in Home Assistant if you cancel this setup.",
+        "description": "Enter the member\u2019s name. HomeCircle creates an editable Home Assistant Person, then returns to your selections so you can assign a tracker. A created Person remains in Home Assistant if you cancel this setup.",
         "data": {
           "name": "Person or pet name"
         }
       },
       "assign_tracker": {
         "title": "Assign a tracker to {person}",
-        "description": "Choose the device tracker for {person}. HomeCircle will link it to this Home Assistant Person when you save the household. Next you can configure the member’s type, homes, map visibility, battery and report-time sensors. {tracker_guidance}",
+        "description": "Choose the device tracker for {person}. HomeCircle will link it to this Home Assistant Person when you save the household. Next you can configure the member\u2019s type, homes, map visibility, battery and report-time sensors. {tracker_guidance}",
         "data": {
           "tracker": "Location tracker"
+        }
+      },
+      "findmy_accounts": {
+        "title": "Apple Find My accounts",
+        "description": "Each Apple account contains its own selected Find My items. Each item has a separate tracker. Items do not count as household people.",
+        "menu_options": {
+          "findmy_add": "Add an Apple account",
+          "findmy_manage": "Manage an Apple account"
+        }
+      },
+      "findmy_manage": {
+        "title": "Choose an Apple account",
+        "data": {
+          "account": "Apple account"
+        }
+      },
+      "findmy_account_actions": {
+        "title": "Manage this Apple account",
+        "menu_options": {
+          "findmy_reconnect": "Reconnect existing items",
+          "findmy_disconnect": "Disconnect this account",
+          "findmy_edit_items": "Discover or change selected items",
+          "findmy_saved_items": "Manage saved items without signing in"
+        }
+      },
+      "findmy_add": {
+        "title": "Connect Apple Find My",
+        "description": "HomeCircle signs in to Apple from Home Assistant, downloads Apple identity libraries when needed, and may appear as HomeCircle Find My in your Apple device list. Discovering new items requires a trusted device\u2019s unlock passcode to recover Find My keys; reconnecting existing items only needs Apple sign-in. HomeCircle does not join a new Keychain trust peer. Passwords, verification codes and device passcodes stay transient. Only selected item keys, your account email, client identity, local identity provisioning state and the report-service token are saved in a local encrypted store; other account information and service tokens are removed. The encryption key is stored alongside it; protect HA storage and backups. Household viewers can see selected item locations. No Mac, terminal or separate helper is required.",
+        "data": {
+          "consent": "Allow this Apple sign-in and Find My key recovery",
+          "label": "Account label"
+        }
+      },
+      "findmy_login": {
+        "title": "Sign in to Apple",
+        "data": {
+          "username": "Apple account email",
+          "password": "Apple account password"
+        },
+        "description": "Enter your Apple account details here. Each submission starts one sign-in attempt. Verification and recovery continue in Home Assistant."
+      },
+      "findmy_factor": {
+        "title": "Choose Apple verification",
+        "data": {
+          "method": "Verification method"
+        },
+        "description": "{verification_notice}"
+      },
+      "findmy_code": {
+        "title": "Enter Apple verification code",
+        "data": {
+          "code": "Verification code"
+        },
+        "description": "{verification_notice} Use the newest verification code for this sign-in. This is different from a device unlock passcode."
+      },
+      "findmy_device": {
+        "title": "Choose a trusted device",
+        "description": "Choose the device whose unlock passcode you know. Names come from Apple; a serial suffix distinguishes unnamed devices.",
+        "data": {
+          "device": "Trusted device"
+        }
+      },
+      "findmy_passcode": {
+        "title": "Recover Find My item keys",
+        "description": "Enter the selected device\u2019s unlock passcode. HomeCircle allows three recovery attempts in this setup and never retries a passcode automatically.",
+        "data": {
+          "passcode": "Trusted device unlock passcode"
+        }
+      },
+      "findmy_select": {
+        "title": "Choose Find My items",
+        "description": "Select the items this account should expose to Home Assistant. Unselected keys are discarded when setup closes. Reconnecting replaces the previous item selection; removed trackers retain their history.",
+        "data": {
+          "items": "Find My items"
+        }
+      },
+      "findmy_types": {
+        "title": "Set item types",
+        "description": "Choose a type for each selected item in this order. Apple may omit the type.\n\n{items}"
+      },
+      "findmy_confirm": {
+        "title": "Save selected Find My items",
+        "description": "Account: {account}\n\nSelected items:\n{items}\n\nEach item gets a separate tracker under this Apple account. Find My reports may arrive later than the Apple app; polling cannot force a new location. If this is part of Household setup, finish saving the household within 15 minutes; expiry discards the entire unfinished edit.",
+        "data": {
+          "confirm": "Save this account and these selected items"
+        }
+      },
+      "findmy_disconnect": {
+        "title": "Disconnect Apple account",
+        "description": "Disconnect {account}? Its polling and HomeCircle item cards stop. The HomeCircle account session and item keys are deleted from HA storage; existing backups are not changed. Tracker history is retained.",
+        "data": {
+          "confirm": "Disconnect this account"
+        }
+      },
+      "findmy_zone": {
+        "title": "Check Find My access",
+        "description": "Apple sign-in succeeded, but HomeCircle must be able to access your Find My item storage before device recovery. Continue to retry this read-only check. No device unlock passcode is needed."
+      },
+      "findmy_discovery": {
+        "title": "Retry Find My item discovery",
+        "description": "Your device passcode recovery succeeded. Recovered keys stay in memory until this setup closes or expires. Continue to retry item discovery without entering the passcode again."
+      },
+      "findmy_saved_items": {
+        "title": "Manage saved Find My items",
+        "description": "Choose among item keys already saved for this account. Opening and selecting saved items stays local: it does not ask for a password or device passcode, repeat Apple authentication or discover new items. Normal Apple report polling continues or resumes after saving. This does not renew an expired Apple session. Removed items stop being tracked after you confirm.",
+        "data": {
+          "consent": "Open this account\u2019s saved items"
         }
       }
     },
@@ -247,23 +357,53 @@
       "invalid_tracker_source": "A directly selected person or pet must use that tracker as the source.",
       "direct_trackers_selected": "Before disconnecting, replace HomeCircle-owned trackers selected here or linked to a selected Home Assistant Person.",
       "tracker_already_in_person": "This tracker is already linked to a selected Home Assistant Person. Keep that Person or choose the tracker as a separate member, not both.",
-      "invalid_display_name": "Enter a name of 1–60 characters without line breaks, or leave this field empty.",
+      "invalid_display_name": "Enter a name of 1\u201360 characters without line breaks, or leave this field empty.",
       "invalid_map_visibility": "Choose whether this member appears on the map.",
-      "invalid_auto_request_location": "Choose whether HomeCircle may request a location from this member’s HA Mobile App tracker.",
+      "invalid_auto_request_location": "Choose whether HomeCircle may request a location from this member\u2019s HA Mobile App tracker.",
       "mobile_app_notify_required": "Choose a tracker from the HA Mobile App on a phone with a working notify entity before enabling requests.",
       "shortcut_conflict": "Choose one quick action at a time. Save other household changes separately.",
-      "invalid_zone_name": "Enter a zone name of 1–60 characters.",
+      "invalid_zone_name": "Enter a zone name of 1\u201360 characters.",
       "zone_already_exists": "A zone with this name already exists. Select the existing zone instead.",
-      "invalid_zone_location": "Choose a valid map location and a radius of 1–100000 meters.",
+      "invalid_zone_location": "Choose a valid map location and a radius of 1\u2013100000 meters.",
       "invalid_zone_use": "Choose how this zone will be used.",
       "zone_creation_unavailable": "Home Assistant could not create this zone. Check that Zones is available, then try again.",
-      "invalid_person_name": "Enter a name of 1–60 characters without line breaks.",
+      "invalid_person_name": "Enter a name of 1\u201360 characters without line breaks.",
       "person_already_exists": "A Home Assistant Person already has this name. Select the existing Person.",
       "person_creation_unavailable": "Home Assistant People is unavailable. Check the Person integration and try again.",
       "person_not_editable": "This Person is managed outside the Home Assistant interface. Assign the tracker in its source configuration first.",
       "tracker_linked_elsewhere": "This tracker already belongs to another Home Assistant Person. Choose that Person or a different tracker.",
       "tracker_required": "Choose at least one tracker for this Person before saving.",
-      "invalid_tracker_selection": "Choose a supported location selection mode."
+      "invalid_tracker_selection": "Choose a supported location selection mode.",
+      "findmy_consent_required": "Consent is required to connect Apple Find My.",
+      "findmy_confirm_required": "Confirm before saving these items.",
+      "findmy_signin_failed": "Apple sign-in could not complete. This does not confirm that your password is incorrect. Try again or check HomeCircle diagnostics.",
+      "findmy_account_attention": "Resolve any account or terms prompts on your Apple device, then try again.",
+      "findmy_code_request_failed": "Could not request Apple verification.",
+      "findmy_code_failed": "Could not complete Apple code verification. This may be a connection or protocol error; it does not necessarily mean the code is incorrect.",
+      "findmy_no_recovery_device": "Apple did not provide a recoverable trusted device.",
+      "findmy_recovery_failed": "Apple sign-in completed, but Find My key recovery could not open. Check HomeCircle diagnostics before starting a new attempt.",
+      "findmy_recovery_limit": "Three recovery attempts have been used. Close setup before starting again.",
+      "findmy_setup_closed": "This setup has expired. Start a new setup.",
+      "findmy_select_items": "Select at least one Find My item.",
+      "findmy_account_mismatch": "Use the same Apple account when reconnecting. An account already connected must be managed from its existing entry.",
+      "findmy_storage_failed": "The saved session could not be safely read or written. It was not replaced.",
+      "findmy_operation_failed": "Could not complete this Apple operation. Try again.",
+      "findmy_identity_failed": "HomeCircle could not initialize its Apple identity engine. Your credentials have not been checked. Check the HA connection and HomeCircle diagnostics.",
+      "findmy_signin_timeout": "Apple setup timed out. This does not confirm that your credentials are incorrect. Try again later.",
+      "findmy_signin_network": "HomeCircle could not reach Apple during setup. Check the HA internet connection and try again later.",
+      "findmy_apple_unavailable": "Apple temporarily refused this request. Try again later.",
+      "findmy_credentials_rejected": "Apple rejected this sign-in. Check the Apple account email and password, and resolve any account alerts on your Apple device.",
+      "findmy_signin_state": "This setup session cannot sign in again. Close setup and start a new attempt.",
+      "findmy_apple_protocol": "Apple returned an unexpected setup response. This may be a compatibility issue; check HomeCircle diagnostics.",
+      "findmy_code_signin_failed": "Apple verification returned, but the follow-up sign-in could not finish. The verification code may have been correct. Stop retrying and check the integration diagnostics.",
+      "findmy_code_delegate_failed": "The follow-up Apple authentication finished, but access to iCloud services failed. Stop retrying codes and check the integration diagnostics.",
+      "findmy_zone_denied": "Apple accepted sign-in but rejected Find My item access. No device passcode has been requested. Check HomeCircle diagnostics before retrying.",
+      "findmy_zone_failed": "HomeCircle could not check Find My item access. No device passcode has been requested. Check diagnostics before retrying.",
+      "findmy_discovery_failed": "Recovery succeeded, but item discovery failed. Check diagnostics before retrying discovery; do not re-enter your device passcode.",
+      "findmy_verification_limit": "Apple kept requesting more verification. Close this setup before starting another sign-in attempt.",
+      "findmy_saved_session_unavailable": "This account does not contain a reusable Find My report session and item keys. Its saved data was not replaced.",
+      "findmy_report_access_unavailable": "HomeCircle could not obtain a usable Find My tracking credential after Apple sign-in. The existing connection was not replaced.",
+      "findmy_initial_refused": "Apple rejected the initial sign-in challenge before checking the password proof. This response does not establish that your password is incorrect. Close setup and review the integration diagnostics before another attempt."
     },
     "abort": {
       "already_configured": "HomeCircle is already configured. Use Options to edit the household.",
@@ -271,7 +411,20 @@
       "reconfigure_successful": "HomeCircle configuration updated.",
       "reauth_successful": "Tracker connection updated.",
       "provider_reauth_unavailable": "This tracker connection cannot be reconnected here. Open HomeCircle Options to review the account.",
-      "single_instance_allowed": "Only one HomeCircle household is supported. Use Options to edit it."
+      "single_instance_allowed": "Only one HomeCircle household is supported. Use Options to edit it.",
+      "findmy_no_items": "Apple returned no Find My items.",
+      "findmy_storage_failed": "The saved session could not be safely read or written. It was not replaced.",
+      "findmy_report_access_unavailable": "HomeCircle could not obtain a usable Find My tracking credential after Apple sign-in. The existing connection was not replaced.",
+      "findmy_code_signin_failed": "Apple verification returned, but the follow-up sign-in could not finish. The verification code may have been correct. Stop retrying and check the integration diagnostics. No connection was saved or replaced.",
+      "findmy_code_delegate_failed": "The follow-up Apple authentication finished, but access to iCloud services failed. Stop retrying codes and check the integration diagnostics. No connection was saved or replaced.",
+      "findmy_verification_limit": "Apple kept requesting more verification. Close this setup before starting another sign-in attempt. No connection was saved or replaced.",
+      "findmy_signin_state": "This setup session cannot sign in again. Close setup and start a new attempt. No connection was saved or replaced.",
+      "findmy_account_mismatch": "Use the same Apple account when reconnecting. An account already connected must be managed from its existing entry. No connection was saved or replaced.",
+      "findmy_initial_refused": "Apple rejected the initial sign-in challenge before checking the password proof. This response does not establish that your password is incorrect. Close setup and review the integration diagnostics before another attempt. No connection was saved or replaced.",
+      "findmy_identity_failed": "HomeCircle could not prepare its Apple identity. No Apple account credentials were checked or saved. Start setup again after checking the HA connection and HomeCircle diagnostics."
+    },
+    "progress": {
+      "findmy_connecting": "Connecting to Apple. Keep this window open; you may cancel to discard this setup."
     }
   },
   "options": {
@@ -284,7 +437,8 @@
           "household": "Manage the whole household and tracker accounts",
           "convert_legacy_member": "Move a tracker-only member to a Person",
           "import_places": "Import places from Life360",
-          "city_lookup": "City lookup"
+          "city_lookup": "City lookup",
+          "findmy_accounts": "Apple Find My accounts"
         }
       },
       "status_member": {
@@ -324,7 +478,7 @@
       },
       "remove_tracker_choice": {
         "title": "Remove a tracker",
-        "description": "This removes the tracker from HomeCircle after review. The tracker and its Home Assistant Person link remain in Home Assistant; change that link separately in Settings → People if needed.",
+        "description": "This removes the tracker from HomeCircle after review. The tracker and its Home Assistant Person link remain in Home Assistant; change that link separately in Settings \u2192 People if needed.",
         "data": {
           "remove_tracker": "Tracker"
         }
@@ -344,11 +498,13 @@
           "remove_tracker": "Remove one tracker",
           "create_zone": "Create a new home or place zone",
           "create_person": "Create a new Home Assistant Person",
-          "family_refresh_enabled": "Allow family location refresh"
+          "family_refresh_enabled": "Allow family location refresh",
+          "findmy_enabled": "Connect Apple Find My accounts",
+          "manage_findmy_accounts": "Manage Apple Find My accounts"
         },
         "data_description": {
-          "edit_member": "Open just this member’s details. Other members stay as saved.",
-          "pets": "Select existing device trackers for pets without Home Assistant Person records. This is a role you assign; the picker can also show people devices. Select each tracker in only one list. The tracker remains this pet’s location source.",
+          "edit_member": "Open just this member\u2019s details. Other members stay as saved.",
+          "pets": "Select existing device trackers for pets without Home Assistant Person records. This is a role you assign; the picker can also show people devices. Select each tracker in only one list. The tracker remains this pet\u2019s location source.",
           "people_trackers": "Select existing device trackers for people without Home Assistant Person records. This is a role you assign; the picker can also show pet devices. Select each tracker in only one list. A connected Life360 tracker can be chosen here after it appears.",
           "life360_direct": "Optional. HomeCircle will connect to Life360 itself and create device trackers in Home Assistant. Turn this off after replacing any selected HomeCircle-owned Life360 trackers.",
           "replace_life360_login": "Use this if the password or token changed for the same Life360 account. Existing member selections are kept.",
@@ -356,12 +512,13 @@
           "places": "Examples: work, school, or a favorite park. These zones label a location but do not count as Home. Add a dorm or second home under Other homes for the appropriate member.",
           "create_zone": "Open a map to create a missing Home Assistant zone, then return here with your selections intact.",
           "create_person": "Creates an editable Person in Home Assistant; the Person remains there if you later cancel HomeCircle setup.",
-          "family_refresh_enabled": "Off by default. Allows a manual family button to refresh explicitly assigned trackers using supported provider actions. Phone requests also require that member’s quiet-phone request opt-in. Unsupported trackers are skipped. A complete selected Life360 Circle with one enabled account can use the external integration’s saved authorization for an unofficial Circle-wide request; otherwise only a supported targeted action is used. HomeCircle-managed connections check cloud reports. Household viewers need control permission for each target. Requests and HA updates do not guarantee new GPS fixes. No credentials are sent to the card."
+          "family_refresh_enabled": "Off by default. Allows a manual family button to refresh explicitly assigned trackers using supported provider actions. Phone requests also require that member\u2019s quiet-phone request opt-in. Unsupported trackers are skipped. A complete selected Life360 Circle with one enabled account can use the external integration\u2019s saved authorization for an unofficial Circle-wide request; otherwise only a supported targeted action is used. HomeCircle-managed connections check cloud reports. Household viewers need control permission for each target. Requests and HA updates do not guarantee new GPS fixes. No credentials are sent to the card.",
+          "findmy_enabled": "Optional. Each Apple account has its own selected item trackers. Items appear separately and do not count as people."
         }
       },
       "member": {
         "title": "Choose trackers and places",
-        "description": "Member {number} of {total}: {person}.\n\n{tracker_guidance}\n\n{position_guidance}\n\nThen choose this member’s other homes and type.\n\nThe map source note reflects the selections when this screen opened; the review updates after you submit.\n\nTo add a missing other-home zone, choose Create another home zone. {new_zone_hint}",
+        "description": "Member {number} of {total}: {person}.\n\n{tracker_guidance}\n\n{position_guidance}\n\nThen choose this member\u2019s other homes and type.\n\nThe map source note reflects the selections when this screen opened; the review updates after you submit.\n\nTo add a missing other-home zone, choose Create another home zone. {new_zone_hint}",
         "data": {
           "trackers": "Location and presence trackers",
           "additional_residences": "Other homes for this member",
@@ -370,12 +527,12 @@
           "configure_reports": "Set up location report times",
           "configure_timing": "Adjust pet location timing",
           "show_on_map": "Show this member on the map",
-          "auto_request_location": "Request a location when this member’s phone is quiet",
+          "auto_request_location": "Request a location when this member\u2019s phone is quiet",
           "create_zone": "Create another home zone",
           "tracker_selection": "Location tracker selection"
         },
         "data_description": {
-          "trackers": "Select one or more trackers you own. Freshest reliable GPS compares verified report times from these selected GPS sources. Follow HA Person uses HA’s position with a selected GPS fallback. Changing this selection does not change the trackers linked to HA Person.",
+          "trackers": "Select one or more trackers you own. Freshest reliable GPS compares verified report times from these selected GPS sources. Follow HA Person uses HA\u2019s position with a selected GPS fallback. Changing this selection does not change the trackers linked to HA Person.",
           "additional_residences": "These zones also count as Home for this member. The Home map button still focuses the primary family home.",
           "kind": "Choose Pet for a pet record. Pet timing can be adjusted when needed; this does not create a tracker.",
           "configure_reports": "Choose a genuine location report-time sensor separately for each selected source. Leave off if none is available.",
@@ -384,7 +541,7 @@
           "show_on_map": "Turn off to leave this member out of the Everyone map and its fit. Selecting the member or a status category still shows their map position.",
           "auto_request_location": "For a selected Home Assistant phone tracker, ask for a location after 15 quiet minutes. Automatic attempts are at least 15 minutes apart and pause after three unanswered attempts until the tracker reports again. Deliberate requests keep a one-minute cooldown. All attempts share the 50-per-24-hour limit. Off by default.",
           "create_zone": "Create a Home Assistant zone on a map and select it for this member without losing the choices above.",
-          "tracker_selection": "Default: use the freshest verified report from explicitly selected GPS trackers. HA entity update times alone do not prove a newer location. Reports within 60 seconds prefer HA’s active selected GPS tracker. HomeCircle classifies the chosen coordinates against your HA zones without changing HA Person. If no selected GPS tracker has a verified report within five minutes, follow HA Person."
+          "tracker_selection": "Default: use the freshest verified report from explicitly selected GPS trackers. HA entity update times alone do not prove a newer location. Reports within 60 seconds prefer HA\u2019s active selected GPS tracker. HomeCircle classifies the chosen coordinates against your HA zones without changing HA Person. If no selected GPS tracker has a verified report within five minutes, follow HA Person."
         }
       },
       "confirm": {
@@ -437,7 +594,7 @@
           "pet_away_minutes": "Away: mark location stale after"
         },
         "data_description": {
-          "pet_home_minutes": "Default: 24 hours. Applies at the primary home and this pet’s other homes.",
+          "pet_home_minutes": "Default: 24 hours. Applies at the primary home and this pet\u2019s other homes.",
           "pet_away_minutes": "Default: 5 minutes. Applies when this pet is away from its homes."
         }
       },
@@ -451,7 +608,7 @@
           "display_name": "Name shown on the dashboard (optional)",
           "configure_timing": "Adjust pet location timing",
           "show_on_map": "Show this member on the map",
-          "auto_request_location": "Request a location when this member’s phone is quiet",
+          "auto_request_location": "Request a location when this member\u2019s phone is quiet",
           "create_zone": "Create another home zone"
         },
         "data_description": {
@@ -489,7 +646,7 @@
           "configure_reports": "Set up location report time",
           "display_name": "Name shown on the dashboard (optional)",
           "show_on_map": "Show this member on the map",
-          "auto_request_location": "Request a location when this member’s phone is quiet",
+          "auto_request_location": "Request a location when this member\u2019s phone is quiet",
           "create_zone": "Create another home zone"
         },
         "data_description": {
@@ -528,14 +685,14 @@
       },
       "create_person": {
         "title": "Create a Home Assistant Person",
-        "description": "Enter the member’s name. HomeCircle creates an editable Home Assistant Person, then returns to your selections so you can assign a tracker. A created Person remains in Home Assistant if you cancel this setup.",
+        "description": "Enter the member\u2019s name. HomeCircle creates an editable Home Assistant Person, then returns to your selections so you can assign a tracker. A created Person remains in Home Assistant if you cancel this setup.",
         "data": {
           "name": "Person or pet name"
         }
       },
       "convert_legacy_member": {
         "title": "Move a tracker-only member",
-        "description": "Choose the existing tracker-only member and the Home Assistant Person who should own its tracker. You can create a new Person first. HomeCircle keeps this member’s pet/person type, homes, and sensor settings. The tracker link is saved to Home Assistant when you save the review. {new_person_hint}",
+        "description": "Choose the existing tracker-only member and the Home Assistant Person who should own its tracker. You can create a new Person first. HomeCircle keeps this member\u2019s pet/person type, homes, and sensor settings. The tracker link is saved to Home Assistant when you save the review. {new_person_hint}",
         "data": {
           "person": "Home Assistant Person",
           "create_person": "Create a new Person first",
@@ -544,7 +701,7 @@
       },
       "assign_tracker": {
         "title": "Assign a tracker to {person}",
-        "description": "Choose the device tracker for {person}. HomeCircle will link it to this Home Assistant Person when you save the household. Next you can configure the member’s type, homes, map visibility, battery and report-time sensors. {tracker_guidance}",
+        "description": "Choose the device tracker for {person}. HomeCircle will link it to this Home Assistant Person when you save the household. Next you can configure the member\u2019s type, homes, map visibility, battery and report-time sensors. {tracker_guidance}",
         "data": {
           "tracker": "Location tracker"
         }
@@ -587,7 +744,7 @@
       },
       "tracker_picture": {
         "title": "Picture for {member}",
-        "description": "Upload a JPG, PNG, or GIF picture stored locally in Home Assistant. Save applies it to this tracker only. Remove picture restores the tracker’s original picture or initials. Uploaded images remain in HA if you cancel or remove the custom picture. Anyone holding the opaque native HA image link can view it without login; keep image links private.",
+        "description": "Upload a JPG, PNG, or GIF picture stored locally in Home Assistant. Save applies it to this tracker only. Remove picture restores the tracker\u2019s original picture or initials. Uploaded images remain in HA if you cancel or remove the custom picture. Anyone holding the opaque native HA image link can view it without login; keep image links private.",
         "data": {
           "picture_id": "Home Assistant image ID"
         }
@@ -597,6 +754,113 @@
         "description": "Enable city lookup with Photon when a selected tracker outside your named places does not supply a city. This sends its GPS coordinates to photon.komoot.io; names and account credentials stay local. Results are cached in HA for seven days. Requests run while HomeCircle is viewed, with limits of 20 per hour and 200 per day. Photon is a public demo service without an availability guarantee. City and street names use OpenStreetMap data. Disable this switch to stop lookups. This covers selected usable trackers even when excluded from Everyone; Private map background only blocks tiles. Cached addresses remain local on disable and are deleted when HomeCircle is removed.",
         "data": {
           "city_lookup_enabled": "Enable Photon city lookup"
+        }
+      },
+      "findmy_accounts": {
+        "title": "Apple Find My accounts",
+        "description": "Each Apple account contains its own selected Find My items. Each item has a separate tracker. Items do not count as household people.",
+        "menu_options": {
+          "findmy_add": "Add an Apple account",
+          "findmy_manage": "Manage an Apple account"
+        }
+      },
+      "findmy_manage": {
+        "title": "Choose an Apple account",
+        "data": {
+          "account": "Apple account"
+        }
+      },
+      "findmy_account_actions": {
+        "title": "Manage this Apple account",
+        "menu_options": {
+          "findmy_reconnect": "Reconnect existing items",
+          "findmy_disconnect": "Disconnect this account",
+          "findmy_edit_items": "Discover or change selected items",
+          "findmy_saved_items": "Manage saved items without signing in"
+        }
+      },
+      "findmy_add": {
+        "title": "Connect Apple Find My",
+        "description": "HomeCircle signs in to Apple from Home Assistant, downloads Apple identity libraries when needed, and may appear as HomeCircle Find My in your Apple device list. Discovering new items requires a trusted device\u2019s unlock passcode to recover Find My keys; reconnecting existing items only needs Apple sign-in. HomeCircle does not join a new Keychain trust peer. Passwords, verification codes and device passcodes stay transient. Only selected item keys, your account email, client identity, local identity provisioning state and the report-service token are saved in a local encrypted store; other account information and service tokens are removed. The encryption key is stored alongside it; protect HA storage and backups. Household viewers can see selected item locations. No Mac, terminal or separate helper is required.",
+        "data": {
+          "consent": "Allow this Apple sign-in and Find My key recovery",
+          "label": "Account label"
+        }
+      },
+      "findmy_login": {
+        "title": "Sign in to Apple",
+        "data": {
+          "username": "Apple account email",
+          "password": "Apple account password"
+        },
+        "description": "Enter your Apple account details here. Each submission starts one sign-in attempt. Verification and recovery continue in Home Assistant."
+      },
+      "findmy_factor": {
+        "title": "Choose Apple verification",
+        "data": {
+          "method": "Verification method"
+        },
+        "description": "{verification_notice}"
+      },
+      "findmy_code": {
+        "title": "Enter Apple verification code",
+        "data": {
+          "code": "Verification code"
+        },
+        "description": "{verification_notice} Use the newest verification code for this sign-in. This is different from a device unlock passcode."
+      },
+      "findmy_device": {
+        "title": "Choose a trusted device",
+        "description": "Choose the device whose unlock passcode you know. Names come from Apple; a serial suffix distinguishes unnamed devices.",
+        "data": {
+          "device": "Trusted device"
+        }
+      },
+      "findmy_passcode": {
+        "title": "Recover Find My item keys",
+        "description": "Enter the selected device\u2019s unlock passcode. HomeCircle allows three recovery attempts in this setup and never retries a passcode automatically.",
+        "data": {
+          "passcode": "Trusted device unlock passcode"
+        }
+      },
+      "findmy_select": {
+        "title": "Choose Find My items",
+        "description": "Select the items this account should expose to Home Assistant. Unselected keys are discarded when setup closes. Reconnecting replaces the previous item selection; removed trackers retain their history.",
+        "data": {
+          "items": "Find My items"
+        }
+      },
+      "findmy_types": {
+        "title": "Set item types",
+        "description": "Choose a type for each selected item in this order. Apple may omit the type.\n\n{items}"
+      },
+      "findmy_confirm": {
+        "title": "Save selected Find My items",
+        "description": "Account: {account}\n\nSelected items:\n{items}\n\nEach item gets a separate tracker under this Apple account. Find My reports may arrive later than the Apple app; polling cannot force a new location. If this is part of Household setup, finish saving the household within 15 minutes; expiry discards the entire unfinished edit.",
+        "data": {
+          "confirm": "Save this account and these selected items"
+        }
+      },
+      "findmy_disconnect": {
+        "title": "Disconnect Apple account",
+        "description": "Disconnect {account}? Its polling and HomeCircle item cards stop. The HomeCircle account session and item keys are deleted from HA storage; existing backups are not changed. Tracker history is retained.",
+        "data": {
+          "confirm": "Disconnect this account"
+        }
+      },
+      "findmy_zone": {
+        "title": "Check Find My access",
+        "description": "Apple sign-in succeeded, but HomeCircle must be able to access your Find My item storage before device recovery. Continue to retry this read-only check. No device unlock passcode is needed."
+      },
+      "findmy_discovery": {
+        "title": "Retry Find My item discovery",
+        "description": "Your device passcode recovery succeeded. Recovered keys stay in memory until this setup closes or expires. Continue to retry item discovery without entering the passcode again."
+      },
+      "findmy_saved_items": {
+        "title": "Manage saved Find My items",
+        "description": "Choose among item keys already saved for this account. Opening and selecting saved items stays local: it does not ask for a password or device passcode, repeat Apple authentication or discover new items. Normal Apple report polling continues or resumes after saving. This does not renew an expired Apple session. Removed items stop being tracked after you confirm.",
+        "data": {
+          "consent": "Open this account\u2019s saved items"
         }
       }
     },
@@ -624,17 +888,17 @@
       "invalid_tracker_source": "A directly selected person or pet must use that tracker as the source.",
       "direct_trackers_selected": "Before disconnecting, replace HomeCircle-owned trackers selected here or linked to a selected Home Assistant Person.",
       "tracker_already_in_person": "This tracker is already linked to a selected Home Assistant Person. Keep that Person or choose the tracker as a separate member, not both.",
-      "invalid_display_name": "Enter a name of 1–60 characters without line breaks, or leave this field empty.",
+      "invalid_display_name": "Enter a name of 1\u201360 characters without line breaks, or leave this field empty.",
       "invalid_map_visibility": "Choose whether this member appears on the map.",
-      "invalid_auto_request_location": "Choose whether HomeCircle may request a location from this member’s HA Mobile App tracker.",
+      "invalid_auto_request_location": "Choose whether HomeCircle may request a location from this member\u2019s HA Mobile App tracker.",
       "mobile_app_notify_required": "Choose a tracker from the HA Mobile App on a phone with a working notify entity before enabling requests.",
       "shortcut_conflict": "Choose one quick action at a time. Save other household changes separately.",
-      "invalid_zone_name": "Enter a zone name of 1–60 characters.",
+      "invalid_zone_name": "Enter a zone name of 1\u201360 characters.",
       "zone_already_exists": "A zone with this name already exists. Select the existing zone instead.",
-      "invalid_zone_location": "Choose a valid map location and a radius of 1–100000 meters.",
+      "invalid_zone_location": "Choose a valid map location and a radius of 1\u2013100000 meters.",
       "invalid_zone_use": "Choose how this zone will be used.",
       "zone_creation_unavailable": "Home Assistant could not create this zone. Check that Zones is available, then try again.",
-      "invalid_person_name": "Enter a name of 1–60 characters without line breaks.",
+      "invalid_person_name": "Enter a name of 1\u201360 characters without line breaks.",
       "person_already_exists": "A Home Assistant Person already has this name. Select the existing Person.",
       "person_creation_unavailable": "Home Assistant People is unavailable. Check the Person integration and try again.",
       "person_not_editable": "This Person is managed outside the Home Assistant interface. Assign the tracker in its source configuration first.",
@@ -646,13 +910,56 @@
       "place_import_changed": "A reviewed place now conflicts with an existing zone. Close and restart the import to review current zones.",
       "place_import_create": "Some zones could not be created. Successfully created zones remain in HA. Retry to complete the remaining places.",
       "invalid_tracker_selection": "Choose a supported location selection mode.",
-      "invalid_tracker_picture": "Choose a valid picture uploaded to Home Assistant."
+      "invalid_tracker_picture": "Choose a valid picture uploaded to Home Assistant.",
+      "findmy_consent_required": "Consent is required to connect Apple Find My.",
+      "findmy_confirm_required": "Confirm before saving these items.",
+      "findmy_signin_failed": "Apple sign-in could not complete. This does not confirm that your password is incorrect. Try again or check HomeCircle diagnostics.",
+      "findmy_account_attention": "Resolve any account or terms prompts on your Apple device, then try again.",
+      "findmy_code_request_failed": "Could not request Apple verification.",
+      "findmy_code_failed": "Could not complete Apple code verification. This may be a connection or protocol error; it does not necessarily mean the code is incorrect.",
+      "findmy_no_recovery_device": "Apple did not provide a recoverable trusted device.",
+      "findmy_recovery_failed": "Apple sign-in completed, but Find My key recovery could not open. Check HomeCircle diagnostics before starting a new attempt.",
+      "findmy_recovery_limit": "Three recovery attempts have been used. Close setup before starting again.",
+      "findmy_setup_closed": "This setup has expired. Start a new setup.",
+      "findmy_select_items": "Select at least one Find My item.",
+      "findmy_account_mismatch": "Use the same Apple account when reconnecting. An account already connected must be managed from its existing entry.",
+      "findmy_storage_failed": "The saved session could not be safely read or written. It was not replaced.",
+      "findmy_operation_failed": "Could not complete this Apple operation. Try again.",
+      "findmy_identity_failed": "HomeCircle could not initialize its Apple identity engine. Your credentials have not been checked. Check the HA connection and HomeCircle diagnostics.",
+      "findmy_signin_timeout": "Apple setup timed out. This does not confirm that your credentials are incorrect. Try again later.",
+      "findmy_signin_network": "HomeCircle could not reach Apple during setup. Check the HA internet connection and try again later.",
+      "findmy_apple_unavailable": "Apple temporarily refused this request. Try again later.",
+      "findmy_credentials_rejected": "Apple rejected this sign-in. Check the Apple account email and password, and resolve any account alerts on your Apple device.",
+      "findmy_signin_state": "This setup session cannot sign in again. Close setup and start a new attempt.",
+      "findmy_apple_protocol": "Apple returned an unexpected setup response. This may be a compatibility issue; check HomeCircle diagnostics.",
+      "findmy_code_signin_failed": "Apple verification returned, but the follow-up sign-in could not finish. The verification code may have been correct. Stop retrying and check the integration diagnostics.",
+      "findmy_code_delegate_failed": "The follow-up Apple authentication finished, but access to iCloud services failed. Stop retrying codes and check the integration diagnostics.",
+      "findmy_zone_denied": "Apple accepted sign-in but rejected Find My item access. No device passcode has been requested. Check HomeCircle diagnostics before retrying.",
+      "findmy_zone_failed": "HomeCircle could not check Find My item access. No device passcode has been requested. Check diagnostics before retrying.",
+      "findmy_discovery_failed": "Recovery succeeded, but item discovery failed. Check diagnostics before retrying discovery; do not re-enter your device passcode.",
+      "findmy_verification_limit": "Apple kept requesting more verification. Close this setup before starting another sign-in attempt.",
+      "findmy_saved_session_unavailable": "This account does not contain a reusable Find My report session and item keys. Its saved data was not replaced.",
+      "findmy_report_access_unavailable": "HomeCircle could not obtain a usable Find My tracking credential after Apple sign-in. The existing connection was not replaced.",
+      "findmy_initial_refused": "Apple rejected the initial sign-in challenge before checking the password proof. This response does not establish that your password is incorrect. Close setup and review the integration diagnostics before another attempt."
     },
     "abort": {
       "place_import_no_account": "No saved Life360 connection is available. Connect Life360 first, then try again.",
       "place_import_none": "No new valid places are available to import. Existing zones and Primary Home are excluded.",
       "place_import_skipped": "All selected places were skipped. No zones were created.",
-      "tracker_picture_only": "Use Home Assistant People settings to change a Person picture."
+      "tracker_picture_only": "Use Home Assistant People settings to change a Person picture.",
+      "findmy_no_items": "Apple returned no Find My items.",
+      "findmy_storage_failed": "The saved session could not be safely read or written. It was not replaced.",
+      "findmy_report_access_unavailable": "HomeCircle could not obtain a usable Find My tracking credential after Apple sign-in. The existing connection was not replaced.",
+      "findmy_code_signin_failed": "Apple verification returned, but the follow-up sign-in could not finish. The verification code may have been correct. Stop retrying and check the integration diagnostics. No connection was saved or replaced.",
+      "findmy_code_delegate_failed": "The follow-up Apple authentication finished, but access to iCloud services failed. Stop retrying codes and check the integration diagnostics. No connection was saved or replaced.",
+      "findmy_verification_limit": "Apple kept requesting more verification. Close this setup before starting another sign-in attempt. No connection was saved or replaced.",
+      "findmy_signin_state": "This setup session cannot sign in again. Close setup and start a new attempt. No connection was saved or replaced.",
+      "findmy_account_mismatch": "Use the same Apple account when reconnecting. An account already connected must be managed from its existing entry. No connection was saved or replaced.",
+      "findmy_initial_refused": "Apple rejected the initial sign-in challenge before checking the password proof. This response does not establish that your password is incorrect. Close setup and review the integration diagnostics before another attempt. No connection was saved or replaced.",
+      "findmy_identity_failed": "HomeCircle could not prepare its Apple identity. No Apple account credentials were checked or saved. Start setup again after checking the HA connection and HomeCircle diagnostics."
+    },
+    "progress": {
+      "findmy_connecting": "Connecting to Apple. Keep this window open; you may cancel to discard this setup."
     }
   },
   "issues": {
@@ -663,6 +970,18 @@
     "life360_auth_failed": {
       "title": "HomeCircle Life360 sign-in needs attention",
       "description": "The direct Life360 connection is no longer authorized. Its trackers may be unavailable. Check the account authorization and reconnect HomeCircle; existing Home Assistant sources remain available."
+    },
+    "findmy_account_auth": {
+      "title": "Apple Find My sign-in needs attention",
+      "description": "The Apple Find My account {account} needs a new sign-in. In HomeCircle settings, open Apple Find My accounts, choose this account, and reconnect. Other accounts continue polling. Passwords and codes must be entered in setup, not logs or support reports."
+    },
+    "findmy_storage_cleanup": {
+      "title": "Find My session cleanup needs attention",
+      "description": "HomeCircle could not safely remove a native Find My session store. Other providers continue running. Protect HA storage and backups, and review HomeCircle storage permissions before retrying cleanup. No files with unexpected ownership or type were deleted."
+    },
+    "findmy_migration_recovery": {
+      "title": "Find My migration needs attention",
+      "description": "HomeCircle could not finish a pending Find My migration. The affected migration account is paused; other accounts and providers continue. The original prototype session and migration ledger are retained. Review the registered tracker identities and reload HomeCircle after fixing the conflict. Disconnecting this paused migration account completes rollback and can re-enable the existing prototype."
     }
   }
 }

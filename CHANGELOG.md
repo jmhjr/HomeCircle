@@ -2,7 +2,20 @@
 
 ## Unreleased
 
-No additional changes queued.
+## 0.1.0-beta.19 — October 19, 2026
+
+Experimental prerelease. See [package and functional acceptance](docs/FINDMY-BETA19-PACKAGING-VALIDATION.md) and the [earlier candidate record](docs/BETA19-CANDIDATE-VALIDATION.md). Publication and HACS verification are separate release steps.
+
+- Include Apple Find My as a native HomeCircle provider using a pinned MIT Python SDK, with Linux API polling and no Mac or separate production helper.
+- Add guided account sign-in, verification, explicit Keychain recovery consent for discovery, selected-item multi-selection/types, reconnect using existing keys, and independent account polling/repairs.
+- Store only selected item keys and a minimized encrypted report session; erase native stores on disconnect/removal and clean orphaned native stores.
+- Add an Items category while preserving existing explicit people/pet roles, custom names, photos, actual report times and recorder entity history.
+- Add account-bound Mac identity provisioning on HA, automatic hash-verified acquisition of the public Apple runtime, and passwordless restart restoration without a physical Mac. Apple binaries and provisioned identities are excluded from the release ZIP.
+- Use the working report-service headers with bounded gzip decoding while retaining the SDK's report request body, source timestamps, estimated accuracy and battery categories.
+- Add sanitized sign-in phase and passive polling diagnostics that distinguish returned reports from retained older locations without extra Apple requests.
+- Return the Apple login form directly when a saved identity is already prepared, avoiding a stalled pre-password spinner. Cancelled or missing setup tasks end without advancing authentication.
+- Omit prototype migration and Undo from public onboarding.
+- Validate the deterministic ZIP in disposable HA Core lifecycle processes and on the HA OS Raspberry Pi. Fresh Apple discovery/selection, passwordless restart and automatic decoded report delivery passed with two selected trackers and no duplicate entities. Source-report freshness, new physical movement and delivery latency remain unproven; beta 18 tracking, places, picture controls and the frozen V2 reference are preserved.
 
 ## 0.1.0-beta.18 — October 11, 2026
 

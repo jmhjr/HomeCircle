@@ -1,0 +1,894 @@
+"""
+Building the messages that join a keychain trust circle.
+
+Implements the message layer of Stage 3 §6.9 of the Find My key-export protocol
+specification: constructing a peer, signing its blobs, and assembling a
+`joinWithVoucher` request.
+
+**Nothing here sends anything.** Joining writes to the user's account -- it creates an
+escrow record and adds a peer to the circle protecting every password they have -- so this
+module builds and signs, and :mod:`findmy.keychain.session` is where the sequence that
+sends lives. What is here can be exercised offline in full.
+
+.. warning::
+    ``establish`` forms a **new** circle rather than joining an existing one, and falling
+    back to it on error would silently destroy the user's trust circle. The message it
+    takes is not defined anywhere in this package, so no code here can build one. Keep it
+    that way.
+"""
+
+from __future__ import annotations
+
+import base64
+import logging
+from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Literal, Protocol, TypedDict, runtime_checkable
+
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import ec
+from google.protobuf.message import DecodeError
+from typing_extensions import override
+
+from custom_components.homecircle._vendor_findmy.cloudkit.proto import cuttlefish_pb2 as cf
+from custom_components.homecircle._vendor_findmy.errors import UnhandledProtocolError
+from custom_components.homecircle._vendor_findmy.util.abc import Serializable
+from custom_components.homecircle._vendor_findmy.util.files import read_data_json, save_and_return_json
+
+if TYPE_CHECKING:
+    import io
+    from collections.abc import Sequence
+    from pathlib import Path
+
+    from .peers import Peer, PeerDirectory
+
+logger = logging.getLogger(__name__)
+
+# The reason a voucher carries. The rest of the enumeration is unspecified; this is the
+# value §6.9.4 step 3 names for the join this project performs.
+VOUCHER_REASON_DEFAULT = 1
+
+# A SignedInfo's signature covers a type string prepended to the serialised message, not
+# the message alone. That prefix is what stops a blob of one kind being presented as
+# another, so omitting it does not merely fail verification -- it removes a protection.
+TYPE_PERMANENT_INFO = b"TPPB.PeerPermanentInfo"
+TYPE_STABLE_INFO = b"TPPB.PeerStableInfo"
+TYPE_DYNAMIC_INFO = b"TPPB.PeerDynamicInfo"
+TYPE_VOUCHER = b"TPPB.Voucher"
+
+
+class JoinError(UnhandledProtocolError):
+    """Raised when a join cannot be assembled or should not be attempted."""
+
+
+@dataclass(frozen=True)
+class SignedBlob:
+    """
+    A serialised message together with the signature over **those exact bytes**.
+
+    This type exists to make one mistake impossible. The signature covers the serialised
+    bytes, not the message they parse to, and protobuf offers no guarantee that
+    re-encoding a parsed message reproduces its input -- field ordering and default
+    handling are implementation details. So a client that parses a blob, holds the
+    message, and re-serialises it before sending can invalidate a perfectly good signature
+    over content that has not changed by a single field.
+
+    Holding the bytes rather than the message removes the opportunity: there is nothing
+    here to re-encode.
+    """
+
+    info: bytes
+    signature: bytes
+
+    type_name: bytes = b""
+    """
+    The type string the signature covers, prepended to :attr:`info`.
+
+    Carried so that a blob can be re-verified without the caller having to remember which
+    kind it is -- which is exactly the confusion the prefix exists to prevent.
+    """
+
+    def to_proto(self) -> cf.SignedInfo:
+        """Render as the wire message, passing the signed bytes through untouched."""
+        return cf.SignedInfo(info=self.info, signature=self.signature)
+
+    @classmethod
+    def sign(
+        cls,
+        message: bytes,
+        signing_key: ec.EllipticCurvePrivateKey,
+        type_name: bytes,
+    ) -> SignedBlob:
+        """
+        Sign an already-serialised message, under its type.
+
+        Takes bytes rather than a message on purpose: the caller serialises once, and
+        those are the bytes that both get signed and get sent.
+
+        :param message: The serialised message to sign.
+        :param signing_key: A P-384 private key.
+        :param type_name: The type string, e.g. :data:`TYPE_VOUCHER`. Prepended to the
+            message before signing, and **not** sent -- the receiver knows which field it
+            is reading and prepends the same thing.
+        """
+        signature = signing_key.sign(type_name + message, ec.ECDSA(hashes.SHA384()))
+        return cls(info=message, signature=signature, type_name=type_name)
+
+    def verify(
+        self,
+        public_key: ec.EllipticCurvePublicKey,
+        type_name: bytes | None = None,
+    ) -> bool:
+        """
+        Check the signature against the type and bytes it covers.
+
+        :param type_name: Overrides the one this blob was built with, for a blob read off
+            the wire rather than signed here.
+        """
+        prefix = type_name if type_name is not None else self.type_name
+        try:
+            public_key.verify(self.signature, prefix + self.info, ec.ECDSA(hashes.SHA384()))
+        except Exception:  # noqa: BLE001 -- cryptography raises InvalidSignature and more
+            return False
+        return True
+
+
+# The two policy hashes are constants -- digests of Apple's own trust policy documents. A
+# client asserts which policy version it speaks rather than deriving anything, so these are
+# sent verbatim. **A wrong value here is not detectable locally**, which is why they are
+# named constants rather than parameters with defaults.
+POLICY_FROZEN_VERSION = 5
+POLICY_FROZEN_HASH = b"SHA256:O/ECQlWhvNlLmlDNh2+nal/yekUC87bXpV3k+6kznSo="
+POLICY_FLEXIBLE_VERSION = 20
+POLICY_FLEXIBLE_HASH = b"SHA256:OIzjC3WyLGrM8GAd/EyIfVzTJdYmcGoKPFdQeWeRZTY="
+
+USER_CONTROLLABLE_VIEWS_ENABLED = 1
+"""What a real client sends for `userControllableViewStatus`."""
+
+PERMANENT_INFO_EPOCH = 1
+"""What a peer's permanent info declares. Not zero, which is the protobuf default."""
+
+
+def next_stable_clock(directory: PeerDirectory) -> int:
+    """
+    Work out the `clock` a joining peer's stable info should carry.
+
+    **The highest clock in the circle plus one, so a first peer sends 1 rather than 0.**
+    Zero is the dynamic info's value, not this one, and the two being different is easy to
+    miss when both fields are called `clock`.
+
+    :param directory: The circle, from :func:`~findmy.keychain.peers.fetch_peer_directory`.
+    """
+    return max((peer.stable_clock for peer in directory.peers.values()), default=0) + 1
+
+
+def public_spki(key: ec.EllipticCurvePublicKey) -> bytes:
+    """
+    Encode a public key the way a peer's permanent info carries it: **DER SPKI**.
+
+    Not a raw point. The identifier of §6.8.2 digests the signed blob these sit inside, so
+    the encoding is part of the peer's identity -- the same key written as an uncompressed
+    point is a different peer, with a different id, vouched for by nobody.
+    """
+    return key.public_bytes(
+        serialization.Encoding.DER,
+        serialization.PublicFormat.SubjectPublicKeyInfo,
+    )
+
+
+def make_permanent_info(  # noqa: PLR0913 -- every field of the message, and it is six
+    signing_key: ec.EllipticCurvePrivateKey,
+    *,
+    signing_public: bytes,
+    encryption_public: bytes,
+    machine_id: str,
+    model_id: str,
+    epoch: int = PERMANENT_INFO_EPOCH,
+    creation_time: int,
+) -> SignedBlob:
+    """
+    Build and sign the permanent info, which is what a peer's identifier digests.
+
+    **Nothing in it may change afterwards.** The peer's identifier is a digest over these
+    exact bytes and their signature, so a peer that re-issues its permanent info is a
+    different peer -- and every voucher, share and escrow label naming the old one stops
+    resolving.
+
+    :param signing_key: The new identity's own signing key. A peer signs its own permanent
+        info; the sponsor's key signs only the voucher.
+    :param signing_public: The new identity's public signing key, **DER SPKI** -- see
+        :func:`public_spki`.
+    :param encryption_public: Its public encryption key, likewise DER SPKI.
+    :param machine_id: The Anisette `X-Apple-I-MD-M` header, which is the machine identity
+        the session itself is bound to. A peer created under local Anisette and one created
+        against a server carry different ids **permanently**, because this blob is signed
+        at generation and never rewritten.
+    :param model_id: The model this client claims to be.
+    :param creation_time: When this identity was made, in **milliseconds** since the epoch,
+        not seconds. Passed in rather than read from the clock so that the bytes are
+        reproducible, which matters for a value a digest covers.
+    """
+    info = cf.PeerPermanentInfo(
+        epoch=epoch,
+        signing_key=signing_public,
+        encryption_key=encryption_public,
+        machine_id=machine_id,
+        model_id=model_id,
+        creation_time=creation_time,
+    )
+    return SignedBlob.sign(info.SerializeToString(), signing_key, TYPE_PERMANENT_INFO)
+
+
+def make_stable_info(
+    signing_key: ec.EllipticCurvePrivateKey,
+    *,
+    clock: int,
+    os_version: str,
+    serial_number: str,
+    device_name: str = "",
+) -> SignedBlob:
+    """
+    Build and sign the stable info: what this peer asserts about itself.
+
+    **An incomplete one is admitted and then behaves oddly rather than refused**, which is
+    the worse failure and lands long after the join. So the policy fields are always sent,
+    at the constants above, and everything the specification does not list is omitted
+    rather than defaulted.
+
+    :param clock: From :func:`next_stable_clock`. **Not zero** -- see there.
+    :param os_version: This client's OS string.
+    :param serial_number: The serial this client declares, as Stage 1 §2.2 uses.
+    :param device_name: How this peer appears to the user. May be empty, and naming it
+        after a person is a choice the README's labelling rules cover.
+    """
+    info = cf.PeerStableInfo(
+        clock=clock,
+        frozen_policy_version=POLICY_FROZEN_VERSION,
+        frozen_policy_hash=POLICY_FROZEN_HASH,
+        flexible_policy_version=POLICY_FLEXIBLE_VERSION,
+        flexible_policy_hash=POLICY_FLEXIBLE_HASH,
+        os_version=os_version,
+        device_name=device_name,
+        serial_number=serial_number,
+        user_controllable_view_status=USER_CONTROLLABLE_VIEWS_ENABLED,
+        is_inherited_account=False,
+    )
+    return SignedBlob.sign(info.SerializeToString(), signing_key, TYPE_STABLE_INFO)
+
+
+@dataclass(frozen=True)
+class TrustSet:
+    """A dynamic info's three merged values, before it is signed."""
+
+    clock: int
+    includeds: tuple[str, ...]
+    excludeds: tuple[str, ...]
+
+    def to_proto(self) -> cf.PeerDynamicInfo:
+        """Render as the message, with nothing else set."""
+        return cf.PeerDynamicInfo(
+            clock=self.clock,
+            includeds=list(self.includeds),
+            excludeds=list(self.excludeds),
+        )
+
+
+def merge_trust(directory: PeerDirectory, *, peer_id: str, sponsor: str) -> TrustSet:
+    """
+    Work out the trust a joining peer asserts: its sponsor's, brought forward, plus itself.
+
+    **A joining peer inherits trust rather than inventing it, and never sends an empty
+    set.** An empty `includeds` with `clock: 0` is the `establish` shape -- the call this
+    project must never make -- and sending it on a join produces a peer that is admitted
+    while claiming to trust nobody. That is the "accepted, then behaves oddly" failure,
+    landing long after the irreversible call.
+
+    The steps are §6.8.2's: start from the sponsor's `includeds`, `excludeds` and `clock`;
+    fast-forward over every peer with a higher clock in ascending order, adopting what it
+    includes and then applying what it excludes; add this peer's own id; increment.
+
+    :param directory: The circle, and it must be **current** -- everything here reads it.
+    :param peer_id: The joining peer's identifier, which it adds to its own trust.
+    :param sponsor: The recovered peer that signed the voucher.
+    :raises JoinError: If the sponsor is not in the directory, since there is then nothing
+        to inherit and the alternative is asserting a set this client invented.
+    """
+    seed = directory.get(sponsor)
+    if seed is None:
+        msg = (
+            f"The sponsoring peer {sponsor} is not in the trust circle, so there is no"
+            " trust to inherit. Joining with a set this client invented is what the"
+            " empty-includeds failure looks like from the other direction."
+        )
+        raise JoinError(msg)
+
+    includeds = list(seed.includeds)
+    excludeds = list(seed.excludeds)
+    clock = seed.dynamic_clock
+
+    # Ascending, because each peer's excludeds are applied on top of what earlier ones
+    # established. Out of order, a removal can be undone by an older peer's inclusion.
+    ahead = sorted(
+        (p for p in directory.peers.values() if p.dynamic_clock > clock),
+        key=lambda p: p.dynamic_clock,
+    )
+
+    for peer in ahead:
+        trusted = peer.hash in includeds
+        if not trusted and not _voucher_admits(peer, includeds, excludeds, directory):
+            # Not believed. A peer asserting membership is exactly how an untrusted party
+            # would write itself into the circle, so an unvouched update is ignored rather
+            # than merged -- and said out loud, since silently dropping trust changes
+            # looks identical to a circle that never had them.
+            logger.info(
+                "Ignoring the trust update from %s: it is not already trusted and carries"
+                " no valid voucher from a peer that is.",
+                peer.hash,
+            )
+            continue
+
+        for included in peer.includeds:
+            if included not in includeds:
+                includeds.append(included)
+        for excluded in peer.excludeds:
+            if excluded in includeds:
+                includeds.remove(excluded)
+            if excluded not in excludeds:
+                excludeds.append(excluded)
+
+        clock = peer.dynamic_clock
+
+    if peer_id not in includeds:
+        includeds.append(peer_id)
+
+    # One past everything it was derived from, so the info sent supersedes its sources.
+    return TrustSet(clock=clock + 1, includeds=tuple(includeds), excludeds=tuple(excludeds))
+
+
+def _voucher_admits(
+    peer: Peer,
+    includeds: Sequence[str],
+    excludeds: Sequence[str],
+    directory: PeerDirectory,
+) -> bool:
+    """
+    Whether a peer not already trusted has earned being adopted.
+
+    Four conditions, and all of them: the voucher's sponsor is already trusted, its
+    signature verifies under that sponsor's signing key, its beneficiary is the peer
+    presenting it, and that beneficiary has not been excluded. Anything less and a peer
+    could join the circle by asserting that it had.
+    """
+    if not peer.voucher_info or peer.hash in excludeds:
+        return False
+
+    try:
+        voucher = cf.Voucher.FromString(peer.voucher_info)
+    except DecodeError:
+        return False
+
+    if voucher.beneficiary != peer.hash or voucher.sponsor not in includeds:
+        return False
+
+    sponsor = directory.get(voucher.sponsor)
+    key = sponsor.signing_public_key() if sponsor else None
+    if key is None:
+        return False
+
+    blob = SignedBlob(info=peer.voucher_info, signature=peer.voucher_signature)
+    return blob.verify(key, TYPE_VOUCHER)
+
+
+def make_dynamic_info(signing_key: ec.EllipticCurvePrivateKey, trust: TrustSet) -> SignedBlob:
+    """
+    Build and sign the dynamic info a *joining* peer sends.
+
+    :param signing_key: The joining peer's own signing key.
+    :param trust: From :func:`merge_trust`. Not assembled here, so that what is asserted
+        can be inspected -- and tested -- before it is signed and sent.
+    """
+    return SignedBlob.sign(trust.to_proto().SerializeToString(), signing_key, TYPE_DYNAMIC_INFO)
+
+
+def reset_dynamic_info(signing_key: ec.EllipticCurvePrivateKey) -> SignedBlob:
+    """
+    Build the dynamic info of a client that finds itself **outside** the circle.
+
+    `clock: 0` with everything cleared, which is the one place that shape is right. It is
+    the reset, not the join: a client that has been removed starts again rather than
+    resending whatever it last asserted about a circle it is no longer in.
+
+    **Not for joining.** :func:`merge_trust` is what a join sends.
+    """
+    return SignedBlob.sign(
+        cf.PeerDynamicInfo(clock=0).SerializeToString(),
+        signing_key,
+        TYPE_DYNAMIC_INFO,
+    )
+
+
+def make_voucher(
+    beneficiary: str,
+    sponsor: str,
+    signing_key: ec.EllipticCurvePrivateKey,
+    *,
+    reason: int = VOUCHER_REASON_DEFAULT,
+) -> SignedBlob:
+    """
+    Build and sign a voucher: one peer saying it trusts another.
+
+    Three fields, and this is the whole mechanism by which a device joins the circle that
+    protects the user's keychain. All the weight is on the signature.
+
+    :param beneficiary: The peer being vouched for -- the new identity.
+    :param sponsor: The peer vouching -- the identity recovered from the bottle.
+    :param signing_key: The sponsor's signing key, from opening the bottle.
+    """
+    if not beneficiary or not sponsor:
+        msg = "A voucher needs both a beneficiary and a sponsor"
+        raise JoinError(msg)
+    if beneficiary == sponsor:
+        msg = "A peer cannot vouch for itself"
+        raise JoinError(msg)
+
+    voucher = cf.Voucher(reason=reason, beneficiary=beneficiary, sponsor=sponsor)
+    return SignedBlob.sign(voucher.SerializeToString(), signing_key, TYPE_VOUCHER)
+
+
+def make_peer(
+    peer_hash: str,
+    *,
+    permanent_info: SignedBlob,
+    stable_info: SignedBlob,
+    dynamic_info: SignedBlob,
+    voucher: SignedBlob,
+) -> cf.CuttlefishPeer:
+    """Assemble a peer from its four signed blobs."""
+    return cf.CuttlefishPeer(
+        hash=peer_hash,
+        permanent_info=permanent_info.to_proto(),
+        stable_info=stable_info.to_proto(),
+        dynamic_info=dynamic_info.to_proto(),
+        voucher=voucher.to_proto(),
+    )
+
+
+def make_join_request(
+    peer: cf.CuttlefishPeer,
+    bottle: cf.Bottle,
+    shares: Sequence[cf.TlkShare],
+    *,
+    restore_point: str | None = None,
+) -> cf.CuttlefishJoinWithVoucherRequest:
+    """
+    Assemble a `joinWithVoucher` request.
+
+    :param peer: The new identity being introduced.
+    :param bottle: The escrow record being created for it, so it is recoverable later.
+    :param shares: The view-key shares re-shared to the new peer. **Must not be empty** --
+        see :func:`require_key_shares`.
+    :param restore_point: The client's sync token, if it has one.
+    :raises JoinError: If there are no key shares to carry.
+    """
+    require_key_shares(shares)
+
+    request = cf.CuttlefishJoinWithVoucherRequest(
+        peer=peer,
+        bottle=bottle,
+        shares=list(shares),
+    )
+    if restore_point is not None:
+        request.restore_point = restore_point
+
+    # `keys` is for establishing keys rather than receiving them, so it stays empty.
+    return request
+
+
+def require_key_shares(shares: Sequence[cf.TlkShare]) -> None:
+    """
+    Refuse to join when the sponsoring peer holds no key shares.
+
+    Joining without them **succeeds** and yields no keys, which is worse than failing
+    because it looks like it worked -- and it is not free: a join leaves a peer in the
+    user's trust circle and an escrow record on their account, both permanent, in exchange
+    for nothing. Checking first is the difference between a failed attempt and two pieces
+    of irreversible clutter.
+
+    :raises JoinError: If there are no shares.
+    """
+    if not shares:
+        msg = (
+            "The sponsoring peer holds no key shares, so joining would succeed and yield"
+            " no keys. Refusing: a join is not free, and would leave a peer in the trust"
+            " circle and an escrow record on the account in exchange for nothing."
+        )
+        raise JoinError(msg)
+
+
+@dataclass(frozen=True)
+class NewIdentity:
+    """
+    A freshly generated peer: its keys, its signed permanent info, and its identifier.
+
+    The permanent info is signed **once, here**, and those bytes are what everything after
+    it refers to -- the identifier digests them, the peer message carries them, the bottle
+    is built around the peer they name. Re-encoding the message later gives a different
+    signature and therefore a different peer.
+    """
+
+    signing_key: ec.EllipticCurvePrivateKey
+    encryption_key: ec.EllipticCurvePrivateKey
+    permanent: SignedBlob
+    peer_id: str
+
+
+@runtime_checkable
+class PeerIdentity(Protocol):
+    """
+    What the reading path actually needs of a peer: an identifier and two private keys.
+
+    Two things satisfy this and they arrive very differently.
+    :class:`~findmy.keychain.session.RecoveredPeer` comes from opening somebody else's
+    escrow record with their passcode; :class:`JoinedPeer` is this client's own membership,
+    kept from a join. **Everything downstream treats them alike**, because nothing
+    downstream asks where an identity came from -- a share is wrapped to a public key and
+    does not care which device holds the private half.
+
+    Stated as a protocol rather than a base class so that neither has to inherit from the
+    other. A recovered peer is not a kind of joined peer, nor the reverse.
+    """
+
+    @property
+    def peer_id(self) -> str:
+        """The identifier the circle knows this peer by."""
+        ...
+
+    def signing_key(self) -> ec.EllipticCurvePrivateKey:
+        """Return the key that signs on this peer's behalf."""
+        ...
+
+    def encryption_key(self) -> ec.EllipticCurvePrivateKey:
+        """Return the key a share addressed to this peer is wrapped to."""
+        ...
+
+
+class JoinedPeerMapping(TypedDict):
+    """JSON mapping representing a :class:`JoinedPeer`."""
+
+    type: Literal["joinedPeer"]
+    peer_id: str
+    signing_key: str
+    encryption_key: str
+
+
+@dataclass(frozen=True)
+class JoinedPeer(Serializable[JoinedPeerMapping]):
+    """
+    A membership this client already holds, in the form the reading path accepts.
+
+    **This is what makes a join worth having.** :meth:`AsyncKeychainSession.join` spends a
+    passcode once and puts a peer of this client's own in the circle; without something to
+    keep, the next run has no way back to that peer and has to recover somebody else's
+    identity with a passcode again. Keep this, hand it back, and "once" means once.
+
+    It is three values -- the identifier and the two private keys -- because that is all
+    the reading path ever asks of a peer. Everything else a recovery produces describes
+    where the identity *came from*, and nothing downstream reads it.
+
+    .. warning::
+        **These are the private keys of a member of the user's trust circle**, and
+        :meth:`to_json` writes them in the clear. Anything holding this file can read the
+        account's keychain for as long as the peer remains in the circle. It belongs in
+        whatever the surrounding application uses for secrets, not beside a config file.
+        This is the most sensitive thing this library serializes.
+
+    .. note::
+        **The bottle entropy is not part of this and is not a substitute for it.** The
+        entropy recovers this peer *through escrow*, under the passcode the record was
+        enrolled with -- the slow way back, for when these keys are lost. Keys held
+        directly are the fast way, and neither replaces the other: keep the entropy so the
+        peer can be recovered if this is destroyed, and keep this so it does not have to
+        be.
+    """
+
+    peer_id: str
+    """The identifier the circle knows this peer by, and shares are addressed to."""
+
+    signing: ec.EllipticCurvePrivateKey
+    """What signs a voucher, if this peer ever sponsors another."""
+
+    encryption: ec.EllipticCurvePrivateKey
+    """What key shares are wrapped to. The one that actually opens the keychain."""
+
+    @classmethod
+    def of(cls, identity: NewIdentity) -> JoinedPeer:
+        """Take the keeping-worthy part of a fresh identity, from :attr:`JoinOutcome.identity`."""
+        return cls(
+            peer_id=identity.peer_id,
+            signing=identity.signing_key,
+            encryption=identity.encryption_key,
+        )
+
+    def signing_key(self) -> ec.EllipticCurvePrivateKey:
+        """See :meth:`PeerIdentity.signing_key`."""
+        return self.signing
+
+    def encryption_key(self) -> ec.EllipticCurvePrivateKey:
+        """See :meth:`PeerIdentity.encryption_key`."""
+        return self.encryption
+
+    @override
+    def to_json(self, dst: str | Path | io.TextIOBase | None = None, /) -> JoinedPeerMapping:
+        """
+        Serialize, **writing the private keys in the clear**.
+
+        See :meth:`Serializable.to_json`, and this class's warning about where the result
+        belongs.
+        """
+        return save_and_return_json(
+            {
+                "type": "joinedPeer",
+                "peer_id": self.peer_id,
+                "signing_key": _private_key_b64(self.signing),
+                "encryption_key": _private_key_b64(self.encryption),
+            },
+            dst,
+        )
+
+    @classmethod
+    @override
+    def from_json(
+        cls,
+        val: str | Path | io.TextIOBase | io.BufferedIOBase | JoinedPeerMapping,
+        /,
+    ) -> JoinedPeer:
+        """See :meth:`Serializable.from_json`."""
+        val = read_data_json(val)
+
+        if val.get("type") != "joinedPeer":
+            msg = f"Not a joined peer: {val.get('type')!r}"
+            raise ValueError(msg)
+
+        try:
+            return cls(
+                peer_id=val["peer_id"],
+                signing=_private_key_from_b64(val["signing_key"]),
+                encryption=_private_key_from_b64(val["encryption_key"]),
+            )
+        except KeyError as e:
+            msg = f"Failed to restore a joined peer: {e}"
+            raise ValueError(msg) from None
+
+
+def _private_key_b64(key: ec.EllipticCurvePrivateKey) -> str:
+    """Render a private key as base64 PKCS#8 DER, unencrypted."""
+    return base64.b64encode(
+        key.private_bytes(
+            encoding=serialization.Encoding.DER,
+            format=serialization.PrivateFormat.PKCS8,
+            encryption_algorithm=serialization.NoEncryption(),
+        ),
+    ).decode()
+
+
+def _private_key_from_b64(value: str) -> ec.EllipticCurvePrivateKey:
+    """Read a key written by :func:`_private_key_b64`, insisting it is an EC one."""
+    key = serialization.load_der_private_key(base64.b64decode(value), password=None)
+    if not isinstance(key, ec.EllipticCurvePrivateKey):
+        # A peer's keys are P-384 and nothing else can stand in for them: an RSA key here
+        # would fail much later, inside an exchange, as something that reads like a
+        # protocol error.
+        msg = f"A peer's keys are elliptic-curve; this is {type(key).__name__}"
+        raise TypeError(msg)
+    return key
+
+
+def generate_identity(*, machine_id: str, model_id: str, creation_time: int) -> NewIdentity:
+    """
+    Generate the identity a join introduces, per §6.9.1.
+
+    Both keys are P-384 and fresh, and both public halves travel as DER SPKI.
+
+    :param machine_id: The Anisette `X-Apple-I-MD-M` header. **This binds the peer to the
+        Anisette in use, permanently**: the blob is signed at generation and never
+        rewritten, so a peer created under local Anisette and one created against a server
+        are different peers for good.
+    :param model_id: The hardware model this client claims to be.
+    :param creation_time: Milliseconds since the epoch, not seconds.
+    """
+    from .peers import peer_identifier  # noqa: PLC0415 -- avoids a circular import
+
+    signing = ec.generate_private_key(ec.SECP384R1())
+    encryption = ec.generate_private_key(ec.SECP384R1())
+
+    permanent = make_permanent_info(
+        signing,
+        signing_public=public_spki(signing.public_key()),
+        encryption_public=public_spki(encryption.public_key()),
+        machine_id=machine_id,
+        model_id=model_id,
+        creation_time=creation_time,
+    )
+
+    return NewIdentity(
+        signing_key=signing,
+        encryption_key=encryption,
+        permanent=permanent,
+        peer_id=peer_identifier(permanent.info, permanent.signature),
+    )
+
+
+@dataclass(frozen=True)
+class SignatureCheck:
+    """What verifying the circle's own signed blobs found."""
+
+    verified: list[str] = field(default_factory=list)
+    failed: list[str] = field(default_factory=list)
+
+    unverifiable: list[str] = field(default_factory=list)
+    """Peers carrying no signature, or a key this cannot read. Neither confirms nor denies."""
+
+    vouchers_verified: list[str] = field(default_factory=list)
+    vouchers_failed: list[str] = field(default_factory=list)
+
+    unvouched: list[str] = field(default_factory=list)
+    """
+    Peers carrying no voucher at all, which is not a fault.
+
+    **[observed] Exactly one peer in a thirteen-peer circle has none.** A voucher is what a
+    peer *joining* an existing circle carries, and the peer that established the circle
+    joined nothing -- so one unvouched peer is the expected shape, and its absence would be
+    the surprising result.
+    """
+
+    der_spki_keys: int = 0
+    """
+    How many signing keys parsed as DER SubjectPublicKeyInfo.
+
+    Separate evidence, and for a separate claim: §6.9.1 says a peer's keys travel as DER
+    SPKI rather than as raw points, and this client's writer encodes them that way. Real
+    peers are what settles that.
+    """
+
+    @property
+    def confirmed(self) -> bool:
+        """Whether every blob that could be checked verified."""
+        return bool(self.verified) and not self.failed and not self.vouchers_failed
+
+    def describe(self) -> str:
+        """One line, for a caller deciding whether the signing construction is right."""
+        checkable = len(self.verified) + len(self.failed)
+        parts = [f"{len(self.verified)}/{checkable} permanent info"]
+        if self.vouchers_verified or self.vouchers_failed:
+            vouchers = len(self.vouchers_verified) + len(self.vouchers_failed)
+            parts.append(f"{len(self.vouchers_verified)}/{vouchers} vouchers")
+        if self.unvouched:
+            parts.append(f"{len(self.unvouched)} unvouched")
+        if self.unverifiable:
+            parts.append(f"{len(self.unverifiable)} could not be checked")
+        return ", ".join(parts)
+
+
+def check_peer_signatures(directory: PeerDirectory) -> SignatureCheck:
+    """
+    Verify the signatures on blobs **Apple's own devices** produced.
+
+    This is the second oracle a join has, and it is the only one that reaches the *signing*
+    construction. Everything else about :class:`SignedBlob` is checked against itself: the
+    tests sign and then verify with the same code, so a wrong type prefix, a wrong digest
+    or a wrong key encoding would agree with itself perfectly. A real peer's signature
+    cannot -- it was made by a device that knows the rule, and verifying it exercises the
+    ASCII prefix with no separator, ECDSA over SHA-384, and reading the key as DER SPKI.
+
+    Getting that rule wrong does not merely fail a join. It can produce blobs that are
+    *admitted and wrong*, which surfaces long after the one call that cannot be taken back.
+
+    Two things are checked and reported separately, because they mean different things:
+
+    * every peer's **permanent info**, signed by that peer's own key -- so a failure is
+      about this client's reading rather than about the circle;
+    * every **voucher**, signed by the sponsor it names -- which additionally exercises
+      looking a peer up and verifying across two parties.
+
+    :param directory: The circle, from
+        :func:`~findmy.keychain.peers.fetch_peer_directory`. Read-only; this sends nothing.
+    """
+    verified: list[str] = []
+    failed: list[str] = []
+    unverifiable: list[str] = []
+    vouchers_verified: list[str] = []
+    vouchers_failed: list[str] = []
+    unvouched: list[str] = []
+    der_spki = 0
+
+    for peer in directory.peers.values():
+        key = peer.signing_public_key()
+        if not peer.permanent_info or not peer.permanent_signature or key is None:
+            unverifiable.append(peer.hash)
+            continue
+
+        der_spki += int(_is_der_spki(peer.signing_key))
+
+        blob = SignedBlob(info=peer.permanent_info, signature=peer.permanent_signature)
+        (verified if blob.verify(key, TYPE_PERMANENT_INFO) else failed).append(peer.hash)
+
+        _check_voucher(
+            peer,
+            directory,
+            vouchers_verified,
+            vouchers_failed,
+            unverifiable,
+            unvouched,
+        )
+
+    check = SignatureCheck(
+        verified=verified,
+        failed=failed,
+        unverifiable=unverifiable,
+        vouchers_verified=vouchers_verified,
+        vouchers_failed=vouchers_failed,
+        unvouched=unvouched,
+        der_spki_keys=der_spki,
+    )
+
+    if check.failed:
+        logger.warning(
+            "%d peer(s) carry a permanent info this cannot verify. That is this client's"
+            " reading of the signing rule being wrong, not the circle being wrong -- and"
+            " a join built on it would send blobs Apple's side rejects, or admits and"
+            " misreads.",
+            len(check.failed),
+        )
+    elif check.verified:
+        logger.info(
+            "The signing construction verifies %d peer(s) signed by Apple's own devices",
+            len(check.verified),
+        )
+
+    return check
+
+
+def _is_der_spki(key: bytes) -> bool:
+    """Whether a peer's key is DER SubjectPublicKeyInfo rather than a raw point."""
+    from cryptography.hazmat.primitives.serialization import (  # noqa: PLC0415
+        load_der_public_key,
+    )
+
+    try:
+        load_der_public_key(key)
+    except (ValueError, TypeError):
+        return False
+    return True
+
+
+def _check_voucher(  # noqa: PLR0913 -- one list per outcome, and there are four
+    peer: Peer,
+    directory: PeerDirectory,
+    verified: list[str],
+    failed: list[str],
+    unverifiable: list[str],
+    unvouched: list[str],
+) -> None:
+    """Verify one peer's voucher against the sponsor it names, if it carries one."""
+    if not peer.voucher_info or not peer.voucher_signature:
+        # Recorded rather than skipped. A circle's founder has no voucher, so seeing one
+        # such peer is the expected shape -- but counting only what was checked would
+        # report "12/12 vouchers" for thirteen peers and leave the difference unexplained.
+        unvouched.append(peer.hash)
+        return
+
+    try:
+        voucher = cf.Voucher.FromString(peer.voucher_info)
+    except DecodeError:
+        failed.append(peer.hash)
+        return
+
+    sponsor = directory.get(voucher.sponsor)
+    sponsor_key = sponsor.signing_public_key() if sponsor else None
+    if sponsor_key is None:
+        # The sponsor is not in the circle, so there is nothing to verify against. Not a
+        # failure of the construction, and not evidence for it either.
+        unverifiable.append(peer.hash)
+        return
+
+    blob = SignedBlob(info=peer.voucher_info, signature=peer.voucher_signature)
+    (verified if blob.verify(sponsor_key, TYPE_VOUCHER) else failed).append(peer.hash)

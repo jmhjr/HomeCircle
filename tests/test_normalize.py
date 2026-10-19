@@ -1084,3 +1084,22 @@ def test_default_gps_zone_matching_uses_ha_accuracy_and_skips_passive(snapshot):
             **{ATTR_LATITUDE: 0.0, ATTR_LONGITUDE: 0.0},
         )
         assert member((config, states)).presence == "away"
+
+
+def test_findmy_items_are_separate_from_household_counts(snapshot):
+    config, states = snapshot
+    config = deepcopy(config)
+    config["items"] = [OTHER_GPS]
+    config["members"][OTHER_GPS] = {
+        "trackers": [OTHER_GPS],
+        "kind": "item",
+        "additional_residences": [],
+    }
+    states = {**states, OTHER_GPS: gps(OTHER_GPS, zones=["zone.home"])}
+    result = normalize_household(config, states, NOW)
+    assert result.counts["home"] == 2
+    assert result.counts["items"] == 1
+    assert OTHER_GPS not in result.primary_home_ids
+    assert OTHER_GPS not in result.focus_ids["home"]
+    assert result.focus_ids["items"] == (OTHER_GPS,)
+    assert OTHER_GPS in result.focus_ids["overview"]

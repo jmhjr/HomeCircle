@@ -724,7 +724,7 @@ class HomeCircleCard extends HTMLElement {
     }
     const members = visibleMembers(this._data, this._config.hidden_members);
     if (
-      !["overview", ...categories].includes(this._mode) &&
+      !["overview", "items", ...categories].includes(this._mode) &&
       !members.some((m) => m.id === this._mode)
     )
       this._mode = "overview";
@@ -777,11 +777,18 @@ class HomeCircleCard extends HTMLElement {
       if (message)
         this._providerAlerts.append(el("div", "provider-alert", message));
     }
-    for (const category of categories) {
+    for (const category of [
+      ...categories,
+      ...(this._data.counts?.items ? ["items"] : []),
+    ]) {
       const node = button("", () => this._choose(category), "category");
       node.dataset.focus = category;
       node.setAttribute("aria-pressed", String(this._mode === category));
-      const count = members.filter((m) => m.presence === category).length;
+      const count = members.filter((m) =>
+        category === "items"
+          ? m.kind === "item"
+          : m.kind !== "item" && m.presence === category,
+      ).length;
       node.setAttribute("aria-label", `${labels[category]}: ${count}`);
       node.append(
         el("span", "count", count),
@@ -852,7 +859,7 @@ class HomeCircleCard extends HTMLElement {
         el(
           "span",
           `badge ${member.presence}`,
-          `${member.kind === "pet" ? "Pet · " : ""}${labels[member.presence]}`,
+          `${member.kind === "pet" ? "Pet · " : member.kind === "item" ? "Item · " : ""}${labels[member.presence]}`,
         ),
       );
       details.append(heading);
@@ -1094,7 +1101,7 @@ class HomeCircleCard extends HTMLElement {
         if (
           points.length &&
           this._data &&
-          !["overview", ...categories].includes(this._mode)
+          !["overview", "items", ...categories].includes(this._mode)
         ) {
           const location = points[0].location;
           this._map.setView(

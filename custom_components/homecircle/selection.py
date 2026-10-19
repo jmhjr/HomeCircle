@@ -9,6 +9,7 @@ from homeassistant.helpers import entity_registry as er
 
 from .const import (
     CONF_MEMBERS,
+    CONF_ITEMS,
     CONF_PEOPLE,
     CONF_TRACKER_PEOPLE,
     CONF_PETS,
@@ -65,6 +66,7 @@ def selected_entities(config: Mapping[str, Any]) -> set[str]:
         *config.get(CONF_PEOPLE, []),
         *config.get(CONF_TRACKER_PEOPLE, []),
         *config.get(CONF_PETS, []),
+        *config.get(CONF_ITEMS, []),
     }
     for member in config[CONF_MEMBERS].values():
         result.update(member[CONF_TRACKERS])
@@ -86,7 +88,7 @@ def trackers_assigned_elsewhere(config: Mapping[str, Any], member_id: str) -> se
         if tracker != member_id
     }
     for other_id, member in config.get(CONF_MEMBERS, {}).items():
-        if other_id != member_id:
+        if other_id != member_id and member.get("kind") != "item":
             assigned.update(member.get(CONF_TRACKERS, []))
     return assigned
 
@@ -104,6 +106,7 @@ def household_errors(hass: HomeAssistant, values: Mapping[str, Any]) -> dict[str
         not people
         and not tracker_people
         and not pets
+        and not values.get(CONF_ITEMS)
         and not connection_requested(values)
     ):
         errors["base"] = "no_members"
@@ -164,7 +167,7 @@ def member_errors(
         "ha_person",
     ):
         errors["tracker_selection"] = "invalid_tracker_selection"
-    if values.get("kind", "person") not in ("person", "pet"):
+    if values.get("kind", "person") not in ("person", "pet", "item"):
         errors["kind"] = "invalid_kind"
     if CONF_DISPLAY_NAME in values:
         name = values[CONF_DISPLAY_NAME]

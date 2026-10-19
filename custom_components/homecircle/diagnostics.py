@@ -12,7 +12,7 @@ async def async_get_config_entry_diagnostics(hass, entry) -> dict:
     config = dict(entry.options or entry.data)
     runtime = getattr(entry, "runtime_data", None)
     clients = runtime.managed_trackers if runtime else {}
-    return {
+    result = {
         "schema": 1,
         "providers": {
             provider.id: (
@@ -23,3 +23,15 @@ async def async_get_config_entry_diagnostics(hass, entry) -> dict:
             for provider in connected_providers(config)
         },
     }
+    findmy = clients.get("findmy")
+    getter = getattr(findmy, "polling_snapshot", None)
+    if callable(getter):
+        from .findmy_provider import validated_polling_snapshot
+
+        try:
+            polling = validated_polling_snapshot(getter())
+        except Exception:
+            polling = None
+        if polling is not None:
+            result["findmy_polling"] = polling
+    return result

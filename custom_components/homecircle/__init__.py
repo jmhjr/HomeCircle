@@ -19,6 +19,7 @@ from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
 
 from .city_lookup import CityLookup
+from .findmy_items import item_config
 from .activity import ActivityLog
 from .normalize import Household, normalize_household
 from .location_requests import async_request_quiet_locations, restore_automatic_requests
@@ -71,6 +72,30 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass: HomeAssistant, entry: HomeCircleEntry) -> bool:
     """Track selected HA entities and optional HomeCircle-owned Life360 trackers."""
+    from .findmy_migration import recover_pending
+
+    findmy_recovery_failed = False
+    try:
+        await recover_pending(hass, entry)
+    except Exception:
+        findmy_recovery_failed = True
+    from .findmy_storage import prune_orphans
+
+    try:
+        await hass.async_add_executor_job(
+            prune_orphans,
+            hass,
+            (entry.options or entry.data).get("findmy_accounts", {}),
+        )
+    except Exception:
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "findmy_storage_cleanup",
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="findmy_storage_cleanup",
+        )
     await frontend.async_register(hass)
     try:
         await dashboard_setup.async_ensure_dashboard(hass)
@@ -79,6 +104,35 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeCircleEntry) -> bool
         # must still work when Lovelace storage cannot be changed.
         _LOGGER.exception("Could not create the optional HomeCircle dashboard")
     runtime = entry.runtime_data = HomeCircleRuntime(dict(entry.options or entry.data))
+    if findmy_recovery_failed:
+        try:
+            pending = (
+                await Store(
+                    hass, 1, f"homecircle_findmy_migration_{entry.entry_id}"
+                ).async_load()
+                or {}
+            )
+        except Exception:
+            pending = {}
+        runtime.config["findmy_accounts"] = {
+            key: account
+            for key, account in runtime.config.get("findmy_accounts", {}).items()
+            if not account.get("migrated_from")
+            or (
+                pending.get("source")
+                and account.get("migrated_from") != pending["source"]
+            )
+        }
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "findmy_migration_recovery",
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="findmy_migration_recovery",
+        )
+    else:
+        ir.async_delete_issue(hass, DOMAIN, "findmy_migration_recovery")
     runtime.city_lookup = CityLookup(
         hass, Store(hass, 1, f"{DOMAIN}.city_lookup.{entry.entry_id}")
     )
@@ -123,6 +177,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeCircleEntry) -> bool
             runtime.location_request_times[tracker_id] = times
             runtime.last_location_request[tracker_id] = max(times)
             runtime.restored_location_requests.add(tracker_id)
+    platforms = sorted(
+        {provider.platform for provider in connected_providers(runtime.config)}
+    )
+    if platforms:
+        await hass.config_entries.async_forward_entry_setups(entry, platforms)
+    runtime.config = item_config(hass, runtime.config)
     entity_ids = selected_entities(runtime.config)
     issue_id = f"missing_entities_{entry.entry_id}"
 
@@ -217,11 +277,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeCircleEntry) -> bool
     )
     entry.async_on_unload(lambda: ir.async_delete_issue(hass, DOMAIN, issue_id))
     refresh()
-    platforms = sorted(
-        {provider.platform for provider in connected_providers(runtime.config)}
-    )
-    if platforms:
-        await hass.config_entries.async_forward_entry_setups(entry, platforms)
     return True
 
 
@@ -275,3 +330,24 @@ async def async_remove_entry(hass: HomeAssistant, entry: HomeCircleEntry) -> Non
     await Store(hass, 1, f"{DOMAIN}.location_requests.{entry.entry_id}").async_remove()
     await Store(hass, 1, f"{DOMAIN}.activity.{entry.entry_id}").async_remove()
     await Store(hass, 1, f"{DOMAIN}.city_lookup.{entry.entry_id}").async_remove()
+    from .findmy_storage import delete_account
+    from homeassistant.helpers import issue_registry as ir
+
+    for account_id, metadata in (
+        (entry.options or entry.data).get("findmy_accounts", {}).items()
+    ):
+        try:
+            await hass.async_add_executor_job(delete_account, hass, metadata)
+        except Exception:
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                "findmy_storage_cleanup",
+                is_fixable=False,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="findmy_storage_cleanup",
+            )
+        ir.async_delete_issue(
+            hass, DOMAIN, f"findmy_auth_{entry.entry_id}_{account_id}"
+        )
+    await Store(hass, 1, f"homecircle_findmy_migration_{entry.entry_id}").async_remove()

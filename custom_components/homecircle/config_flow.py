@@ -45,6 +45,8 @@ from homeassistant.components.image_upload.const import DOMAIN as IMAGE_UPLOAD_D
 
 from .pictures import picture_url
 from .place_import import PlaceImportFlow
+from .findmy_flow import FindMyFlow
+from .findmy_items import item_config
 from . import frontend
 from .life360_direct import validate_account
 from .tracker_providers import disconnected_owned_entities
@@ -500,6 +502,7 @@ class SelectionFlow:
             *self.draft.get(CONF_PEOPLE, []),
             *self.draft.get(CONF_TRACKER_PEOPLE, []),
             *self.draft.get(CONF_PETS, []),
+            *self.draft.get("items", []),
         ]
 
     async def async_step_household(self, user_input=None):
@@ -642,12 +645,14 @@ class SelectionFlow:
                     **values,
                     **saved_connections,
                     "city_lookup_enabled": self.draft.get("city_lookup_enabled", False),
+                    "items": self.draft.get("items", []),
                     CONF_MEMBERS: {
                         person_id: previous[person_id]
                         for person_id in [
                             *values[CONF_PEOPLE],
                             *values[CONF_TRACKER_PEOPLE],
                             *values[CONF_PETS],
+                            *self.draft.get("items", []),
                         ]
                         if person_id in previous
                     },
@@ -1048,7 +1053,9 @@ class SelectionFlow:
         tracker_only_member = person_id in [
             *self.draft.get(CONF_TRACKER_PEOPLE, []),
             *self.draft.get(CONF_PETS, []),
+            *self.draft.get("items", []),
         ]
+        tracker_only_item = person_id in self.draft.get("items", [])
         tracker_only_pet = person_id in self.draft.get(CONF_PETS, [])
         if tracker_only_member:
             active = suggested = person_id
@@ -1072,7 +1079,9 @@ class SelectionFlow:
             }
             values.update(
                 kind=(
-                    "pet"
+                    "item"
+                    if tracker_only_item
+                    else "pet"
                     if tracker_only_pet
                     else "person"
                     if tracker_only_member
@@ -1576,13 +1585,19 @@ class SelectionFlow:
                     result = await self.async_step_household()
                     result["errors"] = {"base": link_error}
                     return result
+        try:
+            await self.async_commit_findmy()
+        except Exception:
+            return self.async_abort(reason="findmy_storage_failed")
         for person_id, trackers in self.pending_person_links.items():
             for tracker_id in trackers:
                 await async_link_tracker(self.hass, person_id, tracker_id)
         return self.save()
 
 
-class HomeCircleConfigFlow(SelectionFlow, config_entries.ConfigFlow, domain=DOMAIN):
+class HomeCircleConfigFlow(
+    FindMyFlow, SelectionFlow, config_entries.ConfigFlow, domain=DOMAIN
+):
     """One household per HA instance; use options to edit it."""
 
     VERSION = 1
@@ -1670,15 +1685,18 @@ class HomeCircleConfigFlow(SelectionFlow, config_entries.ConfigFlow, domain=DOMA
 
 
 class HomeCircleOptionsFlow(
-    PlaceImportFlow, SelectionFlow, config_entries.OptionsFlowWithReload
+    FindMyFlow, PlaceImportFlow, SelectionFlow, config_entries.OptionsFlowWithReload
 ):
     """Persist a complete selection snapshot; reload only after saving."""
 
     async def async_step_init(self, user_input=None):
-        self.start(self.config_entry.options or self.config_entry.data)
+        self.start(
+            item_config(self.hass, self.config_entry.options or self.config_entry.data)
+        )
         menu_options = [
             "add_tracker_choice",
             "import_places",
+            "findmy_accounts",
             "city_lookup",
             "household",
         ]
