@@ -78,6 +78,9 @@ Passwords, verification codes and device passcodes remain transient. See
 [privacy](PRIVACY.md#apple-find-my-connection).
 
 The detailed [packaging record](FINDMY-BETA19-PACKAGING-VALIDATION.md) separates
-earlier research, synthetic controls and actual package acceptance. The [publication record](BETA19-PUBLICATION-VALIDATION.md) records verified
-GitHub asset downloads and the status of disposable HACS distribution checks
-separately from these pre-tag checks.
+earlier research, synthetic controls and actual package acceptance. After
+publication, an actual disposable HACS beta 18 → beta 19 upgrade passed with
+saved settings, household state and matching installed/served release bytes.
+The [publication record](BETA19-PUBLICATION-VALIDATION.md#actual-disposable-hacs-upgrade-passed)
+records that synthetic, non-Apple QA and verified public asset downloads
+separately from these pre-tag checks and real-account acceptance.
