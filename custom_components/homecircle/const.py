@@ -16,3 +16,7 @@ CONF_SHOW_ON_MAP = "show_on_map"
 CONF_AUTO_REQUEST_LOCATION = "auto_request_location"
 
 CONF_FAMILY_REFRESH_ENABLED = "family_refresh_enabled"
+
+CONF_FINDMY_ACCOUNTS = "findmy_accounts"
+CONF_FINDMY_ENABLED = "findmy_enabled"
+CONF_ITEMS = "items"

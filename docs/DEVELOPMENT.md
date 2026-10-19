@@ -1,17 +1,19 @@
 # Development
 
-Current development state is documented in [recent changes](RECENT-CHANGES-2026-10-11.md). The repository now has published beta history and a remote; milestone sections below are historical records, including the original unborn-branch notes. Build products, deployment backups and private evidence remain ignored.
+Current beta 19 work is documented in [Find My packaging validation](FINDMY-BETA19-PACKAGING-VALIDATION.md); [October 11 changes](RECENT-CHANGES-2026-10-11.md) record beta 18. The repository has published beta history and a remote; milestone sections below are historical records, including the original unborn-branch notes. Build products, deployment backups and private evidence remain ignored.
 
 
 ## Current state
 
-Beta 18 packages verified GPS ranking, saved-place import, tracker photos and opt-in city lookup; it implements selection flows, normalization, household counts/focus, an authenticated snapshot interface, an automatic first dashboard, and the card/editor. Public manifest metadata, published HACS installation, and the production beta-test installation are validated in their release records. Keep development and destructive lifecycle checks in disposable HA instances. See [stable scope audit](STABLE-SCOPE-AUDIT.md) before preparing `v0.1.0`.
+Beta 19 adds experimental HA-only Apple Find My setup, explicit item selection, encrypted passwordless persistence and ordinary item trackers, while retaining beta 18's GPS ranking, places, photos and city lookup. Fresh discovery and selection, restart restoration and automatic decoded report delivery passed on one HA OS Raspberry Pi/aarch64 running Core 2026.10.2 and Python 3.14.7 with two selected items. This is not broad platform, multi-account or movement/latency acceptance.
+
+The automated backend and disposable lifecycle target remains Core 2026.9.4 with Python 3.14.7. Other installation types and versions are not established by these checks. Publication and HACS asset/install verification remain separate release steps; earlier published-version checks are preserved in their own records. Keep development and destructive lifecycle checks in disposable HA instances. See [stable scope audit](STABLE-SCOPE-AUDIT.md) before preparing `v0.1.0`.
 
 ## Work sequence
 
 Read PRODUCT, ADR-001, and PRIVACY first. Implement one roadmap milestone per focused branch. Use a disposable HA instance with synthetic entities. No credentials, family entities, photos or raw snapshot files belong in fixtures.
 
-Use Python 3.14.2+ with pinned Home Assistant Core 2026.9.4 and pytest-homeassistant-custom-component 0.13.367 from `requirements-test.txt`. This single version is the tested development target, not a broad compatibility claim. The frontend uses pinned Leaflet/esbuild and native custom elements. Beta release archive and HACS validation are recorded in the versioned reports; stable release validation remains open. The bootstrap privacy checker needs Python 3.10+ and Git. On a fresh clone, enable the local guard:
+Use Python 3.14.7 with pinned Home Assistant Core 2026.9.4 and pytest-homeassistant-custom-component 0.13.367 from `requirements-test.txt`. The live HA OS check above is separate from this disposable development target. The frontend uses pinned Leaflet/esbuild and native custom elements. Beta release archive and HACS validation are recorded in the versioned reports; stable release validation remains open. The bootstrap privacy checker needs Python 3.10+ and Git. On a fresh clone, enable the local guard:
 
 ```sh
 git config core.hooksPath .githooks

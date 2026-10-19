@@ -28,6 +28,15 @@ ENTITIES = re.compile(r'\b(?:person|device_tracker|zone|sensor|button)\.[a-z][a-
 BLOCKED_EXT = {'.png', '.jpg', '.jpeg', '.webp', '.heic', '.zip', '.gz', '.tar', '.db', '.key', '.pem', '.mp4'}
 
 REVIEWED_BINARY_FILES = {
+    # Public Apple escrow root certificates from the pinned MIT FindMy SDK.
+    'custom_components/homecircle/_vendor_findmy/keychain/roots/101.crt':
+        '5644c142208dd4bf7ad770902f70d6730b8571164fd874d9ae5168807b32f766',
+    'custom_components/homecircle/_vendor_findmy/keychain/roots/102.crt':
+        'd4eaa88170b8aee18fceff68698310d4c2ab4ceb48179d99206a53ac73e8a4eb',
+    'custom_components/homecircle/_vendor_findmy/keychain/roots/103.crt':
+        'fdba6f3365d617b9eb799d2f48851b1a85c62cf366c36797e539b3c4c2c3bdc6',
+    'custom_components/homecircle/_vendor_findmy/keychain/roots/500.crt':
+        '654bfb656d80a715559034c7fe08e637b335e770c84ec05cd90475e8bbc59eb0',
     # Original geometric icon, rendered by build_brand.py and visually reviewed.
     'custom_components/homecircle/brand/icon.png':
         'bf85530d7362dbfbe796c1f1b944483ccdc8c0693d0c39411b1156b1860d28a5',
@@ -54,7 +63,7 @@ def violations(name, data):
         domain, value = entity.split('.', 1)
         if entity != 'zone.home' and not value.startswith('example_'):
             # Technical filenames can look like entity IDs; only these are approved.
-            if entity not in {'zone.attributes', 'zone.entity_id'}:
+            if entity not in {'zone.attributes', 'zone.entity_id', 'zone.target_zone'}:
                 issues.append('non-example entity identifier')
                 break
     return issues

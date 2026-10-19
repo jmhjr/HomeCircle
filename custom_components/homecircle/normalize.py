@@ -16,6 +16,7 @@ from homeassistant.util.location import distance
 
 from .const import (
     CONF_MEMBERS,
+    CONF_ITEMS,
     CONF_PEOPLE,
     CONF_TRACKER_PEOPLE,
     CONF_PETS,
@@ -641,28 +642,41 @@ def normalize_household(
             *config.get(CONF_PEOPLE, []),
             *config.get(CONF_TRACKER_PEOPLE, []),
             *config.get(CONF_PETS, []),
+            *config.get(CONF_ITEMS, []),
         ]
     )
     categories = ("home", "away", "driving", "unavailable")
     counts = {
-        category: sum(item.presence == category for item in members)
+        category: sum(
+            item.presence == category and item.kind != "item" for item in members
+        )
         for category in categories
     }
     primary_ids = tuple(
-        item.id for item in members if item.presence == "home" and item.primary_home
+        item.id
+        for item in members
+        if item.presence == "home" and item.primary_home and item.kind != "item"
     )
     focus = {
         category: tuple(
             item.id
             for item in members
             if item.presence == category
+            and item.kind != "item"
             and item.focusable
             and (category != "home" or item.primary_home)
         )
         for category in categories
     }
+    if any(item.kind == "item" for item in members):
+        counts["items"] = sum(item.kind == "item" for item in members)
+        focus["items"] = tuple(
+            item.id for item in members if item.kind == "item" and item.focusable
+        )
     focus["overview"] = tuple(item.id for item in members if item.focusable)
     focus["all_residences"] = tuple(
-        item.id for item in members if item.presence == "home" and item.focusable
+        item.id
+        for item in members
+        if item.presence == "home" and item.focusable and item.kind != "item"
     )
     return Household(members, counts, primary_ids, focus)

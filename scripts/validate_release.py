@@ -4,17 +4,71 @@ The earlier version is a version-only fixture, not a previously published releas
 """
 
 import asyncio
+import hashlib
 import json
 from pathlib import Path
 import shutil
+import stat
 import subprocess
 import sys
 import tempfile
 import zipfile
 
 from validate_ha_restart import run_phase
+from build_release import ReleaseError, TIMESTAMP, allowed_member, validate_payload
 
 ROOT = Path(__file__).resolve().parents[1]
+MAX_MEMBER_BYTES = 16 * 1024**2
+MAX_ARCHIVE_BYTES = 64 * 1024**2
+
+
+def inspect_archive(path, inventory_path=None):
+    """Reject unsafe/incomplete packages before extraction or any HA startup."""
+    payload = {}
+    total = 0
+    with zipfile.ZipFile(path) as archive:
+        members = archive.infolist()
+        names = [member.filename for member in members]
+        if names != sorted(names) or len(names) != len(set(names)):
+            raise ReleaseError("Release archive members must be unique and sorted")
+        for member in members:
+            mode = member.external_attr >> 16
+            if (
+                not allowed_member(member.filename)
+                or member.is_dir()
+                or stat.S_IFMT(mode) != stat.S_IFREG
+                or stat.S_IMODE(mode) != 0o644
+                or member.create_system != 3
+                or member.date_time != TIMESTAMP
+                or member.compress_type != zipfile.ZIP_DEFLATED
+                or member.flag_bits & 1
+                or member.extra
+                or member.comment
+                or not 0 <= member.file_size <= MAX_MEMBER_BYTES
+            ):
+                raise ReleaseError("Release archive contains an unsafe member")
+            total += member.file_size
+            if total > MAX_ARCHIVE_BYTES:
+                raise ReleaseError("Release archive exceeds the size limit")
+            payload[member.filename] = archive.read(member)
+        if archive.comment:
+            raise ReleaseError("Release archive contains unexpected metadata")
+    manifest = validate_payload(payload)
+    if inventory_path is not None:
+        expected = {
+            "version": manifest["version"],
+            "archive_sha256": hashlib.sha256(Path(path).read_bytes()).hexdigest(),
+            "files": {
+                name: {
+                    "bytes": len(content),
+                    "sha256": hashlib.sha256(content).hexdigest(),
+                }
+                for name, content in payload.items()
+            },
+        }
+        if json.loads(Path(inventory_path).read_text()) != expected:
+            raise ReleaseError("Release inventory does not match the archive")
+    return payload
 
 
 async def check_removed(directory):
@@ -69,8 +123,9 @@ def main():
                 )
             )
         return
-    with zipfile.ZipFile(ROOT / "release/homecircle.zip") as archive:
-        payload = {name: archive.read(name) for name in archive.namelist()}
+    payload = inspect_archive(
+        ROOT / "release/homecircle.zip", ROOT / "release/inventory.json"
+    )
     version = json.loads(payload["manifest.json"])["version"]
     previous = "0.0.3-dev0"
     with tempfile.TemporaryDirectory(prefix="homecircle-release-") as directory:

@@ -13,7 +13,13 @@ from typing import Any, Callable, Protocol
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .const import CONF_LIFE360_ACCOUNT, CONF_LIFE360_DIRECT, DOMAIN
+from .const import (
+    CONF_LIFE360_ACCOUNT,
+    CONF_LIFE360_DIRECT,
+    CONF_FINDMY_ACCOUNTS,
+    CONF_FINDMY_ENABLED,
+    DOMAIN,
+)
 
 HEALTH_STATES = frozenset(
     {
@@ -109,6 +115,12 @@ def _life360_client(hass, account, add_entities, entry_id):
     return DirectLife360(hass, account, add_entities, entry_id)
 
 
+def _findmy_client(hass, accounts, add_entities, entry_id):
+    from .findmy_provider import DirectFindMy
+
+    return DirectFindMy(hass, accounts, add_entities, entry_id)
+
+
 TRACKER_PROVIDERS = (
     TrackerProvider(
         id="life360",
@@ -122,6 +134,18 @@ TRACKER_PROVIDERS = (
         client_factory=_life360_client,
         external_platforms=("life360",),
         reauth_step="async_step_reauth_confirm",
+    ),
+    TrackerProvider(
+        id="findmy",
+        display_name="Apple Find My",
+        account_key=CONF_FINDMY_ACCOUNTS,
+        enabled_key=CONF_FINDMY_ENABLED,
+        replace_key="manage_findmy_accounts",
+        setup_step="async_step_findmy_accounts",
+        unique_id_prefix="homecircle_findmy_",
+        platform="device_tracker",
+        client_factory=_findmy_client,
+        external_platforms=("homecircle_findmy",),
     ),
 )
 
@@ -138,7 +162,9 @@ def connection_requested(config: dict[str, Any]) -> bool:
     return any(config.get(provider.enabled_key) for provider in TRACKER_PROVIDERS)
 
 
-def reauth_provider(config: dict[str, Any], provider_id: str | None) -> TrackerProvider | None:
+def reauth_provider(
+    config: dict[str, Any], provider_id: str | None
+) -> TrackerProvider | None:
     """Route repair to the failing connection, including old single-provider flows."""
     providers = connected_providers(config)
     if provider_id is not None:

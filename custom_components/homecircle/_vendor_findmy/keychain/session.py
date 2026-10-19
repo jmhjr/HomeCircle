@@ -1,0 +1,1073 @@
+"""
+One object for everything the keychain half of this library does.
+
+The pieces underneath are separate because the protocol is: two unrelated-looking services
+joined on an identifier, a token with a five-minute life, a host derived from a URL
+belonging to something else entirely. Using them directly means assembling that every
+time, and every caller assembles it identically.
+
+This is that assembly, done once. What it wraps is the part that has been **verified
+against a real account**: listing escrow records, judging which could be recovered from,
+recovering one with a device passcode, opening the bottle it yields, and deleting records
+that are no longer good for anything.
+
+It also carries the one sequence that **writes**: :meth:`AsyncKeychainSession.join`, which
+adds a peer to the circle and enrols an escrow record for it. That is deliberately one
+method rather than a set of steps a caller orders themselves, because the ordering is the
+part that matters -- see its docstring.
+
+    async with await AsyncKeychainSession.open(account) as session:
+        options = await session.recovery_options()
+        for record in options.recoverable:
+            print(record.describe())
+
+.. warning::
+    :meth:`AsyncKeychainSession.recover` needs a device's screen-lock passcode,
+    :meth:`AsyncKeychainSession.delete_record` destroys something irreversibly, and
+    :meth:`AsyncKeychainSession.join` creates two things that nothing but a deliberate
+    removal takes back. Everything else here reads.
+"""
+
+from __future__ import annotations
+
+import logging
+import plistlib
+import time
+import uuid
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Any
+
+from google.protobuf.message import DecodeError
+from typing_extensions import Self, override
+
+from custom_components.homecircle._vendor_findmy.cloudkit import der
+from custom_components.homecircle._vendor_findmy.cloudkit.client import AsyncCloudKitClient
+from custom_components.homecircle._vendor_findmy.cloudkit.constants import CUTTLEFISH_SERVICE
+from custom_components.homecircle._vendor_findmy.cloudkit.pcs import public_key_forms
+from custom_components.homecircle._vendor_findmy.cloudkit.proto import cuttlefish_pb2 as cf
+from custom_components.homecircle._vendor_findmy.errors import UnhandledProtocolError
+from custom_components.homecircle._vendor_findmy.util.abc import Closable
+
+from .bottle import (
+    BottleKeys,
+    CreatedBottle,
+    OpenedBottle,
+    find_bottle_keys,
+    open_bottle,
+    seal_bottle,
+)
+from .cuttlefish import ViableBottles, fetch_viable_bottles, make_cuttlefish_client
+from .enrolment import (
+    DeviceDescription,
+    enrol_record,
+    fetch_club_certificate,
+    new_bottle_entropy,
+    record_label,
+)
+from .escrow import (
+    AsyncEscrowProxy,
+    EscrowError,
+    EscrowRecord,
+    RecoveryOptions,
+    escrow_host,
+    join_recovery_options,
+)
+from .items import (
+    VIEW_MANATEE,
+    VIEW_PROTECTED_CLOUD_STORAGE,
+    ItemError,
+    fetch_view,
+    make_securityd_client,
+    payload_of,
+    readable_items,
+    service_key_item,
+)
+from .join import (
+    JoinedPeer,
+    NewIdentity,
+    PeerIdentity,
+    TrustSet,
+    generate_identity,
+    make_dynamic_info,
+    make_join_request,
+    make_peer,
+    make_stable_info,
+    make_voucher,
+    merge_trust,
+    next_stable_clock,
+)
+from .peers import PeerDirectory, check_peer_identifiers, fetch_peer_directory
+from .recovery import recover_bottled_peer
+from .servicekey import ServiceKeyError, ServiceKeys, service_keys_from_der
+from .shares import (
+    KeyShare,
+    ViewKeyring,
+    fetch_recoverable_shares,
+    make_share,
+    summarise,
+    unwrap_share,
+)
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from cryptography import x509
+    from cryptography.hazmat.primitives.asymmetric import ec
+
+    from custom_components.homecircle._vendor_findmy.reports.account import AsyncAppleAccount
+
+logger = logging.getLogger(__name__)
+
+ENTROPY_FIELD = "BottledPeerEntropy"
+"""
+The field of a recovered record that everything else derives from.
+
+**[observed]** Recovered material also carries `SecureBackupIDMSData`, a
+`DoubleEnrollmentPassword` and version, a `BackupBagPassword`, a backup version and a
+timestamp. Only this one is needed here.
+
+**None of the others is required when writing one either** -- §4.5.3's record is three
+keys, and :func:`findmy.keychain.enrolment.build_record` sends exactly those. They are what
+an Apple client happens to include, and reproducing them would be inventing plausible
+values for fields nothing reads.
+"""
+
+# A PET lasts about five minutes. Renewing a little early costs one authentication and
+# avoids an expiry landing in the middle of an exchange that has already asked a user for
+# their passcode.
+PET_LIFETIME_SECONDS = 240
+
+JOIN_HAPPENED = (
+    "Treat this as the join having happened. The peer is in the circle and the escrow"
+    " record exists; what was lost is the change set and the sync token, and both come"
+    " back from re-reading the directory. **Do not retry**: retrying joins twice, leaving"
+    " a second peer, a second bottle and a second escrow record, all permanent."
+)
+"""
+What any failure after `joinWithVoucher` is sent has to say.
+
+The reflex on a failed call is to repeat it, and this is the one call in the library where
+that reflex is destructive. It applies to a response that will not decode and to a timeout
+alike -- with a timeout it is not even known whether a response was sent, which is a reason
+to assume it was rather than a reason to try again.
+"""
+
+METHOD_JOIN_WITH_VOUCHER = "joinWithVoucher"
+"""
+The one write in this stage.
+
+**Not `establish`**, which forms a new circle rather than joining one and would destroy
+the user's existing trust. Its request message is deliberately undefined in
+`cuttlefish.proto`, so nothing here can fall back to it.
+"""
+
+
+class KeychainSessionError(UnhandledProtocolError):
+    """Raised when a keychain session cannot be established or used."""
+
+
+def _require_partition(partition: str | None) -> str:
+    """Insist on the partition the escrow host is derived from."""
+    if partition is None:
+        msg = (
+            "The container returned no partitioned URL, so the escrow host cannot be"
+            " derived. Every per-account iCloud service is named"
+            " p<N>-<service>.icloud.com and there is no other source for the N."
+        )
+        raise KeychainSessionError(msg)
+    return partition
+
+
+def addressable_peer_id(
+    directory: PeerDirectory,
+    *candidates: str,
+) -> str | None:
+    """
+    Choose which of a bottle's peer ids the trust circle actually answers to.
+
+    **The circle's own answer first.** A bottle carries a peer id on its envelope and
+    another inside it, the escrow record's label carries a third string, and on some
+    accounts they are not all the same -- so "which one is this peer" is a question only
+    the directory can settle. Asking Cuttlefish for shares under an id it does not know
+    returns every view's key set and *no shares*, with no error at all, which is why
+    guessing is expensive: see `parawanderer/OpenTagViewer#140`.
+
+    Falls back to the first non-empty candidate when the directory lists none of them.
+    There is nothing better to go on for a bottle whose peer the circle does not contain,
+    and refusing here would break recovering from a record whose device has since left.
+
+    :param candidates: In order of preference, most authoritative first.
+    """
+    known = next((candidate for candidate in candidates if candidate in directory), None)
+    if known is not None:
+        return known
+
+    return next((candidate for candidate in candidates if candidate), None)
+
+
+@dataclass(frozen=True)
+class RecoveredPeer:
+    """
+    A recovered peer, opened.
+
+    Holding this means holding a device's identity from the user's trust circle -- the
+    private keys it signs and receives with. It is the most sensitive thing this library
+    produces, and it exists in memory only.
+    """
+
+    record: EscrowRecord
+    """The escrow record it came from."""
+
+    fields: dict[str, Any]
+    """Everything the recovered property list carried, entropy included."""
+
+    salt: str
+    """Which account identifier turned out to be the HKDF salt."""
+
+    keys: BottleKeys
+    """The three keys the bottle was sealed under."""
+
+    bottle: OpenedBottle
+    """The opened bottle: the sponsoring peer's own private keys."""
+
+    cuttlefish_peer_id: str | None = None
+    """
+    How the trust-circle service addresses this peer, when it differs from the label.
+
+    Set by :meth:`AsyncKeychainSession.recover` from the sealed bottle. See :attr:`peer_id`.
+    """
+
+    @property
+    def peer_id(self) -> str:
+        """
+        The peer this identity belongs to -- what a voucher would name as sponsor.
+
+        **Not the escrow record's label.** `EscrowRecord.peer_id` is that label with
+        `com.apple.icdp.record.` stripped, and on some accounts it is not the peer hash
+        Cuttlefish knows: it carries no `SHA256:` prefix and is absent from the peer
+        directory. Asking `FetchRecoverableTlkShares` for that id returns every view's
+        key set and *no shares*, which surfaces as "carries no readable share record"
+        for Manatee and reads as an account problem rather than a wrong id.
+
+        So the sealed bottle's own id wins where the two disagree, and the label remains
+        the fallback for accounts where they already agree.
+        """
+        return self.cuttlefish_peer_id or self.record.peer_id
+
+    def signing_key(self) -> ec.EllipticCurvePrivateKey:
+        """Parse the signing key. This is what would sign a voucher."""
+        return self.bottle.signing()
+
+    def encryption_key(self) -> ec.EllipticCurvePrivateKey:
+        """Parse the encryption key. A key share would be wrapped to this."""
+        return self.bottle.encryption()
+
+
+class AsyncKeychainSession(Closable):
+    """
+    A live session against the services that describe an account's escrow records.
+
+    Build one with :meth:`open` rather than by calling the constructor: establishing a
+    session needs a CloudKit container opened before the escrow host can even be derived.
+    """
+
+    def __init__(
+        self,
+        account: AsyncAppleAccount,
+        cloudkit: AsyncCloudKitClient,
+        cuttlefish: AsyncCloudKitClient,
+        securityd: AsyncCloudKitClient,
+        proxy: AsyncEscrowProxy,
+    ) -> None:
+        """Use :meth:`open`."""
+        super().__init__()
+
+        self._account = account
+        self._cloudkit = cloudkit
+        self._cuttlefish = cuttlefish
+        self._securityd = securityd
+        self._proxy = proxy
+        self._pet_obtained_at = time.monotonic()
+
+        self._options: RecoveryOptions | None = None
+        self._bottles: ViableBottles | None = None
+        self._peers: PeerDirectory | None = None
+
+    @classmethod
+    async def open(cls, account: AsyncAppleAccount) -> Self:
+        """
+        Establish a session.
+
+        Opens the container, derives the escrow host from the partition it reports, and
+        obtains a token for the escrow proxy -- which costs one authentication, because
+        logging in spends the token this service wants.
+
+        :param account: A logged-in account.
+        :raises KeychainSessionError: If the escrow host cannot be derived.
+        """
+        cloudkit = AsyncCloudKitClient(account)
+        cuttlefish = make_cuttlefish_client(account)
+
+        # The same container as Cuttlefish, addressed to a different bundle. Keychain item
+        # zones answer to securityd, and reusing the Cuttlefish client asks the wrong
+        # service -- so the two are separate clients rather than one with a swapped header.
+        securityd = make_securityd_client(account)
+
+        try:
+            diagnostics = getattr(account, "_recovery_diagnostics", None)
+            if isinstance(diagnostics, dict):
+                diagnostics["phase"] = "cloudkit_container"
+            info = await cloudkit.open_container()
+            if isinstance(diagnostics, dict):
+                diagnostics["phase"] = "partition"
+            partition = _require_partition(info.partition)
+            if isinstance(diagnostics, dict):
+                diagnostics["phase"] = "pet_refresh"
+            pet = await account.request_pet()
+            if isinstance(diagnostics, dict):
+                diagnostics["phase"] = "escrow_client"
+            proxy = AsyncEscrowProxy(account, escrow_host(partition), pet)
+        except Exception:
+            await cloudkit.close()
+            await cuttlefish.close()
+            await securityd.close()
+            raise
+
+        logger.info("Keychain session open on partition %s", info.partition)
+        return cls(account, cloudkit, cuttlefish, securityd, proxy)
+
+    @override
+    async def close(self) -> None:
+        """Close everything this session opened. Does not close the account."""
+        await self._proxy.close()
+        await self._securityd.close()
+        await self._cuttlefish.close()
+        await self._cloudkit.close()
+
+    async def __aenter__(self) -> Self:
+        """Enter a context that closes this session on exit."""
+        return self
+
+    async def __aexit__(self, *_: object) -> None:
+        """Close the session."""
+        await self.close()
+
+    async def _renew_token_if_stale(self) -> None:
+        """Replace the escrow token before it expires mid-exchange."""
+        if time.monotonic() - self._pet_obtained_at < PET_LIFETIME_SECONDS:
+            return
+
+        logger.debug("Escrow token is near expiry; obtaining another")
+        self._proxy.replace_pet(await self._account.request_pet())
+        self._pet_obtained_at = time.monotonic()
+
+    async def recovery_options(self, *, refresh: bool = False) -> RecoveryOptions:
+        """
+        Ask both services what this account could be recovered from.
+
+        Read-only, creates nothing, and needs no passcode. Neither service alone answers
+        the question: the escrow proxy holds the descriptions and the trust-circle service
+        knows which bottles are usable.
+
+        Worth looking at even with nothing to act on. Escrow records outlive the devices
+        that made them and no Apple interface enumerates them, so this is the only way a
+        user can see what their account is carrying.
+
+        :param refresh: Ask again rather than reusing the previous answer.
+        """
+        if self._options is not None and not refresh:
+            return self._options
+
+        await self._renew_token_if_stale()
+
+        self._bottles = await fetch_viable_bottles(self._cuttlefish)
+        listing = await self._proxy.list_records()
+        self._options = join_recovery_options(
+            listing,
+            self._bottles.valid,
+            partial_count=self._bottles.partial_count,
+        )
+        return self._options
+
+    async def peer_directory(self, *, refresh: bool = False) -> PeerDirectory:
+        """
+        Read who is in the trust circle.
+
+        Read-only. This is a prerequisite rather than an extra: a key share names its
+        sender by hash and a bottle names its sponsor by hash, and nothing else in the
+        protocol says what those peers' keys are. Syncing trust first is what makes those
+        names checkable at all.
+
+        :param refresh: Read again rather than reusing the previous answer.
+        """
+        if self._peers is not None and not refresh:
+            return self._peers
+
+        self._peers = await fetch_peer_directory(self._cuttlefish)
+
+        if not len(self._peers):
+            # Worth saying loudly. Everything that verifies against a peer degrades to
+            # "unknown sender" when this is empty, which reads as a security failure when
+            # the real problem is an empty directory.
+            logger.warning(
+                "The trust circle came back empty. Nothing can be verified against it,"
+                " and every share will report its sender as unknown.",
+            )
+
+        return self._peers
+
+    async def recover(self, record: EscrowRecord, passcode: str) -> RecoveredPeer:
+        """
+        Recover a peer's identity from an escrow record.
+
+        The passcode is the **screen-lock passcode of the device the record belongs to** —
+        its PIN or login password, not an Apple ID password. It is used twice inside this
+        call and is neither stored nor logged; callers should hold it no longer either.
+
+        Nothing here writes to the account.
+
+        :param record: A record from :meth:`recovery_options`. It must be recoverable.
+        :param passcode: That device's passcode.
+        :raises KeychainSessionError: If the record is not one this session listed, or the
+            recovered material is not shaped as expected.
+        """
+        options = await self.recovery_options()
+        if record not in options.recoverable:
+            msg = (
+                f"{record.label} is not among the records this session found recoverable."
+                " Recovering from a record whose bottle is not usable cannot succeed."
+            )
+            raise KeychainSessionError(msg)
+
+        await self._renew_token_if_stale()
+
+        material = await recover_bottled_peer(self._proxy, record, passcode)
+        if isinstance(getattr(self._account, "_recovery_diagnostics", None), dict):
+            self._account._recovery_diagnostics["unlock_phase"] = "bottle_material"
+
+        try:
+            fields = plistlib.loads(material)
+        except (plistlib.InvalidFileException, ValueError, EOFError) as e:
+            msg = (
+                f"The recovered material is not a property list ({e}). A wrong passcode"
+                " and a misread exchange fail identically here, so this does not prove"
+                " which."
+            )
+            raise KeychainSessionError(msg) from None
+
+        entropy = fields.get(ENTROPY_FIELD) if isinstance(fields, dict) else None
+        if not isinstance(entropy, bytes):
+            msg = f"The recovered material carries no {ENTROPY_FIELD}"
+            raise KeychainSessionError(msg)
+
+        sealed = self._sealed_bottle(record)
+        inner = cf.OTBottle.FromString(sealed.bottle)
+
+        # Who sealed this bottle, and under which of its two ids. Looked up before it is
+        # opened, so that key material from a party the circle does not contain is refused
+        # rather than used -- and **the id and the sponsor come out of one lookup**, so
+        # that the peer this addresses and the peer whose signature is checked cannot be
+        # two different peers. Issue #140 was that pair disagreeing.
+        if isinstance(getattr(self._account, "_recovery_diagnostics", None), dict):
+            self._account._recovery_diagnostics["unlock_phase"] = "peer_directory"
+        directory = await self.peer_directory()
+        addressable = addressable_peer_id(directory, sealed.peer_id, inner.peer_id)
+        sponsor = directory.get(addressable) if addressable else None
+
+        # The salt is the account's `adsid`, and an account carries more than one
+        # identifier of that shape. The check is free and offline, so the candidates are
+        # tried rather than one being assumed.
+        if isinstance(getattr(self._account, "_recovery_diagnostics", None), dict):
+            self._account._recovery_diagnostics["unlock_phase"] = "bottle_keys"
+        keys, salt = find_bottle_keys(
+            entropy,
+            [self._account.adsid or "", self._account.dsid],
+            inner.escrowed_signing_key,
+            inner.escrowed_encryption_key,
+        )
+
+        # The same answer the sponsor was looked up with, carried onto the peer so that
+        # the id this addresses and the peer whose signature was checked cannot be two
+        # different peers. The escrow label's suffix is not always either of them; see
+        # `RecoveredPeer.peer_id` and `addressable_peer_id`.
+        cuttlefish_peer_id = addressable
+        if cuttlefish_peer_id and cuttlefish_peer_id != record.peer_id:
+            logger.info(
+                "Addressing the recovered peer as %s; its escrow label says %s",
+                cuttlefish_peer_id,
+                record.peer_id,
+            )
+
+        return RecoveredPeer(
+            record=record,
+            fields=fields,
+            salt=salt,
+            keys=keys,
+            bottle=open_bottle(sealed, keys, sponsor=sponsor),
+            cuttlefish_peer_id=cuttlefish_peer_id,
+        )
+
+    def _sealed_bottle(self, record: EscrowRecord) -> cf.Bottle:
+        """Find the sealed bottle the viability listing already returned for a record."""
+        entries = self._bottles.entries if self._bottles else []
+        sealed = next((entry.bottle for entry in entries if entry.id == record.label), None)
+
+        if sealed is None or not sealed.bottle:
+            msg = (
+                f"The trust-circle service listed {record.label} as viable but returned"
+                " no sealed contents for it, so there is nothing to open."
+            )
+            raise KeychainSessionError(msg)
+        return sealed
+
+    async def key_shares(self, peer: PeerIdentity) -> list[KeyShare]:
+        """
+        Fetch and unwrap the key shares a recovered peer is entitled to.
+
+        **This is where the keys arrive, and it happens before anything is written.** A
+        share is wrapped to the receiving peer's encryption key, which recovery has
+        already yielded -- so no membership of the trust circle is needed to read one, and
+        therefore no peer, no voucher and no escrow record.
+
+        Read-only, and needs no passcode beyond the one recovery already spent.
+
+        :param peer: A peer from :meth:`recover`, or a :class:`~findmy.keychain.join.JoinedPeer`
+            kept from a previous :meth:`join`.
+        """
+        directory = await self.peer_directory()
+        entries = await fetch_recoverable_shares(self._cuttlefish, peer.peer_id)
+        encryption_key = peer.encryption_key()
+
+        # The signing key is offered as an alternate purely so the failure can say which
+        # key a share is addressed to. A share should be wrapped to the encryption key;
+        # if one turns out not to be, that is worth learning from the data rather than
+        # from a wrong assumption that presents as a cipher that will not authenticate.
+        alternates = {"signing": peer.signing_key()}
+
+        shares = [
+            unwrap_share(
+                entry,
+                encryption_key,
+                directory,
+                alternates=alternates,
+                expected_receiver=peer.peer_id,
+            )
+            for entry in entries
+        ]
+        logger.info("Shares for %s: %s", peer.peer_id, summarise(shares))
+        return shares
+
+    async def service_keys(
+        self,
+        peer: PeerIdentity,
+        *,
+        view: str = VIEW_MANATEE,
+        shares: list[KeyShare] | None = None,
+    ) -> ServiceKeys:
+        """
+        Recover the elliptic-curve keys Stage 5 decrypts accessory records with.
+
+        This is the whole path in one call: fetch the shares, unwrap the view's three keys,
+        enumerate the view's zone, follow the pointer tagged with this project's service,
+        decrypt that item, and read its `v_Data`.
+
+        **Note where the boundary is.** Everything up to the item is symmetric -- view
+        keys, item keys, AES-SIV -- and everything after it is elliptic-curve. A view key
+        never becomes an EC private key; the item's payload *contains* one.
+
+        Read-only throughout, and needs no passcode beyond the one :meth:`recover` spent.
+
+        :param peer: A peer from :meth:`recover`, or a :class:`~findmy.keychain.join.JoinedPeer`
+            kept from a previous :meth:`join`.
+        :param view: The keychain view to read. `Manatee` holds Find My's keys.
+        :param shares: Shares already fetched by :meth:`key_shares`, to avoid asking for
+            them twice. They are the same for every view, so a caller reading two views
+            should fetch once and pass them here.
+        :raises KeychainSessionError: If the view yields no keys for this peer.
+        :raises ItemError: If the item cannot be found or decrypted.
+        :raises ServiceKeyError: If its payload is not a key structure.
+        """
+        keyring = await self._view_keyring(peer, view, shares)
+
+        contents = await fetch_view(self._securityd, view)
+        item = service_key_item(contents, keyring)
+
+        return service_keys_from_der(payload_of(item))
+
+    async def _view_keyring(
+        self,
+        peer: PeerIdentity,
+        view: str,
+        shares: list[KeyShare] | None,
+    ) -> ViewKeyring:
+        """Find the symmetric keys that open a view's items, fetching shares if needed."""
+        if shares is None:
+            shares = await self.key_shares(peer)
+
+        keyring = next(
+            (s.view_keys for s in shares if s.service == view and s.view_keys),
+            None,
+        )
+        if keyring is None:
+            available = sorted({s.service for s in shares if s.view_keys})
+            msg = (
+                f"No keys were recovered for the {view!r} view, so its items cannot be"
+                f" read. Views that did yield keys: {', '.join(available) or 'none'}"
+            )
+            raise KeychainSessionError(msg)
+
+        logger.info("Reading the %s view with %s", view, keyring.describe())
+        return keyring
+
+    async def pcs_keys(
+        self,
+        peer: PeerIdentity,
+        *,
+        views: Sequence[str] = (VIEW_MANATEE, VIEW_PROTECTED_CLOUD_STORAGE),
+        shares: list[KeyShare] | None = None,
+    ) -> list[ec.EllipticCurvePrivateKey]:
+        """
+        Every elliptic-curve key a keychain view holds, for Stage 5 to try.
+
+        **Not the same as :meth:`service_keys`, and this is the one a record needs.** That
+        method follows the `currentitem` pointer to the view's *current* key for this
+        service. A record's protection structure names whichever key protected it, which
+        may be an older one or another service's -- §6.8 resolves such a reference by
+        matching on an item's `acct`, so the answer is a view-wide lookup rather than one
+        pointer.
+
+        Reading them all costs a decryption per item and needs no further round trip: the
+        zone was fetched once already.
+
+        :param peer: A peer from :meth:`recover`, or a :class:`~findmy.keychain.join.JoinedPeer`
+            kept from a previous :meth:`join`.
+        :param views: The keychain views to read. **Both by default**, because Stage 5 §2
+            says both must be synced before decryption can begin -- reading only the one
+            that "holds these keys" is a reading of that sentence, and the cheaper mistake
+            is to read the other as well.
+        :param shares: Shares already fetched, to avoid asking twice.
+        """
+        if shares is None:
+            shares = await self.key_shares(peer)
+
+        keys: list[ec.EllipticCurvePrivateKey] = []
+        for view in views:
+            # A view that yields no shares is not a reason to skip the other.
+            keys.extend(await self._pcs_keys_or_none(peer, view, shares))
+
+        logger.info("%d elliptic-curve key(s) across %s", len(keys), ", ".join(views))
+        return keys
+
+    async def _pcs_keys_or_none(
+        self,
+        peer: PeerIdentity,
+        view: str,
+        shares: list[KeyShare],
+    ) -> list[ec.EllipticCurvePrivateKey]:
+        """Read one view's keys, reporting rather than raising if it cannot be read."""
+        try:
+            return await self._pcs_keys_in(peer, view, shares)
+        except KeychainSessionError as e:
+            logger.warning("Could not read the %s view: %s", view, e)
+            return []
+
+    async def _pcs_keys_in(
+        self,
+        peer: PeerIdentity,
+        view: str,
+        shares: list[KeyShare],
+    ) -> list[ec.EllipticCurvePrivateKey]:
+        """Read every elliptic-curve key one view's items hold."""
+        keyring = await self._view_keyring(peer, view, shares)
+        contents = await fetch_view(self._securityd, view)
+
+        keys: list[ec.EllipticCurvePrivateKey] = []
+        for account, item in readable_items(contents, keyring).items():
+            try:
+                found = service_keys_from_der(payload_of(item))
+            except (ItemError, ServiceKeyError, der.DerError) as e:
+                # `DerError` as well, deliberately, even though the reader now answers in
+                # its own vocabulary. Skipping an item it cannot read is this loop's whole
+                # job, and the cost of the two disagreeing about the type is not a worse
+                # message: it is a user's entire export dying on one unreadable item out
+                # of sixty-one. `pcs.py`'s key walk catches the same pair, for the same
+                # reason and after the same lesson.
+                logger.debug("Item for acct %s holds no key: %s", account[:8].hex(), e)
+                continue
+
+            # An item names the key it holds, so a mismatch here is this client having
+            # mis-read the payload rather than the item being for someone else -- worth
+            # saying, because it is the difference between a bad reader and a bad key.
+            if account not in public_key_forms(found.encryption_key.public_key()):
+                logger.warning(
+                    "The item for acct %s holds a key whose public half does not match it",
+                    account[:8].hex(),
+                )
+
+            keys.extend(found.for_pcs())
+
+        logger.info("The %s view holds %d elliptic-curve key(s)", view, len(keys))
+        return keys
+
+    async def recover_service_keys(
+        self,
+        record: EscrowRecord,
+        passcode: str,
+        *,
+        view: str = VIEW_MANATEE,
+    ) -> ServiceKeys:
+        """
+        Go from an escrow record and a device passcode to the keys Stage 5 decrypts with.
+
+        The whole of Stage 3 in one call, and the only one most callers want: recover the
+        peer, fetch its key shares, unwrap the view's keys, read the service key's item,
+        and return the elliptic-curve keys inside it.
+
+        **Read-only.** Nothing is created, signed or enrolled -- see :meth:`key_shares` for
+        why the keys arrive before any write would happen.
+
+        :param record: A recoverable record from :meth:`recovery_options`.
+        :param passcode: That device's screen-lock passcode. Used inside this call and not
+            retained; see :meth:`recover`.
+        :param view: The keychain view to read. `Manatee` holds Find My's keys.
+        :raises KeychainSessionError: If the record is not recoverable, or the view yields
+            no keys.
+        """
+        peer = await self.recover(record, passcode)
+        return await self.service_keys(peer, view=view)
+
+    async def delete_record(
+        self,
+        record: EscrowRecord,
+        *,
+        confirm: str,
+        allow_viable: bool = False,
+    ) -> None:
+        """
+        Delete an escrow record, and its companion if it has one.
+
+        **Irreversible, and the protocol offers no protection.** See
+        :meth:`findmy.keychain.escrow.AsyncEscrowProxy.delete_record` for the four rules
+        that make it safe to offer; this passes the listing through so they apply.
+
+        Note that deleting records does not stop new ones appearing.
+
+        :param record: The record to delete.
+        :param confirm: Its serial, typed back in full.
+        :param allow_viable: Permit deleting a live recovery path. Almost never right.
+        """
+        options = await self.recovery_options()
+        await self._renew_token_if_stale()
+
+        await self._proxy.delete_record(
+            record,
+            options,
+            confirm=confirm,
+            allow_viable=allow_viable,
+        )
+
+        # The service reports success for a deletion that addressed nothing, so the only
+        # proof is asking again. Dropping the cache forces that on the next call.
+        self._options = None
+
+    async def club_certificate(self) -> x509.Certificate:
+        """
+        Fetch the certificate an escrow blob would be sealed to, and verify it.
+
+        **Read-only, and worth running before a join rather than during one.** It is the
+        one part of enrolling that can fail for reasons outside this account -- a pinned
+        root that is not among the four bundled, an expired certificate -- and finding that
+        out here costs nothing, while finding it out mid-join happens after a passcode has
+        been asked for.
+
+        Verified against the bundled roots before it is returned; an unverifiable one
+        raises rather than being handed back with a warning.
+        """
+        await self._renew_token_if_stale()
+        return await fetch_club_certificate(self._proxy, None, str(uuid.uuid4()).upper())
+
+    async def join(
+        self,
+        peer: PeerIdentity,
+        *,
+        passcode: str,
+        device: DeviceDescription,
+        os_version: str,
+    ) -> JoinOutcome:
+        """
+        Join the trust circle with a new identity the recovered peer vouches for.
+
+        **This is the one call in this library that cannot be undone.** It adds a peer to
+        the circle protecting every password the user has, and it enrols an escrow record
+        that no Apple interface displays. Everything before it -- listing, recovering,
+        reading key shares -- is reversible or read-only; this is not.
+
+        Consider whether it is needed at all. :meth:`key_shares` already yields the view
+        keys, because a share is wrapped to the *receiving* peer's encryption key and
+        recovery produces exactly that key. Joining is what makes this client a member in
+        its own right, so that it holds keys addressed to itself; it is not how the keys
+        are first obtained.
+
+        **A failure after the request is sent is never a reason to call this again.** A
+        response that will not decode is not a call that failed, and a timeout does not
+        establish that no response was sent -- so both raise with :data:`JOIN_HAPPENED`
+        rather than looking like something to repeat. Recover by syncing the directory.
+
+        The order is §6.9.4's, and the part of it that matters is that **the escrow record
+        is enrolled before the join is sent**. The two failure modes are not comparable: a
+        join that succeeds with no record leaves a peer nobody can ever recover, invisible
+        to every listing and out of reach of deletion, while a record with no join is
+        listed by :meth:`recovery_options` and removable by :meth:`delete_record`. One is
+        permanent, the other is tidy-up.
+
+        :param peer: A peer from :meth:`recover`, or a :class:`~findmy.keychain.join.JoinedPeer`
+            kept from a previous :meth:`join`. It sponsors the new identity and its
+            shares are what get re-addressed.
+        :param passcode: The passcode **the new record** will be recoverable with. Not the
+            one that recovered `peer`, unless you mean them to be the same. Used inside
+            this call and not retained.
+        :param device: How this client describes itself, both in the escrow record's
+            metadata and in the peer's stable info -- so it is what a person sees in a
+            listing and in their device list.
+        :param os_version: This client's OS string, for the stable info.
+        :raises KeychainSessionError: If the peer identifier derivation cannot be
+            confirmed against the circle, if the sponsoring peer is not in the circle, or
+            if it holds no usable key shares.
+        """
+        directory = await self.peer_directory(refresh=True)
+
+        # Free, offline, and the only chance to check the one derivation a join depends on
+        # before it is spent. A wrong peer id names a beneficiary that does not exist, and
+        # that failure lands after the send.
+        check = check_peer_identifiers(directory)
+        if check.mismatched:
+            msg = (
+                "The peer identifier derivation does not reproduce"
+                f" {len(check.mismatched)} peer(s) already in this circle, so a voucher"
+                " built on it would name a beneficiary that does not exist. Refusing:"
+                " that failure would only surface after the join had been sent."
+            )
+            raise KeychainSessionError(msg)
+
+        # The sponsor has to be a peer the circle actually contains. A voucher naming one
+        # it does not is signed, sent, and permanent -- and what Cuttlefish does with it
+        # is not known here: it may refuse, or it may accept and leave a peer sponsored by
+        # nobody. Issue #140 made this reachable, because the id came from the escrow
+        # label rather than from the circle; the check is free and offline, so there is no
+        # reason to find out the expensive way.
+        if peer.peer_id not in directory:
+            msg = (
+                f"The sponsoring peer {peer.peer_id!r} is not in this trust circle, so the"
+                " voucher would name a sponsor Cuttlefish does not know. Refusing: a join"
+                " cannot be undone, and what it would leave behind is not known. The"
+                f" circle holds {len(directory)} peer(s)."
+            )
+            raise KeychainSessionError(msg)
+
+        recovered = [share.plaintext for share in await self.key_shares(peer) if share.plaintext]
+        if not recovered:
+            msg = (
+                "The sponsoring peer holds no key shares that could be unwrapped, so"
+                " joining would succeed and yield nothing -- while still leaving a peer in"
+                " the circle and a record on the account. Refusing."
+            )
+            raise KeychainSessionError(msg)
+
+        headers = await self._account.get_anisette_headers()
+        identity = generate_identity(
+            machine_id=headers.get("X-Apple-I-MD-M", ""),
+            model_id=device.model,
+            creation_time=int(time.time() * 1000),
+        )
+        logger.warning(
+            "Joining the trust circle as %s, sponsored by %s. This creates a peer and an"
+            " escrow record, and neither is undone by anything short of a deliberate"
+            " removal.",
+            identity.peer_id,
+            peer.peer_id,
+        )
+
+        voucher = make_voucher(identity.peer_id, peer.peer_id, peer.signing_key())
+        trust = merge_trust(directory, peer_id=identity.peer_id, sponsor=peer.peer_id)
+
+        bottle = seal_bottle(
+            peer_id=identity.peer_id,
+            signing_key=identity.signing_key,
+            encryption_key=identity.encryption_key,
+            entropy=new_bottle_entropy(),
+            adsid=self._account.adsid or self._account.dsid,
+            bottle_id=str(uuid.uuid4()).upper(),
+        )
+
+        # Before the join, and this ordering is the whole of §6.9.4's reasoning.
+        label = await self._enrol_for_join(identity, bottle, passcode, device)
+
+        request = make_join_request(
+            make_peer(
+                identity.peer_id,
+                permanent_info=identity.permanent,
+                stable_info=make_stable_info(
+                    identity.signing_key,
+                    clock=next_stable_clock(directory),
+                    os_version=os_version,
+                    serial_number=device.serial,
+                    device_name=device.name,
+                ),
+                dynamic_info=make_dynamic_info(identity.signing_key, trust),
+                voucher=voucher,
+            ),
+            bottle.bottle,
+            [
+                make_share(
+                    plaintext,
+                    peer_id=identity.peer_id,
+                    encryption_key=identity.encryption_key.public_key(),
+                    signing_key=identity.signing_key,
+                )
+                for plaintext in recovered
+            ],
+            # Exactly what Cuttlefish last sent, as a string at both ends. A client that
+            # has never synced has none, which is the ordinary case for a first join.
+            restore_point=directory.sync_token,
+        )
+
+        # Never with `auto_retry`. The HTTP layer's retry is off by default and nothing
+        # here turns it on, because a retry at that level is a second join with no way for
+        # anything above to know it happened.
+        try:
+            serialized = await self._cuttlefish.function_invoke(
+                CUTTLEFISH_SERVICE,
+                METHOD_JOIN_WITH_VOUCHER,
+                request.SerializeToString(),
+            )
+        except Exception as e:
+            msg = f"The join failed or its result was not seen ({e}). {JOIN_HAPPENED}"
+            raise KeychainSessionError(msg) from e
+
+        reply = cf.CuttlefishJoinWithVoucherResponse()
+        try:
+            reply.ParseFromString(serialized)
+        except DecodeError as e:
+            msg = f"The join was accepted but its response did not decode ({e}). {JOIN_HAPPENED}"
+            raise KeychainSessionError(msg) from None
+
+        # Applied rather than discarded: the reply reports what the circle now looks like
+        # with this peer in it, and carries the token every later sync resumes from.
+        self._peers = directory.updated(reply.changes)
+        self._options = None
+
+        logger.info(
+            "Joined as %s; the reply carried %d change(s)",
+            identity.peer_id,
+            len(reply.changes.changes),
+        )
+        return JoinOutcome(
+            identity=identity,
+            bottle=bottle,
+            label=label,
+            trust=trust,
+            shares=len(request.shares),
+            directory=self._peers,
+        )
+
+    async def _enrol_for_join(
+        self,
+        identity: NewIdentity,
+        bottle: CreatedBottle,
+        passcode: str,
+        device: DeviceDescription,
+    ) -> str:
+        """
+        Enrol the new peer's escrow record, retrying once if the label is already taken.
+
+        That retry is the one recovery §6.9.4 asks for, and it is deliberately narrow:
+        only on an error the escrow service itself **reported**. A transport failure has
+        not established that anything exists at that label, and deleting on one would
+        remove a record whose contents this client never saw.
+        """
+        await self._renew_token_if_stale()
+
+        async def enrol() -> str:
+            return await enrol_record(
+                self._proxy,
+                peer_id=identity.peer_id,
+                dsid=self._account.dsid,
+                password=passcode,
+                entropy=bottle.entropy,
+                device=device,
+                bottle_id=bottle.bottle_id,
+                escrowed_spki=bottle.escrowed_spki,
+            )
+
+        try:
+            return await enrol()
+        except EscrowError as e:
+            if not e.reported:
+                raise
+
+            label = record_label(identity.peer_id)
+            logger.warning(
+                "The escrow service refused to enrol %s (%s). Removing whatever is at that"
+                " label and enrolling again, which is what that error means when the label"
+                " is one this client just generated.",
+                label,
+                e,
+            )
+            await self._proxy.delete_label(label)
+            return await enrol()
+
+
+@dataclass(frozen=True)
+class JoinOutcome:
+    """What a completed join produced, and what has to outlive the process to use it."""
+
+    identity: NewIdentity
+    """The peer that was created. Its keys are the only copy in existence."""
+
+    bottle: CreatedBottle
+    """The bottle sent, and the entropy that recovers it."""
+
+    label: str
+    """The escrow record enrolled for it, addressable by §7.1's deletion."""
+
+    trust: TrustSet
+    """The dynamic info as sent, which §6.9.4 step 9 says to persist as sent."""
+
+    shares: int
+    """How many view keys were re-addressed to the new peer."""
+
+    directory: PeerDirectory
+    """
+    The circle with the join's own changes applied, and the token they arrived with.
+
+    §6.9.4 step 9's "apply the returned changes" -- and the reply carries the same
+    `CuttlefishChanges` that `fetchChanges` returns, so it goes through the path that
+    already exists rather than a second reading of what a change is.
+    """
+
+    @property
+    def peer(self) -> JoinedPeer:
+        """
+        The membership to keep, in the form the reading path takes.
+
+        **This is the point of having joined.** Persist it -- somewhere that holds
+        secrets, see :class:`~findmy.keychain.join.JoinedPeer` -- and every later run reads
+        the keychain as this client, with no passcode and no borrowed identity:
+
+            keys = await session.pcs_keys(JoinedPeer.from_json(stored))
+
+        Without it a join costs a passcode, leaves a permanent peer and an escrow record,
+        and buys nothing that recovery did not already give.
+        """
+        return JoinedPeer.of(self.identity)
+
+    @property
+    def sync_token(self) -> str | None:
+        """
+        Where the circle now stands, for the next read to resume from.
+
+        **Worth persisting.** This response is where a new peer first gets one, and it is
+        what makes every later sync incremental instead of a full re-read -- which is the
+        point of being a member rather than a recoverer.
+        """
+        return self.directory.sync_token

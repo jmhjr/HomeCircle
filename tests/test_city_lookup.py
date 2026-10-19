@@ -254,7 +254,7 @@ async def test_unload_cancels_city_lookup_and_remove_deletes_cache(hass):
         ) as remove,
     ):
         await async_remove_entry(hass, entry)
-    assert remove.await_count == 3
+    assert remove.await_count == 4  # Also removes the Find My migration ledger.
 
 
 @pytest.mark.parametrize(

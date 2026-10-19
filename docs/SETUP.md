@@ -1,6 +1,6 @@
 # Set up HomeCircle
 
-Use a test Home Assistant instance running the validated Core 2026.9.4 baseline. Published beta 17 is an experimental prerelease; broader Core compatibility has not been established. New people and pets use the Person-first screens below; existing tracker-only members remain supported. HomeCircle can use existing Home Assistant trackers or optionally connect to Life360 directly.
+Use a test Home Assistant instance. Beta 19 is an experimental prerelease, validated with disposable Core 2026.9.4 tests and live Find My checks on an HA OS Raspberry Pi/aarch64 running Core 2026.10.2. Broader installation compatibility has not been established. New people and pets use the Person-first screens below; existing tracker-only members remain supported. HomeCircle can use existing HA trackers or optionally connect to Life360 and Apple Find My directly.
 
 ## 1. Get a working source into Home Assistant
 
@@ -10,6 +10,7 @@ If using an existing tracker, open Settings → Devices & services → Entities 
 | --- | --- | --- |
 | iPhone | Companion app connected to this test instance, with its location tracker enabled | Location/presence; optional battery sensor |
 | Life360 | An existing Home Assistant tracker, or a direct Life360 account connection in HomeCircle | Location/presence and report time that the tracker supplies |
+| Apple Find My items | An optional HomeCircle Apple account connection with explicitly selected items | Item location, genuine source report time and estimated accuracy |
 | Pet GPS | A separately installed integration that actually exposes the pet's device tracker | Pet location/presence and optional supporting sensors |
 | Router presence, including an existing eero source | An existing HA integration exposing a device tracker | Home/Away presence; a router-only source may have no map position |
 
@@ -37,7 +38,7 @@ A member at an additional residence can count Home while being outside the Home 
 
 1. With HACS already configured on the test instance, open its custom repositories menu.
 2. Add `https://github.com/jmhjr/HomeCircle` with type **Integration**. See [HACS custom repositories](https://www.hacs.dev/docs/faq/custom_repositories/).
-3. Open HomeCircle in HACS. In Download or Redownload, open **Need a different version?**, choose **Release**, select **v0.1.0-beta.17**, and download it. If HACS already offers beta 17 in the dialog, confirm that version before downloading. A branch commit is not the versioned release. Every HomeCircle release is currently a prerelease, so HACS can show the branch commit as its available version while beta updates are off. For future beta update checks, enable and turn on HACS's **HomeCircle pre-release** switch in Home Assistant's Entities settings; it is disabled by default. [HACS explains this switch](https://www.hacs.dev/docs/use/entities/switch/).
+3. Once beta 19 is published, open HomeCircle in HACS. In Download or Redownload, open **Need a different version?**, choose **Release**, select **v0.1.0-beta.19**, and download it. If HACS already offers beta 19 in the dialog, confirm that version before downloading. A branch commit is not the versioned release. Every HomeCircle release is currently a prerelease, so HACS can show the branch commit as its available version while beta updates are off. For future beta update checks, enable and turn on HACS's **HomeCircle pre-release** switch in Home Assistant's Entities settings; it is disabled by default. [HACS explains this switch](https://www.hacs.dev/docs/use/entities/switch/).
 4. Restart Home Assistant.
 5. Open Settings → Devices & services → Add integration → HomeCircle.
 
@@ -143,7 +144,7 @@ HACS upgrades require a restart. To uninstall from a test instance, first remove
 
 ## Validation scope
 
-See [beta 17 validation](BETA17-VALIDATION.md) for this release's tested scope. The reconciled behavior candidate passed physical DAKboard acceptance; the versioned package and HACS checks are recorded separately. Full real departure/return and unattended provider failure/recovery tests remain open before a stable release.
+See [beta 19 packaging validation](FINDMY-BETA19-PACKAGING-VALIDATION.md) for the tested archive, lifecycle and live Find My scope, and [beta 18 validation](BETA18-VALIDATION.md) for earlier features. Publication and HACS checks are separate release steps. New physical movement, current-position freshness and delivery latency remain unproven for Find My. Full departure/return and unattended provider failure/recovery tests remain open before a stable release.
 
 
 ## Optional family location refresh
@@ -165,3 +166,9 @@ Open HomeCircle settings → **Import places from Life360** to use an existing e
 For a tracker-only member, choose **Change picture**, select JPG/PNG/GIF (up to 10 MB), adjust the crop/zoom, and save. Person pictures remain in HA People settings. Uploaded images remain in HA when references are cleared. The current file picker may display “No file chosen” while a selected crop remains visible; the preview is the current selection.
 
 **City lookup** is off by default. Enabling it sends selected tracker coordinates to Photon to fill missing cities without a key; the form discloses caching and limits. Private map background does not override this separate option. See [privacy](PRIVACY.md) and [frontend guide](FRONTEND.md).
+
+## Apple Find My in experimental beta 19
+
+Open **Configure → Apple Find My accounts → Add an Apple account**. Home Assistant prepares the required local runtime before asking for Apple credentials; no physical Mac, separate helper, terminal, or manual YAML is required. Fresh discovery uses Apple sign-in, verification when requested, and a trusted device's unlock passcode, followed by explicit item selection and type review. **Reconnect existing items** reuses saved keys after Apple sign-in without repeating device-passcode recovery.
+
+Follow the [Find My setup guide](FINDMY-SETUP.md) for the workflow, storage disclosure and report-time limits. Selected items get separate HA trackers and do not count as people. A successful poll may retain an older location when Apple has no newer usable report. [Packaging validation](FINDMY-BETA19-PACKAGING-VALIDATION.md) records the experimental feature's tested scope.
