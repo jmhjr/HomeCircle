@@ -1,7 +1,7 @@
 # Beta 19 publication validation
 
-Date: October 19, 2026. Published experimental prerelease; disposable HACS
-upgrade acceptance is still pending.
+Date: October 19, 2026. Published experimental prerelease; actual disposable
+HACS beta 18 → beta 19 upgrade acceptance passed.
 
 ## Published source and assets
 
@@ -44,14 +44,32 @@ current-position freshness, delivery latency and recorder-history continuity
 were not established by these checks. These are disclosed experimental-beta
 limitations, not claims derived from a successful poll or report count.
 
-## Disposable HACS upgrade pending
+## Actual disposable HACS upgrade passed
 
-An actual disposable HACS `v0.1.0-beta.18` → `v0.1.0-beta.19` upgrade has not yet
-completed. It is waiting for fresh HACS device OAuth authorization. No HACS
-installation, upgrade or post-upgrade restart success is inferred from the
-verified GitHub downloads or the already accepted production installation.
+A fresh disposable HA instance completed official HACS device OAuth with the
+owner's approval. No production configuration or credentials were copied.
+The instance used two fictional household members and configured no native
+Apple accounts, so this checks HACS distribution and upgrade preservation
+separately from the real-account acceptance above.
 
-After authorization, record HACS's selected version, package download, restart,
-loaded integration/card versions, preservation of the disposable instance's
-saved configuration, and comparison of installed files with the published
-inventory. Add that proof here once it exists.
+The baseline independently confirmed both HACS's installed
+`v0.1.0-beta.18` and HA's loaded `0.1.0-beta.18` manifest, matching beta 18
+served card bytes, the two fictional members and an unrelated frontend resource.
+The actual upgrade then passed:
+
+- HACS downloaded and recorded `v0.1.0-beta.19`.
+- All 109 installed files matched the canonical published ZIP exactly, with
+  SHA-256 `5f20d536e1b5378bef7f0b972bbfbc7ced911063aea16a0a8f56d2ffa1210cd2`.
+- A real restart launched a new Core worker; an independent check confirmed
+  HA loaded the `0.1.0-beta.19` manifest.
+- Saved entry data and options, plus household counts, member identities,
+  presence and focusability, remained unchanged.
+- The owned card URL contained the beta 19 version and expected asset digest;
+  HTTP-served card bytes matched the release. The unrelated resource survived.
+
+Safe aggregate evidence is retained as `hacs-acceptance.json` in the ignored
+release-validation directory. The HACS test made no production HA changes or
+restarts. Cleanup also passed independently: the temporary configuration and
+local authentication/device-flow files were removed, and the loopback server
+stopped. Cleanup read or modified no production files; its safe receipt is
+`hacs-cleanup.json`.
