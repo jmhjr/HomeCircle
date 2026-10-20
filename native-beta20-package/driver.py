@@ -21,6 +21,7 @@ import stat
 import subprocess
 import tarfile
 import time
+import traceback
 import xml.etree.ElementTree as ET
 import zipfile
 
@@ -439,6 +440,19 @@ def main():
                    "elapsed_seconds": round(time.monotonic() - started, 3)}
         if isinstance(error, Refused):
             failure["failure_code"] = str(error)
+        if isinstance(error, OSError) and type(error.errno) is int and 0 <= error.errno <= 4095:
+            failure["os_errno"] = error.errno
+            if isinstance(error.filename, str):
+                basename = Path(error.filename).name
+                if basename in {"source.tgz", "source-inventory.json", "frozen-candidate.zip",
+                                "frozen-inventory.json", "homecircle-card.js", "LEAFLET-LICENSE.txt", "driver.py"}:
+                    failure["input_basename"] = basename
+        frames = []
+        for frame, line in traceback.walk_tb(error.__traceback__):
+            code = frame.f_code
+            if code.co_filename == __file__ and re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]{0,79}", code.co_name):
+                frames.append({"function": code.co_name, "line": line})
+        failure["driver_frames"] = frames[-6:]
         atomic_json(args.results / "failure-summary.json", failure)
         print(json.dumps(failure), flush=True)
         return 1

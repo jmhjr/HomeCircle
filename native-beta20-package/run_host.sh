@@ -32,7 +32,7 @@ label=io.homecircle.beta20-package
 image_repo=ghcr.io/home-assistant/qemux86-64-homeassistant
 image_digest=sha256:414dce485b4eebd9f929f293f7252340bada5715fc4a48b2b954d79195ed3019
 image="$image_repo@$image_digest"
-driver_sha=695712fba4e30a4cc366d3529365fd44e3a815dfb98a3adc0f3a34d9a57f6b2e
+driver_sha=b6a1da19e54040f3f08dc7b245abc644ee2bde94d35a9f2c6869e1ccc81330a5
 source_sha=261aeb3219071a44e1c6ca53f2f18e26624ae450a641d29be32450ee265d4818
 inventory_sha=be693aef2f7a049cc4c0752179069664c86e444e24cc9fb01393d40f5d1288b1
 cid= image_id= stage=inputs acceptance_exit=-1 kernel=$(uname -r)
@@ -217,14 +217,39 @@ docker_call start "$cid" >"$workspace/start.log" 2>&1
 [[ $(docker_call exec "$cid" uname -s) == Linux && $(docker_call exec "$cid" uname -m) == x86_64 ]] || {
   echo native_container_refused >&2; exit 2;
 }
+stage=container_staging
 docker_call exec "$cid" mkdir -m 700 /qa /qa/input /qa/results
+[[ $(docker_call exec "$cid" id -u) == 0 && $(docker_call exec "$cid" id -g) == 0 ]] || {
+  echo container_staging_identity_refused >&2; exit 2;
+}
+for directory in /qa /qa/input /qa/results; do
+  [[ $(docker_call exec "$cid" stat -c '%u:%g:%a' "$directory") == 0:0:700 ]] || {
+    echo container_staging_directory_refused >&2; exit 2;
+  }
+done
+stage_file() {
+  local source_file=$1 destination=$2 expected actual
+  expected=$(sha256sum "$source_file" | awk '{print $1}')
+  [[ $expected =~ ^[0-9a-f]{64}$ ]] || { echo staging_source_hash_refused >&2; return 1; }
+  # A container-owned process creates each file. No host UID/GID/mode metadata
+  # crosses the boundary, and no capability or host mount is added.
+  bounded 30 "${DOCKER[@]}" exec -i "$cid" /bin/sh -c \
+    'set -eu; umask 077; test ! -e "$1"; test ! -L "$1"; cat > "$1"' sh "$destination" \
+    <"$source_file" >"$workspace/staging.log" 2>&1
+  [[ $(docker_call exec "$cid" stat -c '%u:%g:%a' "$destination") == 0:0:600 ]] || {
+    echo container_staging_file_refused >&2; return 1;
+  }
+  docker_call exec "$cid" test -r "$destination"
+  actual=$(docker_call exec "$cid" sha256sum "$destination" | awk '{print $1}')
+  [[ $actual == "$expected" ]] || { echo container_staging_hash_refused >&2; return 1; }
+}
 for source in frozen-candidate.zip frozen-inventory.json source-inventory.json source.tgz; do
-  docker_call cp "$workspace/input/$source" "$cid:/qa/input/$source"
+  stage_file "$workspace/input/$source" "/qa/input/$source"
 done
 for source in homecircle-card.js LEAFLET-LICENSE.txt; do
-  docker_call cp "$workspace/source/custom_components/homecircle/frontend/$source" "$cid:/qa/input/$source"
+  stage_file "$workspace/source/custom_components/homecircle/frontend/$source" "/qa/input/$source"
 done
-docker_call cp "$script_dir/driver.py" "$cid:/qa/driver.py"
+stage_file "$script_dir/driver.py" /qa/driver.py
 stage=container_setup_and_package
 bounded 720 "${DOCKER[@]}" exec --workdir /qa "$cid" python -I -B /qa/driver.py setup \
   --payload /qa/input --tree /qa/source --results /qa/results >"$workspace/setup.log" 2>&1
