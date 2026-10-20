@@ -58,6 +58,13 @@ class PublicDiagnostics(unittest.TestCase):
         for value in (None, {}, "private-value", "2026.10.2 private-value", "https://example.invalid"):
             self.assertIsNone(controller.public_core_version(value))
 
+    def test_supervisor_projection_excludes_arbitrary_private_fields(self):
+        value = {"result": "ok", "data": {"healthy": True, "supported": False, "state": "running",
+                 "ip_address": "PRIVATE-CANARY", "token": "PRIVATE-CANARY", "version": "PRIVATE-CANARY"}}
+        projected = controller.public_supervisor_state(value)
+        self.assertEqual(projected, {"result": "ok", "healthy": True, "supported": False, "state": "running"})
+        self.assertNotIn("PRIVATE-CANARY", json.dumps(projected))
+
 
 class PhaseContracts(unittest.TestCase):
     def setUp(self):

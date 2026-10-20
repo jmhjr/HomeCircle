@@ -67,6 +67,19 @@ def public_core_version(value):
     return None
 
 
+def public_supervisor_state(value):
+    data = value.get("data", {}) if isinstance(value, dict) else {}
+    if not isinstance(data, dict):
+        data = {}
+    result = value.get("result") if isinstance(value, dict) else None
+    state = data.get("state")
+    allowed = {"initialize", "setup", "startup", "running", "freeze", "shutdown", "stopped", "close"}
+    return {"result": result if isinstance(result, str) and result in {"ok", "error"} else "unavailable",
+            "healthy": data.get("healthy") if isinstance(data.get("healthy"), bool) else None,
+            "supported": data.get("supported") if isinstance(data.get("supported"), bool) else None,
+            "state": state if isinstance(state, str) and state in allowed else None}
+
+
 def write_json(path, data):
     temporary = path.with_name(path.name + ".tmp")
     with temporary.open("xb") as stream:
@@ -163,7 +176,10 @@ class Controller:
         self.core_version_before = None
         self.core_version_after = None
         self.container_core_version_after = None
+        self.container_core_version_before = None
         self.core_update_result = "not_requested"
+        self.initial_landingpage_seen = False
+        self.initial_boot_observations = {}
 
     def remaining(self, maximum, cleanup=False):
         remaining = self.deadline - time.monotonic() + (120 if cleanup else 0)
@@ -178,12 +194,13 @@ class Controller:
         return result.stdout
 
     def guest(self, command, timeout=90):
-        self.remaining(1)
+        operation = self.remaining(timeout)
+        require(operation > 0, "guest_operation_deadline_exceeded")
+        limit = time.monotonic() + operation
         result = self.qga.call("guest-exec", {"path": "/bin/sh", "arg": ["-c", command],
                                               "capture-output": True})
         require(type(result.get("pid")) is int, "guest_process_identity_refused")
         pid = result["pid"]
-        limit = time.monotonic() + self.remaining(timeout)
         while time.monotonic() < limit:
             status = self.qga.call("guest-exec-status", {"pid": pid})
             if status.get("exited"):
@@ -321,15 +338,29 @@ class Controller:
     def wait_managed(self):
         self.stage = "managed_core_ready"
         limit = time.monotonic() + self.remaining(1500)
+        observed_at = 0.0
         while time.monotonic() < limit:
             try:
-                info = json.loads(self.guest(HA + " core info --raw-json", 30))
+                info = json.loads(self.guest(HA + " core info --raw-json", min(30, limit - time.monotonic())))
                 require(info.get("result") == "ok", "managed_core_info_refused")
-                if info.get("data", {}).get("version"):
-                    self.managed_core()
-                    break
+                version = info.get("data", {}).get("version")
+                self.core_version_before = public_core_version(version)
+                self.core_version_after = self.core_version_before
+                if version == "landingpage":
+                    self.initial_landingpage_seen = True
+                require(public_core_version(version) is not None and version != "landingpage",
+                        "real_core_version_not_ready")
+                self.managed_core()
+                actual = self.real_container_version(min(20, limit - time.monotonic()))
+                self.container_core_version_before = public_core_version(actual)
+                require(actual == version and actual != "landingpage", "real_core_version_not_ready")
+                require(time.monotonic() < limit, "managed_core_boot_deadline_exceeded")
+                break
             except (Refused, OSError, ValueError):
-                time.sleep(5)
+                if time.monotonic() - observed_at >= 30 and time.monotonic() + 25 < limit:
+                    self.observe_initial_supervisor(limit)
+                    observed_at = time.monotonic()
+                time.sleep(min(5, max(0, limit - time.monotonic())))
         else:
             raise Refused("managed_core_boot_deadline_exceeded")
         before = info.get("data", {}).get("version")
@@ -358,15 +389,50 @@ class Controller:
                 # Core info can describe the target while an initial landing
                 # page is still running. Verify the actual managed container's
                 # installed Home Assistant version in a bounded Linux child.
-                actual = self.guest("/usr/bin/docker exec homeassistant python3 -B -c "
-                                    + "'from homeassistant.const import __version__; print(__version__)'",
-                                    min(20, limit - time.monotonic())).decode().strip()
+                actual = self.real_container_version(min(20, limit - time.monotonic()))
                 self.container_core_version_after = public_core_version(actual)
                 require(actual == CORE, "managed_container_core_target_not_ready")
+                require(time.monotonic() < limit, "managed_core_target_deadline_exceeded")
                 return
             except (Refused, OSError, ValueError):
                 time.sleep(min(2, max(0, limit - time.monotonic())))
         raise Refused("managed_core_target_deadline_exceeded")
+
+    def real_container_version(self, timeout):
+        return self.guest("/usr/bin/docker exec homeassistant python3 -B -c "
+                          + "'from homeassistant.const import __version__; print(__version__)'",
+                          timeout).decode().strip()
+
+    def observe_initial_supervisor(self, deadline):
+        """Retain narrow health/job diagnostics inside the initial boot bound."""
+        observations = {}
+        try:
+            value = json.loads(self.guest(HA + " supervisor info --raw-json",
+                                          min(10, deadline - time.monotonic())))
+            observations["supervisor"] = public_supervisor_state(value)
+        except (Refused, OSError, ValueError, TypeError):
+            observations["supervisor"] = {"result": "unavailable"}
+        try:
+            value = json.loads(self.guest(HA + " jobs info --raw-json",
+                                          min(10, deadline - time.monotonic())))
+            jobs = value.get("data", {}).get("jobs")
+            require(value.get("result") == "ok" and isinstance(jobs, list), "jobs_projection_refused")
+            pending = list(jobs)
+            projected = []
+            while pending and len(projected) < 64:
+                item = pending.pop(0)
+                require(isinstance(item, dict), "jobs_projection_refused")
+                name, done = item.get("name"), item.get("done")
+                if isinstance(name, str) and re.fullmatch(r"[A-Za-z0-9_]{1,80}", name) and type(done) is bool:
+                    projected.append({"name": name, "done": done})
+                children = item.get("child_jobs", [])
+                require(isinstance(children, list), "jobs_projection_refused")
+                pending.extend(children)
+                require(len(pending) <= 128, "jobs_projection_refused")
+            observations["jobs"] = projected
+        except (Refused, OSError, ValueError, TypeError):
+            observations["jobs_query"] = "unavailable"
+        self.initial_boot_observations = observations
 
     def managed_core(self):
         # Never inspect Config.Env: it contains Supervisor's own internal token.
@@ -702,7 +768,10 @@ class Controller:
                    "core_version_target": CORE, "core_version_before": self.core_version_before,
                    "core_version_after": self.core_version_after,
                    "container_core_version_after": self.container_core_version_after,
+                   "container_core_version_before": self.container_core_version_before,
                    "core_update_result": self.core_update_result,
+                   "initial_landingpage_seen": self.initial_landingpage_seen,
+                   "initial_boot_observations": self.initial_boot_observations,
                    "host_elapsed_seconds": round(time.monotonic() - self.started, 3),
                    "native_linux_amd64_kvm_required": True, "actual_kvm_confirmed": self.kvm_confirmed,
                    "managed_haos_hacs_rehearsal": passed, "phases": len(self.phases),
