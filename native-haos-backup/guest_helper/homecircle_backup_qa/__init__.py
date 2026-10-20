@@ -319,6 +319,73 @@ async def wait_entry_saved(hass, directory, entry):
             await asyncio.sleep(0.25)
 
 
+def persisted_store(directory, key):
+    """Read the actual disk document, without Store's pending-write cache."""
+    root = directory / ".storage"
+    check(root.is_dir() and not root.is_symlink(), "qa_persisted_storage_path")
+    path = root / key
+    check(not path.is_symlink(), "qa_persisted_storage_member")
+    if not path.exists():
+        return None
+    try:
+        value = read_json(path)
+    except json.JSONDecodeError:
+        # Non-atomic Core collection stores can be observed during a normal
+        # delayed write. A complete exact document is still required to pass.
+        return None
+    return value.get("data") if isinstance(value, dict) else None
+
+
+def persisted_snapshot_matches(directory, expected):
+    people = persisted_store(directory, "person")
+    registry = persisted_store(directory, "core.entity_registry")
+    resources = persisted_store(directory, "lovelace_resources")
+    dashboards = persisted_store(directory, "lovelace_dashboards")
+    dashboard = persisted_store(directory, "lovelace." + expected["dashboard_record"]["id"])
+    if not all(isinstance(value, dict) for value in (people, registry, resources, dashboards, dashboard)):
+        return False
+    if not all(isinstance(value, list) and all(isinstance(item, dict) for item in value)
+               for value in (people.get("items"), registry.get("entities"), resources.get("items"), dashboards.get("items"))):
+        return False
+    for person_id, item in expected["people"].items():
+        matches = [value for value in people["items"] if value.get("id") == person_id]
+        if matches != [item]:
+            return False
+    for entity_id, item in expected["registry"].items():
+        matches = [value for value in registry["entities"] if value.get("entity_id") == entity_id]
+        if len(matches) != 1 or {key: matches[0].get(key) for key in ("id", "unique_id")} != item:
+            return False
+    unrelated = [value for value in resources["items"] if value.get("url") == UNRELATED]
+    if unrelated != [expected["unrelated_resource"]] or any(
+            isinstance(value.get("url"), str) and value["url"].split("?")[0] == OWNED_URL
+            for value in resources["items"]):
+        return False
+    owned = [value for value in dashboards["items"] if value.get("id") == expected["dashboard_record"]["id"]]
+    return owned == [expected["dashboard_record"]] and digest(dashboard.get("config")) == expected["dashboard_sha256"]
+
+
+async def wait_snapshot_saved(hass, directory, stable):
+    """Require the supported creates/deletes to have reached disk before backup."""
+    person_ids = {stable["registry"][person]["unique_id"] for person in stable["people"]}
+    people = {value["id"]: deepcopy(value) for value in hass.data["person"][1].async_items()
+              if value["id"] in person_ids}
+    check(set(people) == person_ids and len(people) == 2, "qa_persisted_people_expected")
+    for person, tracker in zip(stable["people"], TRACKERS, strict=True):
+        check(people[stable["registry"][person]["unique_id"]].get("device_trackers") == [tracker],
+              "qa_persisted_person_selection_expected")
+    dashboard = hass.data[LOVELACE_DATA].dashboards["dashboard-homecircle"]
+    dashboard_record = deepcopy(dashboard.config)
+    check(isinstance(dashboard_record, dict) and re.fullmatch(r"[a-z0-9_]{1,128}", dashboard_record.get("id", "")),
+          "qa_persisted_dashboard_key")
+    expected = {"people": people,
+                "registry": {**stable["registry"], **stable["homecircle_registry"]},
+                "unrelated_resource": stable["unrelated_resource"],
+                "dashboard_record": dashboard_record, "dashboard_sha256": stable["dashboard_sha256"]}
+    async with asyncio.timeout(120):
+        while not await hass.async_add_executor_job(persisted_snapshot_matches, directory, expected):
+            await asyncio.sleep(0.25)
+
+
 def integrity(hass):
     from homeassistant.components.recorder.util import session_scope
 
@@ -495,6 +562,10 @@ class Rehearsal:
                     await wait_entry_saved(hass, directory, entry)
                     current = await stable_snapshot(hass, entry, people, registry)
                     check(current == baseline["active"], "qa_quarantine_identity_changed")
+                    stage = "quarantine_persisted_storage"
+                    await wait_snapshot_saved(hass, directory, current)
+                    await assert_quarantine(hass, entry)
+                    receipt["persisted_storage_checked"] = True
                     quarantine = {"stable": current, "disabled_by": "user", "loaded": False,
                                   "owned_resources": 0, "runtime_unloaded": True}
                     await hass.async_add_executor_job(write_json, quarantine_path, quarantine)

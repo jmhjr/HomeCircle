@@ -44,6 +44,49 @@ CORE_MANAGEMENT_JOBS = frozenset({
     "home_assistant_core_restart", "home_assistant_core_rebuild",
 })
 ROOT = Path(__file__).resolve().parent
+BACKUP_ERROR_TYPES = frozenset({
+    "BackupError", "HomeAssistantBackupError", "BackupJobError", "BackupInvalidError", "BackupPermissionError",
+    "BackupFileExistError", "BackupFatalIOError", "BackupDataDiskBadMessageError", "BackupFileNotFoundError",
+    "BackupSupervisorVersionError", "BackupSupervisorUpdateInProgressError", "BackupMountDownError",
+    "JobConditionException", "JobGroupExecutionLimitExceeded", "HomeAssistantWSError", "ConfigurationFileError",
+})
+# Fixed literals reviewed in Supervisor 2026.10.2, CLI bf6d59ff,
+# Cobra 1.10.2 and pflag 1.0.10. No message fragment or value is copied.
+BACKUP_MESSAGE_CATEGORIES = (
+    ("Preparing backup of Home Assistant Core failed. Failed to inform HA Core:", "core_backup_start_transport"),
+    ("Preparing backup of Home Assistant Core failed due to:", "core_backup_start_rejected"),
+    ("Error during pre-backup:", "core_pre_backup_hook_failed"),
+    ("Home Assistant is not running", "recorder_core_not_running"),
+    ("Database migration in progress", "recorder_database_migrating"),
+    ("Could not lock database within ", "recorder_lock_timeout"),
+    ("Could not release database write lock", "recorder_unlock_failed"),
+    ("Can't backup Home Assistant Core config folder:", "core_config_archive_failed"),
+    ("Can't save meta for Home Assistant Core:", "core_metadata_write_failed"),
+    ("Can't write tarfile:", "backup_tar_write_failed"),
+    ("unexpected non-JSON response", "cli_http_non_json"),
+    ("unexpected server response", "cli_http_unexpected_status"),
+    ("unauthorized:", "cli_http_unauthorized"),
+    ("forbidden:", "cli_http_forbidden"),
+    ("bad gateway:", "cli_http_bad_gateway"),
+    ("unknown error occurred", "cli_http_internal_error"),
+    ("unknown command", "cli_unexpected_positional_or_command"),
+    ("unknown flag:", "cli_unknown_flag"),
+    ("flag needs an argument:", "cli_flag_value_missing"),
+    ("bad flag syntax:", "cli_flag_syntax"),
+    ("not enough free space", "supervisor_free_space"),
+    ("system is not healthy", "supervisor_unhealthy"),
+    ("system is not running", "supervisor_not_running"),
+    ("system is not frozen", "supervisor_not_frozen"),
+    ("no supervisor internet connection", "supervisor_internet_unavailable"),
+    ("no host internet connection", "host_internet_unavailable"),
+)
+BACKUP_DIAGNOSTIC_JOBS = CORE_MANAGEMENT_JOBS | {
+    "backup_manager_partial_backup", "backup_manager_partial_restore", "backup_store_homeassistant",
+    "backup_restore_homeassistant", "home_assistant_module_backup", "home_assistant_module_restore",
+    "home_assistant_module_begin_backup", "home_assistant_module_end_backup", "backup_store_supervisor_config",
+    "backup_restore_supervisor_config", "backup_copy_to_additional_locations", "backup_copy_to_location",
+    "backup_store_folders", "backup_restore_folders", "backup_store_apps", "backup_restore_apps",
+}
 
 
 class Refused(RuntimeError):
@@ -189,6 +232,64 @@ def backup_info(value, slug):
             "protected": False, "compressed": False}
 
 
+def backup_error_categories(value):
+    """Classify reviewed public source constants without exporting message text."""
+    if not isinstance(value, dict):
+        return {"type": "unclassified", "categories": []}
+    kind = value.get("type")
+    kind = kind if isinstance(kind, str) and kind in BACKUP_ERROR_TYPES else "unclassified"
+    message = value.get("message")
+    categories = []
+    if isinstance(message, str):
+        # Nested Core errors are embedded in Supervisor's fixed wrapper, so
+        # classify each known literal wherever that nested wrapper places it.
+        lowered = message.lower()
+        categories = {category for literal, category in BACKUP_MESSAGE_CATEGORIES if literal.lower() in lowered}
+        if re.search(r"accepts [0-9]+ arg\(s\), received [0-9]+", message):
+            categories.add("cli_positional_count")
+        categories = sorted(categories)
+    return {"type": kind, "categories": categories}
+
+
+def public_backup_failure_jobs(value, identifier, expected_name):
+    """Return exact/recent backup job diagnostics with complete bounded trees."""
+    require(isinstance(value, dict) and value.get("result") == "ok", "backup_failure_jobs_refused")
+    roots = value.get("data", {}).get("jobs")
+    require(isinstance(roots, list), "backup_failure_jobs_refused")
+    pending, all_nodes = list(roots), []
+    while pending:
+        item = pending.pop(0)
+        require(isinstance(item, dict) and len(all_nodes) + len(pending) < 256, "backup_failure_jobs_refused")
+        all_nodes.append(item)
+        children = item.get("child_jobs", [])
+        require(isinstance(children, list), "backup_failure_jobs_refused")
+        pending.extend(children)
+    exact = [item for item in all_nodes if identifier is not None and item.get("uuid") == identifier]
+    if identifier is not None:
+        require(len(exact) == 1 and exact[0].get("name") == expected_name, "backup_failure_job_identity_refused")
+    selected = exact if identifier is not None else [item for item in all_nodes
+        if item.get("name") in {"backup_manager_partial_backup", "backup_manager_partial_restore"}][:3]
+    result = []
+    for root in selected:
+        pending, nodes = [root], []
+        while pending:
+            item = pending.pop(0)
+            done, failures = item.get("done"), item.get("errors")
+            require((done is None or type(done) is bool) and isinstance(failures, list), "backup_failure_job_state_refused")
+            errors = [backup_error_categories(error) for error in failures]
+            legacy = item.get("error")
+            if legacy is not None and legacy is not False and legacy != "" and legacy != []:
+                errors.append(backup_error_categories(legacy if isinstance(legacy, dict) else {"message": legacy}))
+            require(len(errors) <= 32, "backup_failure_job_errors_refused")
+            name = item.get("name")
+            nodes.append({"name": name if isinstance(name, str) and name in BACKUP_DIAGNOSTIC_JOBS
+                          else "unclassified", "done": done, "errors": errors})
+            pending.extend(item.get("child_jobs", []))
+        result.append({"binding": "exact_operation" if identifier is not None else "recent_backup_job",
+                       "nodes": nodes})
+    return result
+
+
 def write_json(path, data):
     temporary = path.with_name(path.name + ".tmp")
     with temporary.open("xb") as stream:
@@ -298,6 +399,7 @@ class Controller:
         self.supervisor_version_observed = None
         self.cli_version_observed = None
         self.core_actions = []
+        self.backup_requests = []
 
     def remaining(self, maximum, cleanup=False):
         remaining = self.deadline - time.monotonic() + (120 if cleanup else 0)
@@ -311,7 +413,7 @@ class Controller:
         require(result.returncode == 0, "host_command_failed")
         return result.stdout
 
-    def guest(self, command, timeout=90):
+    def guest(self, command, timeout=90, capture=False):
         operation = self.remaining(timeout)
         require(operation > 0, "guest_operation_deadline_exceeded")
         limit = time.monotonic() + operation
@@ -322,10 +424,19 @@ class Controller:
         while time.monotonic() < limit:
             status = self.qga.call("guest-exec-status", {"pid": pid})
             if status.get("exited"):
-                require(status.get("exitcode") == 0 and not status.get("out-truncated")
-                        and not status.get("err-truncated"), "guest_command_failed")
+                exitcode, child_signal = status.get("exitcode"), status.get("signal")
+                truncated = bool(status.get("out-truncated") or status.get("err-truncated"))
                 output = base64.b64decode(status.get("out-data", ""), validate=True)
-                require(len(output) <= 4 * 1024**2, "guest_command_output_refused")
+                error = base64.b64decode(status.get("err-data", ""), validate=True)
+                require(len(output) <= 4 * 1024**2 and len(error) <= 4 * 1024**2, "guest_command_output_refused")
+                if capture:
+                    require((type(exitcode) is int and 0 <= exitcode <= 255)
+                            or (exitcode is None and type(child_signal) is int and 0 < child_signal <= 64),
+                            "guest_exit_status_refused")
+                    return {"exitcode": exitcode, "signal": child_signal,
+                            "stdout": b"" if truncated else output, "stderr": b"" if truncated else error,
+                            "truncated": truncated}
+                require(exitcode == 0 and not truncated, "guest_command_failed")
                 return output
             time.sleep(0.3)
         raise Refused("guest_command_deadline_exceeded")
@@ -739,6 +850,8 @@ class Controller:
         snapshot = fingerprint(receipt.get("snapshot_sha256"))
         owned_resource = fingerprint(receipt.get("owned_resource_id_sha256")) if active else None
         quarantine = receipt.get("quarantine_snapshot_sha256")
+        if name == "quarantine":
+            require(receipt.get("persisted_storage_checked") is True, "prebackup_persisted_storage_required")
         if name in {"quarantine", "restored_quarantine"}:
             quarantine = fingerprint(quarantine)
         elif quarantine is not None:
@@ -816,13 +929,16 @@ class Controller:
         public_guard = {key: guard[key] for key in ("sha256", "blocked", "unresolved", "rejected", "api_status_checked")}
         if not api_checked:
             public_guard["retained_bytes_checked"] = True
-        return {"schema": 1, "phase": name, "generation": self.generation, "outcome": "passed",
+        public = {"schema": 1, "phase": name, "generation": self.generation, "outcome": "passed",
                 "package_files_count": 112, "package_payload_sha256": sha(canonical(expected)),
                 "loaded_source_sha256": loaded, "snapshot_sha256": snapshot,
                 "owned_resource_id_sha256": owned_resource,
                 "quarantine_snapshot_sha256": quarantine, "entry_disabled": not active, "entry_loaded": active,
                 "process": {key: process[key] for key in ("pid", "start_ticks")},
                 "recorder": public_recorder, "guard": public_guard}
+        if name == "quarantine":
+            public["persisted_storage_checked"] = True
+        return public
 
     def cli_capabilities(self):
         self.stage = "backup_cli_capabilities"
@@ -842,6 +958,18 @@ class Controller:
             time.sleep(min(2, max(0, deadline - time.monotonic())))
         raise Refused("backup_job_deadline_exceeded")
 
+    def capture_backup_failure(self, record, identifier, name, deadline):
+        record["jobs_query"] = "unavailable"
+        if time.monotonic() >= deadline:
+            record["jobs_query"] = "deadline_exhausted"
+            return
+        try:
+            value = json.loads(self.guest(HA + " jobs info --raw-json", min(20, deadline - time.monotonic())))
+            record["jobs"] = public_backup_failure_jobs(value, identifier, name)
+            record["jobs_query"] = "ok"
+        except (Refused, OSError, ValueError, TypeError, AttributeError):
+            pass
+
     def backup_operation(self, restore=False):
         action = "restore" if restore else "create"
         self.stage = "supervisor_partial_" + action
@@ -854,19 +982,45 @@ class Controller:
             raise Refused("backup_management_boundary_refused")
         if restore:
             require(self.backup is not None, "backup_before_restore_required")
-            command = "backups restore " + self.backup["slug"] + " --homeassistant=true --location .local"
+            command = "backups restore " + self.backup["slug"] + " --homeassistant=true --location=.local"
             job_name = "backup_manager_partial_restore"
         else:
             command = ("backups new --folders homeassistant --homeassistant-exclude-database=false"
-                       " --uncompressed --location .local --name HomeCircleBackupQA --filename homecircle-backup-qa.tar")
+                       " --uncompressed --location=.local --name HomeCircleBackupQA --filename homecircle-backup-qa.tar")
             job_name = "backup_manager_partial_backup"
         # Exactly one supported synchronous request, never a retry of a mutation.
-        value = json.loads(self.guest(HA + " " + command + " --raw-json", deadline - time.monotonic()))
-        require(isinstance(value, dict) and value.get("result") == "ok", "backup_operation_api_refused")
+        record = {"action": action, "exit_code": None, "signal": None, "result": "unavailable",
+                  "stdout_json": False, "output_truncated": False}
+        self.backup_requests.append(record)
+        captured = self.guest(HA + " " + command + " --raw-json", deadline - time.monotonic(), capture=True)
+        record["exit_code"] = captured["exitcode"]
+        record["signal"] = captured["signal"] if type(captured["signal"]) is int and 0 < captured["signal"] <= 64 else None
+        record["output_truncated"] = captured["truncated"]
+        value = None
+        try:
+            value = json.loads(captured["stdout"])
+            record["stdout_json"] = isinstance(value, dict)
+        except (ValueError, UnicodeError):
+            pass
+        if not isinstance(value, dict):
+            value = {}
+        result = value.get("result")
+        record["result"] = result if isinstance(result, str) and result in {"ok", "error"} else "response_invalid"
+        record["api_error"] = backup_error_categories(value)
+        record["stderr_error"] = backup_error_categories({"message": captured["stderr"].decode(errors="replace")})
         data = value.get("data", {})
-        job = data.get("job_id") if isinstance(data, dict) else None
+        job = value.get("job_id") or (data.get("job_id") if isinstance(data, dict) else None)
+        job = job if isinstance(job, str) and re.fullmatch(r"[0-9a-f]{32}", job) else None
+        record["exact_job_id_returned"] = job is not None
+        if captured["exitcode"] != 0 or captured["truncated"] or result != "ok":
+            self.capture_backup_failure(record, job, job_name, deadline)
+            raise Refused("backup_operation_api_refused")
         require(isinstance(job, str) and re.fullmatch(r"[0-9a-f]{32}", job), "backup_operation_job_refused")
-        status = self.wait_backup_job(job, job_name, deadline)
+        try:
+            status = self.wait_backup_job(job, job_name, deadline)
+        except (Refused, OSError, ValueError, TypeError, AttributeError):
+            self.capture_backup_failure(record, job, job_name, deadline)
+            raise
         if restore:
             self.restore = {"result": "ok", "job": status, "disabled_entry_gate_required": True}
         else:
@@ -1148,6 +1302,7 @@ print(json.dumps({"archive_bytes":path.stat().st_size,"archive_sha256":sha(path.
                    "supervisor_version_observed": self.supervisor_version_observed,
                    "cli_version_observed": self.cli_version_observed,
                    "core_actions": self.core_actions,
+                   "backup_requests": self.backup_requests,
                    "host_elapsed_seconds": round(time.monotonic() - self.started, 3),
                    "native_linux_amd64_kvm_required": True, "actual_kvm_confirmed": self.kvm_confirmed,
                    "guarded_partial_backup_restore_rehearsal": passed, "phases": len(self.phases),

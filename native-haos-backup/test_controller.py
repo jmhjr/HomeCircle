@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import base64
 import io
 import json
 from pathlib import Path
@@ -147,6 +148,41 @@ class BackupContracts(unittest.TestCase):
             with self.subTest(key=key), self.assertRaises(controller.Refused):
                 controller.backup_info(changed, "abcd1234")
 
+    def test_nested_backup_failure_diagnostics_exclude_raw_messages_and_unknown_types(self):
+        self.job["child_jobs"] = [{"uuid": "b" * 32, "name": "backup_store_homeassistant", "done": True,
+            "errors": [{"type": "HomeAssistantBackupError", "message":
+                "Preparing backup of Home Assistant Core failed due to: Error during pre-backup: "
+                "Could not lock database within 30 PRIVATE-CANARY"},
+                {"type": "PRIVATE-CANARY", "message": "PRIVATE-CANARY"}], "child_jobs": []}]
+        result = controller.public_backup_failure_jobs(self.value, self.identifier, self.job["name"])
+        self.assertEqual(result[0]["binding"], "exact_operation")
+        errors = result[0]["nodes"][1]["errors"]
+        self.assertEqual(errors[0], {"type": "HomeAssistantBackupError", "categories": [
+            "core_backup_start_rejected", "core_pre_backup_hook_failed", "recorder_lock_timeout"]})
+        self.assertEqual(errors[1], {"type": "unclassified", "categories": []})
+        self.assertNotIn("PRIVATE-CANARY", json.dumps(result))
+
+    def test_recent_failure_jobs_are_labeled_without_an_exact_returned_id(self):
+        result = controller.public_backup_failure_jobs(self.value, None, self.job["name"])
+        self.assertEqual(result[0]["binding"], "recent_backup_job")
+
+    def test_backup_failure_diagnostic_tree_is_bounded_without_silent_truncation(self):
+        self.job["child_jobs"] = [{"uuid": "b" * 32, "done": True, "errors": []}] * 256
+        with self.assertRaises(controller.Refused):
+            controller.public_backup_failure_jobs(self.value, self.identifier, self.job["name"])
+
+    def test_cli_and_condition_categories_never_copy_dynamic_arguments_or_reasons(self):
+        for message, expected in (
+            ('unknown command "PRIVATE-CANARY"', "cli_unexpected_positional_or_command"),
+            ("accepts 1 arg(s), received 2 PRIVATE-CANARY", "cli_positional_count"),
+            ("unexpected non-JSON response PRIVATE-CANARY", "cli_http_non_json"),
+            ("Not enough free space PRIVATE-CANARY", "supervisor_free_space"),
+        ):
+            result = controller.backup_error_categories({"message": message})
+            with self.subTest(expected=expected):
+                self.assertEqual(result["categories"], [expected])
+                self.assertNotIn("PRIVATE-CANARY", json.dumps(result))
+
 
 class PhaseContracts(unittest.TestCase):
     def setUp(self):
@@ -179,6 +215,10 @@ class PhaseContracts(unittest.TestCase):
 
     def read(self):
         self.host.guest_read = Mock(return_value=controller.canonical(self.receipt))
+
+    def captured(self, value, exitcode=0, error=b""):
+        return {"exitcode": exitcode, "signal": None, "stdout": controller.canonical(value),
+                "stderr": error, "truncated": False}
 
     def initialize(self):
         self.host.phases.append(self.host.accept_phase("initialize", self.receipt))
@@ -215,6 +255,16 @@ class PhaseContracts(unittest.TestCase):
         self.receipt.update(entry_disabled=None, entry_loaded=False, quarantine_snapshot_sha256="e" * 64)
         with self.assertRaises(controller.Refused):
             self.host.accept_phase("quarantine", self.receipt)
+
+    def test_quarantine_requires_actual_persisted_storage_proof_before_backup(self):
+        self.initialize()
+        self.receipt.update(entry_disabled=True, entry_loaded=False, loaded_source_sha256=None,
+                            quarantine_snapshot_sha256="e" * 64, persisted_storage_checked=False)
+        self.receipt["guard"].update(api_status_checked=False, retained_bytes_checked=True)
+        with self.assertRaisesRegex(controller.Refused, "^prebackup_persisted_storage_required$"):
+            self.host.accept_phase("quarantine", self.receipt)
+        self.receipt["persisted_storage_checked"] = True
+        self.assertTrue(self.host.accept_phase("quarantine", self.receipt)["persisted_storage_checked"])
 
     def test_recorder_hook_and_committed_history_are_required(self):
         for key in ("backup_platform_registered", "commit_proven", "integrity_ok"):
@@ -262,11 +312,21 @@ class PhaseContracts(unittest.TestCase):
 
     def test_supported_backup_cli_mutation_is_not_retried_after_api_error(self):
         self.host.management_ready = Mock(return_value=True)
-        self.host.guest = Mock(return_value=b'{"result":"error","message":"PRIVATE-CANARY"}')
+        failure = {"result": "error", "message": "PRIVATE-CANARY", "job_id": "a" * 32}
+        jobs = {"result": "ok", "data": {"jobs": [{"uuid": "a" * 32, "name": "backup_manager_partial_backup",
+                "done": True, "errors": [{"type": "BackupFileExistError", "message": "PRIVATE-CANARY"}]}]}}
+        self.host.guest = Mock(side_effect=[self.captured(failure, exitcode=1), controller.canonical(jobs)])
         with self.assertRaises(controller.Refused):
             self.host.backup_operation()
-        self.assertEqual(self.host.guest.call_count, 1)
-        self.assertIn("--homeassistant-exclude-database=false", self.host.guest.call_args.args[0])
+        commands = [call.args[0] for call in self.host.guest.call_args_list]
+        self.assertEqual(sum(" backups new " in command for command in commands), 1)
+        self.assertIn("--homeassistant-exclude-database=false", commands[0])
+        self.assertIn("--location=.local", commands[0])
+        self.assertNotIn("--location .local", commands[0])
+        self.assertEqual(self.host.backup_requests[0]["exit_code"], 1)
+        self.assertEqual(self.host.backup_requests[0]["result"], "error")
+        self.assertEqual(self.host.backup_requests[0]["jobs"][0]["binding"], "exact_operation")
+        self.assertNotIn("PRIVATE-CANARY", json.dumps(self.host.backup_requests))
         self.assertIsNone(self.host.backup)
 
     def test_successful_backup_accepts_a_normally_returning_void_core_validator(self):
@@ -275,7 +335,7 @@ class PhaseContracts(unittest.TestCase):
         self.host.remaining = Mock(return_value=30)
         self.host.wait_backup_job = Mock(return_value={"done": True, "error_count": 0, "nodes": 1})
         self.host.guest = Mock(side_effect=[
-            b'{"result":"ok","data":{"job_id":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","slug":"abcd1234"}}',
+            self.captured({"result": "ok", "data": {"job_id": "a" * 32, "slug": "abcd1234"}}),
             controller.canonical({"result": "ok", "data": {"slug": "abcd1234", "type": "partial",
                 "homeassistant": controller.CORE, "homeassistant_exclude_database": False,
                 "protected": False, "compressed": False}}),
@@ -291,11 +351,35 @@ class PhaseContracts(unittest.TestCase):
     def test_explicit_homeassistant_flag_selects_partial_restore(self):
         self.host.backup = {"slug": "abcd1234"}
         self.host.management_ready = Mock(return_value=True)
-        self.host.guest = Mock(return_value=b'{"result":"error"}')
+        self.host.guest = Mock(side_effect=[self.captured({"result": "error"}, exitcode=1),
+                                           b'{"result":"ok","data":{"jobs":[]}}'])
         with self.assertRaises(controller.Refused):
             self.host.backup_operation(restore=True)
-        self.assertIn("--homeassistant=true", self.host.guest.call_args.args[0])
-        self.assertEqual(self.host.guest.call_count, 1)
+        commands = [call.args[0] for call in self.host.guest.call_args_list]
+        self.assertIn("--homeassistant=true", commands[0])
+        self.assertIn("--location=.local", commands[0])
+        self.assertNotIn("--location .local", commands[0])
+        self.assertEqual(sum(" backups restore " in command for command in commands), 1)
+
+    def test_nonzero_child_with_ok_json_remains_a_failed_request(self):
+        self.host.management_ready = Mock(return_value=True)
+        self.host.guest = Mock(side_effect=[self.captured({"result": "ok", "data": {}}, exitcode=2),
+                                           b'{"result":"ok","data":{"jobs":[]}}'])
+        with self.assertRaises(controller.Refused):
+            self.host.backup_operation()
+        self.assertEqual(self.host.backup_requests[0]["exit_code"], 2)
+        self.assertEqual(self.host.backup_requests[0]["result"], "ok")
+        self.assertIsNone(self.host.backup)
+
+    def test_guest_capture_preserves_nonzero_exit_without_exporting_its_response(self):
+        self.host.qga = Mock()
+        self.host.qga.call.side_effect = [{"pid": 9}, {"exited": True, "exitcode": 7,
+            "out-data": base64.b64encode(b'{"result":"error"}').decode(),
+            "err-data": base64.b64encode(b"PRIVATE-CANARY").decode()}]
+        result = controller.Controller.guest(self.host, "fixed-synthetic-command", capture=True)
+        self.assertEqual(result["exitcode"], 7)
+        self.assertEqual(json.loads(result["stdout"])["result"], "error")
+        self.assertEqual(self.host.backup_requests, [])
 
     def test_restored_automatic_boot_must_be_disabled_without_candidate_import(self):
         self.initialize()
