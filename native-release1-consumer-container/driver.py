@@ -47,6 +47,29 @@ def source(c, directory):
     return support, files
 
 
+def cache_command(wanted, executable, constraints):
+    """Use both fixed official image sources without inheriting an index config."""
+    return [
+        "uv",
+        "pip",
+        "install",
+        "--no-config",
+        "--prefix",
+        "/config/deps",
+        "--python",
+        executable,
+        "--index-url",
+        "https://pypi.org/simple",
+        "--extra-index-url",
+        "https://wheels.home-assistant.io/musllinux-index/",
+        "--index-strategy",
+        "unsafe-first-match",
+        "--constraint",
+        str(constraints),
+        *[name + "==" + version for name, version in sorted(wanted.items())],
+    ]
+
+
 def setup(c, values, args):
     args.setup_stage = "preparer_boundary"
     status = dict(
@@ -148,23 +171,7 @@ def setup(c, values, args):
         "normal_cache_layout_refused",
     )
     wanted = values["dependency_versions"] | values["startup_versions"]
-    command = [
-        "uv",
-        "pip",
-        "install",
-        "--no-config",
-        "--prefix",
-        "/config/deps",
-        "--python",
-        sys.executable,
-        "--index-url",
-        "https://pypi.org/simple",
-        "--index-strategy",
-        "unsafe-first-match",
-        "--constraint",
-        str(root / "package_constraints.txt"),
-        *[name + "==" + version for name, version in sorted(wanted.items())],
-    ]
+    command = cache_command(wanted, sys.executable, root / "package_constraints.txt")
     args.setup_stage = "cache_install"
     c.check(
         support.run_owned(

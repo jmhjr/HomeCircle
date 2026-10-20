@@ -38,11 +38,11 @@ jobs:
           import subprocess
           root = Path("native-release1-consumer-container")
           expected = {
-              "PREPARED.json": "a346798d50d8fe69dccc934969c665cbf7c9ca2fe9528dc196484fc8019cf825",
-              "README.md": "b58a7e73eb96316fddd13a3ba21499a370dea78641acb3d9b7d005416570aaa1",
+              "PREPARED.json": "199d0520b2daf335fe0f4fb38fbc7a9b3e37e0a2c865bb958b3d2a6c308e3905",
+              "README.md": "f0156c15599d23f5212ed5fed4565bc28489340a2699b7c62b5d15787eaab900",
               "cache_child.py": "73b5eee7f142dbe63374fce280ccadafb65064145b4a6105861070c3be1fa9b8",
               "common.py": "9be103213dc3bbbfdb1e821514f7955faf90e7d4985088a19debc09a51dcef97",
-              "driver.py": "f747b29e6375c2bf84c465ae721432b3123cbe5146d04e14c4bc853f581bccbe",
+              "driver.py": "95553632c3fb062436d5d3f5e940cde3277a2a9dbb9a1b762a522cc682281978",
               "guest.py": "92c70abfcc69c712065bc4a034c783ff5029ba7fc132f9d5025a067c279173d4",
               "package_support.py": "e97e3f71fc9f7ceb9391f86e0178c59c3b88a2fafe5f397e25a9fb69fe568e59",
               "payload/homecircle.zip": "c4530d94be3b2996f8d6c8948db88a51868566047d68558eefde7967f270a861",
@@ -50,13 +50,13 @@ jobs:
               "payload/source-config.json": "bce0379d11d76c53954380c3893a2cf581d539519168492f4235ffee9ba3be0d",
               "payload/source-inventory.json": "e1e999d3324a896dc84323afe24c1c1c60e694fc61a37e885d4bbdbef964d351",
               "payload/source.tgz": "a44c7d404a53eb93386715a376d826dc9be447d0cf59639cd19bf2d7b21ed72e",
-              "pins-current-amd64.json": "e4d438155defbde2e8cc82d5c7c71353f350550ae8c7ae850a53d9571375e1d6",
-              "pins-current-arm64.json": "777c8a8404d06274c1f4894f9c0773b7eb12e899439562a15422cc701952ffe7",
-              "pins-minimum-amd64.json": "2ee7c2c0009e64a07926ba12882649fa1fd8b892043af63a05376630cedf96b1",
-              "pins-minimum-arm64.json": "d4c0442eeb3309d91e57cfb7b7df3fdb310afbb237950df8abf0626007ce9e9f",
+              "pins-current-amd64.json": "92edd4b6431b653b2a145eef68b700dde9f320ee175ff6e9ddbcfe9d023646a9",
+              "pins-current-arm64.json": "0c908eff7d1dbf8cd09097f7e6125a0b08357409984cca3338f0380d2db97f2a",
+              "pins-minimum-amd64.json": "48972c436ca42f36d3846f9224c7e596bd812a4d63b2810fcde4ae485edbe2a0",
+              "pins-minimum-arm64.json": "8f6af677f540f869bd5ef143f0ddf93feb8b25a08a7c734c61336f499338a62d",
               "process_probe.py": "fda1c83041a61d720e9c7c9d9fde2a652eaeb43a5a77efcaf17a97c62e0905b3",
               "run_host.sh": "8cafffa854415234c3401c4ac9d2e8221f1c9b5a5531890b511d6272e87de73f",
-              "test_controls.py": "a573ac7c2e87bdb7fe75cbde456443080d35f3e5fba85ee0abd3c184c2e2bac0"
+              "test_controls.py": "36cbcc05216c95bf066ee125b94b2e170ba79c735006f58f7abf3e34c7f122cc"
           }
           tracked = subprocess.check_output(["git", "ls-files", "-z", "--", str(root)]).decode().split("\0")
           assert {name for name in tracked if name} == {str(root / name) for name in expected}, "fixture_tracked_members_refused"
@@ -69,7 +69,7 @@ jobs:
               assert hashlib.sha256((root / name).read_bytes()).hexdigest() == digest, "fixture_bytes_refused"
           print("Verified 19 frozen fixture files; one current-amd64 pilot target.")
           PY
-      - name: Check twenty-four standalone and Linux process contracts
+      - name: Check twenty-six standalone and Linux process contracts
         timeout-minutes: 3
         shell: bash
         run: |
@@ -77,7 +77,7 @@ jobs:
           PYTHONDONTWRITEBYTECODE=1 python3 -B - <<'PY'
           import unittest
           suite = unittest.defaultTestLoader.discover('native-release1-consumer-container', pattern='test_controls.py')
-          if suite.countTestCases() != 24:
+          if suite.countTestCases() != 26:
               raise SystemExit('reviewed_contract_count_refused')
           result = unittest.TextTestRunner(verbosity=2).run(suite)
           if result.skipped:
@@ -91,13 +91,13 @@ jobs:
           timeout --signal=TERM --kill-after=150s 2300s bash native-release1-consumer-container/run_host.sh \
             --payload native-release1-consumer-container/payload \
             --pins native-release1-consumer-container/pins-current-amd64.json \
-            --pins-sha e4d438155defbde2e8cc82d5c7c71353f350550ae8c7ae850a53d9571375e1d6 \
+            --pins-sha 92edd4b6431b653b2a145eef68b700dde9f320ee175ff6e9ddbcfe9d023646a9 \
             --source-repository "$GITHUB_WORKSPACE" \
             --output native-release1-consumer-container-results
           receipts=native-release1-consumer-container-results/public-summary
           jq -e '.schema==1 and .outcome=="passed" and .target=="current-amd64" and
             .stage=="complete" and .exit_code==0 and
-            .pins_sha256=="e4d438155defbde2e8cc82d5c7c71353f350550ae8c7ae850a53d9571375e1d6" and
+            .pins_sha256=="92edd4b6431b653b2a145eef68b700dde9f320ee175ff6e9ddbcfe9d023646a9" and
             .cleanup_failed==false and .owned_containers_stopped==true and
             .owned_containers_removed==true and .owned_volume_removed==true and
             .private_workspace_removed==true and .both_containers_offline_during_acceptance==true and

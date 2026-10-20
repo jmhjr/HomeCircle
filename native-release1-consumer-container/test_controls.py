@@ -50,6 +50,8 @@ class Contracts(unittest.TestCase):
             {"image_repository": "ghcr.io/home-assistant/qemux86-64-homeassistant"},
             {"schema": True},
             {"unknown": "PRIVATE-CANARY"},
+            {"index_url": "https://private.invalid/simple"},
+            {"extra_index_url": "https://private.invalid/simple"},
             {"constraints_sha256": "0" * 64},
             {
                 "startup_versions": dict(
@@ -59,6 +61,63 @@ class Contracts(unittest.TestCase):
         ):
             with self.subTest(changes=changes), self.assertRaises(c.Refused):
                 self.read_pins(self.original | changes)
+
+    def test_cache_argv_uses_only_both_fixed_sources_and_exact_pins(self):
+        wanted = (
+            self.original["dependency_versions"] | self.original["startup_versions"]
+        )
+        command = driver.cache_command(
+            wanted,
+            "/usr/local/bin/python",
+            Path("/reviewed/core/package_constraints.txt"),
+        )
+        self.assertEqual(
+            command[:16],
+            [
+                "uv",
+                "pip",
+                "install",
+                "--no-config",
+                "--prefix",
+                "/config/deps",
+                "--python",
+                "/usr/local/bin/python",
+                "--index-url",
+                "https://pypi.org/simple",
+                "--extra-index-url",
+                "https://wheels.home-assistant.io/musllinux-index/",
+                "--index-strategy",
+                "unsafe-first-match",
+                "--constraint",
+                "/reviewed/core/package_constraints.txt",
+            ],
+        )
+        self.assertEqual(len(command), 61)
+        self.assertEqual(
+            command[16:],
+            sorted(name + "==" + version for name, version in wanted.items()),
+        )
+        self.assertEqual(
+            [value for value in command if value.startswith("https://")],
+            [
+                "https://pypi.org/simple",
+                "https://wheels.home-assistant.io/musllinux-index/",
+            ],
+        )
+
+    def test_retargeted_cache_index_control_is_refused_before_execution(self):
+        for name in self.original["controls"]:
+            (self.root / name).write_bytes((HERE / name).read_bytes())
+        c.controls(self.root, self.original)
+        target = self.root / "driver.py"
+        target.write_text(
+            target.read_text().replace(
+                "https://wheels.home-assistant.io/musllinux-index/",
+                "https://private.invalid/simple",
+            )
+        )
+        with self.assertRaisesRegex(c.Refused, "^input_hash_refused$"):
+            c.controls(self.root, self.original)
 
     def test_hash_duplicate_pin_and_input_symlink_are_refused(self):
         path = self.root / "pins.json"
