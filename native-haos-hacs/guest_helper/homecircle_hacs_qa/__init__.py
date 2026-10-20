@@ -21,6 +21,7 @@ from pathlib import Path, PurePosixPath
 import re
 import stat
 from types import MappingProxyType
+from urllib.parse import urlsplit
 
 import aiohttp
 import probatio as vol
@@ -199,7 +200,17 @@ async def create_homecircle(hass, registry):
     return entry, people
 
 
-async def snapshot(hass, entry, people, registry):
+def location_category(value):
+    if not value:
+        return "absent"
+    try:
+        path = urlsplit(value).path
+    except (TypeError, ValueError):
+        return "other"
+    return "onboarding" if path in {"/onboarding", "/onboarding.html"} else "other"
+
+
+async def snapshot(hass, entry, people, registry, http_probe):
     from custom_components.homecircle import api, frontend
 
     check(entry.state == ConfigEntryState.LOADED and bool(entry.options), "qa_entry_loaded")
@@ -223,9 +234,25 @@ async def snapshot(hass, entry, people, registry):
     url = await hass.async_add_executor_job(frontend.resource_url)
     check(owned[0]["url"] == url, "qa_resource_url")
     bundle = await hass.async_add_executor_job((Path(hass.config.path("custom_components/homecircle/frontend/homecircle-card.js"))).read_bytes)
+    port = hass.http.server_port
+    tls = hass.http.context is not None
+    http_probe.update({"tls": tls, "expected_bytes": len(bundle), "expected_sha256": digest(bundle)})
+    check(type(port) is int and 1 <= port <= 65535, "qa_http_active_port")
+    http_probe["active_port"] = port
+    check(not tls, "qa_http_fixture_tls")
     async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=30), trust_env=False) as session:
-        async with session.get("http://127.0.0.1:8123" + url, allow_redirects=False) as response:
-            check(response.status == 200 and await response.read() == bundle, "qa_served_bundle")
+        async with session.get(f"http://127.0.0.1:{port}" + url, allow_redirects=False) as response:
+            http_probe.update({"status": response.status,
+                               "location_category": location_category(response.headers.get("Location"))})
+            chunks, received = [], 0
+            async for chunk in response.content.iter_chunked(65536):
+                received += len(chunk)
+                check(received <= 32 * 1024**2, "qa_served_bundle_size")
+                chunks.append(chunk)
+            body = b"".join(chunks)
+            http_probe.update({"response_bytes": len(body), "response_sha256": digest(body),
+                               "body_matches": body == bundle})
+            check(response.status == 200 and body == bundle, "qa_served_bundle")
     dashboard = hass.data[LOVELACE_DATA].dashboards.get("dashboard-homecircle")
     check(dashboard is not None and dashboard.config and dashboard.config.get("id"), "qa_dashboard")
     config = await dashboard.async_load(False)
@@ -312,6 +339,7 @@ class Rehearsal:
         hass, directory = self.hass, self.directory
         name = phase["phase"]
         stage = "platform"
+        http_probe = {}
         receipt = {"schema": 1, "token": phase["token"], "phase": name, "outcome": "failed",
                    "process": process(), "owner_accounts_used": False, "oauth_tested": False,
                    "core_version": CORE_VERSION, "production_configuration_used": False,
@@ -383,7 +411,7 @@ class Rehearsal:
                     if name == "baseline":
                         await self.loaded(inputs["baseline_inventory"])
                     stage = "persistent_snapshot"
-                    current, details = await snapshot(hass, entry, people, registry)
+                    current, details = await snapshot(hass, entry, people, registry, http_probe)
                     if name == "baseline":
                         await hass.async_add_executor_job(write_json, baseline_path, current)
                     else:
@@ -452,6 +480,8 @@ class Rehearsal:
             receipt.update({"outcome": "failed", "stage": stage, "failure_type": type(error).__name__})
             if isinstance(error, Refused):
                 receipt["failure_code"] = str(error)
+            if http_probe:
+                receipt["http_probe"] = http_probe
             _LOGGER.error("Disposable HACS rehearsal failed at %s (%s)", stage, type(error).__name__)
         await hass.async_add_executor_job(write_json, directory / RESULTS / (name + ".json"), receipt)
 

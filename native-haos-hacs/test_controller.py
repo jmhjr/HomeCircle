@@ -71,6 +71,15 @@ class PublicDiagnostics(unittest.TestCase):
         self.assertEqual(controller.public_root_state(value), {
             "result": "ok", "state": "running", "supervisor_version": "2026.10.0", "supported": True})
 
+    def test_http_projection_refuses_invalid_types_and_unbounded_values(self):
+        self.assertEqual(controller.public_http_probe({
+            "active_port": True, "status": 600, "response_bytes": -1, "expected_bytes": 32 * 1024**2 + 1,
+            "tls": "PRIVATE-CANARY", "body_matches": 1, "response_sha256": "PRIVATE-CANARY",
+            "expected_sha256": "A" * 64, "location_category": "https://PRIVATE-CANARY/",
+        }), {})
+        for value in (None, [], "PRIVATE-CANARY"):
+            self.assertEqual(controller.public_http_probe(value), {})
+
 
 class ManagementJobs(unittest.TestCase):
     def project(self, jobs):
@@ -129,6 +138,22 @@ class PhaseContracts(unittest.TestCase):
         public = (self.host.public / "baseline.json").read_text()
         self.assertNotIn("PRIVATE-CANARY", public)
         self.assertNotIn(self.host.nonce, public)
+
+    def test_failed_static_probe_exports_only_finite_diagnostics(self):
+        probe = {"active_port": 80, "tls": False, "status": 307, "location_category": "other",
+                 "response_bytes": 4, "response_sha256": "c" * 64, "expected_bytes": 100,
+                 "expected_sha256": "d" * 64, "body_matches": False}
+        self.receipt.update(outcome="failed", stage="persistent_snapshot", failure_type="Refused",
+                            failure_code="qa_served_bundle", http_probe={**probe, "body": "PRIVATE-CANARY",
+                            "location": "http://PRIVATE-CANARY/", "headers": {"secret": "PRIVATE-CANARY"}})
+        self.read()
+        with self.assertRaisesRegex(controller.Refused, "^guest_acceptance_failed$"):
+            self.host.phase("baseline")
+        public = (self.host.public / "baseline.json").read_text()
+        self.assertEqual(json.loads(public)["http_probe"], probe)
+        self.assertNotIn("PRIVATE-CANARY", public)
+        self.assertNotIn(self.host.nonce, public)
+        self.assertEqual(self.host.phases, [])
 
     def test_passing_guest_receipt_cannot_override_package_pin(self):
         self.receipt["package_payload_sha256"] = "0" * 64

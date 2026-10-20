@@ -72,6 +72,29 @@ def public_core_version(value):
     return None
 
 
+def public_http_probe(value):
+    """Keep only finite static-file diagnostics, never response text or URLs."""
+    if not isinstance(value, dict):
+        return {}
+    projected = {}
+    for key, lower, upper in (("active_port", 1, 65535), ("status", 100, 599),
+                              ("response_bytes", 0, 32 * 1024**2), ("expected_bytes", 0, 32 * 1024**2)):
+        number = value.get(key)
+        if type(number) is int and lower <= number <= upper:
+            projected[key] = number
+    for key in ("tls", "body_matches"):
+        if type(value.get(key)) is bool:
+            projected[key] = value[key]
+    for key in ("response_sha256", "expected_sha256"):
+        fingerprint = value.get(key)
+        if isinstance(fingerprint, str) and re.fullmatch(r"[0-9a-f]{64}", fingerprint):
+            projected[key] = fingerprint
+    category = value.get("location_category")
+    if isinstance(category, str) and category in {"absent", "legacy_port_transition", "onboarding", "other"}:
+        projected["location_category"] = category
+    return projected
+
+
 def public_supervisor_state(value):
     data = value.get("data", {}) if isinstance(value, dict) else {}
     if not isinstance(data, dict):
@@ -638,6 +661,8 @@ class Controller:
                     value = receipt.get(key)
                     if isinstance(value, str) and re.fullmatch(r"[A-Za-z0-9_]{1,80}", value):
                         failure[key] = value
+                if probe := public_http_probe(receipt.get("http_probe")):
+                    failure["http_probe"] = probe
                 write_json(self.public / (name + ".json"), failure)
                 raise Refused("guest_acceptance_failed")
             hacs = receipt.get("hacs", {})
