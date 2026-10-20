@@ -1,5 +1,6 @@
 """Linux-only stdlib contracts; no package imports, native execution or network."""
 
+import ast
 import importlib.util
 import io
 import json
@@ -140,11 +141,38 @@ class DriverContracts(unittest.TestCase):
         original = b'# unchanged\nCANDIDATE_SHA256 = "' + subject.OLD_SHA.encode() + b'"\nCOUNT = 112\n'
         files = {"scripts/platform_validate_linux_lifecycle.py": original,
                  **{"scripts/" + name: b"unchanged" for name in
-                    ("platform_validate_candidate.py", "validate_release.py", "build_release.py")}}
+                    ("platform_validate_candidate.py", "validate_release.py", "build_release.py", "validate_ha_restart.py")}}
         path, receipt = subject.lifecycle_copy(SimpleNamespace(results=directory), files)
         self.assertEqual(path.read_bytes(), original.replace(subject.OLD_SHA.encode(), subject.RELEASE_SHA.encode()))
         self.assertEqual(files["scripts/platform_validate_linux_lifecycle.py"], original)
         self.assertEqual(receipt["substitutions"], 1)
+
+    def test_adapter_includes_actual_tagged_local_import_closure(self):
+        archive = Path(__file__).resolve().parents[1] / "native-beta20-package/payload/source.tgz"
+        raw = archive.read_bytes()
+        self.assertEqual(subject.sha(raw), subject.SOURCE_SHA)
+        files = {}
+        with tarfile.open(fileobj=io.BytesIO(raw), mode="r:gz") as source:
+            for member in source.getmembers():
+                if member.name.startswith("scripts/") and member.name.endswith(".py"):
+                    with source.extractfile(member) as stream:
+                        files[member.name] = stream.read()
+        path, _ = subject.lifecycle_copy(SimpleNamespace(results=self.temporary()), files)
+        pending, visited = [path], set()
+        while pending:
+            script = pending.pop()
+            if script.name in visited:
+                continue
+            visited.add(script.name)
+            for node in ast.walk(ast.parse(script.read_bytes())):
+                if isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
+                    name = node.module.split(".")[0] + ".py"
+                    if "scripts/" + name in files:
+                        sibling = script.parent / name
+                        self.assertTrue(sibling.is_file(), "missing exact tagged helper: " + name)
+                        self.assertEqual(sibling.read_bytes(), files["scripts/" + name])
+                        pending.append(sibling)
+        self.assertIn("validate_ha_restart.py", visited)
 
     def test_hash_adapter_refuses_ambiguous_literals(self):
         raw = ('CANDIDATE_SHA256 = "' + subject.OLD_SHA + '"\n').encode() * 2
@@ -202,6 +230,35 @@ class DriverContracts(unittest.TestCase):
         result = subject.project_child_failure({"failure_type": "raw error text", "failure_code": [],
                                                 "missing_module": "/private/path", "public_frames": {"locals": "CANARY"}})
         self.assertEqual(result, {"public_frames": []})
+
+    def test_probe_failure_retains_fixed_lifecycle_phase_and_type(self):
+        log = self.temporary() / "private.log"
+        log.write_text('  File "/discarded/private/platform_validate_linux_lifecycle.py", line 340, in run_validation\n'
+                       'ValueError: linux_lifecycle_probe_refused:dependency_copy:PermissionError\n')
+        result = subject.probe_failure(log, "lifecycle", 1)
+        self.assertEqual(result, {"stage": "lifecycle", "exit_code": 1, "failure_type": "ValueError",
+                                  "failure_code": "linux_lifecycle_probe_refused", "probe_phase": "dependency_copy",
+                                  "probe_failure_type": "PermissionError",
+                                  "public_frames": [{"script": "platform_validate_linux_lifecycle.py", "line": 340}]})
+
+    def test_probe_failure_retains_only_allowlisted_missing_module(self):
+        log = self.temporary() / "private.log"
+        log.write_text('  File "/private/validate_release.py", line 17, in <module>\n'
+                       "ModuleNotFoundError: No module named 'validate_ha_restart'\n")
+        result = subject.probe_failure(log, "lifecycle", 1)
+        self.assertEqual(result["missing_module"], "validate_ha_restart")
+        self.assertEqual(result["failure_type"], "ModuleNotFoundError")
+        self.assertNotIn("/private", json.dumps(result))
+
+    def test_probe_failure_drops_unknown_message_module_and_frame(self):
+        log = self.temporary() / "private.log"
+        log.write_text('  File "/private/CANARY.py", line 17, in CANARY\n'
+                       "ModuleNotFoundError: No module named 'CANARY'\n"
+                       "ValueError: linux_lifecycle_probe_refused:CANARY:PermissionError\n"
+                       "ValueError: CANARY token/private/response\n")
+        result = subject.probe_failure(log, "native", 1)
+        self.assertNotIn("CANARY", json.dumps(result))
+        self.assertEqual(result["public_frames"], [])
 
 
 if __name__ == "__main__":

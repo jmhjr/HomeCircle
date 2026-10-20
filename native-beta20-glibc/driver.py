@@ -51,6 +51,36 @@ DEADLINE = 0.0
 CURRENT_STAGE = "inputs"
 LAST_PIP_STEP = None
 STARTUP_FAILURE = None
+PROBE_FAILURE = None
+PROBE_PHASES = frozenset({
+    "startup", "import", "dependency_copy", "dependency_resolution", "fixture",
+    "normal_open", "limits", "normal_check", "normal_close", "cancel_open",
+    "native_loop", "cancel_close", "cleanup", "complete",
+})
+PROBE_TYPES = frozenset({
+    "ValueError", "ModuleNotFoundError", "ImportError", "AssertionError", "PermissionError",
+    "FileNotFoundError", "OSError", "RuntimeError", "TypeError", "AttributeError", "KeyError",
+    "NameError", "IdentityUnavailable", "ReleaseError", "TimeoutError", "MemoryError",
+    "ProcessLookupError", "NotImplementedError", "OverflowError", "SyntaxError",
+    "IndentationError", "RecursionError", "JSONDecodeError",
+})
+PROBE_MODULES = frozenset({
+    "validate_ha_restart", "validate_release", "build_release", "platform_validate_candidate",
+    "unicorn", "life360", "google", "google.protobuf", "anisette", "srp", "bs4", "packaging",
+    "packaging.requirements", "packaging.specifiers",
+})
+PROBE_CODES = frozenset({
+    "platform_candidate_hash_refused", "platform_core_constraints_refused", "platform_core_python_refused",
+    "platform_dependency_version_refused", "platform_native_probe_refused", "platform_python_version_refused",
+    "linux_lifecycle_cancellation_refused", "linux_lifecycle_candidate_changed",
+    "linux_lifecycle_candidate_hash_refused", "linux_lifecycle_candidate_inventory_refused",
+    "linux_lifecycle_check_refused", "linux_lifecycle_cleanup_refused",
+    "linux_lifecycle_dependency_resolution_refused", "linux_lifecycle_dependency_version_refused",
+    "linux_lifecycle_limits_refused", "linux_lifecycle_linux_required", "linux_lifecycle_native_loop_refused",
+    "linux_lifecycle_open_refused", "linux_lifecycle_pipe_contract_refused", "linux_lifecycle_probe_refused",
+    "linux_lifecycle_probe_timeout", "linux_lifecycle_provider_import_refused",
+    "linux_lifecycle_spawn_contract_refused", "linux_lifecycle_worker_cleanup_refused",
+})
 SAFE_CHILD_CODES = frozenset({
     "startup_script_hash_refused", "startup_loaded_version_refused", "startup_arguments_required",
     "linux_runtime_refused", "ubuntu_release_refused", "active_glibc_version_refused",
@@ -523,12 +553,46 @@ def lifecycle_copy(args, files):
     directory = args.results / "lifecycle-private"
     check(not directory.exists(), "fresh_lifecycle_adapter_required")
     directory.mkdir(mode=0o700)
-    for name in ("platform_validate_candidate.py", "validate_release.py", "build_release.py"):
+    for name in ("platform_validate_candidate.py", "validate_release.py", "build_release.py", "validate_ha_restart.py"):
         (directory / name).write_bytes(files["scripts/" + name])
     path = directory / "platform_validate_linux_lifecycle.py"
     path.write_bytes(executed)
     return path, {"original_sha256": sha(original), "executed_sha256": sha(executed),
                   "only_candidate_hash_literal_changed": True, "substitutions": 1}
+
+
+def probe_failure(log, stage, code):
+    """Read a private traceback, exporting only finite public identifiers."""
+    check(stage in {"native", "lifecycle"} and type(code) is int and -128 <= code <= 255,
+          "probe_failure_arguments_refused")
+    check(log.is_file() and not log.is_symlink() and log.stat().st_size <= 32 * 1024**2,
+          "probe_failure_log_refused")
+    with log.open("rb") as stream:
+        stream.seek(max(0, log.stat().st_size - 65536))
+        text = stream.read(65536).decode("utf-8", errors="replace")
+    result = {"stage": stage, "exit_code": code}
+    frames = []
+    for line in text.splitlines():
+        match = re.fullmatch(r"([A-Za-z_][A-Za-z0-9_]{0,79}):(?: .*)?", line)
+        if match and match[1] in PROBE_TYPES:
+            result["failure_type"] = match[1]
+        match = re.fullmatch(r"ModuleNotFoundError: No module named '([A-Za-z_][A-Za-z0-9_.]{0,179})'", line)
+        if match and match[1] in PROBE_MODULES:
+            result["missing_module"] = match[1]
+        match = re.fullmatch(r"ValueError: ([a-z_]{1,100})", line)
+        if match and match[1] in PROBE_CODES:
+            result["failure_code"] = match[1]
+        match = re.fullmatch(r"ValueError: linux_lifecycle_probe_refused:([a-z_]{1,40}):([A-Za-z_][A-Za-z0-9_]{0,79})", line)
+        if match and match[1] in PROBE_PHASES and match[2] in PROBE_TYPES:
+            result.update({"failure_code": "linux_lifecycle_probe_refused", "probe_phase": match[1],
+                           "probe_failure_type": match[2]})
+        match = re.fullmatch(r'  File "[^"\r\n]*/([A-Za-z_][A-Za-z0-9_]{0,79}\.py)", line ([0-9]{1,7}), in [^\r\n]+', line)
+        if match and match[1] in {"platform_validate_linux_lifecycle.py", "platform_validate_candidate.py",
+                                  "validate_release.py", "build_release.py", "validate_ha_restart.py"} \
+                and 0 < int(match[2]) <= 1000000:
+            frames.append({"script": match[1], "line": int(match[2])})
+    result["public_frames"] = frames[-6:]
+    return result
 
 
 def startup_child(args):
@@ -585,7 +649,7 @@ def startup(args):
 
 
 def acceptance(args, files, payload):
-    global CURRENT_STAGE
+    global CURRENT_STAGE, PROBE_FAILURE
     CURRENT_STAGE = "acceptance_preconditions"
     result = common(args, files, payload)
     before = environment(dependencies=True)
@@ -600,11 +664,14 @@ def acceptance(args, files, payload):
     atomic_json(output, result)
     CURRENT_STAGE = "native"
     native = args.results / "native-private.json"
-    check(run_owned([sys.executable, "-B", str(args.runtime_tree / "scripts/platform_validate_candidate.py"),
+    code = run_owned([sys.executable, "-B", str(args.runtime_tree / "scripts/platform_validate_candidate.py"),
                      "--archive", str(args.payload / "published-homecircle.zip"), "--inventory",
                      str(args.payload / "published-inventory.json"), "--expected-sha256", RELEASE_SHA,
                      "--output", str(native)], cwd=args.runtime_tree, log=args.results / "native-private.log",
-                    limit=180) == 0, "native_child_refused")
+                    limit=180)
+    if code != 0:
+        PROBE_FAILURE = probe_failure(args.results / "native-private.log", "native", code)
+        raise Refused("native_child_refused")
     result["native"] = native_result(native)
     check(result["native"]["closure"] == installed, "native_closure_changed")
     result["current_stage"] = "lifecycle"
@@ -612,11 +679,13 @@ def acceptance(args, files, payload):
     atomic_json(output, result)
     path, adaptation = lifecycle_copy(args, files)
     lifecycle = args.results / "lifecycle-private.json"
-    check(run_owned([sys.executable, "-B", str(path), "--archive",
+    code = run_owned([sys.executable, "-B", str(path), "--archive",
                      str(args.payload / "published-homecircle.zip"), "--inventory",
                      str(args.payload / "published-inventory.json"), "--output", str(lifecycle)],
-                    cwd=args.runtime_tree, log=args.results / "lifecycle-private.log", limit=120) == 0,
-          "lifecycle_child_refused")
+                    cwd=args.runtime_tree, log=args.results / "lifecycle-private.log", limit=120)
+    if code != 0:
+        PROBE_FAILURE = probe_failure(args.results / "lifecycle-private.log", "lifecycle", code)
+        raise Refused("lifecycle_child_refused")
     result["lifecycle"] = {**lifecycle_result(lifecycle), "validator_adaptation": adaptation}
     common(args, files, payload)
     result["current_stage"] = "core_startup"
@@ -716,6 +785,8 @@ def main():
             failure["last_pip_step"] = LAST_PIP_STEP
         if STARTUP_FAILURE is not None:
             failure["startup_child_failure"] = STARTUP_FAILURE
+        if PROBE_FAILURE is not None:
+            failure["probe_child_failure"] = PROBE_FAILURE
         if isinstance(error, ModuleNotFoundError) and isinstance(error.name, str) and len(error.name) <= 180 \
                 and re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)*", error.name):
             failure["missing_module"] = error.name
