@@ -278,7 +278,7 @@ async def repository_for(hacs):
         await hacs.async_register_repository(REPOSITORY, category=HacsCategory.INTEGRATION)
         repository = hacs.repositories.get_by_full_name(REPOSITORY)
     check(repository is not None and repository.data.full_name == REPOSITORY, "qa_hacs_repository")
-    if not repository.data.show_beta:
+    if not repository.data.show_beta or TAG not in repository.data.published_tags:
         # Match the official hacs/repository/beta websocket backend exactly.
         repository.data.show_beta = True
         await repository.update_repository(force=True)
