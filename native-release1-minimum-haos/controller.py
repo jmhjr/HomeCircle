@@ -33,6 +33,11 @@ BRANCH = "codex/native-amd64-validation"
 IMAGE_REFERENCE = "ghcr.io/home-assistant/qemux86-64-homeassistant:2026.9.4"
 IMAGE_INDEX_DIGEST = "sha256:414dce485b4eebd9f929f293f7252340bada5715fc4a48b2b954d79195ed3019"
 IMAGE_CONFIG_ID = "sha256:560be76a9ee5019c1b557241db8d1127550f21fba952a1a976c3d186f9b2cd9e"
+IMAGE_MANIFEST_DIGEST = "sha256:17fb5b1f953b12e32185c74d34f789270eec3711666df81b1e47e7d45ffd0167"
+IMAGE_OBJECTS = {'index': (IMAGE_INDEX_DIGEST, 856), 'manifest': (IMAGE_MANIFEST_DIGEST, 4488),
+                 'config': (IMAGE_CONFIG_ID, 11038)}
+CONTAINERD_ADDRESS = '/run/containerd/containerd.sock'
+CONTAINERD_NAMESPACE = 'moby'
 HA = "/usr/bin/docker exec hassio_cli ha"
 GUEST_ROOT = "/mnt/data/homecircle-minimum-haos-qa"
 CONTROL = "homecircle-minimum-haos-qa-control"
@@ -64,7 +69,7 @@ def canonical(data):
 def public_core_version(value):
     """Only a Core version or the known initial landing-page marker is public."""
     if isinstance(value, str) and (value == "landingpage" or re.fullmatch(
-            r"[0-9]{4}\.[0-9]{1,2}\.[0-9]{1,2}(?:[a-z0-9.+-]{0,24})", value)):
+            r"[0-9]{4}\.[0-9]{1,2}\.[0-9]{1,2}", value)):
         return value
     return None
 
@@ -111,6 +116,100 @@ def public_jobs(value):
 
 def core_jobs_idle(jobs):
     return not any(job["name"] in CORE_MANAGEMENT_JOBS and job["done"] is not True for job in jobs)
+
+
+def parse_core_container_state(result):
+    """Only a successful daemon listing proves absence; errors remain unknown."""
+    if not isinstance(result, dict) or type(result.get('exitcode')) is not int or result['exitcode'] != 0 \
+            or result.get('signal') is not None or result.get('truncated') is not False \
+            or result.get('stderr') != b'' or not isinstance(result.get('stdout'), bytes) \
+            or len(result['stdout']) > 64 * 1024:
+        return 'unknown'
+    try:
+        lines = result['stdout'].decode().splitlines()
+        if len(lines) > 32:
+            return 'unknown'
+        records = []
+        for line in lines:
+            value = json.loads(line)
+            if type(value) is not dict or set(value) != {'id', 'name', 'state'} \
+                    or not isinstance(value['id'], str) or not re.fullmatch(r'[0-9a-f]{64}', value['id']) \
+                    or not isinstance(value['name'], str) or len(value['name']) > 256 \
+                    or not isinstance(value['state'], str):
+                return 'unknown'
+            names = [item.strip().removeprefix('/') for item in value['name'].split(',')]
+            if 'homeassistant' in names:
+                records.append(value)
+    except (UnicodeError, ValueError, TypeError):
+        return 'unknown'
+    if not records:
+        return 'not_created'
+    if len(records) != 1:
+        return 'unknown'
+    return {'running': 'running', 'created': 'stopped', 'exited': 'stopped'}.get(records[0]['state'], 'unknown')
+
+
+def verify_stored_image_chain(container, image, daemon, blobs):
+    """Bind Docker29's index identity to the actual stored, pinned OCI config."""
+    require(type(container) is dict and container.get('reference') == IMAGE_REFERENCE
+            and container.get('image_id') == IMAGE_INDEX_DIGEST, 'minimum_container_index_identity_refused')
+    require(type(daemon) is dict and daemon.get('Address') == CONTAINERD_ADDRESS
+            and type(daemon.get('Namespaces')) is dict
+            and daemon['Namespaces'].get('Containers') == CONTAINERD_NAMESPACE, 'minimum_containerd_location_refused')
+    require(type(image) is dict and image.get('Id') == IMAGE_INDEX_DIGEST
+            and image.get('Architecture') == 'amd64' and image.get('Os') == 'linux', 'minimum_image_platform_identity_refused')
+    require(type(image.get('RepoTags')) is list and IMAGE_REFERENCE in image['RepoTags']
+            and type(image.get('RepoDigests')) is list
+            and IMAGE_REFERENCE.rsplit(':', 1)[0] + '@' + IMAGE_INDEX_DIGEST in image['RepoDigests'],
+            'minimum_image_repository_binding_refused')
+    descriptor = image.get('Descriptor')
+    require(type(descriptor) is dict and descriptor.get('digest') == IMAGE_INDEX_DIGEST
+            and descriptor.get('mediaType') == 'application/vnd.oci.image.index.v1+json'
+            and descriptor.get('size') == IMAGE_OBJECTS['index'][1], 'minimum_image_descriptor_refused')
+    require(type(blobs) is dict and set(blobs) == set(IMAGE_OBJECTS), 'minimum_stored_object_names_refused')
+    objects = {}
+    for label, (expected_digest, expected_size) in IMAGE_OBJECTS.items():
+        raw = blobs[label]
+        require(isinstance(raw, bytes) and len(raw) == expected_size
+                and 'sha256:' + sha(raw) == expected_digest, 'minimum_stored_object_digest_refused')
+        objects[label] = json.loads(raw)
+        require(type(objects[label]) is dict, 'minimum_stored_object_schema_refused')
+    index, manifest, config = (objects[name] for name in ('index', 'manifest', 'config'))
+    require(index.get('schemaVersion') == 2 and index.get('mediaType') == 'application/vnd.oci.image.index.v1+json'
+            and type(index.get('manifests')) is list, 'minimum_stored_index_schema_refused')
+    selected = [item for item in index['manifests'] if type(item) is dict
+                and item.get('platform') == {'os': 'linux', 'architecture': 'amd64'}]
+    require(len(selected) == 1 and selected[0].get('digest') == IMAGE_MANIFEST_DIGEST
+            and selected[0].get('size') == IMAGE_OBJECTS['manifest'][1]
+            and selected[0].get('mediaType') == 'application/vnd.oci.image.manifest.v1+json',
+            'minimum_stored_index_platform_link_refused')
+    require(manifest.get('schemaVersion') == 2 and manifest.get('mediaType') == 'application/vnd.oci.image.manifest.v1+json'
+            and type(manifest.get('config')) is dict and manifest['config'].get('digest') == IMAGE_CONFIG_ID
+            and manifest['config'].get('size') == IMAGE_OBJECTS['config'][1]
+            and manifest['config'].get('mediaType') == 'application/vnd.oci.image.config.v1+json',
+            'minimum_stored_manifest_config_link_refused')
+    require(config.get('architecture') == 'amd64' and config.get('os') == 'linux'
+            and type(config.get('config')) is dict and type(config['config'].get('Labels')) is dict,
+            'minimum_stored_config_platform_refused')
+    labels = config['config']['Labels']
+    require(all(labels.get(key) == value for key, value in {'io.hass.arch': 'amd64', 'io.hass.machine': 'qemux86-64',
+                'io.hass.type': 'core', 'io.hass.version': CORE}.items()), 'minimum_stored_config_target_refused')
+    rootfs = config.get('rootfs')
+    require(type(rootfs) is dict, 'minimum_stored_rootfs_schema_refused')
+    layers = rootfs.get('diff_ids')
+    require(rootfs.get('type') == 'layers' and type(layers) is list and len(layers) == 22
+            and all(isinstance(value, str) and re.fullmatch(r'sha256:[0-9a-f]{64}', value) for value in layers)
+            and type(manifest.get('layers')) is list and len(manifest['layers']) == len(layers), 'minimum_stored_layer_schema_refused')
+    require(type(image.get('RootFS')) is dict and image['RootFS'].get('Type') == 'layers'
+            and image['RootFS'].get('Layers') == layers, 'minimum_image_rootfs_config_binding_refused')
+    return {'reference': IMAGE_REFERENCE, 'identity_model': 'containerd_index_with_verified_stored_oci_chain',
+            'observed_container_image_id': IMAGE_INDEX_DIGEST, 'observed_image_inspect_id': IMAGE_INDEX_DIGEST,
+            'official_index_digest': IMAGE_INDEX_DIGEST, 'selected_manifest_digest': IMAGE_MANIFEST_DIGEST,
+            'verified_oci_config_digest': IMAGE_CONFIG_ID, 'stored_objects_hashed': 3,
+            'object_bytes': {name: value[1] for name, value in IMAGE_OBJECTS.items()},
+            'containerd_address': CONTAINERD_ADDRESS, 'containerd_namespace': CONTAINERD_NAMESPACE,
+            'platform': {'os': 'linux', 'architecture': 'amd64'}, 'rootfs_layers': 22,
+            'image_rootfs_matches_verified_config': True, 'repository_digest_checked': True}
 
 
 def write_json(path, data):
@@ -247,6 +346,7 @@ class Controller:
         self.core_actions = []
         self.reset_receipt = self.cli_capabilities = self.dependencies_before = self.target_environment = None
         self.minimum_core_image = None
+        self.core_container_state_after_selection = None
 
     def remaining(self, maximum, cleanup=False):
         remaining = self.deadline - time.monotonic() + (120 if cleanup else 0)
@@ -492,11 +592,20 @@ class Controller:
         return result == b"true"
 
 
+    def core_container_state(self, timeout):
+        # Docker's documented name filter is a substring match; the parser
+        # selects the exact canonical name and exports only one finite state.
+        command = "/usr/bin/docker container ls --all --no-trunc --filter name=homeassistant --format " \
+            + "'{\"id\":{{json .ID}},\"name\":{{json .Names}},\"state\":{{json .State}}}'"
+        return parse_core_container_state(self.guest(command, timeout, capture=True))
+
+
     def core_action(self, action):
         require(action in {"stop", "start"}, "core_action_refused")
         deadline = time.monotonic() + self.remaining(180)
         record = {"action": action, "result": "not_requested", "supervisor_running": False,
-                  "relevant_core_jobs_idle": False, "running_before": None, "running_after": None}
+                  "relevant_core_jobs_idle": False, "running_before": None, "running_after": None,
+                  "container_state_before": None, "container_state_after": None}
         self.core_actions.append(record)
         while time.monotonic() < deadline:
             try:
@@ -508,9 +617,11 @@ class Controller:
             time.sleep(min(2, max(0, deadline - time.monotonic())))
         else:
             raise Refused("core_management_boundary_deadline_exceeded")
-        record["running_before"] = self.core_running(min(10, deadline - time.monotonic()))
+        before = self.core_container_state(min(10, deadline - time.monotonic()))
+        record['container_state_before'] = before
+        record['running_before'] = {'running': True, 'stopped': False}.get(before)
         expected = action == "start"
-        require(record["running_before"] is not expected, "core_action_initial_state_refused")
+        require(before in ({'stopped', 'not_created'} if expected else {'running'}), "core_action_initial_state_refused")
         # Exactly one mutating request. The request and state transition share
         # the existing 180-second total envelope; there is no command retry.
         record["result"] = "response_invalid"
@@ -521,8 +632,10 @@ class Controller:
         require(result == "ok", "core_action_api_refused")
         while time.monotonic() < deadline:
             try:
-                record["running_after"] = self.core_running(min(10, deadline - time.monotonic()))
-                if record["running_after"] is expected and time.monotonic() < deadline:
+                after = self.core_container_state(min(10, deadline - time.monotonic()))
+                record['container_state_after'] = after
+                record['running_after'] = {'running': True, 'stopped': False}.get(after)
+                if after == ('running' if expected else 'stopped') and time.monotonic() < deadline:
                     return
             except (Refused, OSError, ValueError, TypeError):
                 pass
@@ -689,7 +802,7 @@ print(json.dumps({"connected":connected}))
                 and self.private is not None and self.config_path == '/mnt/data/supervisor/homeassistant',
                 'fresh_owned_vm_reset_required')
         self.stop_core()
-        require(self.core_running(15) is False, 'stopped_core_before_fresh_reset_required')
+        require(self.core_container_state(15) == 'stopped', 'stopped_core_before_fresh_reset_required')
         script = (ROOT / 'reset_fresh_config.py').read_bytes()
         self.guest_write(GUEST_ROOT + '/reset-fresh-config.py', script)
         value = json.loads(self.guest('/usr/bin/docker exec -i hassio_supervisor python3 -B - '
@@ -705,8 +818,9 @@ print(json.dumps({"connected":connected}))
                                           + ' --backup=false --raw-json', min(900, limit - time.monotonic())))
             self.core_update_result = result.get('result') if result.get('result') in {'ok', 'error'} else 'response_invalid'
             require(self.core_update_result == 'ok', 'minimum_core_selection_api_refused')
-        require(self.core_running(min(15, limit - time.monotonic())) is False,
-                'stopped_core_after_selection_required')
+        self.core_container_state_after_selection = self.core_container_state(min(15, limit - time.monotonic()))
+        require(self.core_container_state_after_selection in {'not_created', 'stopped'},
+                'nonrunning_known_core_after_selection_required')
         self.start_core()
         while time.monotonic() < limit:
             try:
@@ -730,12 +844,21 @@ print(json.dumps({"connected":connected}))
                 'normal_dependency_installation_not_demonstrable')
 
     def actual_core_image(self):
-        value = json.loads(self.guest("/usr/bin/docker inspect homeassistant --format "
+        self.stage = 'minimum_core_image_content_identity'
+        container = json.loads(self.guest("/usr/bin/docker inspect homeassistant --format "
             + "'{\"reference\":{{json .Config.Image}},\"image_id\":{{json .Image}}}'", 20))
-        require(type(value) is dict and value.get('reference') == IMAGE_REFERENCE
-                and value.get('image_id') == IMAGE_CONFIG_ID, 'minimum_core_image_identity_refused')
-        return {'reference': IMAGE_REFERENCE, 'image_config_id': IMAGE_CONFIG_ID,
-                'official_index_digest': IMAGE_INDEX_DIGEST, 'observed_config_id_matches': True}
+        image = json.loads(self.guest('/usr/bin/docker image inspect ' + IMAGE_REFERENCE + ' --format '
+            + "'{\"Id\":{{json .Id}},\"RepoTags\":{{json .RepoTags}},\"RepoDigests\":{{json .RepoDigests}},"
+              "\"Architecture\":{{json .Architecture}},\"Os\":{{json .Os}},\"RootFS\":{{json .RootFS}},"
+              "\"Descriptor\":{{json .Descriptor}}}'", 20))
+        daemon = json.loads(self.guest("/usr/bin/docker info --format '{{json .Containerd}}'", 20))
+        require(type(daemon) is dict and daemon.get('Address') == CONTAINERD_ADDRESS
+                and type(daemon.get('Namespaces')) is dict
+                and daemon['Namespaces'].get('Containers') == CONTAINERD_NAMESPACE, 'minimum_containerd_location_refused')
+        blobs = {name: self.guest('/usr/bin/ctr --address ' + CONTAINERD_ADDRESS + ' --namespace '
+                                 + CONTAINERD_NAMESPACE + ' content get ' + value[0], 20)
+                 for name, value in IMAGE_OBJECTS.items()}
+        return verify_stored_image_chain(container, image, daemon, blobs)
 
     def observe_dependencies(self):
         script = (ROOT / 'guest_helper/homecircle_minimum_haos_qa/dependency_probe.py').read_bytes()
@@ -879,7 +1002,8 @@ print(json.dumps({"connected":connected}))
                 if path.is_file() and '__pycache__' not in path.parts and path.suffix != '.pyc'},
             'reset_script_sha256': sha((ROOT / 'reset_fresh_config.py').read_bytes()),
             'expected_machine_image_reference': IMAGE_REFERENCE, 'expected_machine_image_index_digest': IMAGE_INDEX_DIGEST,
-            'expected_machine_image_config_id': IMAGE_CONFIG_ID}
+            'expected_machine_image_config_id': IMAGE_CONFIG_ID,
+            'expected_machine_image_manifest_digest': IMAGE_MANIFEST_DIGEST}
         self.start_vm(self.download_haos())
         self.wait_initial_managed()
         require(self.supervisor_version_observed == '2026.10.2', 'pinned_supervisor_required')
@@ -911,6 +1035,7 @@ print(json.dumps({"connected":connected}))
             'core_version_after': self.core_version_after, 'container_core_version_before': self.container_core_version_before,
             'container_core_version_after': self.container_core_version_after, 'core_update_result': self.core_update_result,
             'version_change_requests': self.version_change_requests, 'initial_landingpage_seen': self.initial_landingpage_seen,
+            'core_container_state_after_selection': self.core_container_state_after_selection,
             'initial_boot_observations': self.initial_boot_observations,
             'management_boundary_observations': self.management_boundary_observations,
             'supervisor_version_observed': self.supervisor_version_observed, 'cli_capabilities': self.cli_capabilities,

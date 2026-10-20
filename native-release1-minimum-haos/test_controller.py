@@ -196,16 +196,21 @@ class CLIAndMutationContracts(unittest.TestCase):
         obj=instance();obj.cli_version_observed='2026.09.0';obj.guest=Mock(return_value=b'Usage: --backup')
         with self.assertRaises(controller.Refused):obj.verify_cli()
 
-    def test_actual_machine_image_reference_and_config_id_are_mandatory(self):
+    def test_actual_machine_image_requires_bound_index_manifest_and_config(self):
+        fixture=image_fixture()
         obj=instance()
-        for reference,image_id in ((controller.IMAGE_REFERENCE,controller.IMAGE_CONFIG_ID),
-                                   ('ghcr.io/home-assistant/qemux86-64-homeassistant:2026.10.2',controller.IMAGE_CONFIG_ID),
-                                   (controller.IMAGE_REFERENCE,'sha256:'+'0'*64)):
-            obj.guest=Mock(return_value=json.dumps({'reference':reference,'image_id':image_id}).encode())
-            if reference==controller.IMAGE_REFERENCE and image_id==controller.IMAGE_CONFIG_ID:
-                self.assertTrue(obj.actual_core_image()['observed_config_id_matches'])
-            else:
-                with self.subTest(reference=reference),self.assertRaises(controller.Refused):obj.actual_core_image()
+        with patch.multiple(controller,**fixture['constants']):
+            obj.guest=Mock(side_effect=[json.dumps(fixture[name]).encode() for name in ('container','image','daemon')]
+                           +[fixture['blobs'][name] for name in ('index','manifest','config')])
+            result=obj.actual_core_image()
+            self.assertEqual(result['verified_oci_config_digest'],fixture['constants']['IMAGE_CONFIG_ID'])
+            self.assertEqual(result['observed_container_image_id'],fixture['constants']['IMAGE_INDEX_DIGEST'])
+            self.assertEqual(result['stored_objects_hashed'],3)
+            commands=[call.args[0] for call in obj.guest.call_args_list]
+            self.assertEqual(len(commands),6)
+            self.assertTrue(all('/usr/bin/ctr --address /run/containerd/containerd.sock --namespace moby content get ' in cmd
+                                for cmd in commands[-3:]))
+            self.assertTrue(all('.Config.Env' not in cmd for cmd in commands))
 
     def test_unproven_vm_cannot_reset_any_configuration(self):
         obj=instance();obj.stop_core=Mock()
@@ -215,7 +220,7 @@ class CLIAndMutationContracts(unittest.TestCase):
     def test_version_selection_error_has_one_mutation_and_no_retry(self):
         obj=instance();obj.kvm_confirmed=True;obj.qemu=Mock();obj.qemu.poll.return_value=None
         obj.private=Path('/private');obj.config_path='/mnt/data/supervisor/homeassistant';obj.core_version_before='2026.10.2'
-        obj.stop_core=Mock();obj.core_running=Mock(return_value=False);obj.guest_write=Mock()
+        obj.stop_core=Mock();obj.core_container_state=Mock(return_value='stopped');obj.guest_write=Mock()
         obj.guest=Mock(side_effect=[json.dumps(fresh_reset()).encode(),b'{"result":"error"}'])
         with self.assertRaisesRegex(controller.Refused,'minimum_core_selection_api_refused'):obj.select_minimum_core()
         self.assertEqual(obj.version_change_requests,1)
@@ -225,7 +230,7 @@ class CLIAndMutationContracts(unittest.TestCase):
         self.assertEqual(obj.version_change_requests,1)
 
     def test_failed_core_stop_api_is_not_retried(self):
-        obj=instance();obj.management_ready=Mock(return_value=True);obj.core_running=Mock(return_value=True)
+        obj=instance();obj.management_ready=Mock(return_value=True);obj.core_container_state=Mock(return_value='running')
         obj.guest=Mock(return_value=b'{"result":"error"}')
         with self.assertRaises(controller.Refused):obj.stop_core()
         self.assertEqual(obj.guest.call_count,1)
@@ -288,6 +293,187 @@ class OwnedBlankResetContracts(unittest.TestCase):
             (root/'link').unlink();__import__('os').link(root/'one',root/'hard')
             with patch.object(reset_fresh_config,'CONFIG',root),self.assertRaises(ValueError):reset_fresh_config.inspect_blank(root)
             with self.assertRaises(ValueError):reset_fresh_config.inspect_blank(root)
+
+
+def container_result(state=None, name='homeassistant', identifier='a'*64):
+    stdout = b'' if state is None else json.dumps({'id':identifier,'name':name,'state':state}).encode()+b'\n'
+    return {'exitcode':0,'signal':None,'stdout':stdout,'stderr':b'','truncated':False}
+
+
+def image_fixture(config_change=None, manifest_change=None, index_change=None):
+    """Synthetic coherent OCI graph; patched pins test semantic checks beyond hashes."""
+    diff_ids=['sha256:'+format(number,'064x') for number in range(22)]
+    config={'architecture':'amd64','os':'linux','config':{'Labels':{'io.hass.arch':'amd64','io.hass.machine':'qemux86-64',
+        'io.hass.type':'core','io.hass.version':'2026.9.4'}},'rootfs':{'type':'layers','diff_ids':diff_ids}}
+    if config_change:config_change(config)
+    config_raw=controller.canonical(config);config_id='sha256:'+controller.sha(config_raw)
+    manifest={'schemaVersion':2,'mediaType':'application/vnd.oci.image.manifest.v1+json',
+        'config':{'mediaType':'application/vnd.oci.image.config.v1+json','digest':config_id,'size':len(config_raw)},
+        'layers':[{'mediaType':'application/vnd.oci.image.layer.v1.tar+zstd','digest':value,'size':1} for value in diff_ids]}
+    if manifest_change:manifest_change(manifest)
+    manifest_raw=controller.canonical(manifest);manifest_id='sha256:'+controller.sha(manifest_raw)
+    index={'schemaVersion':2,'mediaType':'application/vnd.oci.image.index.v1+json','manifests':[
+        {'mediaType':'application/vnd.oci.image.manifest.v1+json','digest':manifest_id,'size':len(manifest_raw),
+         'platform':{'architecture':'amd64','os':'linux'}}]}
+    if index_change:index_change(index)
+    index_raw=controller.canonical(index);index_id='sha256:'+controller.sha(index_raw)
+    return {'container':{'reference':controller.IMAGE_REFERENCE,'image_id':index_id},
+        'image':{'Id':index_id,'RepoTags':[controller.IMAGE_REFERENCE],
+            'RepoDigests':[controller.IMAGE_REFERENCE.rsplit(':',1)[0]+'@'+index_id],
+            'Architecture':'amd64','Os':'linux','RootFS':{'Type':'layers','Layers':list(diff_ids)},
+            'Descriptor':{'mediaType':'application/vnd.oci.image.index.v1+json','digest':index_id,'size':len(index_raw)}},
+        'daemon':{'Address':controller.CONTAINERD_ADDRESS,'Namespaces':{'Containers':controller.CONTAINERD_NAMESPACE}},
+        'blobs':{'index':index_raw,'manifest':manifest_raw,'config':config_raw},
+        'constants':{'IMAGE_INDEX_DIGEST':index_id,'IMAGE_MANIFEST_DIGEST':manifest_id,'IMAGE_CONFIG_ID':config_id,
+            'IMAGE_OBJECTS':{'index':(index_id,len(index_raw)),'manifest':(manifest_id,len(manifest_raw)),'config':(config_id,len(config_raw))}}}
+
+
+def check_image_fixture(fixture):
+    with patch.multiple(controller,**fixture['constants']):
+        return controller.verify_stored_image_chain(*(fixture[name] for name in ('container','image','daemon','blobs')))
+
+
+class StoredImageIdentityContracts(unittest.TestCase):
+    def test_index_id_is_separate_from_verified_config_digest(self):
+        fixture=image_fixture();result=check_image_fixture(fixture)
+        self.assertNotEqual(result['observed_container_image_id'],result['verified_oci_config_digest'])
+        self.assertTrue(result['image_rootfs_matches_verified_config'])
+
+    def test_wrong_actual_blob_bytes_and_missing_or_extra_objects_are_refused(self):
+        for name in ('index','manifest','config'):
+            fixture=image_fixture();fixture['blobs'][name]+=b'\n'
+            with self.subTest(name=name),self.assertRaises(controller.Refused):check_image_fixture(fixture)
+        for name in ('missing','extra'):
+            fixture=image_fixture()
+            if name=='missing':fixture['blobs'].pop('config')
+            else:fixture['blobs']['private']=b'canary'
+            with self.assertRaises(controller.Refused):check_image_fixture(fixture)
+
+    def test_validly_hashed_wrong_platform_or_config_link_is_refused(self):
+        for fixture in (
+            image_fixture(index_change=lambda value:value['manifests'][0]['platform'].update(architecture='arm64')),
+            image_fixture(index_change=lambda value:value['manifests'][0].update(digest='sha256:'+'0'*64)),
+            image_fixture(manifest_change=lambda value:value['config'].update(digest='sha256:'+'0'*64)),
+            image_fixture(config_change=lambda value:value.update(architecture='arm64')),
+            image_fixture(config_change=lambda value:value['config']['Labels'].update({'io.hass.version':'2026.10.2'})),
+        ):
+            with self.assertRaises(controller.Refused):check_image_fixture(fixture)
+
+    def test_actual_platform_repository_descriptor_or_layer_mismatch_is_refused(self):
+        for mutate in (
+            lambda value:value['image'].update(Architecture='arm64'),
+            lambda value:value['image'].update(Os='windows'),
+            lambda value:value['image'].update(RepoDigests=[]),
+            lambda value:value['image']['Descriptor'].update(digest='sha256:'+'0'*64),
+            lambda value:value['image']['RootFS']['Layers'].reverse(),
+            lambda value:value['container'].update(image_id=value['constants']['IMAGE_CONFIG_ID']),
+            lambda value:value['container'].update(reference='ghcr.io/home-assistant/qemux86-64-homeassistant:2026.10.2'),
+            lambda value:value['daemon'].update(Address='/unrelated/private.sock'),
+            lambda value:value['daemon']['Namespaces'].update(Containers='other'),
+        ):
+            fixture=image_fixture();mutate(fixture)
+            with self.assertRaises(controller.Refused):check_image_fixture(fixture)
+
+    def test_unknown_containerd_location_is_refused_before_ctr_content_requests(self):
+        fixture=image_fixture();fixture['daemon']['Address']='/unrelated/private.sock';obj=instance()
+        obj.guest=Mock(side_effect=[json.dumps(fixture[name]).encode() for name in ('container','image','daemon')])
+        with patch.multiple(controller,**fixture['constants']),self.assertRaises(controller.Refused):obj.actual_core_image()
+        self.assertEqual(obj.guest.call_count,3)
+
+    def test_public_image_projection_never_exports_extra_metadata(self):
+        fixture=image_fixture();fixture['image']['private']='private-canary'
+        self.assertNotIn('private-canary',json.dumps(check_image_fixture(fixture)))
+
+    def test_public_core_versions_refuse_local_prerelease_and_bare_canaries(self):
+        for value in ('2026.10.2+privatecanary','2026.10.2b1','2026.10.2rc1','bare_private_canary','2026.10.2-private'):
+            self.assertIsNone(controller.public_core_version(value))
+        for value in ('landingpage','2026.9.4','2026.10.2','2026.09.0'):
+            self.assertEqual(controller.public_core_version(value),value)
+
+
+class ContainerLifecycleContracts(unittest.TestCase):
+    def test_successful_listing_distinguishes_absence_stopped_and_running(self):
+        self.assertEqual(controller.parse_core_container_state(container_result()),'not_created')
+        for raw, expected in (('created','stopped'),('exited','stopped'),('running','running'),
+                              ('paused','unknown'),('restarting','unknown'),('removing','unknown'),('dead','unknown')):
+            self.assertEqual(controller.parse_core_container_state(container_result(raw)),expected)
+        self.assertEqual(controller.parse_core_container_state(container_result('running','homeassistant-helper')),'not_created')
+
+    def test_daemon_failure_truncation_and_malformed_listing_never_mean_absent(self):
+        for key,value in (('exitcode',1),('exitcode',True),('signal',9),('stderr',b'private-canary'),
+                          ('truncated',True),('stdout',b'not-json'),('stdout',b'[]'),('stdout',b'\xff'),('stdout',b'x'*65537)):
+            result=container_result();result[key]=value
+            with self.subTest(key=key):
+                self.assertEqual(controller.parse_core_container_state(result),'unknown')
+        self.assertEqual(controller.parse_core_container_state(container_result('running',identifier='not-a-docker-id')),'unknown')
+        result=container_result('running');result['stdout']*=2
+        self.assertEqual(controller.parse_core_container_state(result),'unknown')
+
+    def test_state_transport_uses_bounded_all_container_listing_not_inspect_errors(self):
+        obj=instance();obj.guest=Mock(return_value=container_result())
+        self.assertEqual(obj.core_container_state(12),'not_created')
+        command=obj.guest.call_args.args[0]
+        self.assertIn('container ls --all --no-trunc',command)
+        self.assertIn('{{json .Names}}',command)
+        self.assertNotIn('inspect',command)
+        self.assertEqual(obj.guest.call_args.kwargs,{'capture':True})
+
+    def test_absent_container_requires_one_supported_start_and_actual_running_state(self):
+        obj=instance();obj.management_ready=Mock(return_value=True)
+        obj.core_container_state=Mock(side_effect=['not_created','running'])
+        obj.guest=Mock(return_value=b'{"result":"ok"}')
+        obj.start_core()
+        self.assertEqual(obj.guest.call_count,1)
+        self.assertEqual(obj.guest.call_args.args[0],controller.HA+' core start --raw-json')
+        record=obj.core_actions[0]
+        self.assertIsNone(record['running_before'])
+        self.assertEqual(record['container_state_before'],'not_created')
+        self.assertEqual(record['container_state_after'],'running')
+        self.assertTrue(record['running_after'])
+
+    def test_unknown_state_cannot_trigger_start_and_missing_state_cannot_trigger_stop(self):
+        for action,state in (('start','unknown'),('stop','not_created'),('stop','unknown')):
+            obj=instance();obj.management_ready=Mock(return_value=True)
+            obj.core_container_state=Mock(return_value=state);obj.guest=Mock()
+            with self.subTest(action=action,state=state),self.assertRaisesRegex(controller.Refused,'core_action_initial_state_refused'):
+                obj.core_action(action)
+            obj.guest.assert_not_called()
+
+    def test_start_api_ok_without_running_state_is_incomplete_and_not_retried(self):
+        obj=instance();obj.management_ready=Mock(return_value=True)
+        obj.core_container_state=Mock(return_value='not_created');obj.guest=Mock(return_value=b'{"result":"ok"}')
+        obj.remaining=Mock(return_value=0.02)
+        with self.assertRaisesRegex(controller.Refused,'core_action_state_deadline_exceeded'):obj.start_core()
+        self.assertEqual(obj.guest.call_count,1)
+        self.assertEqual(obj.core_actions[0]['container_state_after'],'not_created')
+        self.assertIsNone(obj.core_actions[0]['running_after'])
+
+    def test_stopped_update_missing_container_reaches_supported_start_and_real_target_checks(self):
+        obj=instance();obj.kvm_confirmed=True;obj.qemu=Mock();obj.qemu.poll.return_value=None
+        obj.private=Path('/private');obj.config_path='/mnt/data/supervisor/homeassistant';obj.core_version_before='2026.10.2'
+        obj.stop_core=Mock();obj.core_container_state=Mock(side_effect=['stopped','not_created']);obj.guest_write=Mock()
+        obj.guest=Mock(side_effect=[json.dumps(fresh_reset()).encode(),b'{"result":"ok"}',b'{"result":"ok","data":{"version":"2026.9.4"}}'])
+        obj.start_core=Mock();obj.managed_core=Mock();obj.real_container_version=Mock(return_value='2026.9.4')
+        obj.management_ready=Mock(return_value=True);obj.actual_core_image=Mock(return_value={'actual':'image'})
+        obj.observe_dependencies=Mock(return_value=dependencies(False))
+        obj.select_minimum_core()
+        self.assertEqual(obj.version_change_requests,1)
+        self.assertEqual(obj.core_container_state_after_selection,'not_created')
+        obj.start_core.assert_called_once()
+        obj.managed_core.assert_called_once();obj.real_container_version.assert_called_once();obj.actual_core_image.assert_called_once()
+        self.assertEqual(obj.container_core_version_after,'2026.9.4')
+
+    def test_successful_selection_and_start_cannot_bypass_wrong_actual_target(self):
+        obj=instance();obj.kvm_confirmed=True;obj.qemu=Mock();obj.qemu.poll.return_value=None
+        obj.private=Path('/private');obj.config_path='/mnt/data/supervisor/homeassistant';obj.core_version_before='2026.10.2'
+        obj.stop_core=Mock();obj.core_container_state=Mock(side_effect=['stopped','not_created']);obj.guest_write=Mock()
+        obj.guest=Mock(side_effect=[json.dumps(fresh_reset()).encode(),b'{"result":"ok"}',b'{"result":"ok","data":{"version":"2026.10.2"}}'])
+        obj.start_core=Mock();obj.managed_core=Mock();obj.real_container_version=Mock(return_value='2026.10.2')
+        obj.management_ready=Mock(return_value=True);obj.actual_core_image=Mock();obj.observe_dependencies=Mock()
+        obj.remaining=Mock(return_value=0.02)
+        with self.assertRaisesRegex(controller.Refused,'actual_minimum_core_deadline_exceeded'):obj.select_minimum_core()
+        obj.start_core.assert_called_once();obj.actual_core_image.assert_not_called();obj.observe_dependencies.assert_not_called()
+        self.assertEqual(obj.direct_installs,0);self.assertEqual(obj.phases,[])
 
 
 if __name__ == '__main__':

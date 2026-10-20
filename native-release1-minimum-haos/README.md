@@ -8,6 +8,14 @@ It uses the exact same-version unreleased `0.1.0-beta.20` preview, source
 This is managed dependency/setup/start/restart compatibility evidence. It does
 not repeat the full backend suite, native worker or six-phase restore experiment.
 
+The earlier attempt stopped before any candidate installation after a successful
+stopped image selection. This prepared revision separately models an absent,
+stopped, running or unknown container. Only a successful bounded daemon listing
+proves absence; generic failures are unknown. A known absent/stopped state can
+reach one supported Core start, which must produce running state. Actual minimum
+runtime and image/content proof still precede candidate staging. This revision
+has not been published or executed.
+
 The new code is restricted to its own QA folder. The existing C453 prepared
 restore fixture, historical evidence, product source and root working files
 remain unchanged. The parent folder's `CHANGE-MAP.md` records the reviewed
@@ -41,9 +49,18 @@ for real downgrades.
 The official machine-image reference is
 `ghcr.io/home-assistant/qemux86-64-homeassistant:2026.9.4`, index
 `sha256:414dce485b4eebd9f929f293f7252340bada5715fc4a48b2b954d79195ed3019`.
-Its Linux/amd64 manifest config ID is
+Its Linux/amd64 manifest is
+`sha256:17fb5b1f953b12e32185c74d34f789270eec3711666df81b1e47e7d45ffd0167`,
+with OCI config digest
 `sha256:560be76a9ee5019c1b557241db8d1127550f21fba952a1a976c3d186f9b2cd9e`.
-Actual running container reference and config ID must match before candidate
+Docker 29's containerd store can report the index as its container/image ID.
+The witness requires that exact index, repository digest, platform and descriptor,
+then reads all three actual stored OCI objects with the read-only containerd CLI
+at Docker's observed socket/namespace. Each object's byte count and digest, the
+index's Linux/amd64 manifest link, manifest's config link, config target labels,
+and actual image RootFS/config layer equality must pass. Raw container index and
+verified OCI config digest are reported separately. No arbitrary digest or
+config-ID-only fallback is accepted. This complete proof repeats before candidate
 staging and after both observations. Core constraints must hash to
 `962c9ccaf398e0b92b10ac9f765ac0f17e22238adc4e768deebc051ee8b60651`.
 
@@ -103,6 +120,8 @@ failure, timeout, target mismatch or cleanup failure returns nonzero with a
 finite source-derived stage/code and fixed exception-type catalogs, plus bounded
 dependency diagnostics when available. Unknown valid-looking labels are replaced
 with fixed unrecognized sentinels or omitted; they are never copied as strings.
+Public Core versions allow only numeric release versions or `landingpage`;
+unknown suffixes, prerelease and local-version strings are not exported.
 Nothing is converted into a known-safety-exception success. This experiment
 makes no restore-safety or stable-release acceptance claim.
 
