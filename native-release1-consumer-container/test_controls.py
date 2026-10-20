@@ -1309,5 +1309,116 @@ class ExerciseDiagnosticAsyncContracts(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(saved, [])
 
 
+CORE_RESOURCE_CREATE_SOURCE = 'async def _process_create_data(self, data: dict) -> dict:\n        """Validate the config is valid."""\n        data = self.CREATE_SCHEMA(data)\n        data[CONF_TYPE] = data.pop(CONF_RESOURCE_TYPE_WS)\n        return data\n'
+OLD_RESOURCE_MAPPER_SOURCE = 'semantic_resources = sorted(\n            (\n                {"url": item["url"], "res_type": item["res_type"]}\n                for item in resources.async_items()\n            ),\n            key=lambda item: item["url"],\n        )\n'
+
+
+class ResourceTypeContracts(unittest.TestCase):
+    def created(self, url, kind):
+        self.assertEqual(
+            c.sha(CORE_RESOURCE_CREATE_SOURCE.encode()),
+            "ed9ae7f3b46e76f8893a3ddbe184947154e42609a9ea8f8da76e502f9a9eabfe",
+        )
+        # The actual tagged transform executes; dict only models schema handling
+        # for these known valid inputs. No HA/schema package is imported.
+        namespace = {"CONF_TYPE": "type", "CONF_RESOURCE_TYPE_WS": "res_type"}
+        exec(
+            compile(
+                ast.parse(CORE_RESOURCE_CREATE_SOURCE),
+                "exact_Core_resource_transform",
+                "exec",
+            ),
+            namespace,
+        )
+        return asyncio.run(
+            namespace["_process_create_data"](
+                SimpleNamespace(CREATE_SCHEMA=dict), {"url": url, "res_type": kind}
+            )
+        )
+
+    def mapper(self, old=False):
+        if old:
+            self.assertEqual(
+                c.sha(OLD_RESOURCE_MAPPER_SOURCE.encode()),
+                "5e91ab452d42b0961cf6e467e82d056ba6f806e7b603adc2f4bfd20038258d97",
+            )
+            assignment = ast.parse(OLD_RESOURCE_MAPPER_SOURCE).body[0]
+        else:
+            tree = ast.parse((HERE / "guest.py").read_bytes())
+            assignment = next(
+                n
+                for n in ast.walk(tree)
+                if isinstance(n, ast.Assign)
+                and any(
+                    isinstance(t, ast.Name) and t.id == "semantic_resources"
+                    for t in n.targets
+                )
+            )
+        function = ast.parse("def project(resources):\n    return None\n").body[0]
+        returned = ast.copy_location(
+            ast.Return(value=ast.Name(id="semantic_resources", ctx=ast.Load())),
+            assignment,
+        )
+        function.body = [assignment, returned]
+        function.end_lineno = assignment.end_lineno
+        namespace = {}
+        exec(
+            compile(
+                ast.fix_missing_locations(ast.Module(body=[function], type_ignores=[])),
+                "actual_resource_mapper",
+                "exec",
+            ),
+            namespace,
+        )
+        return lambda rows: namespace["project"](
+            SimpleNamespace(async_items=lambda: rows)
+        )
+
+    def test_actual_tagged_create_transform_reproduces_old_mapper_keyerror_and_fixed_mapper_passes(
+        self,
+    ):
+        rows = [
+            self.created("/local/example_resource.js", "module")
+            | {"id": "synthetic-resource"}
+        ]
+        self.assertNotIn("res_type", rows[0])
+        self.assertEqual(rows[0]["type"], "module")
+        with self.assertRaises(KeyError):
+            self.mapper(old=True)(rows)
+        self.assertEqual(
+            self.mapper()(rows),
+            [{"url": "/local/example_resource.js", "res_type": "module"}],
+        )
+
+    def test_actual_mapper_preserves_url_type_ignores_id_order_and_refuses_missing_keys(
+        self,
+    ):
+        a = self.created("/local/example_a.js", "module") | {
+            "id": "synthetic-a",
+            "private": "PRIVATE-CANARY",
+        }
+        b = self.created("/local/example_b.css", "css") | {"id": "synthetic-b"}
+        project = self.mapper()
+        first = project([b, a])
+        second = project([a | {"id": "different-a"}, b | {"id": "different-b"}])
+        self.assertEqual(first, second)
+        self.assertEqual([item["url"] for item in first], [a["url"], b["url"]])
+        self.assertTrue(all(set(item) == {"url", "res_type"} for item in first))
+        self.assertNotIn("PRIVATE", json.dumps(first))
+        fingerprint = lambda value: c.sha(json.dumps(value, sort_keys=True).encode())
+        self.assertNotEqual(
+            fingerprint(first), fingerprint(project([a | {"type": "css"}, b]))
+        )
+        self.assertNotEqual(
+            fingerprint(first),
+            fingerprint(project([a | {"url": "/local/example_changed.js"}, b])),
+        )
+        for missing in ("url", "type"):
+            row = dict(a)
+            del row[missing]
+            with self.assertRaises(KeyError):
+                project([row])
+
+
 if __name__ == "__main__":
     unittest.main()

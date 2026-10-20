@@ -419,7 +419,7 @@ async def async_setup(hass, config):
         selected = identity(entry)
         semantic_resources = sorted(
             (
-                {"url": item["url"], "res_type": item["res_type"]}
+                {"url": item["url"], "res_type": item["type"]}
                 for item in resources.async_items()
             ),
             key=lambda item: item["url"],

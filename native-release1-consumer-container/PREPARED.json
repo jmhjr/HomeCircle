@@ -1,72 +1,67 @@
 {
-  "38_prior_methods_AST_unchanged": true,
-  "acceptance_or_flow_function_changed": false,
-  "actual_failure_cause_known": false,
-  "all39_prior_cases_retained": true,
-  "artifact_paths_unchanged": 10,
-  "baseline_control_commit": "669cb2745f3c352d1956d3c7dc1600d26c3e12e9",
-  "baseline_failed_run": 39513706335,
+  "actual_runtime_diagnostic": {
+    "exception_type": "KeyError",
+    "exercise_stage": "resource_identity",
+    "missing_key_text_observed": false
+  },
+  "all45_previous_cases_AST_unchanged": true,
+  "all_other_flows_checks_versions_images_constraints_sources_and_diagnostics_unchanged": true,
+  "artifact_paths": 10,
+  "baseline_control_commit": "a53322576274bebc29ca77cd07be919890b59cad",
+  "baseline_failed_run": 39515362247,
   "ci_launched": false,
   "controls": {
     "cache_child.py": "73b5eee7f142dbe63374fce280ccadafb65064145b4a6105861070c3be1fa9b8",
     "common.py": "8110ea01d544427557f8ece10976973f23cbfbaf7cb5c4270002897cb08bc2e8",
     "driver.py": "c98388c57c0ba7bf25d70d78940391f5d78717ae582f0075bd99387ebaf0a5d4",
-    "guest.py": "6b1ab4fad5e980744141e5dee203d50cfbe62dd144dd073967a39a1da55935d2",
+    "guest.py": "fd03d84d2b89b7061054e83b168597f57810476e07dc3a203d96abb4185e5745",
     "process_probe.py": "fda1c83041a61d720e9c7c9d9fde2a652eaeb43a5a77efcaf17a97c62e0905b3",
     "run_host.sh": "8cafffa854415234c3401c4ac9d2e8221f1c9b5a5531890b511d6272e87de73f"
   },
-  "correction": "diagnostic-only fixed exercise stage and exact builtin exception family projection",
-  "exception_types": 14,
-  "exercise_stages": 25,
+  "correction": "read stored item[type], retaining semantic output res_type and creation input res_type",
+  "eight_negative_artifacts_preserved": true,
+  "exact_upstream_method_text_sha256": "ed9ae7f3b46e76f8893a3ddbe184947154e42609a9ea8f8da76e502f9a9eabfe",
   "local_interpreters": {
     "3.12": {
       "Linux_skipped": 7,
-      "discovered": 45,
-      "passed": 38
+      "discovered": 47,
+      "passed": 40
     },
     "3.14": {
       "Linux_skipped": 7,
-      "discovered": 45,
-      "passed": 38
+      "discovered": 47,
+      "passed": 40
     }
   },
-  "marker_45pins_constraints_images_indexes_unchanged": true,
-  "new_cases": 6,
-  "one_existing_projection_case_fixture_and_schema_extension_only": true,
+  "method_source_bytes": 220,
+  "new_cases": 2,
   "pilot_target": "current-amd64",
   "prepared_only": true,
-  "previous_actual_Linux_fork_contracts_passed": {
-    "cases": 7,
-    "cases_unchanged": true,
-    "run": 39513706335,
-    "skipped": 0
-  },
-  "request_base_pending_root_coordination": true,
+  "resource_ID_persistence_claimed": false,
   "runtime_executed": false,
   "schema": 1,
-  "seven_previous_negatives_preserved": true,
-  "success_receipt_schema_unchanged": true,
+  "schema_stub_only_known_valid_fixtures": true,
+  "success_schemas_unchanged": true,
   "targets": {
     "current-amd64": {
       "filename": "pins-current-amd64.json",
       "pilot": true,
-      "sha256": "2fab48ad440c46a161fedc94ecc226e7d4f34a190c02ded15dc2b8c905a65cd3"
+      "sha256": "4d8742caf94e3bfcf4ebaa2113a0c5d88037e636413412f1bf5c926943ba02b9"
     },
     "current-arm64": {
       "filename": "pins-current-arm64.json",
       "pilot": false,
-      "sha256": "19f24a7336ad2cd342f01b7aa6ad046a601ce740201af20b189f460bb8cd9cfb"
+      "sha256": "b202d2457f6e7acd362828303a7aae0b7a71a00edba45c47254931945aa0f45e"
     },
     "minimum-amd64": {
       "filename": "pins-minimum-amd64.json",
       "pilot": false,
-      "sha256": "0ab3d1fcfc1cfb2cf2483a44c6d661bbf18c5d8c64bb3754d94bae94454f1251"
+      "sha256": "18529404631e511fae09832e2199b42ab2a85e2a9eb5e837d0bdafc725875dab"
     },
     "minimum-arm64": {
       "filename": "pins-minimum-arm64.json",
       "pilot": false,
-      "sha256": "57e1a5ac32e3ba820fe03dfa47c5e5144c98ff2a506fa9fc169bcab4a112499e"
+      "sha256": "fef3eaf61b259564f38a0e4aae04ed4209215e17d5e6893914cb136fe2b71dc6"
     }
-  },
-  "unknowns_suppressed": true
+  }
 }
