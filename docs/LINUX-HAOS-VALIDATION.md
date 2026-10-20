@@ -6,6 +6,8 @@ emulated AMD64. All four recorded Linux backend targets, including native AMD64
 Core 2026.9.4, passed the final suite.** Native AMD64 HAOS also passes the
 eight-phase synthetic HACS-baseline, stopped candidate activation and rollback
 rehearsal [recorded below](#october-20-native-haos-and-hacs-rehearsal).
+A separate [prepared Supervisor partial-backup and Recorder restore](#october-20-guarded-supervisor-backup-and-recorder-restore)
+also passed six phases, with manual newest-guard preservation.
 The October 19 emulated AMD64 upgrade/rollback and recovery attempts **failed
 their bounded checks**. The separate [October 20 native AMD64 container run](#october-20-native-amd64-container-upgrade-and-recovery)
 **passed both exact-baseline upgrade/rollback sequences and full synthetic recovery**.
@@ -49,7 +51,8 @@ Mac ARM host. Its official qemux86-64 Core **2026.10.2** image is recorded as:
 | Fresh HAOS 18.3 x86_64 guest under QEMU/TCG, Core 2026.10.2 | Actual Linux native/lifecycle, 1,443 backend tests and managed Core installation/flow/restart/native checks passed | Emulated CPU scope; separate full AMD64 upgrade/recovery follow-up failed its bounds and remains unqualified below |
 | Native x86_64 Ubuntu 24.04 CI host, pinned Alpine/musl Core 2026.10.2 Docker container | Both ten-phase exact-baseline upgrade/rollback sequences and twenty-process full synthetic recovery passed | Native AMD64 container scope; no native HAOS-managed service, glibc Core, backend-suite or separate worker/lifecycle rerun claim |
 | Native x86_64 Ubuntu 24.04 CI host, pinned Alpine/musl Core 2026.9.4 Docker container | Full 1,443-test backend suite plus one optional skip, native worker/lifecycle, both upgrades and full recovery passed | Minimum-Core native AMD64 container scope; see the October 20 result below |
-| Native x86_64/KVM HAOS 18.3, managed Core 2026.10.2, HACS 2.0.5 | Eight phases passed: genuine HACS published install/rollback, two stopped exact-candidate installs, restart/selection/identity persistence and latest-guard continuity | Synthetic managed service; candidate HACS delivery, OAuth and Supervisor backups remain open |
+| Native x86_64/KVM HAOS 18.3, managed Core 2026.10.2, HACS 2.0.5 | Eight phases passed: genuine HACS published install/rollback, two stopped exact-candidate installs, restart/selection/identity persistence and latest-guard continuity | Synthetic managed service; candidate HACS delivery and OAuth remain open. This run excluded Supervisor backups/Recorder; the prepared partial scope is recorded separately below |
+| Native x86_64/KVM HAOS 18.3, managed Core/Supervisor 2026.10.2, prepared disabled-entry partial backup | Six phases passed genuine Supervisor backup/restore including Recorder, exact history rollback/new recording, saved selections/identities and manually retained newest guard | Prepared synthetic partial scope; ordinary enabled-entry/full-system restore and automatic anti-rollback remain open |
 | Linux glibc and additional targets | Earlier official-wheel and ELF checks retain their dated scope | Actual runtime acceptance pending |
 
 A QA-container result establishes behavior in the recorded image and architecture.
@@ -258,6 +261,7 @@ live location reports or physical-display acceptance.
 | Linux amd64 execution | Native/lifecycle, full backend suite and managed setup/restart/native checks passed under QEMU/TCG |
 | Native AMD64 Core 2026.10.2 container upgrade/rollback and full recovery | Passed October 20: 20 upgrade phases across both exact baselines, 20 recovery processes and 40 blocked probes; unchanged frozen candidate and CLI limits |
 | Native AMD64 Core 2026.9.4 container full suite and acceptance | Passed October 20: 1,443 backend tests plus one optional skip, native/lifecycle, both upgrades and full recovery; unchanged frozen candidate and child limits |
+| Prepared native HAOS Supervisor partial backup and Recorder restore | Passed six phases: actual database/history rollback, renewed recording across restart, application-state continuity and manual newest-guard preservation |
 
 Each backend result runs the same expanded suite on a separate target. The full
 emulated AMD64 upgrade/recovery follow-up below failed its bounded checks. The
@@ -265,10 +269,12 @@ later native AMD64 container runs passed those synthetic scenarios separately;
 the minimum-Core run also passed the full backend and native/lifecycle checks.
 Native AMD64 HAOS synthetic activation, persistence and rollback now pass below.
 Glibc and additional runtime scopes remain unqualified; candidate HACS delivery
-and Supervisor backup restoration remain open. The previous Mac
+and ordinary enabled-entry/full-system Supervisor restoration remain open. The
+prepared disabled-entry partial-backup protocol and synthetic Recorder continuity
+pass in the later record below. The previous Mac
 finalization crashes remain unattributed; this phase does not claim to repair
 their cause. Live recovery, long-term report behavior, current production installed-state
-and HACS upgrade, Recorder continuity, physical DAKboard acceptance and the
+and HACS upgrade, production Recorder continuity, physical DAKboard acceptance and the
 remaining license/service-use gates remain separate.
 
 Ignored runner records, exact-input receipts and Linux outputs are retained
@@ -688,3 +694,110 @@ Recorder continuity proof. Owner/live recovery, current production installed
 state, candidate HACS delivery, long-term field behavior, physical DAKboard,
 glibc and the remaining license/service-use gates stay open. No Mac Python,
 release, tag, version change, main update or production deployment was involved.
+
+## October 20 guarded Supervisor backup and Recorder restore
+
+[Run 39452393848](https://github.com/jmhjr/HomeCircle/actions/runs/39452393848),
+at revision `a11542b52d1b2020586da57b091978cd8176f4fb`, **passed all six
+phases in 309.430 host seconds**, including preparation and cleanup. All **42
+offline controller contracts** passed separately in 0.023 seconds. This is an
+actual Supervisor backup/restore, distinct from the earlier stopped filesystem
+restoration.
+
+This separate native x86_64/KVM rehearsal uses a fresh official HAOS 18.3 guest
+and actual managed Core 2026.10.2. It observed Supervisor 2026.10.2 and
+CLI 2026.09.0, and checks the supported command flags before
+issuing exactly one backup and one restore request. The unchanged candidate ZIP
+retains SHA-256 `f0477a91e78181fe1f8d80ada176a1739e10a7502abe7ee6ee2240571280d1f5`
+and all 112 files. There is no HACS operation or GitHub token inside the guest.
+
+The operation is a genuine **Supervisor partial Home Assistant backup and
+restore, including Recorder's database**. The controller checks the exact
+returned backup/restore jobs and their bounded child trees for completion and
+errors. It inspects the private uncompressed archive for the database, exact
+candidate package, persisted disabled entry and older recovery guard. The
+archive, database, configuration and raw history never become public artifacts.
+
+Supervisor automatically starts Core before restore returns. The test therefore
+deliberately disables HomeCircle through the supported config-entry API, waits
+for unload and the actual saved disabled/options state, and backs up that
+quarantined installation while Core and Recorder remain running. It verifies
+the registered genuine Recorder backup platform and uses the actual live hooks.
+After backup, a real options-flow change, committed history markers and three
+local synthetic recovery refusals create distinguishable newer state.
+
+The newest guard and the private post-backup history window are independently
+retained outside the replaced configuration. After Supervisor restore, a fresh
+automatic-boot observation must show HomeCircle disabled, not loaded and not
+imported. Core is then stopped. The controller proves the restored guard equals
+the older backup, separately proves the retained newest guard differs, and
+promotes/checks the newest bytes before another disabled boot. Fresh QA
+generation/nonce controls prevent restored stale receipts from counting as
+progress. Only the explicit final phase may re-enable the entry after the
+disabled-state and newest-guard checks.
+
+The exact returned backup and restore jobs both completed with zero errors,
+with three and four checked job-tree nodes respectively. The **2,846,720-byte**
+partial archive matched SHA-256
+`7c4deee95f409d60916d22ba12e401baadce26bd7d2cd2159eaa9d802ca17143`.
+Archive inspection confirmed the database, exact 112-file package, saved disabled
+entry and old guard. The actual pre-backup saved-store gate passed.
+
+| Actual acceptance | Result |
+| --- | --- |
+| Pre-backup Recorder history | Ten committed timestamped rows retained exactly through restore and restart; closed-window SHA-256 `19d1c392555f452fa4744de05a1fbbebfbb9f9a09c261a30ce3367c7adee16ba` |
+| Post-backup mutation | A changed options snapshot rolled back; ten separately committed marker rows were absent after restore |
+| Renewed recording | Ten new committed post-restore rows remained exactly after another Core restart; SHA-256 `ec7e2006659a1b5727da7f776691443a3a96b2584eec12ed2b0d7bf9c75a6b37` |
+| Recorder operation | Genuine backup platform registered, actual commit and history API checks passed, SQLite integrity passed and no backup-failure issue appeared |
+| Restored application state | Entry/options, selections and Person/registry/dashboard/unrelated-resource snapshot returned exactly: SHA-256 `da0088837e6521ff860485c2c2baf31c7a7ecff008bd9fa2281e7e0b48c216ca` |
+| Automatic restored boot | Fresh process observed disabled, unloaded and with no candidate import before any guard promotion |
+| Guard ordering | Old guard `87e066171f45017a4a64fe53f0f6e54255a056460d4a11d60054a7d6f854967b` actually restored; separately retained newest guard `6a539827f2c55dc92c6221bc2edee2ad3e18ada0a2bccf607f2f502b9c309106` promoted while Core was stopped |
+| Guard after explicit enable and restart | Actual candidate API remained blocked, with three unresolved and three rejected local synthetic submissions |
+| Current resource | Owned ID changed on re-enable as expected, then remained stable through restart; exactly one current resource served the unchanged bundle |
+| Cleanup | Owned QEMU process stopped, private workspace removed and no cleanup failure |
+
+These are synthetic local recovery refusals; no passcode proof, Apple request,
+provider account or owner data was used. The restored-quarantine phase verifies
+the retained guard bytes without importing the candidate's guard API.
+
+The guarded procedure preserves entry/options, Person/tracker/registry, dashboard
+and unrelated-resource identity. Normal disable intentionally deletes HomeCircle's
+owned card resource; re-enable must create exactly one current resource serving
+the exact bundle. Its newly created ID must then survive the final restart.
+
+Preparation review corrected a controller condition that treated a successful
+void validation as a false boolean, preventing completion of a successful
+operation. Its focused success-path contract uses the actual void-return
+behavior. The HTTP probe requires status 200 and bounded exact decoded bytes,
+without assuming compressed Content-Length equals decoded length. These are
+validation-helper corrections; candidate code and the original bounds are
+unchanged. Linux contract execution is separate from the timed VM rehearsal.
+
+The first live attempt, [run 39450320492](https://github.com/jmhjr/HomeCircle/actions/runs/39450320492), failed after 174.772 host seconds at the backup CLI child, with initialize/quarantine passed and no restore reached. Its 35 offline contracts passed separately. The missing child error body prevents assigning a sole runtime cause. Its 2,726-byte sanitized artifact ZIP matched SHA-256 `313b1eb19198e7a1952be1a12822daf7f5775fbeb30ffdc1c155ad19b2ec18f9`.
+
+Follow-up source review found that the CLI optional-value local-storage flag can leave a separate value as a rejected positional argument; both calls now use explicit `--location=.local`. Failed commands preserve bounded numeric exit/API/job error categories, with no raw text. The helper also waits for actual saved Person, registry and Lovelace stores because genuine live backup hooks do not flush all delayed collection writes. The added checks read disk and never force or rewrite Core stores. Candidate bytes, the 600-second guest phases, 180-second Core actions, 900/1,200-second backup/restore operations and 5,520-second controller bound remain unchanged.
+
+The downloaded seven-JSON sanitized artifact is **6,221 bytes**, SHA-256
+`79c7ec7c77e4fe2282b8d5593687a0c0cb2b17262edc693f7ffb7f773107c3a0`.
+Its exact names and every member byte were independently verified against the
+retained receipts. The full raw backup, database and configuration stayed private
+inside the disposable runner and were removed. The archive is uncompressed and
+unprotected because it contains synthetic data only; this does not qualify
+encrypted-backup handling.
+
+Executed controller SHA-256:
+`0bf19f86e565c1b6a49392559d184537b8199c47c9a6a8356ad0709f8c9d5b0a`.
+Executed guest helper SHA-256:
+`9f037ee3ec7e2c8eff49229a67dba4cbd3432d7576c67bbe77956020180bd5cb`.
+The fresh official HAOS image and candidate inputs matched their recorded pins.
+
+This qualifies the deliberately prepared disabled-entry partial-backup protocol
+for synthetic data. It does not qualify ordinary enabled-entry backups, full OS/
+Supervisor/add-on restoration, encrypted/cloud portability, automatic guard
+anti-rollback, owner/Apple recovery or current production data. Recorder's
+synthetic rollback and renewed recording are separate from production history,
+long-term retention and field acceptance. Candidate HACS delivery, live owner/
+field/physical-display, other platform and remaining licensing/service gates
+remain open. The newest guard is manually retained; Apple service allowance is
+neither established nor reset. No Mac Python, production or V2 change, release,
+tag or version change is part of this rehearsal.

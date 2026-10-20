@@ -576,8 +576,8 @@
     "sha256": "b3aac76553bb6d5c4520e208e319370fbda4eecc01409b42b7c115c9293d96ec"
   },
   "docs/CURRENT-RELEASE-READINESS.md": {
-    "bytes": 114862,
-    "sha256": "03ac4eb4347762ac9b867634252c3185017a6218984516d30fe7a23932dbaf93"
+    "bytes": 116454,
+    "sha256": "b03f68422300561235ec3baf1be00bef3f9237e836d51ec4779d0219e6a44240"
   },
   "docs/DASHBOARD-POLISH.md": {
     "bytes": 1268,
@@ -616,8 +616,8 @@
     "sha256": "b1a6da3c63ecc1da58609af5ee7d6d8e32f4b80d3890ce40d56b758c3d0f7707"
   },
   "docs/FINDMY-SETUP.md": {
-    "bytes": 8035,
-    "sha256": "a38e95aee3c209ca2cb9278d42fd8c67c0e91a13519886cc9c2da98fc61d7b66"
+    "bytes": 10846,
+    "sha256": "9ef9a6ed3265d9415680902b1bea5b3e5414d0b99fe6ff59a402e1d008d48c78"
   },
   "docs/FOCUSED-HARDENING-VALIDATION.md": {
     "bytes": 9799,
@@ -644,8 +644,8 @@
     "sha256": "a5e69da9c9f697d3ebfaffb6a3946f668706bebd2d0980da30cd74fbc5f3bcc5"
   },
   "docs/LINUX-HAOS-VALIDATION.md": {
-    "bytes": 47186,
-    "sha256": "f031f15b53d5adcb1c0328d6b4977f136ac249497fac902ff468501f28065be1"
+    "bytes": 56664,
+    "sha256": "04f1c32f53dd4f8093a3d505d628216a47ff925c4bd01bb99e69bc581280cc87"
   },
   "docs/MILESTONE-1-VALIDATION.md": {
     "bytes": 4463,
@@ -680,8 +680,8 @@
     "sha256": "75d2061c71e64a03576f6cd93b62789f437684ecbb13dd5798a082577f1cfb53"
   },
   "docs/PLATFORM-UPGRADE-RECOVERY-VALIDATION.md": {
-    "bytes": 22798,
-    "sha256": "384d10ead5918c307ee52e7e814cf3118a09cdc17f1a5f926b1900e4faabdc0b"
+    "bytes": 25286,
+    "sha256": "83a8bbdf0cb077fd1c424284f3edc8d49043430aa3a0799f8cefd45680630cbc"
   },
   "docs/POST-BETA4-FIXES.md": {
     "bytes": 1780,
@@ -736,8 +736,8 @@
     "sha256": "47408939576a43dac8fe8dbcc1e67af2bcc12491b1952a30be99f74a44bbb261"
   },
   "docs/STABLE-RELEASE-CHECKLIST.md": {
-    "bytes": 14228,
-    "sha256": "3e0566d2e793e99f1a26666b5900f046e4ae567fa560209ffa0c99b78c45493b"
+    "bytes": 15416,
+    "sha256": "ca3250f77159d8c933bca736791d32d287b2ca5b3c032f4e8b8ee844916eca89"
   },
   "docs/STABLE-SCOPE-AUDIT.md": {
     "bytes": 13304,

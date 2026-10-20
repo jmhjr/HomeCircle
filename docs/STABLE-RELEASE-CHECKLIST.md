@@ -91,8 +91,21 @@ local fixes and their limits. The subsequent [independent cryptographic review](
   continuity and latest-guard preservation through matching stopped state
   restoration. The actual candidate API stayed blocked at three after reinstall;
   the older rollback verified guard bytes only. Owned VM/private cleanup passed.
-  Candidate HACS delivery/release transport, OAuth and Supervisor backup/Recorder
-  acceptance remain open; see the [native HAOS record](LINUX-HAOS-VALIDATION.md#october-20-native-haos-and-hacs-rehearsal).
+  Candidate HACS delivery/release transport and OAuth remain open. This HACS run
+  excluded Supervisor backups/Recorder; the prepared partial scope is recorded
+  separately below. See the [native HAOS record](LINUX-HAOS-VALIDATION.md#october-20-native-haos-and-hacs-rehearsal).
+
+- [x] Rehearse a prepared disabled-entry Supervisor partial Home Assistant
+  backup/restore including Recorder on fresh native HAOS. [Run 39452393848](https://github.com/jmhjr/HomeCircle/actions/runs/39452393848)
+  passed six phases in 309.430 host seconds and 42 offline contracts. Original
+  committed history returned exactly, post-backup markers disappeared and new
+  recording survived restart. Saved selections/options/identities and unrelated
+  resources were restored; the owned resource was recreated and retained across
+  restart. Automatic restore boot stayed disabled/unloaded without candidate
+  import; the independently retained newest guard was manually restored before
+  enable and remained blocked at three. Owned VM/private cleanup passed.
+  Ordinary enabled-entry/full-system/add-on/encrypted/cloud restore, automatic
+  anti-rollback and production history remain open. See the [guarded restore record](LINUX-HAOS-VALIDATION.md#october-20-guarded-supervisor-backup-and-recorder-restore).
 
 See [platform, upgrade and recovery validation](PLATFORM-UPGRADE-RECOVERY-VALIDATION.md)
 for the exact evidence, replacement harness and recorded shutdown failures,
@@ -156,8 +169,9 @@ and remaining limits.
   attempts. The later minimum-Core native AMD64 run passes the full backend,
   native/lifecycle, both upgrade and full-recovery scopes on Core 2026.9.4.
   The later native AMD64 HAOS rehearsal also passes synthetic managed-service
-  activation, persistence and rollback; candidate HACS delivery and Supervisor
-  backups remain open. Glibc Core and additional runtime scopes remain unqualified. The earlier Core
+  activation, persistence and rollback. A prepared disabled-entry Supervisor
+  partial backup/Recorder restore also passes; candidate HACS delivery and
+  ordinary enabled-entry/full-system restore remain open. Glibc Core and additional runtime scopes remain unqualified. The earlier Core
   2026.10.2 native CI run
   did not rerun the backend suite, separate worker/lifecycle checks or anonymous
   Apple runtime; Ubuntu's host libc does not establish glibc Core acceptance.
@@ -180,7 +194,7 @@ and remaining limits.
   ledger loss and latest independent recovery-guard retention still apply. The
   native HAOS rehearsal adds published-release HACS install/rollback and stopped
   candidate activation with synthetic identities; it does not close candidate
-  HACS release transport, current production storage, Recorder or physical acceptance.
+  HACS release transport, current production storage/Recorder or physical acceptance.
 - [ ] Close the remaining [licensing/service terms checklist](STABLE-SCOPE-AUDIT.md#licensing-and-service-terms-release-checklist)
   for the exact selected provider scope. Restoring one inherited notice does not
   settle the separate provenance, dependency, software/service or branding gates.
