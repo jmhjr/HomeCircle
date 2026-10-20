@@ -34,7 +34,12 @@ checked in the tested environment; an Ubuntu host label alone is insufficient.
 Dependency setup uses exact Core 2026.10.2 constraints, SHA-256
 `7baa9a8f39ddeb9c5bb60a1036f6d5e33f4b84267f151f53cc2b95ef031a21b5`,
 and test plugin `0.13.373`, whose metadata targets that Core release. Declared
-startup component requirements are installed before networking is disconnected.
+startup requirements are installed before networking is disconnected. The scan
+follows Core's hard and after dependencies and manifest discovery references,
+and includes the unchanged default authentication provider and TOTP MFA
+declarations. Preimport-only modules contribute their own requirements.
+Declarations, Core source fingerprints and installed versions are recorded
+and checked again in acceptance and the separate startup processes.
 Acceptance covers real synthetic Core/HomeCircle startup, the exact packaged
 native worker and provider lifecycle, and the backend suite. Only the named
 optional retained-Apple-installer fixture may be skipped. An isolated copy of
@@ -49,7 +54,9 @@ substitution counts are recorded; the tagged script and product are unchanged.
 The runtime build and test container are owned by this invocation. Acceptance
 runs without external networking, host mounts, published ports or Linux
 capabilities. Each phase and the whole invocation have fixed deadlines and
-separate cleanup allowance. Only narrow synthetic JSON summaries are uploaded;
+separate cleanup allowance. Startup failures may retain fixed Core error
+categories and allowlisted public identifiers, without formatted messages,
+private paths, arguments or local values. Only narrow synthetic JSON summaries are uploaded;
 private temporary files, logs, test state and the owned runtime image are
 removed. No owner account, GitHub credential or Apple binary enters the test
 container. Production, V2, main, release tags/assets and existing harnesses are

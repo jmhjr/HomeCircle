@@ -15,6 +15,7 @@ import importlib.metadata
 import importlib.util
 import io
 import json
+import logging
 import os
 from pathlib import Path, PurePosixPath
 import platform
@@ -52,6 +53,9 @@ CURRENT_STAGE = "inputs"
 LAST_PIP_STEP = None
 STARTUP_FAILURE = None
 PROBE_FAILURE = None
+CORE_DIAGNOSTICS = None
+STARTUP_LOG_DOMAINS = set()
+STARTUP_LOG_REQUIREMENTS = set()
 PROBE_PHASES = frozenset({
     "startup", "import", "dependency_copy", "dependency_resolution", "fixture",
     "normal_open", "limits", "normal_check", "normal_close", "cancel_open",
@@ -116,7 +120,16 @@ SAFE_CHILD_CODES = frozenset({
     "core_environment_origin_refused", "installed_core_constraints_refused", "unicorn_version_refused",
     "unicorn_loaded_library_refused", "tree_path_refused", "tree_symlink_refused",
     "tree_special_file_refused", "tree_bytes_changed", "input_path_refused", "input_hash_refused",
+    "startup_requirement_missing", "startup_requirement_version_refused", "core_literal_declaration_refused",
+    "default_auth_declaration_refused", "default_auth_requirements_refused", "declared_requirements_refused",
 })
+CORE_LOGGERS = frozenset({"homeassistant.bootstrap", "homeassistant.setup", "homeassistant.requirements",
+                          "homeassistant.loader", "homeassistant.config", "homeassistant.core_config",
+                          "homeassistant.auth.providers", "homeassistant.auth.mfa_modules", "homeassistant.util.package"})
+CORE_CATEGORIES = frozenset({"core_integrations_failed", "core_config_initialization_failed", "package_install_failed",
+                            "component_setup_failed", "component_exception", "dependencies_failed", "other_core_error"})
+CORE_TYPES = PROBE_TYPES | {"HomeAssistantError", "RequirementsNotFound", "Invalid", "MultipleInvalid",
+                            "UnsupportedStorageVersionError", "ConfigValidationError"}
 
 
 class Refused(RuntimeError):
@@ -398,6 +411,111 @@ def pip_install(args, requirements, name, limit):
           "dependency_install_refused")
 
 
+def declared_requirements(value):
+    check(isinstance(value, list) and len(value) <= 256, "declared_requirements_refused")
+    check(all(isinstance(item, str) and len(item) <= 300 and re.fullmatch(
+        r"[A-Za-z0-9][A-Za-z0-9_.-]*(?:\[[A-Za-z0-9_,.-]+\])?==[A-Za-z0-9][A-Za-z0-9_.+!-]*", item)
+        for item in value), "declared_requirements_refused")
+    return value
+
+
+def source_literal(raw, name, *, required):
+    try:
+        module = ast.parse(raw)
+        nodes = []
+        for node in module.body:
+            if isinstance(node, ast.Assign) and any(isinstance(target, ast.Name) and target.id == name
+                                                    for target in node.targets):
+                nodes.append(node.value)
+            elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name) and node.target.id == name:
+                nodes.append(node.value)
+        check(len(nodes) == 1 or (not required and not nodes), "core_literal_declaration_refused")
+        return ast.literal_eval(nodes[0]) if nodes else []
+    except (SyntaxError, ValueError, TypeError):
+        raise Refused("core_literal_declaration_refused") from None
+
+
+def default_auth_declarations(config_raw, provider_raw, mfa_raw):
+    """Derive the exact unchanged Core defaults, without importing auth modules."""
+    try:
+        module = ast.parse(config_raw)
+        providers, modules = [], []
+        for node in ast.walk(module):
+            if not isinstance(node, ast.Assign):
+                continue
+            names = {target.id for target in node.targets if isinstance(target, ast.Name)}
+            if "auth_conf" in names:
+                providers.append(ast.literal_eval(node.value))
+            if "mfa_conf" in names:
+                value = node.value
+                check(isinstance(value, ast.Call) and isinstance(value.func, ast.Attribute)
+                      and isinstance(value.func.value, ast.Name) and value.func.value.id == "config"
+                      and value.func.attr == "get" and len(value.args) == 2 and not value.keywords
+                      and isinstance(value.args[0], ast.Name) and value.args[0].id == "CONF_AUTH_MFA_MODULES",
+                      "default_auth_declaration_refused")
+                modules.append(ast.literal_eval(value.args[1]))
+        check(providers == [[{"type": "homeassistant"}]]
+              and modules == [[{"type": "totp", "id": "totp", "name": "Authenticator app"}]],
+              "default_auth_declaration_refused")
+        provider = declared_requirements(source_literal(provider_raw, "REQUIREMENTS", required=False))
+        mfa = declared_requirements(source_literal(mfa_raw, "REQUIREMENTS", required=True))
+        check(provider == [] and mfa == ["pyotp==2.10.0", "PyQRCode==1.2.1"],
+              "default_auth_requirements_refused")
+        return {"homeassistant.auth.providers.homeassistant": provider, "homeassistant.auth.mfa_modules.totp": mfa}
+    except (SyntaxError, ValueError, TypeError):
+        raise Refused("default_auth_declaration_refused") from None
+
+
+def requirement_graph(base, roots, preimports, discovery):
+    """Mirror Core's requirement traversal, without setting integrations up."""
+    def manifest(domain):
+        check(isinstance(domain, str) and re.fullmatch(r"[a-z][a-z0-9_]{0,79}", domain),
+              "core_component_name_refused")
+        path = base / domain / "manifest.json"
+        check(path.is_file() and not path.is_symlink() and path.stat().st_size <= 2 * 1024**2,
+              "core_component_manifest_refused")
+        value = json.loads(path.read_bytes())
+        check(isinstance(value, dict) and value.get("domain") == domain, "core_component_manifest_refused")
+        return value
+    found, requirements = set(), set()
+    for domain in preimports:
+        requirements.update(declared_requirements(manifest(domain).get("requirements", [])))
+    queue = list(roots)
+    while queue:
+        domain = queue.pop()
+        check(isinstance(domain, str) and re.fullmatch(r"[a-z][a-z0-9_]{0,79}", domain),
+              "core_component_name_refused")
+        if domain in found:
+            continue
+        found.add(domain)
+        check(len(found) <= 256, "core_component_count_refused")
+        value = manifest(domain)
+        requirements.update(declared_requirements(value.get("requirements", [])))
+        for key in ("dependencies", "after_dependencies"):
+            dependencies = value.get(key, [])
+            check(isinstance(dependencies, list) and len(dependencies) <= 256, "core_dependencies_refused")
+            check(all(isinstance(item, str) and re.fullmatch(r"[a-z][a-z0-9_]{0,79}", item)
+                      for item in dependencies), "core_dependencies_refused")
+            queue.extend(dependencies)
+        queue.extend(domain for domain, keys in discovery.items() if any(key in value for key in keys))
+    return {"domains": sorted(found), "preimport_own_requirements_modules": sorted(preimports),
+            "requirements": sorted(requirements)}
+
+
+def verify_declared_versions(requirements):
+    versions = {}
+    for raw in declared_requirements(requirements):
+        name, wanted = raw.split("==", 1)
+        name = name.split("[", 1)[0]
+        try:
+            actual = importlib.metadata.version(name)
+        except importlib.metadata.PackageNotFoundError:
+            raise Refused("startup_requirement_missing") from None
+        check(actual == wanted, "startup_requirement_version_refused")
+        versions[name.lower().replace("_", "-")] = actual
+    return dict(sorted(versions.items()))
+
+
 def core_component_requirements(payload):
     spec = importlib.util.find_spec("homeassistant")
     check(spec is not None and spec.origin is not None, "core_origin_refused")
@@ -432,29 +550,25 @@ def core_component_requirements(payload):
         if isinstance(node, ast.ImportFrom) and node.level == 1 and node.module == "components":
             preimports.update(alias.name for alias in node.names)
     check({"CORE_INTEGRATIONS", "DEFAULT_INTEGRATIONS"} <= seen, "bootstrap_domain_roots_refused")
-    queue = list(roots | set(json.loads(payload["manifest.json"])["dependencies"]) | {"http", "person", "zone"})
-    found, requirements = set(), set()
-    # Importing default_config does not set up all its optional dependencies.
-    # Only preload these modules' own declared wheels; actual setup roots below
-    # retain their full hard-dependency graph.
-    for domain in preimports:
-        check(re.fullmatch(r"[a-z][a-z0-9_]{0,79}", domain) is not None, "core_component_name_refused")
-        path = base / domain / "manifest.json"
-        check(path.is_file() and not path.is_symlink(), "core_component_manifest_refused")
-        requirements.update(json.loads(path.read_bytes()).get("requirements", ()))
-    while queue:
-        domain = queue.pop()
-        check(re.fullmatch(r"[a-z][a-z0-9_]{0,79}", domain) is not None, "core_component_name_refused")
-        if domain in found:
-            continue
-        found.add(domain)
-        check(len(found) <= 256, "core_component_count_refused")
-        path = base / domain / "manifest.json"
-        check(path.is_file() and not path.is_symlink(), "core_component_manifest_refused")
-        manifest = json.loads(path.read_bytes())
-        queue.extend(manifest.get("dependencies", ()))
-        requirements.update(manifest.get("requirements", ()))
-    return sorted(requirements)
+    discovery = source_literal((core / "requirements.py").read_bytes(), "DISCOVERY_INTEGRATIONS", required=True)
+    check(discovery == {"dhcp": ("dhcp",), "mqtt": ("mqtt",), "ssdp": ("ssdp",),
+                        "zeroconf": ("zeroconf", "homekit")}, "core_discovery_declaration_refused")
+    actual_roots = roots | set(json.loads(payload["manifest.json"])["dependencies"]) | {"http", "person", "zone"}
+    result = requirement_graph(base, actual_roots, preimports, discovery)
+    auth_paths = ("core_config.py", "auth/providers/homeassistant.py", "auth/mfa_modules/totp.py")
+    raw = []
+    for name in auth_paths:
+        path = core / name
+        check(path.is_file() and not path.is_symlink() and path.stat().st_size <= 2 * 1024**2,
+              "core_auth_source_refused")
+        raw.append(path.read_bytes())
+    auth = default_auth_declarations(*raw)
+    result["default_auth_modules"] = auth
+    result["requirements"] = sorted(set(result["requirements"]).union(*(set(value) for value in auth.values())))
+    result["source_sha256"] = {name: sha(content) for name, content in zip(auth_paths, raw)}
+    for name in ("bootstrap.py", "requirements.py"):
+        result["source_sha256"][name] = sha((core / name).read_bytes())
+    return result
 
 
 def common(args, files, payload):
@@ -480,7 +594,8 @@ def setup(args, files, payload):
                        "pytest-homeassistant-custom-component==" + PLUGIN, "findmy==0.10.2",
                        "home-assistant-frontend==20260930.4"], "dependencies", 1200)
     CURRENT_STAGE = "core_component_requirements"
-    requirements = core_component_requirements(payload)
+    preparation = core_component_requirements(payload)
+    requirements = preparation["requirements"]
     if requirements:
         CURRENT_STAGE = "core_component_install"
         pip_install(args, requirements, "core-components", 240)
@@ -492,7 +607,8 @@ def setup(args, files, payload):
     result = common(args, files, payload)
     result.update({"outcome": "passed", "completed": True, "environment": environment(dependencies=True),
                    "installed_dependency_closure": closure(args.payload / "core-constraints.txt"),
-                   "core_component_requirements": requirements})
+                   "core_component_requirements": requirements, "core_requirement_preparation": preparation,
+                   "startup_requirement_versions": verify_declared_versions(requirements)})
     atomic_json(args.results / "setup-summary.json", result)
 
 
@@ -596,6 +712,96 @@ def lifecycle_copy(args, files):
                   "only_declared_harness_adaptations": True, "tagged_source_unchanged": True}
 
 
+def project_core_diagnostics(records):
+    if not isinstance(records, list):
+        return []
+    result = []
+    for value in records[-32:]:
+        if not isinstance(value, dict) or not isinstance(value.get("category"), str) \
+                or value["category"] not in CORE_CATEGORIES:
+            continue
+        item = {"category": value["category"]}
+        if isinstance(value.get("source"), str) and value["source"] in CORE_LOGGERS:
+            item["source"] = value["source"]
+        if isinstance(value.get("failure_type"), str) and value["failure_type"] in CORE_TYPES:
+            item["failure_type"] = value["failure_type"]
+        if isinstance(value.get("domain"), str) and value["domain"] in STARTUP_LOG_DOMAINS:
+            item["domain"] = value["domain"]
+        if isinstance(value.get("requirement"), str) and value["requirement"] in STARTUP_LOG_REQUIREMENTS:
+            item["requirement"] = value["requirement"]
+        missing = value.get("missing_module")
+        if isinstance(missing, str) and missing in PROBE_MODULES | {"pyotp", "pyqrcode", "aiohasupervisor"}:
+            item["missing_module"] = missing
+        errno = value.get("os_errno")
+        if type(errno) is int and 0 <= errno <= 4095:
+            item["os_errno"] = errno
+        frames = []
+        supplied = value.get("public_frames", [])
+        for frame in supplied[-6:] if isinstance(supplied, list) else []:
+            if (isinstance(frame, dict) and isinstance(frame.get("module"), str)
+                    and len(frame["module"]) <= 180
+                    and re.fullmatch(r"homeassistant(?:\.[a-z_][a-z0-9_]*)*", frame["module"])
+                    and isinstance(frame.get("function"), str)
+                    and re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]{0,79}", frame["function"])
+                    and type(frame.get("line")) is int and 0 < frame["line"] <= 1000000):
+                frames.append({key: frame[key] for key in ("module", "function", "line")})
+        item["public_frames"] = frames
+        result.append(item)
+    return result
+
+
+def core_log_projection(record):
+    if record.name not in CORE_LOGGERS or record.levelno < logging.ERROR or not isinstance(record.msg, str):
+        return None
+    templates = {
+        ("homeassistant.bootstrap", "Home Assistant core failed to initialize. "): ("core_integrations_failed", None, None),
+        ("homeassistant.bootstrap", "Home Assistant core failed to initialize. Further initialization aborted"):
+            ("core_config_initialization_failed", None, None),
+        ("homeassistant.util.package", "Unable to install package %s: %s"): ("package_install_failed", None, 0),
+        ("homeassistant.setup", "Setup failed for %s'%s': %s"): ("component_setup_failed", 1, None),
+        ("homeassistant.setup", "Error during setup of component %s: %s"): ("component_exception", 0, None),
+        ("homeassistant.setup", "Unable to set up dependencies of '%s'. Setup failed for dependencies: %s"):
+            ("dependencies_failed", 0, None),
+    }
+    category, domain_index, requirement_index = templates.get((record.name, record.msg), ("other_core_error", None, None))
+    value = {"category": category, "source": record.name, "public_frames": []}
+    arguments = record.args if isinstance(record.args, tuple) else ()
+    if domain_index is not None and len(arguments) > domain_index and isinstance(arguments[domain_index], str):
+        value["domain"] = arguments[domain_index]
+    if requirement_index is not None and len(arguments) > requirement_index and isinstance(arguments[requirement_index], str):
+        value["requirement"] = arguments[requirement_index]
+    if isinstance(record.exc_info, tuple) and len(record.exc_info) == 3 and isinstance(record.exc_info[1], BaseException):
+        error = record.exc_info[1]
+        value["failure_type"] = type(error).__name__
+        if isinstance(error, ModuleNotFoundError):
+            value["missing_module"] = error.name
+        if isinstance(error, OSError):
+            value["os_errno"] = error.errno
+        for frame, line in traceback.walk_tb(record.exc_info[2]):
+            value["public_frames"].append({"module": frame.f_globals.get("__name__"),
+                                            "function": "module" if frame.f_code.co_name == "<module>" else frame.f_code.co_name,
+                                            "line": line})
+    return project_core_diagnostics([value])[0]
+
+
+class CoreFailureCapture(logging.Handler):
+    """Observe Core errors without formatting or changing their behavior."""
+
+    def __init__(self):
+        super().__init__(level=logging.ERROR)
+        self.records = []
+
+    def emit(self, record):
+        try:
+            value = core_log_projection(record)
+            if value is not None:
+                self.records.append(value)
+                self.records[:] = self.records[-32:]
+        except Exception:
+            # A diagnostic observer must never change the startup result.
+            return
+
+
 def probe_failure(log, stage, code):
     """Read a private traceback, exporting only finite public identifiers."""
     check(stage in {"native", "lifecycle"} and type(code) is int and -128 <= code <= 255,
@@ -631,22 +837,45 @@ def probe_failure(log, stage, code):
 
 
 def startup_child(args):
+    global CORE_DIAGNOSTICS, STARTUP_LOG_DOMAINS, STARTUP_LOG_REQUIREMENTS
     environment(dependencies=True)
+    _, payload = inputs(args.payload)
+    preparation = core_component_requirements(payload)
+    declared_versions = verify_declared_versions(preparation["requirements"])
+    setup_receipt = private_json(args.results / "setup-summary.json")
+    check(setup_receipt.get("outcome") == "passed" and setup_receipt.get("completed") is True
+          and setup_receipt.get("core_requirement_preparation") == preparation
+          and setup_receipt.get("startup_requirement_versions") == declared_versions, "setup_receipt_refused")
+    STARTUP_LOG_DOMAINS = set(preparation["domains"]) | set(preparation["default_auth_modules"])
+    STARTUP_LOG_REQUIREMENTS = set(preparation["requirements"])
     sys.path.insert(0, str(args.runtime_tree))
     path = args.runtime_tree / "scripts/validate_ha_restart.py"
     check(sha(path.read_bytes()) == STARTUP_SHA, "startup_script_hash_refused")
     spec = importlib.util.spec_from_file_location("exact_tag_startup", path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    asyncio.run(module.run_phase(str(args.config), args.phase, VERSION))
+    capture = CoreFailureCapture()
+    logger = logging.getLogger()
+    logger.addHandler(capture)
+    try:
+        asyncio.run(module.run_phase(str(args.config), args.phase, VERSION))
+    except BaseException:
+        CORE_DIAGNOSTICS = project_core_diagnostics(capture.records)
+        raise
+    finally:
+        logger.removeHandler(capture)
     import custom_components.homecircle as integration
     from custom_components.homecircle import frontend
     check(Path(integration.__file__).resolve() ==
           (args.runtime_tree / "custom_components/homecircle/__init__.py").resolve()
           and frontend.VERSION == VERSION, "startup_loaded_version_refused")
+    check(core_component_requirements(payload) == preparation
+          and verify_declared_versions(preparation["requirements"]) == declared_versions,
+          "startup_requirements_changed_after_acceptance")
     atomic_json(args.receipt, {"phase": args.phase, "outcome": "passed", "core": CORE,
                               "loaded_version": VERSION, "exact_published_source_imported": True,
-                              "environment": environment(dependencies=True)})
+                              "environment": environment(dependencies=True),
+                              "core_requirement_preparation": preparation, "startup_requirement_versions": declared_versions})
 
 
 def startup(args):
@@ -676,6 +905,10 @@ def startup(args):
                   and record.get("exact_published_source_imported") is True,
                   "core_startup_receipt_refused")
             check(record.get("environment") == environment(dependencies=True), "core_startup_runtime_refused")
+            expected = private_json(args.results / "setup-summary.json")
+            check(record.get("core_requirement_preparation") == expected.get("core_requirement_preparation")
+                  and record.get("startup_requirement_versions") == expected.get("startup_requirement_versions"),
+                  "core_startup_requirements_refused")
             records.append({"phase": phase, "loaded_version": VERSION, "outcome": "passed"})
     check(not config.exists(), "startup_configuration_cleanup_refused")
     return {"separate_core_processes": records, "config_options_persistence": True,
@@ -684,17 +917,24 @@ def startup(args):
 
 
 def acceptance(args, files, payload):
-    global CURRENT_STAGE, PROBE_FAILURE
+    global CURRENT_STAGE, PROBE_FAILURE, STARTUP_LOG_DOMAINS, STARTUP_LOG_REQUIREMENTS
     CURRENT_STAGE = "acceptance_preconditions"
     result = common(args, files, payload)
     before = environment(dependencies=True)
     installed = closure(args.payload / "core-constraints.txt")
+    preparation = core_component_requirements(payload)
+    declared_versions = verify_declared_versions(preparation["requirements"])
+    STARTUP_LOG_DOMAINS = set(preparation["domains"]) | set(preparation["default_auth_modules"])
+    STARTUP_LOG_REQUIREMENTS = set(preparation["requirements"])
     setup_receipt = private_json(args.results / "setup-summary.json")
     check(setup_receipt.get("outcome") == "passed" and setup_receipt.get("completed") is True
           and setup_receipt.get("environment") == before
-          and setup_receipt.get("installed_dependency_closure") == installed, "setup_receipt_refused")
+          and setup_receipt.get("installed_dependency_closure") == installed
+          and setup_receipt.get("core_requirement_preparation") == preparation
+          and setup_receipt.get("startup_requirement_versions") == declared_versions, "setup_receipt_refused")
     result.update({"outcome": "in_progress", "completed": False, "environment": before,
                    "installed_dependency_closure": installed, "current_stage": "native"})
+    result.update({"core_requirement_preparation": preparation, "startup_requirement_versions": declared_versions})
     output = args.results / "glibc-summary.json"
     atomic_json(output, result)
     CURRENT_STAGE = "native"
@@ -742,6 +982,9 @@ def acceptance(args, files, payload):
     common(args, files, payload)
     check(environment(dependencies=True) == before and closure(args.payload / "core-constraints.txt") == installed,
           "runtime_changed_after_acceptance")
+    check(core_component_requirements(payload) == preparation
+          and verify_declared_versions(preparation["requirements"]) == declared_versions,
+          "startup_requirements_changed_after_acceptance")
     inputs(args.payload)
     result.update({"outcome": "passed", "completed": True, "current_stage": "complete",
                    "offline_container_boundary_required": True, "apple_binary_executed": False,
@@ -774,6 +1017,8 @@ def project_child_failure(value):
                 and type(frame.get("line")) is int and 0 < frame["line"] <= 1000000):
             frames.append({key: frame[key] for key in ("script", "function", "line")})
     result["public_frames"] = frames
+    if "core_diagnostics" in value:
+        result["core_diagnostics"] = project_core_diagnostics(value["core_diagnostics"])
     return result
 
 
@@ -822,6 +1067,8 @@ def main():
             failure["startup_child_failure"] = STARTUP_FAILURE
         if PROBE_FAILURE is not None:
             failure["probe_child_failure"] = PROBE_FAILURE
+        if CORE_DIAGNOSTICS is not None:
+            failure["core_diagnostics"] = project_core_diagnostics(CORE_DIAGNOSTICS)
         if isinstance(error, ModuleNotFoundError) and isinstance(error.name, str) and len(error.name) <= 180 \
                 and re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)*", error.name):
             failure["missing_module"] = error.name

@@ -4,6 +4,7 @@ import ast
 import importlib.util
 import io
 import json
+import logging
 from pathlib import Path
 import struct
 import sys
@@ -312,6 +313,111 @@ class DriverContracts(unittest.TestCase):
                     guard(event, (command[0], list(command), {}))
         self.assertEqual(counters["approved_posix_spawn_events"], 0)
         self.assertEqual(counters["denied_unknown_spawn_events"], 2)
+
+    def auth_sources(self):
+        # Exact default expressions and omitted TOTP declarations from tagged
+        # Core2026.10.2; no Core imports or authentication setup in contracts.
+        config = b'''async def async_process_ha_core_config(hass, config):
+    if (auth_conf := config.get(CONF_AUTH_PROVIDERS)) is None:
+        auth_conf = [{"type": "homeassistant"}]
+    mfa_conf = config.get(CONF_AUTH_MFA_MODULES,
+        [{"type": "totp", "id": "totp", "name": "Authenticator app"}])
+'''
+        return config, b"# Default provider has no per-module REQUIREMENTS.\n", \
+            b'REQUIREMENTS = ["pyotp==2.10.0", "PyQRCode==1.2.1"]\n'
+
+    def manifest(self, base, domain, **values):
+        path = base / domain / "manifest.json"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps({"domain": domain, **values}))
+
+    def test_default_auth_includes_both_actual_totp_requirements(self):
+        result = subject.default_auth_declarations(*self.auth_sources())
+        self.assertEqual(result, {"homeassistant.auth.providers.homeassistant": [],
+                                  "homeassistant.auth.mfa_modules.totp": ["pyotp==2.10.0", "PyQRCode==1.2.1"]})
+
+    def test_auth_declarations_refuse_changed_defaults_or_dynamic_requirements(self):
+        config, provider, mfa = self.auth_sources()
+        for values in ((config.replace(b'"totp"', b'"other"'), provider, mfa),
+                       (config, provider, b"REQUIREMENTS = load_private_requirements()\n"),
+                       (config, provider, b'REQUIREMENTS = ["pyotp==2.11.0", "PyQRCode==1.2.1"]\n'),
+                       (config, provider, b"# missing REQUIREMENTS\n")):
+            with self.subTest(source=values[2]):
+                with self.assertRaises(subject.Refused):
+                    subject.default_auth_declarations(*values)
+
+    def test_requirements_refuse_urls_ranges_and_nonstring_values(self):
+        for values in (["public @ https://private.invalid/CANARY"], ["pyotp>=2"], [None], "pyotp==2.10.0"):
+            with self.subTest(values=values):
+                with self.assertRaisesRegex(subject.Refused, "^declared_requirements_refused$"):
+                    subject.declared_requirements(values)
+
+    def test_requirement_graph_follows_after_and_discovery_but_not_preimport_dependencies(self):
+        base = self.temporary()
+        self.manifest(base, "root", dependencies=["hard"], after_dependencies=["after"], homekit={})
+        self.manifest(base, "hard", requirements=["Hard==1.0"])
+        self.manifest(base, "after", requirements=["After==2.0"])
+        self.manifest(base, "zeroconf", requirements=["Discovery==3.0"])
+        self.manifest(base, "preimport", dependencies=["must_not_be_set_up"], requirements=["Preload==4.0"])
+        value = subject.requirement_graph(base, {"root"}, {"preimport"}, {"zeroconf": ("zeroconf", "homekit")})
+        self.assertEqual(value["domains"], ["after", "hard", "root", "zeroconf"])
+        self.assertEqual(value["requirements"], ["After==2.0", "Discovery==3.0", "Hard==1.0", "Preload==4.0"])
+
+    def test_missing_after_or_discovery_manifest_refused(self):
+        for manifest, discovery in (({"after_dependencies": ["missing"]}, {}),
+                                    ({"homekit": {}}, {"zeroconf": ("zeroconf", "homekit")})):
+            with self.subTest(manifest=manifest):
+                base = self.temporary()
+                self.manifest(base, "root", **manifest)
+                with self.assertRaisesRegex(subject.Refused, "^core_component_manifest_refused$"):
+                    subject.requirement_graph(base, {"root"}, set(), discovery)
+
+    def test_malformed_after_dependency_list_refused(self):
+        base = self.temporary()
+        self.manifest(base, "root", after_dependencies="must_be_a_list")
+        with self.assertRaisesRegex(subject.Refused, "^core_dependencies_refused$"):
+            subject.requirement_graph(base, {"root"}, set(), {})
+
+    def test_auth_installed_versions_must_exist_and_match(self):
+        requirements = ["pyotp==2.10.0", "PyQRCode==1.2.1"]
+        with patch.object(subject.importlib.metadata, "version", side_effect=["2.10.0", "1.2.1"]):
+            self.assertEqual(subject.verify_declared_versions(requirements), {"pyotp": "2.10.0", "pyqrcode": "1.2.1"})
+        with patch.object(subject.importlib.metadata, "version", return_value="0.0.0"):
+            with self.assertRaisesRegex(subject.Refused, "^startup_requirement_version_refused$"):
+                subject.verify_declared_versions(requirements)
+        with patch.object(subject.importlib.metadata, "version", side_effect=subject.importlib.metadata.PackageNotFoundError):
+            with self.assertRaisesRegex(subject.Refused, "^startup_requirement_missing$"):
+                subject.verify_declared_versions(requirements)
+
+    def test_core_diagnostic_never_formats_private_message_arguments(self):
+        record = logging.LogRecord("homeassistant.util.package", logging.ERROR, "CANARY/private.py", 1,
+                                   "Unable to install package %s: %s", ("pyotp==2.10.0", "PRIVATE_CANARY"), None)
+        record.getMessage = Mock(side_effect=AssertionError("must never format logs"))
+        with patch.object(subject, "STARTUP_LOG_REQUIREMENTS", {"pyotp==2.10.0"}):
+            result = subject.core_log_projection(record)
+        self.assertEqual(result, {"category": "package_install_failed", "source": "homeassistant.util.package",
+                                  "requirement": "pyotp==2.10.0", "public_frames": []})
+        self.assertNotIn("CANARY", json.dumps(result))
+        record.getMessage.assert_not_called()
+
+    def test_core_diagnostic_rejects_private_canaries_and_malformed_fields(self):
+        value = {"category": "other_core_error", "source": "CANARY", "failure_type": "CANARY",
+                 "domain": "CANARY", "requirement": "CANARY", "missing_module": "CANARY",
+                 "message": "PRIVATE_CANARY", "os_errno": "PRIVATE_CANARY",
+                 "public_frames": [{"module": "/private/CANARY", "function": "CANARY", "line": 1},
+                                   {"module": "homeassistant.bootstrap", "function": "async_from_config_dict",
+                                    "line": 531, "locals": "PRIVATE_CANARY"}]}
+        result = subject.project_core_diagnostics([value, {"category": []}])
+        self.assertNotIn("CANARY", json.dumps(result))
+        self.assertEqual(result, [{"category": "other_core_error", "public_frames": [
+            {"module": "homeassistant.bootstrap", "function": "async_from_config_dict", "line": 531}]}])
+
+    def test_core_diagnostic_observer_cannot_raise_into_startup(self):
+        capture = subject.CoreFailureCapture()
+        record = logging.LogRecord("homeassistant.bootstrap", logging.ERROR, "unused", 1, "unused", (), None)
+        with patch.object(subject, "core_log_projection", side_effect=ValueError("PRIVATE_CANARY")):
+            capture.emit(record)
+        self.assertEqual(capture.records, [])
 
 
 if __name__ == "__main__":
