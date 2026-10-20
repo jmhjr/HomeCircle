@@ -162,7 +162,12 @@ done
 stage=prepare
 bounded 120 python3 -I -B "$script_dir/driver.py" prepare --payload "$workspace/input" \
   --tree "$workspace/source" --results "$workspace/results" >"$workspace/prepare.log" 2>&1
-NPM=(npm --userconfig=/dev/null --globalconfig=/dev/null --cache="$workspace/npm-cache")
+stage=node_toolchain
+# npm rejects loading one physical file as both configuration scopes. These
+# distinct empty files keep both scopes private without loading owner settings.
+: >"$workspace/user.npmrc"
+: >"$workspace/global.npmrc"
+NPM=(npm --userconfig="$workspace/user.npmrc" --globalconfig="$workspace/global.npmrc" --cache="$workspace/npm-cache")
 node_version=$(bounded 10 node --version); npm_version=$(bounded 10 "${NPM[@]}" --version)
 [[ $node_version =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ && $npm_version =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
   echo node_version_refused >&2; exit 2;
