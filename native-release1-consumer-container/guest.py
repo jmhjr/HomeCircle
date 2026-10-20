@@ -74,6 +74,80 @@ def distribution_failure(index, expected, distribution, cache, search_path):
     }
 
 
+EXERCISE_STAGES = frozenset(
+    {
+        "unclassified",
+        "imports",
+        "phase_request",
+        "runtime",
+        "resolved_dependencies",
+        "synthetic_trackers",
+        "person_sources",
+        "resources",
+        "flow_start",
+        "flow_household",
+        "flow_assign_tracker",
+        "flow_member",
+        "flow_confirm",
+        "flow_create",
+        "flow_loaded",
+        "options_flow",
+        "entry_state",
+        "source_selection",
+        "loaded_files",
+        "resource_identity",
+        "served_frontend",
+        "disk_identity",
+        "restart_identity",
+        "unload_setup",
+        "receipt",
+    }
+)
+EXERCISE_EXCEPTION_TYPES = frozenset(
+    {
+        "AssertionError",
+        "AttributeError",
+        "FileNotFoundError",
+        "ImportError",
+        "IndexError",
+        "KeyError",
+        "ModuleNotFoundError",
+        "OSError",
+        "PermissionError",
+        "RuntimeError",
+        "TimeoutError",
+        "TypeError",
+        "ValueError",
+        "OtherError",
+    }
+)
+
+
+def exercise_diagnostic(error, stage):
+    """Return only fixed stage and exact built-in error families; never values."""
+    families = {
+        AssertionError: "AssertionError",
+        AttributeError: "AttributeError",
+        FileNotFoundError: "FileNotFoundError",
+        ImportError: "ImportError",
+        IndexError: "IndexError",
+        KeyError: "KeyError",
+        ModuleNotFoundError: "ModuleNotFoundError",
+        OSError: "OSError",
+        PermissionError: "PermissionError",
+        RuntimeError: "RuntimeError",
+        TimeoutError: "TimeoutError",
+        TypeError: "TypeError",
+        ValueError: "ValueError",
+    }
+    return {
+        "exercise_stage": stage
+        if type(stage) is str and stage in EXERCISE_STAGES
+        else "unclassified",
+        "exception_type": families.get(type(error), "OtherError"),
+    }
+
+
 async def wait(predicate, limit=75):
     deadline = asyncio.get_running_loop().time() + limit
     while True:
@@ -134,13 +208,17 @@ async def async_setup(hass, config):
     runtime, values, c = await hass.async_add_executor_job(load_controls)
     task = None
     distribution_check = {}
+    exercise_stage = "unclassified"
 
     async def exercise():
+        nonlocal exercise_stage
+        exercise_stage = "imports"
         from homeassistant.components.lovelace.const import LOVELACE_DATA
         from homeassistant.config_entries import ConfigEntryState, SOURCE_USER
         from homeassistant.const import __version__ as core_version
         import aiohttp
 
+        exercise_stage = "phase_request"
         request = json.loads(
             await hass.async_add_executor_job(
                 lambda: c.read(control / "phase.json", limit=4096)
@@ -153,6 +231,7 @@ async def async_setup(hass, config):
             "guest_phase_refused",
         )
         phase = request["phase"]
+        exercise_stage = "runtime"
         c.check(
             sys.platform == "linux"
             and platform.machine() == values["machine"]
@@ -201,12 +280,15 @@ async def async_setup(hass, config):
                 counts["cache" if origin == cache else "system"] += 1
             return counts
 
+        exercise_stage = "resolved_dependencies"
         origin_counts = await hass.async_add_executor_job(resolved_origins)
+        exercise_stage = "synthetic_trackers"
         for tracker, source_type in zip(TRACKERS, ("gps", "router"), strict=True):
             attrs = {"source_type": source_type, "in_zones": ["zone.home"]}
             if source_type == "gps":
                 attrs.update(latitude=0.0, longitude=0.0, gps_accuracy=5)
             hass.states.async_set(tracker, "home", attrs)
+        exercise_stage = "person_sources"
         await wait(
             lambda: all(
                 hass.states.get(person) is not None
@@ -214,6 +296,7 @@ async def async_setup(hass, config):
                 for person, tracker in zip(PEOPLE, TRACKERS, strict=True)
             )
         )
+        exercise_stage = "resources"
         resources = hass.data[LOVELACE_DATA].resources
         await resources.async_get_info()
         if phase == "first":
@@ -221,20 +304,24 @@ async def async_setup(hass, config):
                 not hass.config_entries.async_entries("homecircle"),
                 "first_entry_collision",
             )
+            exercise_stage = "flow_start"
             manager = hass.config_entries.flow
             result = await manager.async_init(
                 "homecircle", context={"source": SOURCE_USER}
             )
             c.check(result["step_id"] == "household", "household_step_refused")
+            exercise_stage = "flow_household"
             result = await manager.async_configure(
                 result["flow_id"],
                 {"people": list(PEOPLE), "primary_home": "zone.home", "places": []},
             )
             for tracker in TRACKERS:
+                exercise_stage = "flow_assign_tracker"
                 c.check(result["step_id"] == "assign_tracker", "assign_step_refused")
                 result = await manager.async_configure(
                     result["flow_id"], {"tracker": tracker}
                 )
+                exercise_stage = "flow_member"
                 c.check(result["step_id"] == "member", "member_step_refused")
                 result = await manager.async_configure(
                     result["flow_id"],
@@ -244,13 +331,17 @@ async def async_setup(hass, config):
                         "kind": "person",
                     },
                 )
+            exercise_stage = "flow_confirm"
             c.check(result["step_id"] == "confirm", "confirm_step_refused")
             result = await manager.async_configure(
                 result["flow_id"], {"next_step_id": "confirm_save"}
             )
+            exercise_stage = "flow_create"
             c.check(result["type"] == "create_entry", "entry_flow_refused")
             entry = result["result"]
+            exercise_stage = "flow_loaded"
             await wait(lambda: entry.state == ConfigEntryState.LOADED)
+            exercise_stage = "options_flow"
             old = entry.runtime_data
             options = hass.config_entries.options
             result = await options.async_init(entry.entry_id)
@@ -268,17 +359,20 @@ async def async_setup(hass, config):
                     and entry.runtime_data is not old
                 )
             )
+            exercise_stage = "resources"
             c.check(
                 not any(item["url"] == UNRELATED for item in resources.async_items()),
                 "resource_collision",
             )
             await resources.async_create_item({"url": UNRELATED, "res_type": "module"})
+        exercise_stage = "entry_state"
         entries = hass.config_entries.async_entries("homecircle")
         c.check(len(entries) == 1, "entry_count_refused")
         entry = entries[0]
         await wait(
             lambda: entry.state == ConfigEntryState.LOADED and bool(entry.options)
         )
+        exercise_stage = "source_selection"
         c.check(
             entry.options.get("city_lookup_enabled") is False
             and "life360" not in hass.config.components,
@@ -293,6 +387,7 @@ async def async_setup(hass, config):
             ),
             "explicit_source_selection_refused",
         )
+        exercise_stage = "loaded_files"
         inventory = json.loads(
             await hass.async_add_executor_job(
                 lambda: c.read(control / "inventory.json", c.INVENTORY)
@@ -320,6 +415,7 @@ async def async_setup(hass, config):
                 )
 
         await hass.async_add_executor_job(installed_origins)
+        exercise_stage = "resource_identity"
         selected = identity(entry)
         semantic_resources = sorted(
             (
@@ -338,6 +434,7 @@ async def async_setup(hass, config):
             if item["url"].startswith("/homecircle_static/homecircle-card.js?")
         ]
         c.check(len(owned) == 1, "owned_resource_count_refused")
+        exercise_stage = "served_frontend"
         async with aiohttp.ClientSession() as session:
             async with session.get(
                 "http://127.0.0.1:18123" + owned[0]["url"],
@@ -360,6 +457,7 @@ async def async_setup(hass, config):
             ),
         }
         if phase == "first":
+            exercise_stage = "disk_identity"
 
             def saved_on_disk():
                 try:
@@ -382,6 +480,7 @@ async def async_setup(hass, config):
                 c.atomic, control / "saved-identity.json", snapshot
             )
         else:
+            exercise_stage = "restart_identity"
             c.check(
                 snapshot
                 == json.loads(
@@ -391,6 +490,7 @@ async def async_setup(hass, config):
                 ),
                 "restart_identity_changed",
             )
+            exercise_stage = "unload_setup"
             old = entry.runtime_data
             c.check(
                 await hass.config_entries.async_unload(entry.entry_id),
@@ -401,8 +501,10 @@ async def async_setup(hass, config):
                 await hass.config_entries.async_setup(entry.entry_id),
                 "consumer_setup_refused",
             )
+            exercise_stage = "unload_setup"
             await wait(lambda: entry.state == ConfigEntryState.LOADED)
             await hass.async_add_executor_job(installed_origins)
+        exercise_stage = "receipt"
         await hass.async_add_executor_job(
             c.atomic,
             control / (phase + "-receipt.json"),
@@ -434,6 +536,7 @@ async def async_setup(hass, config):
             raise
         except Exception as error:
             failure = await hass.async_add_executor_job(c.safe_failure, error, control)
+            failure.update(exercise_diagnostic(error, exercise_stage))
             if distribution_check:
                 failure["distribution_check"] = dict(distribution_check)
             await hass.async_add_executor_job(

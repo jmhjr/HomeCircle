@@ -747,6 +747,8 @@ class DistributionContracts(unittest.TestCase):
             "control": self.root,
             "distribution_check": projected,
             "exercise": exercise,
+            "exercise_stage": "resolved_dependencies",
+            "exercise_diagnostic": guest.exercise_diagnostic,
         }
         actual = self.guest_function("run", namespace)
         asyncio.run(actual())
@@ -754,12 +756,22 @@ class DistributionContracts(unittest.TestCase):
         value = json.loads(raw)
         self.assertEqual(
             set(value),
-            {"schema", "outcome", "failure_type", "failure_code", "distribution_check"},
+            {
+                "schema",
+                "outcome",
+                "failure_type",
+                "failure_code",
+                "distribution_check",
+                "exercise_stage",
+                "exception_type",
+            },
         )
         self.assertEqual(
             value["failure_code"], "guest_cached_distribution_origin_refused"
         )
         self.assertEqual(value["distribution_check"], projected)
+        self.assertEqual(value["exercise_stage"], "resolved_dependencies")
+        self.assertEqual(value["exception_type"], "OtherError")
         self.assertNotIn("private", raw.lower())
         self.assertNotIn("/owner", raw)
 
@@ -1091,6 +1103,210 @@ class ConfigMarkerContracts(unittest.TestCase):
         ]
         self.assertEqual(len(marker_receipts), 1)
         self.assertGreater(marker_receipts[0].lineno, cache[0].lineno)
+
+
+class ExerciseDiagnosticContracts(unittest.TestCase):
+    def test_projection_uses_only_fixed_stages_and_exact_builtin_error_types(self):
+        for error_type in (
+            AssertionError,
+            AttributeError,
+            FileNotFoundError,
+            ImportError,
+            IndexError,
+            KeyError,
+            ModuleNotFoundError,
+            OSError,
+            PermissionError,
+            RuntimeError,
+            TimeoutError,
+            TypeError,
+            ValueError,
+        ):
+            for stage in guest.EXERCISE_STAGES:
+                result = guest.exercise_diagnostic(error_type("PRIVATE-CANARY"), stage)
+                self.assertEqual(set(result), {"exercise_stage", "exception_type"})
+                self.assertEqual(result["exercise_stage"], stage)
+                self.assertEqual(result["exception_type"], error_type.__name__)
+                self.assertIn(result["exception_type"], guest.EXERCISE_EXCEPTION_TYPES)
+                self.assertNotIn("PRIVATE-CANARY", json.dumps(result))
+
+    def test_unknown_types_private_names_values_and_bad_stages_are_suppressed(self):
+        private = type("PRIVATE-CANARY", (Exception,), {})
+        forged = type("KeyError", (KeyError,), {})
+        for error in (
+            private("PRIVATE-CANARY /owner/private"),
+            forged("PRIVATE-CANARY"),
+            c.Refused("PRIVATE-CANARY"),
+        ):
+            for stage in (
+                "PRIVATE-CANARY",
+                "bare_private_canary",
+                "flow_start/PRIVATE-CANARY",
+                None,
+                {},
+                [],
+                True,
+                4,
+            ):
+                result = c.safe_failure(error, HERE)
+                result.update(guest.exercise_diagnostic(error, stage))
+                self.assertEqual(result["exercise_stage"], "unclassified")
+                self.assertEqual(result["exception_type"], "OtherError")
+                public = json.dumps(result)
+                self.assertNotIn("CANARY", public)
+                self.assertNotIn("canary", public)
+                self.assertNotIn("/owner/private", public)
+
+    def test_fixed_stage_catalog_contains_every_actual_assignment_and_projection_is_wired(
+        self,
+    ):
+        tree = ast.parse((HERE / "guest.py").read_bytes())
+        assigned = []
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Assign) and any(
+                isinstance(t, ast.Name) and t.id == "exercise_stage"
+                for t in node.targets
+            ):
+                self.assertIsInstance(node.value, ast.Constant)
+                self.assertIs(type(node.value.value), str)
+                assigned.append(node.value.value)
+        self.assertEqual(set(assigned), guest.EXERCISE_STAGES)
+        run = next(
+            n
+            for n in ast.walk(tree)
+            if isinstance(n, ast.AsyncFunctionDef) and n.name == "run"
+        )
+        update = [
+            n
+            for n in ast.walk(run)
+            if isinstance(n, ast.Call)
+            and isinstance(n.func, ast.Attribute)
+            and ast.unparse(n.func) == "failure.update"
+        ]
+        self.assertEqual(len(update), 1)
+        self.assertEqual(
+            ast.unparse(update[0]),
+            "failure.update(exercise_diagnostic(error, exercise_stage))",
+        )
+        for name in ("EXERCISE_STAGES", "EXERCISE_EXCEPTION_TYPES"):
+            value = next(
+                n.value
+                for n in tree.body
+                if isinstance(n, ast.Assign)
+                and any(isinstance(t, ast.Name) and t.id == name for t in n.targets)
+            )
+            self.assertEqual(value.func.id, "frozenset")
+            self.assertEqual(len(value.args), 1)
+            self.assertTrue(
+                all(type(item) is str for item in ast.literal_eval(value.args[0]))
+            )
+
+
+class ExerciseDiagnosticAsyncContracts(unittest.IsolatedAsyncioTestCase):
+    def actual_run(self, exercise, stage):
+        tree = ast.parse((HERE / "guest.py").read_bytes())
+        node = next(
+            n
+            for n in ast.walk(tree)
+            if isinstance(n, ast.AsyncFunctionDef) and n.name == "run"
+        )
+        saved = []
+
+        async def execute(function, *args):
+            return function(*args)
+
+        common = SimpleNamespace(
+            safe_failure=c.safe_failure,
+            atomic=lambda path, value: saved.append((path.name, value)),
+        )
+        namespace = {
+            "asyncio": asyncio,
+            "exercise": exercise,
+            "hass": SimpleNamespace(async_add_executor_job=execute),
+            "c": common,
+            "control": HERE,
+            "distribution_check": {},
+            "exercise_stage": stage,
+            "exercise_diagnostic": guest.exercise_diagnostic,
+        }
+        exec(
+            compile(
+                ast.Module(body=[node], type_ignores=[]), "actual_guest_run", "exec"
+            ),
+            namespace,
+        )
+        return namespace["run"], saved
+
+    async def test_actual_wait_handles_unexpected_api_shapes_with_distinct_diagnostics(
+        self,
+    ):
+        def missing_key():
+            return {"unexpected": None}["step_id"]
+
+        def missing_attribute():
+            return SimpleNamespace().attributes
+
+        def wrong_shape():
+            value = None
+            return value["step_id"]
+
+        for predicate, expected in (
+            (missing_key, "KeyError"),
+            (missing_attribute, "AttributeError"),
+            (wrong_shape, "TypeError"),
+        ):
+            with self.subTest(expected=expected):
+
+                async def exercise():
+                    await guest.wait(predicate, limit=0.01)
+
+                run, saved = self.actual_run(exercise, "flow_household")
+                await run()
+                self.assertEqual(len(saved), 1)
+                name, result = saved[0]
+                self.assertEqual(name, "guest-failure.json")
+                self.assertEqual(result["exercise_stage"], "flow_household")
+                self.assertEqual(result["exception_type"], expected)
+
+    async def test_actual_run_distinguishes_own_wait_deadline_and_outer_timeout_without_text(
+        self,
+    ):
+        async def own_deadline():
+            await guest.wait(lambda: False, limit=0)
+
+        async def outer_timeout():
+            async with asyncio.timeout(0):
+                await guest.wait(lambda: False, limit=60)
+
+        for exercise, expected in (
+            (own_deadline, "RuntimeError"),
+            (outer_timeout, "TimeoutError"),
+        ):
+            with self.subTest(expected=expected):
+                run, saved = self.actual_run(exercise, "person_sources")
+                await run()
+                self.assertEqual(len(saved), 1)
+                result = saved[0][1]
+                self.assertEqual(result["exercise_stage"], "person_sources")
+                self.assertEqual(result["exception_type"], expected)
+                if expected == "RuntimeError":
+                    self.assertEqual(result["failure_code"], "guest_condition_deadline")
+                self.assertNotIn("traceback", json.dumps(result).lower())
+
+    async def test_actual_run_propagates_cancellation_without_failure_receipt(self):
+        started = asyncio.Event()
+
+        async def exercise():
+            started.set()
+            await asyncio.Event().wait()
+
+        run, saved = self.actual_run(exercise, "person_sources")
+        task = asyncio.create_task(run())
+        await started.wait()
+        task.cancel()
+        with self.assertRaises(asyncio.CancelledError):
+            await task
+        self.assertEqual(saved, [])
 
 
 if __name__ == "__main__":
