@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "candidate_source_commit": "FILL_CANONICAL_40_HEX_COMMIT",
+  "candidate_source_prefix": "",
+  "source_sha256": "FILL_SOURCE_TGZ_SHA256",
+  "source_inventory_sha256": "FILL_INVENTORY_SHA256",
+  "source_files": 0,
+  "driver_sha256": "FILL_FINAL_DRIVER_SHA256",
+  "checker_sha256": "FILL_REVIEWED_PRIVACY_CHECKER_SHA256",
+  "version": "0.1.0-beta.20",
+  "expected_release_files": 113,
+  "minimum_backend_passed": 1443,
+  "required_backend_tests": [
+    {
+      "class": "tests.test_normalize",
+      "function": "test_legacy_pending_gps_skips_passive_residence_but_keeps_explicit_person_state"
+    },
+    {
+      "class": "tests.test_city_lookup",
+      "function": "test_close_handles_independently_cancelled_disk_save"
+    }
+  ],
+  "frontend_tests": 110
+}

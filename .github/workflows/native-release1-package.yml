@@ -1,0 +1,71 @@
+name: HomeCircle 1.0 preparation exact-source checks
+
+on:
+  push:
+    branches: [codex/native-amd64-validation]
+    paths:
+      - native-release1-package/**
+      - .github/workflows/native-release1-package.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: homecircle-release1-package-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  exact-source-development-preview:
+    if: github.ref == 'refs/heads/codex/native-amd64-validation'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    steps:
+      - name: Check out reviewed validation source and canonical history
+        timeout-minutes: 3
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Use the reviewed frontend toolchain
+        timeout-minutes: 3
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: 23.7.0
+      - name: Check standalone validation contracts
+        timeout-minutes: 2
+        run: |
+          bash -n native-release1-package/run_host.sh
+          python3 -B -m unittest discover -s native-release1-package -p test_driver.py -v
+      - name: Validate the exact canonical source and unreleased preview
+        timeout-minutes: 62
+        shell: bash
+        run: |
+          timeout --signal=TERM --kill-after=150s 3500s bash native-release1-package/run_host.sh \
+            --payload native-release1-package/payload \
+            --pins-sha bce0379d11d76c53954380c3893a2cf581d539519168492f4235ffee9ba3be0d \
+            --source-repository "$GITHUB_WORKSPACE" \
+            --output native-release1-package-results
+          jq -e '.outcome=="passed" and .container_stopped==true and .container_removed==true and
+            .cleanup_failed==false and .private_workspace_removed==true and .release_assets_checked==true' \
+            native-release1-package-results/public-summary/host.json
+      - name: Retain narrow validation receipts
+        timeout-minutes: 3
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: release1-preparation-validation-receipts
+          path: native-release1-package-results/public-summary/*.json
+          if-no-files-found: warn
+          retention-days: 7
+          include-hidden-files: false
+      - name: Retain the explicitly unreleased same-version development preview
+        timeout-minutes: 3
+        if: success()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: unreleased-release1-development-preview-not-beta20-replacement
+          path: native-release1-package-results/release-assets/*
+          if-no-files-found: error
+          retention-days: 7
+          include-hidden-files: false
