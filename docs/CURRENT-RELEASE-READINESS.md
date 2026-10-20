@@ -1,3 +1,54 @@
+# October 19–20 stable preparation
+
+The current published experimental prerelease is beta 19; see [beta 19 validation](BETA19-VALIDATION.md) and [publication validation](BETA19-PUBLICATION-VALIDATION.md). The older beta records below retain their dated scope. Stable preparation now includes a local [polling isolation and test-baseline candidate](STABLE-MILESTONE1-VALIDATION.md); it has not been released or installed in production. A follow-up [combined isolation candidate](STABLE-ISOLATION-VALIDATION.md) implements SRP and provider-startup isolation. The next local [recovery and identity candidate](RECOVERY-IDENTITY-VALIDATION.md) adds persistent submission safeguards and selection continuity. The [focused hardening candidate](FOCUSED-HARDENING-VALIDATION.md) addresses confirmed runtime, storage, recovery authentication and cleanup defects. The latest local [independent cryptographic review candidate](INDEPENDENT-CRYPTO-VALIDATION.md) further fixes peer/key binding, protected-record authentication, resource/cancellation and saved account/session binding issues. The subsequent [platform, upgrade and recovery validation](PLATFORM-UPGRADE-RECOVERY-VALIDATION.md) checks both local Core targets, exact beta 19/recorded-patch upgrade and backup recovery.
+
+The [Linux/HAOS validation phase](LINUX-HAOS-VALIDATION.md) passed synthetic native/lifecycle checks and 1,443 backend tests with one optional fixture skipped on ARM64 Core 2026.9.4, ARM64 Core 2026.10.2 and emulated AMD64 Core 2026.10.2. Both ARM64 targets also passed synthetic upgrade/recovery sequences. Actual HAOS-managed Core 2026.10.2 installed the exact candidate's dependencies, loaded an explicitly selected synthetic Person/tracker through the real flow and retained all 112 file hashes plus each instance's saved configuration/resource/dashboard identities across restart on ARM64 and emulated AMD64. Native checks in both managed containers passed. The first failed AMD64 suite invocation and corrected QA aggregate deadline remain recorded. The separate October 20 native AMD64 Core 2026.10.2 container run now passes both exact-baseline upgrade/rollback sequences and full synthetic recovery. The subsequent native AMD64 Core 2026.9.4 container run passed the full backend suite, native worker/lifecycle, both upgrade baselines and full recovery; see the minimum-Core result below. The subsequent native AMD64 HAOS rehearsal also passed eight synthetic managed-service phases, as recorded below. Glibc Core, additional runtime scopes, candidate HACS delivery and current production acceptance remain open. The [current stable checklist](STABLE-RELEASE-CHECKLIST.md) tracks remaining external-assurance/platform/field/upgrade/license acceptance. No stable version or final provider scope has been chosen.
+
+The [October 19 emulated AMD64 upgrade/rollback and full recovery follow-up](LINUX-HAOS-VALIDATION.md#october-19-follow-up-amd64-upgrade-rollback-and-full-recovery) **failed and remains unqualified within that emulated scope** on the disposable HAOS 18.3 x86_64/Core 2026.10.2 runner. Both upgrade attempts timed out in the older published baseline's first child at its unchanged 180-second bound, without a completed phase receipt; the reconstructed baseline was not reached. Independent recovery failed at its first 45-second child deadline with zero phases completed, so no full 20-process/40-probe result is claimed for those attempts. The bounded diagnostic recorded `acceptance_pass: false` and left the timeout cause unconfirmed. Exact archive/script/112-file source inputs matched before and after that diagnostic; the candidate is unchanged. Its disposition required a faster/native AMD64 runner or a confirmed runner issue and fix before another attempt, without blind reruns or relaxed limits. Prior passing checks, the first failed AMD64 backend audit and all remaining release gates retain their scope.
+
+Cleanup then confirmed an AMD64 guest clock-integrity issue, making elapsed-time evidence from that boot unreliable. The disposable VM alone was changed to enable HPET and passed a reviewed host-clock gate for runner clock behavior; the first gate's QA-criterion failure remains recorded. The corrected-clock upgrade attempt then **failed after 260.377106 host seconds** despite all eight workload clock checks passing with TSC selected. The older published baseline's first child still exceeded its unchanged 180-second deadline, with no completed phase or candidate result. The single corrected-clock recovery attempt also **failed after 110.627503 host seconds**, with all three workload clock checks passing/TSC retained but its first child timing out at the unchanged 45-second bound, killed with exit -9. Zero recovery phases completed, so no 20-process/40-probe result is claimed for that attempt. Input pins remained unchanged and exact QA-container stop was confirmed after each attempt without host cleanup failures. Both emulated full scopes remain unqualified; no candidate bug or sole timeout cause is established. No further emulated retries were made. See [runner clock incident and gate scope](LINUX-HAOS-VALIDATION.md#runner-clock-incident-and-gated-retry) and the [corrected-clock outcomes](LINUX-HAOS-VALIDATION.md#corrected-clock-upgrade-and-recovery-outcomes).
+
+The separate [October 20 native AMD64 container validation](LINUX-HAOS-VALIDATION.md#october-20-native-amd64-container-upgrade-and-recovery), [Actions run 39426549335](https://github.com/jmhjr/HomeCircle/actions/runs/39426549335) at revision `50f9fa38ca3f88e68a9734637ec1ec84203ce8dc`, **passed in 223.990 host seconds**, including preparation and cleanup. On the native x86_64 Ubuntu 24.04 runner, the pinned official Core 2026.10.2/Python 3.14.6 Alpine/musl container passed ten upgrade/rollback phases from each exact baseline, then twenty full-recovery processes and all 40 network-denial probes, with zero unexpected network attempts or Apple requests. The 112-file candidate digest `f0477a91e78181fe1f8d80ada176a1739e10a7502abe7ee6ee2240571280d1f5`, baseline/script/inventory pins and 24-package Core-constrained dependency closure matched; acceptance ran with Docker networking disconnected. Acceptance and runner exited zero, the owned container stopped and was removed, and cleanup reported no failure. No candidate runtime fix or limit change was needed.
+
+The maintainer authorized publishing the frozen validation payload and workflow on `codex/native-amd64-validation` (commits `2623de5` and `50f9fa3`); main and the local working checkout/HEAD, release/tag/version and production remain unchanged. Three sanitized JSON summaries were uploaded successfully and downloaded locally, with seven-day CI retention. Raw synthetic configurations, logs and per-phase receipts were collected inside the ephemeral runner but not persisted in the artifact. A nonblocking upload-action Node 20 deprecation/forced-Node-24 annotation did not prevent the successful upload. This native run did not rerun the 1,443-test backend suite, separate worker/lifecycle checks or anonymous Apple runtime; it adds no native HAOS-managed service, glibc Core, owner/live recovery, production/HACS, Recorder, physical-display, long-term field or license/service acceptance. The package-only rollback identity-ledger limit and latest-recovery-guard requirement remain. No Mac Python or owner/production configuration was used.
+
+The [minimum-Core native AMD64 validation](LINUX-HAOS-VALIDATION.md#october-20-minimum-core-native-amd64-validation),
+[run 39433931788](https://github.com/jmhjr/HomeCircle/actions/runs/39433931788)
+at revision `c92a0c579ea7c03dd0ed238dfb5ede2c7661d73b`, **passed in 534.500 host
+seconds** on Core **2026.9.4**/Python **3.14.6** in the official native AMD64
+musl container. It passed **1,443 backend tests** with one named optional public
+fixture skipped, separate actual packaged-worker/native lifecycle checks,
+both ten-phase exact-baseline upgrade/rollback sequences and full twenty-process
+synthetic recovery with all **40 probes blocked**. The 112-file candidate,
+24-package Core-constrained closure and input/source pins matched. Acceptance
+ran offline and owned-container cleanup passed. Two earlier source-staging
+failures remain documented; their fix changed test-container staging, with no
+candidate or inner-limit change. The three downloaded sanitized summaries
+matched the retained artifact digest. Managed HAOS/HACS, glibc Core, live Apple,
+production/Recorder/field and licensing gates remain separate; the candidate is
+still unreleased and no Mac Python was used.
+
+The [native HAOS/HACS rehearsal](LINUX-HAOS-VALIDATION.md#october-20-native-haos-and-hacs-rehearsal),
+[run 39441631322](https://github.com/jmhjr/HomeCircle/actions/runs/39441631322)
+at revision 80af07bb829c68bda93269c2726d8549aca3338a, **passed eight phases
+in 344.041 host seconds**, plus all 23 controller contracts. Native x86_64/KVM
+HAOS 18.3 with managed Core 2026.10.2 and unmodified HACS 2.0.5 passed genuine
+HACS beta 19 install/rollback and two stopped exact-112-file candidate installs.
+Persistent selections, nonempty options/reload, registry/resource/dashboard
+identities, exact served bundle and real restarts passed. Matching stopped state
+restoration retained the newest guard; the actual candidate API remained blocked
+at three after reinstallation. Owned VM/private cleanup passed. The linked
+record retains the verified eleven-receipt artifact, five earlier incomplete
+runs, and supported catalog-refresh/active-port helper corrections. Candidate
+code and all inner limits are unchanged. HACS resolved the candidate branch to
+main, so candidate HACS delivery/release-ZIP transport remains open. OAuth,
+Supervisor backups, Recorder, live owner/Apple, production, field, glibc and
+remaining release/licensing gates are separate. No Mac Python was used.
+
+# October 19 licensing and service terms release gates
+
+The [stable release checklist](STABLE-SCOPE-AUDIT.md#licensing-and-service-terms-release-checklist) now records the beta 19 license and service-terms findings, required evidence and open acceptance criteria. These include the inherited MIT notice, source provenance, Unicorn licensing, Apple and Life360 permissions, service policies and branding. The inherited OpenTagViewer notice is restored and archive-tested in the local candidate; the remaining gates stay open. [Beta 19 publication validation](BETA19-PUBLICATION-VALIDATION.md) records the published experimental package; the older release and field records below retain their dated scope.
+
 # Current beta 18 release record
 
 See [beta 18 validation](BETA18-VALIDATION.md) and [October 11 changes](RECENT-CHANGES-2026-10-11.md) for the current candidate. The material below is historical through October 10. Stable release gates remain open.

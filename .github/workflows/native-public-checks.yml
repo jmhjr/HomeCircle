@@ -1,0 +1,48 @@
+name: Frozen public source privacy check
+
+on:
+  push:
+    branches: [codex/native-amd64-validation]
+    paths:
+      - native-public-checks/**
+      - .github/workflows/native-public-checks.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: homecircle-native-public-checks-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  public-source-privacy:
+    if: github.ref == 'refs/heads/codex/native-amd64-validation'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out the isolated validation revision
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Check only the frozen product public snapshot
+        shell: bash
+        run: |
+          python3 -I -B native-public-checks/run_check.py \
+            --source native-public-checks/source.tgz \
+            --inventory native-public-checks/inventory.json \
+            --output native-public-checks-results
+          jq -e '.outcome=="passed" and .completed==true and .public_files_checked==326 and .checker_exit==0 and .private_workspace_removed==true' \
+            native-public-checks-results/privacy.json
+      - name: Retain paths/rules and the narrow receipt only
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: native-public-checks-sanitized-summary
+          path: |
+            native-public-checks-results/privacy.json
+            native-public-checks-results/privacy.log
+          if-no-files-found: warn
+          retention-days: 7
+          include-hidden-files: false
