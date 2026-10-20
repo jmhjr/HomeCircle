@@ -12,6 +12,16 @@ VMs. User-mode NAT permits the public downloads HAOS and HACS need; it is not an
 outbound firewall. The test config has only fictional People and trackers, no
 provider account and no production location source.
 
+The fixture uses normal HAOS HTTP binding inside this private guest so that
+Supervisor's supported internal TCP health checks work as well as its newer
+Unix-socket transport. No guest port is forwarded onto the CI host. Before a
+management action, the controller checks the supported root `/info` lifecycle
+state is `running` and relevant Core install/start/update jobs are complete.
+Each stop/start sends one request, validates its JSON result, and observes the
+actual container state inside its original 180-second total bound. Reported
+Supervisor and CLI versions are observed runtime values, separate from source
+inspection of the official API.
+
 The supplied HACS 2.0.5 asset must have SHA-256
 `97be6b824a4f38e683728cc6dd72367f6b8bad0a43428b1b3b987a3087adf413`.
 All HACS source bytes are extracted from that archive, without runtime patches.

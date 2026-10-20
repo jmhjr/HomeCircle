@@ -39,6 +39,11 @@ HA = "/usr/bin/docker exec hassio_cli ha"
 GUEST_ROOT = "/mnt/data/homecircle-hacs-qa"
 PHASES = ("bootstrap_hacs", "baseline", "candidate_install", "candidate",
           "rollback_download", "rollback", "final_install", "final")
+CORE_MANAGEMENT_JOBS = frozenset({
+    "home_assistant_core_install_landing_page", "home_assistant_core_install",
+    "home_assistant_core_start", "home_assistant_core_update", "home_assistant_core_stop",
+    "home_assistant_core_restart", "home_assistant_core_rebuild",
+})
 ROOT = Path(__file__).resolve().parent
 
 
@@ -78,6 +83,37 @@ def public_supervisor_state(value):
             "healthy": data.get("healthy") if isinstance(data.get("healthy"), bool) else None,
             "supported": data.get("supported") if isinstance(data.get("supported"), bool) else None,
             "state": state if isinstance(state, str) and state in allowed else None}
+
+
+def public_root_state(value):
+    result = public_supervisor_state(value)
+    data = value.get("data", {}) if isinstance(value, dict) else {}
+    result["supervisor_version"] = public_core_version(data.get("supervisor")) if isinstance(data, dict) else None
+    return {key: result[key] for key in ("result", "state", "supported", "supervisor_version")}
+
+
+def public_jobs(value):
+    require(isinstance(value, dict) and value.get("result") == "ok", "jobs_projection_refused")
+    jobs = value.get("data", {}).get("jobs")
+    require(isinstance(jobs, list), "jobs_projection_refused")
+    pending = list(jobs)
+    projected = []
+    while pending:
+        require(len(projected) + len(pending) <= 256, "jobs_projection_refused")
+        item = pending.pop(0)
+        require(isinstance(item, dict), "jobs_projection_refused")
+        name, done = item.get("name"), item.get("done")
+        require(isinstance(name, str) and re.fullmatch(r"[A-Za-z0-9_]{1,80}", name)
+                and (done is None or type(done) is bool), "jobs_projection_refused")
+        projected.append({"name": name, "done": done})
+        children = item.get("child_jobs", [])
+        require(isinstance(children, list), "jobs_projection_refused")
+        pending.extend(children)
+    return projected
+
+
+def core_jobs_idle(jobs):
+    return not any(job["name"] in CORE_MANAGEMENT_JOBS and job["done"] is not True for job in jobs)
 
 
 def write_json(path, data):
@@ -180,6 +216,10 @@ class Controller:
         self.core_update_result = "not_requested"
         self.initial_landingpage_seen = False
         self.initial_boot_observations = {}
+        self.management_boundary_observations = {}
+        self.supervisor_version_observed = None
+        self.cli_version_observed = None
+        self.core_actions = []
 
     def remaining(self, maximum, cleanup=False):
         remaining = self.deadline - time.monotonic() + (120 if cleanup else 0)
@@ -354,6 +394,7 @@ class Controller:
                 actual = self.real_container_version(min(20, limit - time.monotonic()))
                 self.container_core_version_before = public_core_version(actual)
                 require(actual == version and actual != "landingpage", "real_core_version_not_ready")
+                require(self.management_ready(limit), "initial_core_management_not_ready")
                 require(time.monotonic() < limit, "managed_core_boot_deadline_exceeded")
                 break
             except (Refused, OSError, ValueError):
@@ -392,6 +433,7 @@ class Controller:
                 actual = self.real_container_version(min(20, limit - time.monotonic()))
                 self.container_core_version_after = public_core_version(actual)
                 require(actual == CORE, "managed_container_core_target_not_ready")
+                require(self.management_ready(limit), "target_core_management_not_ready")
                 require(time.monotonic() < limit, "managed_core_target_deadline_exceeded")
                 return
             except (Refused, OSError, ValueError):
@@ -415,24 +457,38 @@ class Controller:
         try:
             value = json.loads(self.guest(HA + " jobs info --raw-json",
                                           min(10, deadline - time.monotonic())))
-            jobs = value.get("data", {}).get("jobs")
-            require(value.get("result") == "ok" and isinstance(jobs, list), "jobs_projection_refused")
-            pending = list(jobs)
-            projected = []
-            while pending and len(projected) < 64:
-                item = pending.pop(0)
-                require(isinstance(item, dict), "jobs_projection_refused")
-                name, done = item.get("name"), item.get("done")
-                if isinstance(name, str) and re.fullmatch(r"[A-Za-z0-9_]{1,80}", name) and type(done) is bool:
-                    projected.append({"name": name, "done": done})
-                children = item.get("child_jobs", [])
-                require(isinstance(children, list), "jobs_projection_refused")
-                pending.extend(children)
-                require(len(pending) <= 128, "jobs_projection_refused")
-            observations["jobs"] = projected
+            observations["jobs"] = public_jobs(value)
         except (Refused, OSError, ValueError, TypeError):
             observations["jobs_query"] = "unavailable"
         self.initial_boot_observations = observations
+
+    def management_ready(self, deadline):
+        """Read the supported root lifecycle state and the actual Core jobs.
+
+        /info state is the Supervisor lifecycle; /supervisor/info healthy does
+        not provide it. Source: Supervisor 2026.10.0 api/root.py and api/jobs.py.
+        No token/environment, arbitrary response body or job reference is kept.
+        """
+        observed = {"root": {"result": "unavailable"}, "jobs_query": "unavailable"}
+        self.management_boundary_observations = observed
+        value = json.loads(self.guest(HA + " info --raw-json", min(10, deadline - time.monotonic())))
+        root = public_root_state(value)
+        observed["root"] = root
+        if root["supervisor_version"] is not None:
+            self.supervisor_version_observed = root["supervisor_version"]
+        value = json.loads(self.guest(HA + " jobs info --raw-json", min(10, deadline - time.monotonic())))
+        jobs = public_jobs(value)
+        observed.pop("jobs_query")
+        observed["jobs"] = jobs
+        observed["relevant_core_jobs_idle"] = core_jobs_idle(jobs)
+        if self.cli_version_observed is None and time.monotonic() + 11 < deadline:
+            try:
+                value = json.loads(self.guest(HA + " cli info --raw-json", min(10, deadline - time.monotonic())))
+                if value.get("result") == "ok":
+                    self.cli_version_observed = public_core_version(value.get("data", {}).get("version"))
+            except (Refused, OSError, ValueError, TypeError):
+                pass
+        return root["result"] == "ok" and root["state"] == "running" and core_jobs_idle(jobs)
 
     def managed_core(self):
         # Never inspect Config.Env: it contains Supervisor's own internal token.
@@ -447,13 +503,53 @@ class Controller:
         require(matching[0].get("RW") is True, "writable_managed_config_required")
         self.config_path = matching[0]["Source"]
 
+    def core_running(self, timeout):
+        result = self.guest("/usr/bin/docker inspect homeassistant --format '{{.State.Running}}'", timeout).strip()
+        require(result in {b"true", b"false"}, "managed_core_state_refused")
+        return result == b"true"
+
+    def core_action(self, action):
+        require(action in {"stop", "start"}, "core_action_refused")
+        deadline = time.monotonic() + self.remaining(180)
+        record = {"action": action, "result": "not_requested", "supervisor_running": False,
+                  "relevant_core_jobs_idle": False, "running_before": None, "running_after": None}
+        self.core_actions.append(record)
+        while time.monotonic() < deadline:
+            try:
+                if self.management_ready(deadline):
+                    record.update(supervisor_running=True, relevant_core_jobs_idle=True)
+                    break
+            except (Refused, OSError, ValueError, TypeError):
+                pass
+            time.sleep(min(2, max(0, deadline - time.monotonic())))
+        else:
+            raise Refused("core_management_boundary_deadline_exceeded")
+        record["running_before"] = self.core_running(min(10, deadline - time.monotonic()))
+        expected = action == "start"
+        require(record["running_before"] is not expected, "core_action_initial_state_refused")
+        # Exactly one mutating request. The request and state transition share
+        # the existing 180-second total envelope; there is no command retry.
+        record["result"] = "response_invalid"
+        response = json.loads(self.guest(HA + " core " + action + " --raw-json",
+                                         deadline - time.monotonic()))
+        result = response.get("result")
+        record["result"] = result if isinstance(result, str) and result in {"ok", "error"} else "response_invalid"
+        require(result == "ok", "core_action_api_refused")
+        while time.monotonic() < deadline:
+            try:
+                record["running_after"] = self.core_running(min(10, deadline - time.monotonic()))
+                if record["running_after"] is expected and time.monotonic() < deadline:
+                    return
+            except (Refused, OSError, ValueError, TypeError):
+                pass
+            time.sleep(min(1, max(0, deadline - time.monotonic())))
+        raise Refused("core_action_state_deadline_exceeded")
+
     def stop_core(self):
-        self.guest(HA + " core stop --raw-json", 180)
-        require(self.guest("docker inspect homeassistant --format '{{.State.Running}}'", 30).strip() == b"false",
-                "stopped_core_required")
+        self.core_action("stop")
 
     def start_core(self):
-        self.guest(HA + " core start --raw-json", 180)
+        self.core_action("start")
 
     def prepare(self, candidate_inventory, baseline_inventory):
         self.stage = "disposable_configuration"
@@ -509,7 +605,7 @@ class Controller:
         self.token_injected = True
         config = {"homeassistant": {"name": "Disposable HomeCircle HACS QA", "latitude": 0.0,
                                    "longitude": 0.0, "elevation": 0, "unit_system": "metric", "time_zone": "UTC"},
-                  "frontend": {}, "http": {"server_host": "127.0.0.1"}, "lovelace": {},
+                  "frontend": {}, "http": {}, "lovelace": {},
                   "person": {}, "zone": {}, "websocket_api": {}, "image_upload": {},
                   "homecircle_hacs_qa": {"disposable": True}}
         self.guest_write(self.config_path + "/configuration.yaml", canonical(config))
@@ -580,12 +676,16 @@ class Controller:
                 guard = receipt.get("guard", {})
                 require(guard.get("blocked") is True and guard.get("unresolved") == 3,
                         "phase_guard_projection_refused")
-                public["guard"] = {"blocked": True, "unresolved": 3}
+                api_checked = name in {"candidate", "final"}
+                require(guard.get("api_status_checked") is api_checked, "phase_guard_evidence_refused")
+                public["guard"] = {"blocked": True, "unresolved": 3, "api_status_checked": api_checked}
+                if name == "rollback":
+                    require(guard.get("retained_bytes_checked") is True, "phase_guard_evidence_refused")
+                    public["guard"]["retained_bytes_checked"] = True
                 fingerprint = guard.get("sha256")
-                if fingerprint is not None:
-                    require(isinstance(fingerprint, str) and re.fullmatch(r"[0-9a-f]{64}", fingerprint),
-                            "guard_hash_refused")
-                    public["guard"]["sha256"] = fingerprint
+                require(isinstance(fingerprint, str) and re.fullmatch(r"[0-9a-f]{64}", fingerprint),
+                        "guard_hash_refused")
+                public["guard"]["sha256"] = fingerprint
             if name in {"candidate_install", "final_install"}:
                 catalog = receipt.get("hacs_catalog", {})
                 require(receipt.get("candidate_install_preflight") is True
@@ -772,6 +872,10 @@ class Controller:
                    "core_update_result": self.core_update_result,
                    "initial_landingpage_seen": self.initial_landingpage_seen,
                    "initial_boot_observations": self.initial_boot_observations,
+                   "management_boundary_observations": self.management_boundary_observations,
+                   "supervisor_version_observed": self.supervisor_version_observed,
+                   "cli_version_observed": self.cli_version_observed,
+                   "core_actions": self.core_actions,
                    "host_elapsed_seconds": round(time.monotonic() - self.started, 3),
                    "native_linux_amd64_kvm_required": True, "actual_kvm_confirmed": self.kvm_confirmed,
                    "managed_haos_hacs_rehearsal": passed, "phases": len(self.phases),

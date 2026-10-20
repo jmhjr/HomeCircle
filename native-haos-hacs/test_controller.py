@@ -8,7 +8,7 @@ from pathlib import Path
 from types import SimpleNamespace
 import tempfile
 import unittest
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 import zipfile
 
 import controller
@@ -65,6 +65,35 @@ class PublicDiagnostics(unittest.TestCase):
         self.assertEqual(projected, {"result": "ok", "healthy": True, "supported": False, "state": "running"})
         self.assertNotIn("PRIVATE-CANARY", json.dumps(projected))
 
+    def test_root_info_state_and_version_exclude_host_identifiers(self):
+        value = {"result": "ok", "data": {"state": "running", "supervisor": "2026.10.0",
+                 "supported": True, "hostname": "PRIVATE-CANARY", "machine_id": "PRIVATE-CANARY"}}
+        self.assertEqual(controller.public_root_state(value), {
+            "result": "ok", "state": "running", "supervisor_version": "2026.10.0", "supported": True})
+
+
+class ManagementJobs(unittest.TestCase):
+    def project(self, jobs):
+        return controller.public_jobs({"result": "ok", "data": {"jobs": jobs}})
+
+    def test_not_started_nested_core_job_blocks_readiness(self):
+        jobs = self.project([{"name": "unrelated_background_task", "done": False, "child_jobs": [
+            {"name": "home_assistant_core_start", "done": None, "child_jobs": []}]}])
+        self.assertFalse(controller.core_jobs_idle(jobs))
+
+    def test_unrelated_perpetual_job_does_not_block_completed_core(self):
+        jobs = self.project([{"name": "unrelated_background_task", "done": False},
+                             {"name": "home_assistant_core_install", "done": True}])
+        self.assertTrue(controller.core_jobs_idle(jobs))
+
+    def test_unknown_job_identity_is_not_silently_accepted_as_idle(self):
+        with self.assertRaises(controller.Refused):
+            self.project([{"name": None, "done": False}])
+
+    def test_large_tree_is_refused_instead_of_truncated(self):
+        with self.assertRaises(controller.Refused):
+            self.project([{"name": "unrelated_background_task", "done": True}] * 257)
+
 
 class PhaseContracts(unittest.TestCase):
     def setUp(self):
@@ -115,11 +144,29 @@ class PhaseContracts(unittest.TestCase):
             self.host.phase("baseline")
 
     def test_candidate_installed_by_controller_keeps_hacs_metadata_honest(self):
-        self.receipt.update(phase="candidate", guard={"blocked": True, "unresolved": 3, "sha256": "c" * 64})
+        self.receipt.update(phase="candidate", guard={"blocked": True, "unresolved": 3,
+                            "sha256": "c" * 64, "api_status_checked": True})
         self.read()
         self.host.phase("candidate")
         result = json.loads((self.host.public / "candidate.json").read_text())
         self.assertEqual(result["hacs"]["installed_version"], "v0.1.0-beta.19")
+        self.assertIs(result["guard"]["api_status_checked"], True)
+
+    def test_rollback_reports_retained_bytes_separately_from_guard_api(self):
+        self.receipt.update(phase="rollback", guard={"blocked": True, "unresolved": 3,
+                            "sha256": "c" * 64, "api_status_checked": False, "retained_bytes_checked": True})
+        self.read()
+        self.host.phase("rollback")
+        result = json.loads((self.host.public / "rollback.json").read_text())
+        self.assertIs(result["guard"]["api_status_checked"], False)
+        self.assertIs(result["guard"]["retained_bytes_checked"], True)
+
+    def test_rollback_cannot_claim_an_unexercised_guard_api(self):
+        self.receipt.update(phase="rollback", guard={"blocked": True, "unresolved": 3,
+                            "sha256": "c" * 64, "api_status_checked": True, "retained_bytes_checked": True})
+        self.read()
+        with self.assertRaises(controller.Refused):
+            self.host.phase("rollback")
 
     def test_candidate_without_blocked_guard_is_refused(self):
         self.receipt.update(phase="candidate", guard={"blocked": False, "unresolved": 0})
@@ -135,6 +182,26 @@ class PhaseContracts(unittest.TestCase):
         self.assertFalse(private.exists())
         self.assertEqual(self.host.cleanup, {"qemu_stopped": True, "private_workspace_removed": True,
                                              "cleanup_failed": False})
+
+    def test_core_stop_uses_one_request_then_observes_actual_transition(self):
+        self.host.management_ready = Mock(return_value=True)
+        self.host.core_running = Mock(side_effect=[True, True, False])
+        self.host.guest = Mock(return_value=b'{"result":"ok","data":{}}')
+        with patch.object(controller.time, "sleep"):
+            self.host.core_action("stop")
+        self.assertEqual(self.host.guest.call_count, 1)
+        self.assertIn(" core stop --raw-json", self.host.guest.call_args.args[0])
+        self.assertIs(self.host.core_actions[-1]["running_after"], False)
+
+    def test_core_api_error_is_not_retried_even_with_successful_cli_exit(self):
+        self.host.management_ready = Mock(return_value=True)
+        self.host.core_running = Mock(return_value=True)
+        self.host.guest = Mock(return_value=b'{"result":"error","message":"PRIVATE-CANARY"}')
+        with self.assertRaises(controller.Refused):
+            self.host.core_action("stop")
+        self.assertEqual(self.host.guest.call_count, 1)
+        self.assertEqual(self.host.core_actions[-1]["result"], "error")
+        self.assertNotIn("PRIVATE-CANARY", json.dumps(self.host.core_actions))
 
 
 if __name__ == "__main__":
