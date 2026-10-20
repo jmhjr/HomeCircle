@@ -12,7 +12,11 @@ real-browser check. [Minimum](RELEASE-1.0-MINIMUM-LIFECYCLE.md) and
 [current](RELEASE-1.0-CURRENT-LIFECYCLE.md) native QA-container lifecycle checks
 passed on both CPUs. The [exact-preview managed HAOS investigation](RELEASE-1.0-HAOS-RESTORE.md)
 completed operational restore and manual repair, while automatic guard protection
-failed. The [compatibility disposition](RELEASE-1.0-COMPATIBILITY.md) retains the
+failed. The [minimum-Core amd64 managed witness](RELEASE-1.0-MINIMUM-HAOS.md)
+passed normal dependency setup and exact-preview startup/restart. The
+[four consumer and two local ARM pilots](RELEASE-1.0-INCOMPLETE-PILOTS.md)
+remain unsuccessful, with no completed consumer phase or accepted ARM phase.
+The [compatibility disposition](RELEASE-1.0-COMPATIBILITY.md) retains the
 remaining target gaps. Both direct providers remain selected for 1.0. This is not a
 published release, and the
 beta 20 evidence below retains its original artifact scope.

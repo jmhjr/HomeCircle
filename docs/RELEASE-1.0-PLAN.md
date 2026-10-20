@@ -100,8 +100,10 @@ maintainer changes the scope. Do not convert the old wishlist into new blockers.
 
 ### 3. Notices, source obligations and permission
 
-- [ ] Carry the GrandSlam, Unicorn supplemental and Construct notice correction
-  into the actual candidate; verify their installed paths after dependency setup.
+- [x] Carry the GrandSlam, Unicorn supplemental and Construct notice correction
+  into the actual candidate and verify its installed integration paths:
+  [exact-package notice witness](RELEASE-1.0-NOTICE-INSTALLATION.md). Individual
+  dependency-wheel layouts and source/permission obligations remain separate.
 - [ ] Record disposition of the unlicensed gist ancestry/independent
   implementation basis and GrandSlam's literal unfilled license fields.
 - [ ] Resolve Unicorn binding/core attribution and applicable GPLv2 source or
@@ -168,12 +170,21 @@ The [exact-source minimum-Core amd64 run](RELEASE-1.0-CORE-VALIDATION.md) passed
 113-file preview package. Its runtime scope is one official Container image;
 it does not qualify the remaining advertised matrix by itself.
 The [compatibility disposition](RELEASE-1.0-COMPATIBILITY.md) now records
-minimum/current QA-container lifecycle passes on both CPUs and the exact-C
-managed amd64 investigation, with the remaining managed/consumer scopes open.
+minimum/current QA-container lifecycle passes on both CPUs, the exact-C
+managed amd64 restore investigation and the [minimum-Core amd64 managed
+startup/restart pass](RELEASE-1.0-MINIMUM-HAOS.md). The [four consumer and two
+local ARM pilots](RELEASE-1.0-INCOMPLETE-PILOTS.md) remain unsuccessful; their
+cleanup does not close the remaining managed/consumer scopes.
 
 - [x] Qualify exact-C scripted native Core lifecycle on amd64 and ARM64 at
   2026.9.4 and 2026.10.2: 12 focused cases and four separate Core processes per
   cell, preserved settings/source identity, exact served bytes and owned cleanup.
+
+- [x] Verify normal managed dependency installation and exact-C enabled startup/
+  restart on native amd64 HAOS 18.3/Supervisor 2026.10.2/Core 2026.9.4.
+  Run 39504506480 preserved explicit selections, nonempty settings, identities
+  and served bytes across a real restart with the external NIC closed.
+  HACS, historical migration, removal and backup/restore were outside this run.
 
 - [ ] Freeze the advertised matrix. The current proposal has eight cells:
   HAOS/Container × amd64/ARM64 × Core 2026.9.4/2026.10.2.
@@ -286,9 +297,11 @@ selection completion and the remaining mobile/display/access cases stay open.
 ## Work that can proceed now
 
 Canonical source and confirmed fixes, the full exact-source qualification,
-four native QA-container endpoint cells, the exact-C managed restore investigation
-and scoped Safari checks are recorded. Both providers remain included.
-Next work is the remaining managed/consumer compatibility scope, intended
+four native QA-container endpoint cells, the minimum-Core amd64 managed witness,
+the exact-C managed restore investigation and scoped Safari checks are recorded.
+Both providers remain included. The unsuccessful consumer and ARM pilots retain
+their negative disposition. Next work is the remaining consumer entrypoint and
+ARM64 managed compatibility scope, intended
 installed-state inspection, owner account/field/display acceptance and the
 documented assurance/provenance dispositions, followed by an identified RC.
 No outstanding requirement is silently checked by these completed scoped runs.

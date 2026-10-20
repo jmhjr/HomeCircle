@@ -1,0 +1,1050 @@
+{
+  "artifact_download": {
+    "archive_bytes": 5539,
+    "archive_sha256": "fc6cac6f971bf6da609ee9354d923b2265cd1c478ce4cae543350c4a4e0e6a8c",
+    "artifact_id": 12303375312,
+    "members": {
+      "host.json": {
+        "bytes": 10772,
+        "sha256": "366359c7dcecb3c26d4b6af52636a59fafa5c907c2c489de33cefcc9c6014a74"
+      },
+      "initialize.json": {
+        "bytes": 5580,
+        "sha256": "34f287e03d2f1067d95da00054dd7d10d672346751197259a5f23402d946f8eb"
+      },
+      "restart.json": {
+        "bytes": 5577,
+        "sha256": "b423dc8ea7af5aa3c338c82498208542a9f0981749fe31028dc7de76b93f779a"
+      }
+    },
+    "metadata_digest_matched_before_member_read": true,
+    "outcome": "passed",
+    "schema": 1
+  },
+  "independent_verification": {
+    "actual_core": "2026.9.4",
+    "actual_loaded_and_http_served_bytes": true,
+    "actual_stored_oci_chain_and_rootfs_verified": true,
+    "actual_supervisor": "2026.10.2",
+    "artifact_bytes": 5539,
+    "artifact_id": 12303375312,
+    "artifact_sha256": "fc6cac6f971bf6da609ee9354d923b2265cd1c478ce4cae543350c4a4e0e6a8c",
+    "authenticated_provider_behavior_tested": false,
+    "backup_restore_tested": false,
+    "candidate_hacs_download_tested": false,
+    "candidate_package_files": 113,
+    "candidate_release_zip_transport_tested": false,
+    "candidate_source_commit": "9bf03eb45d2cf43274074534e9dfe2de841f4011",
+    "candidate_zip_sha256": "c4530d94be3b2996f8d6c8948db88a51868566047d68558eefde7967f270a861",
+    "closed_network_negative_controls": 2,
+    "closure_packages": 24,
+    "evidence_integrity": "passed",
+    "image_checks_enforced_by_hash_bound_source": 3,
+    "managed_core_actions": 7,
+    "managed_core_processes": 2,
+    "members": {
+      "host.json": {
+        "bytes": 10772,
+        "sha256": "366359c7dcecb3c26d4b6af52636a59fafa5c907c2c489de33cefcc9c6014a74"
+      },
+      "initialize.json": {
+        "bytes": 5580,
+        "sha256": "34f287e03d2f1067d95da00054dd7d10d672346751197259a5f23402d946f8eb"
+      },
+      "restart.json": {
+        "bytes": 5577,
+        "sha256": "b423dc8ea7af5aa3c338c82498208542a9f0981749fe31028dc7de76b93f779a"
+      }
+    },
+    "native_amd64_kvm": true,
+    "nonempty_settings_and_persisted_identity": true,
+    "normal_managed_dependency_setup": true,
+    "owned_cleanup_passed": true,
+    "published_qa_files_checked": 11,
+    "published_workflow_checked": true,
+    "restart_external_nic_closed": true,
+    "run_attempt": 1,
+    "run_id": 39504506480,
+    "schema": 1,
+    "stable_release_approval": false,
+    "stored_objects_per_check": 3,
+    "witness_outcome": "passed",
+    "workflow_commit": "9ab476e6f652273e8ae7220084d767dd6b66b045"
+  },
+  "run": {
+    "attempt": 1,
+    "id": 39504506480,
+    "url": "https://github.com/jmhjr/HomeCircle/actions/runs/39504506480"
+  },
+  "schema": 1,
+  "stable_release_approval": false,
+  "summaries": {
+    "host.json": {
+      "actual_kvm_confirmed": true,
+      "backup_restore_tested": false,
+      "candidate_hacs_download_tested": false,
+      "candidate_release_zip_transport_tested": false,
+      "candidate_transport": "stopped_verified_zip_files",
+      "cleanup_failed": false,
+      "cli_capabilities": {
+        "actual_start_stop_help": true,
+        "actual_update_version_backup_flags": true,
+        "addon_version": "2026.09.0",
+        "application_version_not_inferred_from_addon": true,
+        "executed_binary_sha256": "fb2e2177bd7bc014f029b807cd1cc7d74484ecfed1e90d5f9b2a61d65ff5393d"
+      },
+      "container_core_version_after": "2026.9.4",
+      "container_core_version_before": "2026.10.2",
+      "core_actions": [
+        {
+          "action": "stop",
+          "container_state_after": "stopped",
+          "container_state_before": "running",
+          "relevant_core_jobs_idle": true,
+          "result": "ok",
+          "running_after": false,
+          "running_before": true,
+          "supervisor_running": true
+        },
+        {
+          "action": "start",
+          "container_state_after": "running",
+          "container_state_before": "not_created",
+          "relevant_core_jobs_idle": true,
+          "result": "ok",
+          "running_after": true,
+          "running_before": null,
+          "supervisor_running": true
+        },
+        {
+          "action": "stop",
+          "container_state_after": "stopped",
+          "container_state_before": "running",
+          "relevant_core_jobs_idle": true,
+          "result": "ok",
+          "running_after": false,
+          "running_before": true,
+          "supervisor_running": true
+        },
+        {
+          "action": "start",
+          "container_state_after": "running",
+          "container_state_before": "stopped",
+          "relevant_core_jobs_idle": true,
+          "result": "ok",
+          "running_after": true,
+          "running_before": false,
+          "supervisor_running": true
+        },
+        {
+          "action": "stop",
+          "container_state_after": "stopped",
+          "container_state_before": "running",
+          "relevant_core_jobs_idle": true,
+          "result": "ok",
+          "running_after": false,
+          "running_before": true,
+          "supervisor_running": true
+        },
+        {
+          "action": "start",
+          "container_state_after": "running",
+          "container_state_before": "stopped",
+          "relevant_core_jobs_idle": true,
+          "result": "ok",
+          "running_after": true,
+          "running_before": false,
+          "supervisor_running": true
+        },
+        {
+          "action": "stop",
+          "container_state_after": "stopped",
+          "container_state_before": "running",
+          "relevant_core_jobs_idle": true,
+          "result": "ok",
+          "running_after": false,
+          "running_before": true,
+          "supervisor_running": true
+        }
+      ],
+      "core_container_state_after_selection": "not_created",
+      "core_update_result": "ok",
+      "core_version_after": "2026.9.4",
+      "core_version_before": "2026.10.2",
+      "core_version_target": "2026.9.4",
+      "dependencies_before_candidate": {
+        "closure": {
+          "aiohappyeyeballs": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "2.7.1"
+          },
+          "aiohttp": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "3.14.3"
+          },
+          "aiosignal": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "1.4.0"
+          },
+          "anisette": {
+            "available": false,
+            "constraints_satisfied": false,
+            "metadata_system_origin": false,
+            "python_satisfied": false,
+            "version": null
+          },
+          "appdirs": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "1.4.4"
+          },
+          "attrs": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "26.1.0"
+          },
+          "beautifulsoup4": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "4.13.3"
+          },
+          "certifi": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "2026.7.22"
+          },
+          "frozenlist": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "1.8.0"
+          },
+          "fs": {
+            "available": false,
+            "constraints_satisfied": false,
+            "metadata_system_origin": false,
+            "python_satisfied": false,
+            "version": null
+          },
+          "idna": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "3.20"
+          },
+          "life360": {
+            "available": false,
+            "constraints_satisfied": false,
+            "metadata_system_origin": false,
+            "python_satisfied": false,
+            "version": null
+          },
+          "multidict": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "6.9.1"
+          },
+          "propcache": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "0.5.2"
+          },
+          "protobuf": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "6.32.0"
+          },
+          "pyelftools": {
+            "available": false,
+            "constraints_satisfied": false,
+            "metadata_system_origin": false,
+            "python_satisfied": false,
+            "version": null
+          },
+          "setuptools": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "81.0.0"
+          },
+          "six": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "1.17.0"
+          },
+          "soupsieve": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "2.10"
+          },
+          "srp": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "1.0.22"
+          },
+          "typing-extensions": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "4.16.0"
+          },
+          "unicorn": {
+            "available": false,
+            "constraints_satisfied": false,
+            "metadata_system_origin": false,
+            "python_satisfied": false,
+            "version": null
+          },
+          "urllib3": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "2.8.0"
+          },
+          "yarl": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "1.24.5"
+          }
+        },
+        "closure_count": 24,
+        "closure_graph_checked": false,
+        "config_deps_empty": true,
+        "constraints_match": true,
+        "constraints_sha256": "962c9ccaf398e0b92b10ac9f765ac0f17e22238adc4e768deebc051ee8b60651",
+        "core": "2026.9.4",
+        "direct": {
+          "anisette": {
+            "available": false,
+            "loaded_module_present": false,
+            "module_system_origin": false,
+            "origin_probe": "unavailable",
+            "satisfies_requirement": false,
+            "version": null
+          },
+          "beautifulsoup4": {
+            "available": true,
+            "loaded_module_present": false,
+            "module_system_origin": true,
+            "origin_probe": "import_spec",
+            "satisfies_requirement": true,
+            "version": "4.13.3"
+          },
+          "life360": {
+            "available": false,
+            "loaded_module_present": false,
+            "module_system_origin": false,
+            "origin_probe": "unavailable",
+            "satisfies_requirement": false,
+            "version": null
+          },
+          "protobuf": {
+            "available": true,
+            "loaded_module_present": false,
+            "module_system_origin": true,
+            "origin_probe": "import_spec",
+            "satisfies_requirement": true,
+            "version": "6.32.0"
+          },
+          "srp": {
+            "available": true,
+            "loaded_module_present": false,
+            "module_system_origin": true,
+            "origin_probe": "import_spec",
+            "satisfies_requirement": true,
+            "version": "1.0.22"
+          },
+          "unicorn": {
+            "available": false,
+            "loaded_module_present": false,
+            "module_system_origin": false,
+            "origin_probe": "unavailable",
+            "satisfies_requirement": false,
+            "version": null
+          }
+        },
+        "docker_environment": true,
+        "ordinary_pip_target_unset": true,
+        "provider_or_native_imports_requested_by_probe": false,
+        "python": "3.14.6",
+        "schema": 1,
+        "skip_pip": null
+      },
+      "direct_candidate_installs": 1,
+      "failure_code": null,
+      "failure_or_final_stage": "minimum_managed_witness_complete",
+      "failure_type": null,
+      "fresh_owned_config": {
+        "bytes": 280476,
+        "candidate_previously_present": false,
+        "children": 13,
+        "files": 24,
+        "fresh_config_reset": true,
+        "mount_directory_preserved": true,
+        "owner_accounts_found": false
+      },
+      "host_elapsed_seconds": 314.188,
+      "initial_boot_observations": {
+        "jobs": [
+          {
+            "done": false,
+            "name": "home_assistant_core_install"
+          },
+          {
+            "done": false,
+            "name": "home_assistant_core_start"
+          }
+        ],
+        "supervisor": {
+          "healthy": true,
+          "result": "ok",
+          "state": null,
+          "supported": true
+        }
+      },
+      "initial_landingpage_seen": true,
+      "management_boundary_observations": {
+        "jobs": [],
+        "relevant_core_jobs_idle": true,
+        "root": {
+          "result": "ok",
+          "state": "running",
+          "supervisor_version": "2026.10.2",
+          "supported": true
+        }
+      },
+      "minimum_core_image": {
+        "containerd_address": "/run/containerd/containerd.sock",
+        "containerd_namespace": "moby",
+        "identity_model": "containerd_index_with_verified_stored_oci_chain",
+        "image_rootfs_matches_verified_config": true,
+        "object_bytes": {
+          "config": 11038,
+          "index": 856,
+          "manifest": 4488
+        },
+        "observed_container_image_id": "sha256:414dce485b4eebd9f929f293f7252340bada5715fc4a48b2b954d79195ed3019",
+        "observed_image_inspect_id": "sha256:414dce485b4eebd9f929f293f7252340bada5715fc4a48b2b954d79195ed3019",
+        "official_index_digest": "sha256:414dce485b4eebd9f929f293f7252340bada5715fc4a48b2b954d79195ed3019",
+        "platform": {
+          "architecture": "amd64",
+          "os": "linux"
+        },
+        "reference": "ghcr.io/home-assistant/qemux86-64-homeassistant:2026.9.4",
+        "repository_digest_checked": true,
+        "rootfs_layers": 22,
+        "selected_manifest_digest": "sha256:17fb5b1f953b12e32185c74d34f789270eec3711666df81b1e47e7d45ffd0167",
+        "stored_objects_hashed": 3,
+        "verified_oci_config_digest": "sha256:560be76a9ee5019c1b557241db8d1127550f21fba952a1a976c3d186f9b2cd9e"
+      },
+      "native_worker_repeated": false,
+      "network_boundary": {
+        "before_probe_connected": true,
+        "closed_probe_connected": false,
+        "closed_probe_observations": 2,
+        "guest_agent_remained_available": true,
+        "link_closed": true
+      },
+      "normal_managed_dependency_installation": true,
+      "outcome": "passed",
+      "owner_credentials_used": false,
+      "phases": 2,
+      "prepared_dependency_preload_used": false,
+      "private_workspace_removed": true,
+      "production_configuration_used": false,
+      "provenance": {
+        "candidate_files": 113,
+        "candidate_source_commit": "9bf03eb45d2cf43274074534e9dfe2de841f4011",
+        "candidate_version": "0.1.0-beta.20",
+        "candidate_zip_sha256": "c4530d94be3b2996f8d6c8948db88a51868566047d68558eefde7967f270a861",
+        "controller_branch": "codex/native-amd64-validation",
+        "controller_branch_commit": "9ab476e6f652273e8ae7220084d767dd6b66b045",
+        "controller_sha256": "470fcb2e7425936b7c9b31c0a4fff6f43b8f1fdd555f569c6b5566577d43424f",
+        "expected_machine_image_config_id": "sha256:560be76a9ee5019c1b557241db8d1127550f21fba952a1a976c3d186f9b2cd9e",
+        "expected_machine_image_index_digest": "sha256:414dce485b4eebd9f929f293f7252340bada5715fc4a48b2b954d79195ed3019",
+        "expected_machine_image_manifest_digest": "sha256:17fb5b1f953b12e32185c74d34f789270eec3711666df81b1e47e7d45ffd0167",
+        "expected_machine_image_reference": "ghcr.io/home-assistant/qemux86-64-homeassistant:2026.9.4",
+        "haos_version": "18.3",
+        "haos_xz_sha256": "fae6a728768cc10aff60d4820bfcd40d64cd77fab82c8bd92af13b3d9d414090",
+        "helper_files_sha256": {
+          "homecircle_minimum_haos_qa/__init__.py": "6612b4b20f2c8f62bb32c95db20c2c6e2774cb0e902ddabd959f2d212ee329d1",
+          "homecircle_minimum_haos_qa/dependency_probe.py": "40b48f0bfa4beead988a8beedbfa408d1877d2ea54626e6c2237838a1800fc6c",
+          "homecircle_minimum_haos_qa/manifest.json": "d59ae93f618a60d2f3661ff06456a84a08960b5823b7054d0f22dd7cd7b7486e"
+        },
+        "release_published": false,
+        "reset_script_sha256": "df600d5695de2d09feabcded9e59d81dcc8149be2082b19b7931e0f11f12aa3c",
+        "same_version_unreleased_development_preview": true
+      },
+      "provider_accounts_configured": false,
+      "provider_request_attempt_counts_measured": false,
+      "qemu_stopped": true,
+      "recovery_proof_attempt_counts_measured": false,
+      "restart_with_external_network_closed": true,
+      "schema": 1,
+      "setup_with_normal_external_access": true,
+      "stable_release_approval": false,
+      "supervisor_version_observed": "2026.10.2",
+      "version_change_requests": 1
+    },
+    "initialize.json": {
+      "candidate_archive_sha256": "c4530d94be3b2996f8d6c8948db88a51868566047d68558eefde7967f270a861",
+      "core_version": "2026.9.4",
+      "entry_disabled": false,
+      "entry_loaded": true,
+      "explicit_trackers": 2,
+      "loaded_source_sha256": "d877f4132c8aeaf18af3e507129098a40e7262c3440d259c5646102ba8eaf946",
+      "nonempty_options": true,
+      "normal_dependencies": {
+        "closure": {
+          "aiohappyeyeballs": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "2.7.1"
+          },
+          "aiohttp": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "3.14.3"
+          },
+          "aiosignal": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "1.4.0"
+          },
+          "anisette": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "1.2.4"
+          },
+          "appdirs": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "1.4.4"
+          },
+          "attrs": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "26.1.0"
+          },
+          "beautifulsoup4": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "4.13.3"
+          },
+          "certifi": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "2026.10.19"
+          },
+          "frozenlist": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "1.8.0"
+          },
+          "fs": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "2.4.16"
+          },
+          "idna": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "3.20"
+          },
+          "life360": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "7.2.0"
+          },
+          "multidict": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "6.9.1"
+          },
+          "propcache": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "0.5.2"
+          },
+          "protobuf": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "6.32.0"
+          },
+          "pyelftools": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "0.33"
+          },
+          "setuptools": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "81.0.0"
+          },
+          "six": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "1.17.0"
+          },
+          "soupsieve": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "2.10"
+          },
+          "srp": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "1.0.22"
+          },
+          "typing-extensions": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "4.16.0"
+          },
+          "unicorn": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "2.1.4"
+          },
+          "urllib3": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "2.8.0"
+          },
+          "yarl": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "1.24.5"
+          }
+        },
+        "closure_count": 24,
+        "closure_graph_checked": true,
+        "config_deps_empty": true,
+        "constraints_match": true,
+        "constraints_sha256": "962c9ccaf398e0b92b10ac9f765ac0f17e22238adc4e768deebc051ee8b60651",
+        "core": "2026.9.4",
+        "direct": {
+          "anisette": {
+            "available": true,
+            "loaded_module_present": false,
+            "module_system_origin": true,
+            "origin_probe": "import_spec",
+            "satisfies_requirement": true,
+            "version": "1.2.4"
+          },
+          "beautifulsoup4": {
+            "available": true,
+            "loaded_module_present": false,
+            "module_system_origin": true,
+            "origin_probe": "import_spec",
+            "satisfies_requirement": true,
+            "version": "4.13.3"
+          },
+          "life360": {
+            "available": true,
+            "loaded_module_present": true,
+            "module_system_origin": true,
+            "origin_probe": "loaded_module",
+            "satisfies_requirement": true,
+            "version": "7.2.0"
+          },
+          "protobuf": {
+            "available": true,
+            "loaded_module_present": false,
+            "module_system_origin": true,
+            "origin_probe": "import_spec",
+            "satisfies_requirement": true,
+            "version": "6.32.0"
+          },
+          "srp": {
+            "available": true,
+            "loaded_module_present": false,
+            "module_system_origin": true,
+            "origin_probe": "import_spec",
+            "satisfies_requirement": true,
+            "version": "1.0.22"
+          },
+          "unicorn": {
+            "available": true,
+            "loaded_module_present": false,
+            "module_system_origin": true,
+            "origin_probe": "import_spec",
+            "satisfies_requirement": true,
+            "version": "2.1.4"
+          }
+        },
+        "docker_environment": true,
+        "ordinary_pip_target_unset": true,
+        "provider_or_native_imports_requested_by_probe": false,
+        "python": "3.14.6",
+        "schema": 1,
+        "skip_pip": false
+      },
+      "outcome": "passed",
+      "owned_resource_id_sha256": "87f767cd0fd331b04f35b4be2994213c6cd5326191c2d38c297ac02b47fc3571",
+      "owner_accounts_used": false,
+      "package_files_count": 113,
+      "package_payload_sha256": "823ce2f1c0447687d70f9da20c98ee59c920c158048d20c8c139c0747c60e69b",
+      "persisted_storage_checked": true,
+      "persistent_people": 2,
+      "phase": "initialize",
+      "process": {
+        "pid": 72,
+        "start_ticks": 20293
+      },
+      "provider_accounts_configured": false,
+      "runtime_config_sha256": "590021759cde7e55db6f1da4f8f40a9b8a156bdd79fd13298df27e5554ffe3a8",
+      "schema": 1,
+      "served_bundle_sha256": "80b2727d18a0b8edb052c47d2c718850adf19bf5d35c2af6c3eb86c07f1f6cac",
+      "snapshot_sha256": "647c5f78837da3db758f02d741a7ab8a16017ad8874f170ec40226ef68fa1ac0",
+      "static_served_bundle_matches": true
+    },
+    "restart.json": {
+      "candidate_archive_sha256": "c4530d94be3b2996f8d6c8948db88a51868566047d68558eefde7967f270a861",
+      "core_version": "2026.9.4",
+      "entry_disabled": false,
+      "entry_loaded": true,
+      "explicit_trackers": 2,
+      "loaded_source_sha256": "d877f4132c8aeaf18af3e507129098a40e7262c3440d259c5646102ba8eaf946",
+      "nonempty_options": true,
+      "normal_dependencies": {
+        "closure": {
+          "aiohappyeyeballs": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "2.7.1"
+          },
+          "aiohttp": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "3.14.3"
+          },
+          "aiosignal": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "1.4.0"
+          },
+          "anisette": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "1.2.4"
+          },
+          "appdirs": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "1.4.4"
+          },
+          "attrs": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "26.1.0"
+          },
+          "beautifulsoup4": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "4.13.3"
+          },
+          "certifi": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "2026.10.19"
+          },
+          "frozenlist": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "1.8.0"
+          },
+          "fs": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "2.4.16"
+          },
+          "idna": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "3.20"
+          },
+          "life360": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "7.2.0"
+          },
+          "multidict": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "6.9.1"
+          },
+          "propcache": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "0.5.2"
+          },
+          "protobuf": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "6.32.0"
+          },
+          "pyelftools": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "0.33"
+          },
+          "setuptools": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "81.0.0"
+          },
+          "six": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "1.17.0"
+          },
+          "soupsieve": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "2.10"
+          },
+          "srp": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "1.0.22"
+          },
+          "typing-extensions": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "4.16.0"
+          },
+          "unicorn": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "2.1.4"
+          },
+          "urllib3": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "2.8.0"
+          },
+          "yarl": {
+            "available": true,
+            "constraints_satisfied": true,
+            "metadata_system_origin": true,
+            "python_satisfied": true,
+            "version": "1.24.5"
+          }
+        },
+        "closure_count": 24,
+        "closure_graph_checked": true,
+        "config_deps_empty": true,
+        "constraints_match": true,
+        "constraints_sha256": "962c9ccaf398e0b92b10ac9f765ac0f17e22238adc4e768deebc051ee8b60651",
+        "core": "2026.9.4",
+        "direct": {
+          "anisette": {
+            "available": true,
+            "loaded_module_present": false,
+            "module_system_origin": true,
+            "origin_probe": "import_spec",
+            "satisfies_requirement": true,
+            "version": "1.2.4"
+          },
+          "beautifulsoup4": {
+            "available": true,
+            "loaded_module_present": false,
+            "module_system_origin": true,
+            "origin_probe": "import_spec",
+            "satisfies_requirement": true,
+            "version": "4.13.3"
+          },
+          "life360": {
+            "available": true,
+            "loaded_module_present": true,
+            "module_system_origin": true,
+            "origin_probe": "loaded_module",
+            "satisfies_requirement": true,
+            "version": "7.2.0"
+          },
+          "protobuf": {
+            "available": true,
+            "loaded_module_present": false,
+            "module_system_origin": true,
+            "origin_probe": "import_spec",
+            "satisfies_requirement": true,
+            "version": "6.32.0"
+          },
+          "srp": {
+            "available": true,
+            "loaded_module_present": false,
+            "module_system_origin": true,
+            "origin_probe": "import_spec",
+            "satisfies_requirement": true,
+            "version": "1.0.22"
+          },
+          "unicorn": {
+            "available": true,
+            "loaded_module_present": false,
+            "module_system_origin": true,
+            "origin_probe": "import_spec",
+            "satisfies_requirement": true,
+            "version": "2.1.4"
+          }
+        },
+        "docker_environment": true,
+        "ordinary_pip_target_unset": true,
+        "provider_or_native_imports_requested_by_probe": false,
+        "python": "3.14.6",
+        "schema": 1,
+        "skip_pip": false
+      },
+      "outcome": "passed",
+      "owned_resource_id_sha256": "87f767cd0fd331b04f35b4be2994213c6cd5326191c2d38c297ac02b47fc3571",
+      "owner_accounts_used": false,
+      "package_files_count": 113,
+      "package_payload_sha256": "823ce2f1c0447687d70f9da20c98ee59c920c158048d20c8c139c0747c60e69b",
+      "persisted_storage_checked": true,
+      "persistent_people": 2,
+      "phase": "restart",
+      "process": {
+        "pid": 72,
+        "start_ticks": 23705
+      },
+      "provider_accounts_configured": false,
+      "runtime_config_sha256": "590021759cde7e55db6f1da4f8f40a9b8a156bdd79fd13298df27e5554ffe3a8",
+      "schema": 1,
+      "served_bundle_sha256": "80b2727d18a0b8edb052c47d2c718850adf19bf5d35c2af6c3eb86c07f1f6cac",
+      "snapshot_sha256": "647c5f78837da3db758f02d741a7ab8a16017ad8874f170ec40226ef68fa1ac0",
+      "static_served_bundle_matches": true
+    }
+  },
+  "tested_product_source_commit": "9bf03eb45d2cf43274074534e9dfe2de841f4011",
+  "validation_control_commit": "9ab476e6f652273e8ae7220084d767dd6b66b045"
+}

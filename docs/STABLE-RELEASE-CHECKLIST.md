@@ -8,6 +8,26 @@ by maintainer choice. The [1.0 execution plan](RELEASE-1.0-PLAN.md) tracks the
 current product branch, [passed exact-source checks](RELEASE-1.0-CORE-VALIDATION.md)
 and remaining acceptance. No stable release or production rollout is approved.
 
+## Current 1.0 development-preview qualification
+
+The current source is `9bf03eb45d2cf43274074534e9dfe2de841f4011`, with the
+unreleased 113-file `c453…` preview. It is separate from the historical beta 20
+artifacts below. These scoped results do not approve the full advertised matrix.
+
+- [x] Record the [minimum-Core amd64 managed HAOS witness](RELEASE-1.0-MINIMUM-HAOS.md),
+  run 39504506480: ordinary managed dependency installation, exact enabled
+  startup/restart, nonempty settings, persisted identities and served bytes,
+  closed external NIC at restart and owned cleanup. This used direct verified
+  ZIP installation; HACS, migration, removal and backup/restore were outside it.
+- [ ] Accept the standard consumer Container entrypoint and remaining ARM64
+  managed cells. The [four consumer and two local ARM pilots](RELEASE-1.0-INCOMPLETE-PILOTS.md)
+  failed without a completed consumer phase or accepted ARM phase. Retain the
+  negative evidence and confirmed diagnostic/setup gaps before another attempt.
+- [ ] Resolve the [automatic guard rollback finding](RELEASE-1.0-HAOS-RESTORE.md)
+  and the other final-RC, provider, notice/assurance and owner-acceptance gates
+  in the [release plan](RELEASE-1.0-PLAN.md). Passing manual prepared restore
+  repair does not make ordinary restore safety accepted.
+
 ## Completed published beta 20 validation
 
 The exact public 112-file ZIP is SHA-256
