@@ -195,7 +195,17 @@ docker_call start "$cid" >"$workspace/start.log" 2>&1
   echo native_container_required >&2; exit 2;
 }
 docker_call exec "$cid" mkdir -m 700 /qa
-docker_call cp "$payload/." "$cid:/qa/"
+# Create parents in the container, rather than copying host directory ownership
+# into the capability-restricted root process's writable source workspace.
+while IFS= read -r relative; do
+  if [[ $relative == */* ]]; then
+    docker_call exec "$cid" mkdir -p -m 700 "/qa/${relative%/*}"
+  fi
+  docker_call cp "$payload/$relative" "$cid:/qa/$relative"
+done <"$workspace/expected-members.txt"
+[[ $(docker_call exec "$cid" stat -c '%u:%a' /qa/scripts) == 0:700 ]] || {
+  echo source_directory_ownership_refused >&2; exit 2;
+}
 docker_call cp "$script_dir/setup_container.py" "$cid:/qa/setup_container.py"
 docker_call cp "$script_dir/run_suite.py" "$cid:/qa/run_suite.py"
 docker_call cp "$script_dir/run_validation_core94.py" "$cid:/qa/run_validation_core94.py"
