@@ -16,6 +16,7 @@ import platform
 import stat
 import subprocess
 import tarfile
+import traceback
 import zipfile
 
 
@@ -328,6 +329,16 @@ def main():
     except BaseException as error:
         value = {"outcome": "failed", "completed": False,
                  "failure_type": type(error).__name__}
+        # Retain operation locations without exception text, locals or paths.
+        value["failure_frames"] = [
+            {"module": Path(frame.filename).name, "function": frame.name, "line": frame.lineno}
+            for frame in traceback.extract_tb(error.__traceback__)[-6:]
+        ]
+        if isinstance(error, OSError):
+            value["failure_errno"] = error.errno
+            name = Path(error.filename).name if isinstance(error.filename, str) else None
+            if name and len(name) <= 80 and all(char.isalnum() or char in "_.-" for char in name):
+                value["failure_file_basename"] = name
         if isinstance(error, Refused):
             value["failure_code"] = str(error)
         print(json.dumps(value))

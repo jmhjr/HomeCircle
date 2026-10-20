@@ -162,7 +162,7 @@ done < <(jq -r 'to_entries[] | [.key,.value.sha256,(.value.bytes|tostring)] | @t
 [[ $(sha256sum "$payload/amd64-upgrade-recovery/run_validation.py" | awk '{print $1}') == "$expected_driver" ]] || {
   echo driver_hash_refused >&2; exit 2;
 }
-[[ $(sha256sum "$script_dir/setup_container.py" | awk '{print $1}') == 7e12fc383a600b3b87a2363e643c46bee026f2b6107cffcc5d4b2803d24b6078 ]] || {
+[[ $(sha256sum "$script_dir/setup_container.py" | awk '{print $1}') == 75c628e7289738395bb4759c4a1d3a0cdfa3ce3c2cd00cf2b25fda15a508df4f ]] || {
   echo setup_helper_hash_refused >&2; exit 2;
 }
 [[ $(sha256sum "$script_dir/run_suite.py" | awk '{print $1}') == 8f1d236325ca4f3606a1ebf52f3847ff0853f1b8b33c56c2a2ef31ecc22c60ea ]] || {
