@@ -1,0 +1,64 @@
+name: Frozen native HAOS guarded partial backup restore
+
+on:
+  push:
+    branches: [codex/native-amd64-validation]
+    paths:
+      - native-haos-backup/**
+      - .github/workflows/native-haos-backup.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: homecircle-native-haos-backup-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  frozen-haos-backup:
+    if: github.ref == 'refs/heads/codex/native-amd64-validation'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 125
+    steps:
+      - name: Check out the isolated validation revision
+        timeout-minutes: 3
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Install native virtual machine tools
+        timeout-minutes: 10
+        shell: bash
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq qemu-system-x86 qemu-utils ovmf
+          test -c /dev/kvm
+          sudo chown "$(id -u):$(id -g)" /dev/kvm
+          test -r /dev/kvm && test -w /dev/kvm
+      - name: Verify offline backup safety contracts
+        timeout-minutes: 2
+        shell: bash
+        run: |
+          cd native-haos-backup
+          python3 -B -m unittest -v test_controller.py
+      - name: Rehearse guarded partial backup and Recorder restore on HAOS
+        timeout-minutes: 97
+        shell: bash
+        run: |
+          bash native-haos-backup/run_host.sh \
+            --candidate-zip native-validation/payload/homecircle-candidate.zip \
+            --branch-commit "$GITHUB_SHA" \
+            --output native-haos-backup-results
+          jq -e '.outcome=="passed" and .phases==6 and .qemu_stopped==true and .private_workspace_removed==true' \
+            native-haos-backup-results/public-summary/host.json
+      - name: Retain only narrow synthetic summaries
+        timeout-minutes: 3
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: native-haos-backup-sanitized-summary
+          path: native-haos-backup-results/public-summary/*.json
+          if-no-files-found: warn
+          retention-days: 7
+          include-hidden-files: false

@@ -1,0 +1,9 @@
+{
+  "domain": "homecircle_backup_qa",
+  "name": "Disposable HomeCircle Backup QA",
+  "version": "0.0.0",
+  "documentation": "https://github.com/jmhjr/HomeCircle",
+  "dependencies": ["backup", "frontend", "http", "image_upload", "lovelace", "person", "recorder", "websocket_api", "zone"],
+  "codeowners": [],
+  "requirements": []
+}
