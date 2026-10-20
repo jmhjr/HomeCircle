@@ -48,6 +48,7 @@ def source(c, directory):
 
 
 def setup(c, values, args):
+    args.setup_stage = "preparer_boundary"
     status = dict(
         line.split(":", 1)
         for line in Path("/proc/self/status").read_text().splitlines()
@@ -66,17 +67,21 @@ def setup(c, values, args):
         and importlib.metadata.version("homeassistant") == values["core"],
         "preparer_runtime_refused",
     )
+    args.setup_stage = "startup_identity"
     root = Path("/usr/src/homeassistant/homeassistant")
     c.read(root / "package_constraints.txt", values["constraints_sha256"])
     for name, expected in values["startup_scripts"].items():
         c.read(Path("/") / name, expected)
     for name, expected in values["startup_sources"].items():
         c.read(root / name, expected)
+    args.setup_stage = "source_inputs"
     support, files = source(c, args.payload)
+    args.setup_stage = "source_extract"
     support.extract(files, Path("/qa/source"))
     sys.path.insert(
         0, "/qa/source/scripts"
     )  # Preparation inspector only, never the acceptance service.
+    args.setup_stage = "package_inspection"
     inspector = c.load(
         "consumer_release_inspector",
         Path("/qa/source/scripts/validate_release.py"),
@@ -86,6 +91,7 @@ def setup(c, values, args):
         args.payload / "homecircle.zip", args.payload / "inventory.json"
     )
     c.check(len(body) == 113, "preparer_package_count_refused")
+    args.setup_stage = "fixture_staging"
     config = Path("/config")
     c.check(not any(config.iterdir()), "fresh_owned_volume_required")
     control = config / c.CONTROL
@@ -128,6 +134,7 @@ def setup(c, values, args):
     (config / "configuration.yaml").write_text(
         "homeassistant:\n  name: Example consumer household\n  latitude: 0\n  longitude: 0\n  elevation: 0\n  unit_system: metric\n  time_zone: UTC\nhttp:\n  server_host: 127.0.0.1\n  server_port: 18123\nperson:\n  - id: consumer_example_a\n    name: Consumer Example A\n    device_trackers: [device_tracker.consumer_example_phone]\n  - id: consumer_example_b\n    name: Consumer Example B\n    device_trackers: [device_tracker.consumer_example_router]\nzone: []\nhomecircle_consumer_qa:\n  disposable: true\n"
     )
+    args.setup_stage = "cache_layout"
     env = dict(os.environ, PYTHONUSERBASE="/config/deps")
     cache = (
         subprocess.check_output(
@@ -158,6 +165,7 @@ def setup(c, values, args):
         str(root / "package_constraints.txt"),
         *[name + "==" + version for name, version in sorted(wanted.items())],
     ]
+    args.setup_stage = "cache_install"
     c.check(
         support.run_owned(
             command, cwd=config, log=control / "cache-install-private.log", limit=660
@@ -165,6 +173,7 @@ def setup(c, values, args):
         == 0,
         "cache_preparation_refused",
     )
+    args.setup_stage = "cache_versions"
     actual = {
         item.metadata["Name"].lower().replace("_", "-"): item.version
         for item in importlib.metadata.distributions(path=[cache])
@@ -173,7 +182,9 @@ def setup(c, values, args):
         all(actual.get(name) == version for name, version in wanted.items()),
         "prepared_cache_versions_refused",
     )
+    args.setup_stage = "source_recheck"
     support.source_unchanged(files, Path("/qa/source"))
+    args.setup_stage = "setup_receipt"
     runtime = {
         "schema": 1,
         "token": secrets.token_hex(32),
@@ -249,7 +260,12 @@ def main():
             control(c, values, args)
     except Exception as error:
         if args.mode != "prepare":
-            c.atomic(Path("/qa/failure-summary.json"), c.safe_failure(error, HERE))
+            c.atomic(
+                Path("/qa/failure-summary.json"),
+                c.safe_failure(
+                    error, HERE, setup_stage=getattr(args, "setup_stage", None)
+                ),
+            )
         raise
 
 

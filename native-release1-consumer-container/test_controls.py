@@ -203,6 +203,81 @@ class Contracts(unittest.TestCase):
             self.assertNotIn("failure_code", result)
             self.assertNotIn("PRIVATE-CANARY", json.dumps(result))
 
+    def test_support_fixed_failure_catalog_is_hash_bound(self):
+        support = c.load(
+            "consumer_diagnostic_support", HERE / "package_support.py", c.SUPPORT
+        )
+        value = c.safe_failure(
+            support.Refused("owned_child_descendants_not_reaped"), HERE
+        )
+        self.assertEqual(value["failure_code"], "owned_child_descendants_not_reaped")
+        for message in ("PRIVATE-CANARY /owner/private", "bare_private_canary"):
+            value = c.safe_failure(support.Refused(message), HERE)
+            self.assertNotIn("failure_code", value)
+            self.assertNotIn(message, json.dumps(value))
+        for name in (
+            "common.py",
+            "driver.py",
+            "guest.py",
+            "process_probe.py",
+            "package_support.py",
+        ):
+            (self.root / name).write_bytes((HERE / name).read_bytes())
+        with (self.root / "package_support.py").open("ab") as output:
+            output.write(b'\nraise RuntimeError("bare_private_canary")\n')
+        with self.assertRaisesRegex(c.Refused, "^input_hash_refused$"):
+            c.safe_failure(support.Refused("bare_private_canary"), self.root)
+        (self.root / "package_support.py").unlink()
+        value = c.safe_failure(c.Refused("consumer_phase_receipt_refused"), self.root)
+        self.assertEqual(value["failure_code"], "consumer_phase_receipt_refused")
+
+    def test_setup_stage_projection_requires_exact_fixed_catalog(self):
+        value = c.safe_failure(
+            RuntimeError("PRIVATE-CANARY"), HERE, setup_stage="cache_install"
+        )
+        self.assertEqual(value["setup_stage"], "cache_install")
+        self.assertNotIn("PRIVATE-CANARY", json.dumps(value))
+        for stage in (
+            "bare_private_canary",
+            "cache_install/PRIVATE-CANARY",
+            {"private": "canary"},
+            None,
+        ):
+            value = c.safe_failure(
+                RuntimeError("PRIVATE-CANARY"), HERE, setup_stage=stage
+            )
+            self.assertNotIn("setup_stage", value)
+            self.assertNotIn("canary", json.dumps(value).lower())
+
+    def test_actual_main_retains_setup_stage_and_support_label(self):
+        support = c.load(
+            "consumer_diagnostic_wire_support", HERE / "package_support.py", c.SUPPORT
+        )
+
+        def fail(_common, _values, args):
+            args.setup_stage = "cache_install"
+            raise support.Refused("owned_child_descendants_not_reaped")
+
+        with (
+            patch.object(driver, "bootstrap", return_value=(c, self.original)),
+            patch.object(driver, "setup", side_effect=fail),
+            patch.object(
+                driver.sys,
+                "argv",
+                ["driver", "setup", "--pins", "synthetic", "--pins-sha", "a" * 64],
+            ),
+            patch.object(driver.sys, "platform", "linux"),
+            patch.object(driver.platform, "machine", return_value="x86_64"),
+            patch.object(c, "atomic") as saved,
+            self.assertRaises(support.Refused),
+        ):
+            driver.main()
+        self.assertEqual(saved.call_args.args[1]["setup_stage"], "cache_install")
+        self.assertEqual(
+            saved.call_args.args[1]["failure_code"],
+            "owned_child_descendants_not_reaped",
+        )
+
     def test_guest_has_no_new_core_instance_import_path_or_alternate_service(self):
         source = (HERE / "guest.py").read_text()
         tree = ast.parse(source)

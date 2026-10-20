@@ -50,3 +50,7 @@ bash run_host.sh --payload "$PWD/payload" --output /tmp/homecircle-consumer-curr
 ```
 
 Use a fresh output path. The launcher refuses a mismatched native CPU or preexisting output. Other endpoint/CPU witnesses use their separately reviewed pin file and output path only after the pilot has been assessed. No workflow is included or launched by this preparation.
+
+## Separate diagnostic revision after first pilot
+
+The first automatic pilot, run 39502196796 at QA commit 5869404, failed in preparation before any consumer start; cleanup passed. Its exact inputs and receipts remain in the parent folder. The failure's underlying reason is unconfirmed. This separate revision changes diagnostic projection only: the preparer may export fixed literal failure codes from the exact hash-pinned support file, plus one of eleven fixed setup stages. Unknown exception text, arbitrary stage strings and tampered support catalogs are refused or omitted. The guest has no support file and retains its existing four-control diagnostics. Seventeen standalone contracts include three reproduced pre-fix failures for support codes, stage projection and the actual main error path. No launcher, image, package, dependency command, process acceptance, lifecycle or cleanup behavior is changed. No revision has been executed or published by this preparation.

@@ -14,6 +14,21 @@ SOURCE_CONFIG = "bce0379d11d76c53954380c3893a2cf581d539519168492f4235ffee9ba3be0
 CONTROL = ".homecircle-consumer-qa"
 DOMAIN = "homecircle_consumer_qa"
 VERSION = "0.1.0-beta.20"
+SETUP_STAGES = frozenset(
+    {
+        "preparer_boundary",
+        "startup_identity",
+        "source_inputs",
+        "source_extract",
+        "package_inspection",
+        "fixture_staging",
+        "cache_layout",
+        "cache_install",
+        "cache_versions",
+        "source_recheck",
+        "setup_receipt",
+    }
+)
 
 
 class Refused(RuntimeError):
@@ -211,10 +226,19 @@ def base_receipt(value):
     }
 
 
-def safe_failure(error, folder):
+def safe_failure(error, folder, *, setup_stage=None):
     allowed = set()
-    for name in ("common.py", "driver.py", "guest.py", "process_probe.py"):
-        for node in ast.walk(ast.parse(read(folder / name))):
+    catalog = [
+        (name, None)
+        for name in ("common.py", "driver.py", "guest.py", "process_probe.py")
+    ]
+    # Only the preparer has this support file. Guest diagnostics remain local
+    # to their four controls; support literals are trusted only at its exact pin.
+    support = folder / "package_support.py"
+    if support.exists() or support.is_symlink():
+        catalog.append(("package_support.py", SUPPORT))
+    for name, expected in catalog:
+        for node in ast.walk(ast.parse(read(folder / name, expected))):
             if isinstance(node, ast.Call):
                 call = (
                     node.func.id
@@ -248,4 +272,6 @@ def safe_failure(error, folder):
     }
     if isinstance(error, (Refused, RuntimeError)) and str(error) in allowed:
         result["failure_code"] = str(error)
+    if isinstance(setup_stage, str) and setup_stage in SETUP_STAGES:
+        result["setup_stage"] = setup_stage
     return result

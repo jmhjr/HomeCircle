@@ -38,10 +38,10 @@ jobs:
           import subprocess
           root = Path("native-release1-consumer-container")
           expected = {
-              "PREPARED.json": "0f58df07ea2b028268f00447cc08d9e7e101b91ffe50c12bf120e72906f1c29b",
-              "README.md": "7b6a835c9e70cd59027063cf7587697447c467d681f6db5c37a668b8537e81dc",
-              "common.py": "63103cae040a2b69b366b36299d92a26fa28a8b3fe8652a8c682f7be06587758",
-              "driver.py": "1a73434ca036969300e2f26a42e1758f6b2a88decf092cba4172584841196a18",
+              "PREPARED.json": "36c939f493302020d3d3cb236d855336533df8bd22f0fe3f6689c0cc33270308",
+              "README.md": "e87491f53e646716dfdaff75bbad8fcb05a82ce6fed5019789f4e2bf7f68e587",
+              "common.py": "1e405703a89389879e879d8bb6fc12178b8ffe4bf6ef654207182ee1a4b04aa5",
+              "driver.py": "54a6b0f8dd89779a33c169c9d5ae42b9557dffde1bd4e74825975cdd3209a40f",
               "guest.py": "92c70abfcc69c712065bc4a034c783ff5029ba7fc132f9d5025a067c279173d4",
               "package_support.py": "e97e3f71fc9f7ceb9391f86e0178c59c3b88a2fafe5f397e25a9fb69fe568e59",
               "payload/homecircle.zip": "c4530d94be3b2996f8d6c8948db88a51868566047d68558eefde7967f270a861",
@@ -49,13 +49,13 @@ jobs:
               "payload/source-config.json": "bce0379d11d76c53954380c3893a2cf581d539519168492f4235ffee9ba3be0d",
               "payload/source-inventory.json": "e1e999d3324a896dc84323afe24c1c1c60e694fc61a37e885d4bbdbef964d351",
               "payload/source.tgz": "a44c7d404a53eb93386715a376d826dc9be447d0cf59639cd19bf2d7b21ed72e",
-              "pins-current-amd64.json": "55a47c56973a6708362575c67cce2114b9330e95d2c0253ee3a06215ff2ab9f0",
-              "pins-current-arm64.json": "b0f60c656329e86574d27fd2bd3fb7f72ed6812bebe698b17d2946997f1f4099",
-              "pins-minimum-amd64.json": "2269d8937d1c24bf08d8414cb040b2ca24a4a896b3ef4857314d1e1f2b2e726e",
-              "pins-minimum-arm64.json": "3e366f04a47b869ea3f2fe40d714257dfa8874616eebe85e26526b3fb2062973",
+              "pins-current-amd64.json": "5a60f31354c4c45b64608a9e15b2306c65626dd55bd9d2ccf4243cb44f46deff",
+              "pins-current-arm64.json": "46b0eb6d8e4ee6bc4ae6c8b696621e8843d00b0a24f9136d6439f63a9735c889",
+              "pins-minimum-amd64.json": "6825cf633b7733a9e70a06c0aa483304f8e088d5b003e65cae98f8809e75bc70",
+              "pins-minimum-arm64.json": "77b461879071d7f40a7b83fe52cae20b7eb816cb1e6a312d290000bfcc11f981",
               "process_probe.py": "fda1c83041a61d720e9c7c9d9fde2a652eaeb43a5a77efcaf17a97c62e0905b3",
               "run_host.sh": "677b39f6c554808951149c16e28863bee2b8409f8e4824cabd20f21d4592aa59",
-              "test_controls.py": "99cbc2b90501606fee5130c14e8ddd420c1249b57ad0046f54540a032b26a029"
+              "test_controls.py": "173db566d428cad35919159a6897cde105d2b0285d7e3f2d818b76e7f9f49b1c"
           }
           tracked = subprocess.check_output(["git", "ls-files", "-z", "--", str(root)]).decode().split("\0")
           assert {name for name in tracked if name} == {str(root / name) for name in expected}, "fixture_tracked_members_refused"
@@ -68,13 +68,19 @@ jobs:
               assert hashlib.sha256((root / name).read_bytes()).hexdigest() == digest, "fixture_bytes_refused"
           print("Verified 18 frozen fixture files; one current-amd64 pilot target.")
           PY
-      - name: Check fourteen standalone contracts
+      - name: Check seventeen standalone contracts
         timeout-minutes: 3
         shell: bash
         run: |
           bash -n native-release1-consumer-container/run_host.sh
-          PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover \
-            -s native-release1-consumer-container -p test_controls.py -v
+          PYTHONDONTWRITEBYTECODE=1 python3 -B - <<'PY'
+          import unittest
+          suite = unittest.defaultTestLoader.discover('native-release1-consumer-container', pattern='test_controls.py')
+          if suite.countTestCases() != 17:
+              raise SystemExit('reviewed_contract_count_refused')
+          result = unittest.TextTestRunner(verbosity=2).run(suite)
+          raise SystemExit(0 if result.wasSuccessful() else 1)
+          PY
       - name: Witness original startup, stop and restart on native amd64
         timeout-minutes: 43
         shell: bash
@@ -82,13 +88,13 @@ jobs:
           timeout --signal=TERM --kill-after=150s 2300s bash native-release1-consumer-container/run_host.sh \
             --payload native-release1-consumer-container/payload \
             --pins native-release1-consumer-container/pins-current-amd64.json \
-            --pins-sha 55a47c56973a6708362575c67cce2114b9330e95d2c0253ee3a06215ff2ab9f0 \
+            --pins-sha 5a60f31354c4c45b64608a9e15b2306c65626dd55bd9d2ccf4243cb44f46deff \
             --source-repository "$GITHUB_WORKSPACE" \
             --output native-release1-consumer-container-results
           receipts=native-release1-consumer-container-results/public-summary
           jq -e '.schema==1 and .outcome=="passed" and .target=="current-amd64" and
             .stage=="complete" and .exit_code==0 and
-            .pins_sha256=="55a47c56973a6708362575c67cce2114b9330e95d2c0253ee3a06215ff2ab9f0" and
+            .pins_sha256=="5a60f31354c4c45b64608a9e15b2306c65626dd55bd9d2ccf4243cb44f46deff" and
             .cleanup_failed==false and .owned_containers_stopped==true and
             .owned_containers_removed==true and .owned_volume_removed==true and
             .private_workspace_removed==true and .both_containers_offline_during_acceptance==true and
