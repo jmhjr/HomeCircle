@@ -3,6 +3,9 @@ name: Frozen native AMD64 validation
 on:
   push:
     branches: [codex/native-amd64-validation]
+    paths:
+      - native-validation/**
+      - .github/workflows/native-amd64-validation.yml
   workflow_dispatch:
 
 permissions:
