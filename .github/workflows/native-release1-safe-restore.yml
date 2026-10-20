@@ -61,8 +61,15 @@ jobs:
         timeout-minutes: 5
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq qemu-system-x86 qemu-utils
-          test -r /dev/kvm && test -w /dev/kvm
+          sudo apt-get install -y -qq qemu-system-x86 qemu-utils ovmf
+          test -c /dev/kvm
+          sudo chown "$(id -u):$(id -g)" /dev/kvm
+          test -r /dev/kvm
+          test -w /dev/kvm
+          test -f /usr/share/OVMF/OVMF_CODE_4M.fd
+          test -r /usr/share/OVMF/OVMF_CODE_4M.fd
+          test -f /usr/share/OVMF/OVMF_VARS_4M.fd
+          test -r /usr/share/OVMF/OVMF_VARS_4M.fd
       - name: Require exactly seventy-nine zero-skip contracts
         timeout-minutes: 3
         shell: bash
