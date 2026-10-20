@@ -132,3 +132,29 @@ The [October 20 native HAOS rehearsal](LINUX-HAOS-VALIDATION.md#october-20-guard
 passed this prepared protocol with synthetic data, including actual Recorder
 history rollback, renewed recording across restart and a guard that stayed
 blocked at three. It used no owner account or production configuration.
+
+
+### Enabled-backup investigation during 1.0 preparation
+
+The [first enabled-entry experiment](ENABLED-RESTORE-VALIDATION.md) completed a
+real Supervisor partial backup and restore and observed the exact older guard
+at two unresolved exchanges on automatic startup, replacing the separately
+observed newer blocked guard at three. Its later operational startup check timed
+out; manual repair was not reached. This is observed guard rollback with
+incomplete operational qualification, not acceptance of an ordinary enabled
+restore. The prepared disabled-entry protocol above remains the established
+ordering. A prepared-dependency offline followup does not qualify default
+online dependency reinstallation or full-system recovery.
+
+
+The [prepared enabled-entry followup](ENABLED-RESTORE-PREPARED.md) subsequently
+completed settings, identity and Recorder restoration, followed by successful
+manual newest-guard repair and restart. It also confirmed the old guard returning
+before repair. This does not remove the manual preservation requirement or
+broaden the prepared disabled-entry backup protocol above.
+
+The [exact development-preview investigation](RELEASE-1.0-HAOS-RESTORE.md) then
+repeated all six managed phases with the newer 113-file package and reproduced
+the same guard rollback. Operational restoration and separate manual repair
+passed; ordinary and prepared enabled-restore safety remain unaccepted. Keep
+using the prepared disabled-entry ordering and preserve the newest safeguard.

@@ -3,9 +3,10 @@
 Updated October 20, 2026. This is a release preparation checklist, not approval to
 publish. The published release is experimental
 [v0.1.0-beta.20](https://github.com/jmhjr/HomeCircle/releases/tag/v0.1.0-beta.20),
-source commit `d02a9bdb9027cb51c99165a09ba50d5b175f5fb9`. No stable version or
-final provider scope has been chosen. Preserve the existing Ruby fix, installed
-settings and history, and the frozen V2 reference.
+source commit `d02a9bdb9027cb51c99165a09ba50d5b175f5fb9`. The stable target is `v1.0.0`, retaining both direct Apple Find My and Life360
+by maintainer choice. The [1.0 execution plan](RELEASE-1.0-PLAN.md) tracks the
+current product branch, [passed exact-source checks](RELEASE-1.0-CORE-VALIDATION.md)
+and remaining acceptance. No stable release or production rollout is approved.
 
 ## Completed published beta 20 validation
 

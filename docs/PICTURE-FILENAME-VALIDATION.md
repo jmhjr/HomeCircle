@@ -49,3 +49,9 @@ local `node_modules`; none is an edit to a baseline source file. The parent can
 rebuild deterministically and select only the reviewed source changes for the
 canonical branch. The selected source changes are being consolidated onto the 1.0 development
 branch. No published release asset or tag was changed.
+
+Subsequent qualification: the [exact-source Linux run](RELEASE-1.0-CORE-VALIDATION.md)
+passed all 110 frontend tests and reproduced the bundle. The
+[real desktop Safari check](PICTURE-BROWSER-VALIDATION.md) passed actual decoding,
+canvas and filename/upload/navigation cases; native-picker completion, mobile
+and physical-display acceptance remain separately open.

@@ -181,3 +181,12 @@ raw-diagnostic canary and the exact-license privacy exception. The two names in
 the example configuration alone are not that final regression list. Actual
 native execution, final configuration/commit review and sanitized result review
 remain separate from these eleven preparation contracts.
+
+
+## Subsequent parent qualification
+
+[Native exact-source run 39490732759](RELEASE-1.0-CORE-VALIDATION.md) tested these
+unchanged fixes at source `9bf03eb45d2cf43274074534e9dfe2de841f4011` and passed
+all 1,452 backend and 110 frontend tests, including every new regression. This
+updates the runtime-check status after the source review above; it does not
+establish final managed lifecycle, mobile/display or provider account acceptance.

@@ -175,3 +175,12 @@ Assistant or native provider/emulator dependency. No version, package lock,
 provider scope, published artifact or production installation was changed.
 Full real-Core regression and independent review remain required before this
 candidate's runtime corrections are accepted for release.
+
+
+## Subsequent parent qualification
+
+[Native exact-source run 39490732759](RELEASE-1.0-CORE-VALIDATION.md) tested these
+unchanged fixes at source `9bf03eb45d2cf43274074534e9dfe2de841f4011` and passed
+all 1,452 backend and 110 frontend tests, including every new regression. This
+updates the runtime-check status after the source review above; it does not
+establish final managed lifecycle, mobile/display or provider account acceptance.

@@ -1,6 +1,6 @@
-# Stable V0.1 scope audit — current disposition October 20, 2026
+# Stable 1.0 scope audit — current disposition October 20, 2026
 
-This is a pre-release review, not approval to tag `v0.1.0`. It compares the intended [product](PRODUCT.md) and [roadmap](ROADMAP.md) with beta 16 source, automated tests, and the [published validation record](BETA16-VALIDATION.md). Older milestone and beta validation reports are dated evidence, not current installation instructions.
+The target is `v1.0.0`, with direct Apple Find My and Life360 retained by maintainer choice. The [1.0 plan](RELEASE-1.0-PLAN.md) and [exact-source validation](RELEASE-1.0-CORE-VALIDATION.md) record current preparation; no stable release is approved. The tables below originally compared the [product](PRODUCT.md) and [roadmap](ROADMAP.md) with beta 16 source and its [validation record](BETA16-VALIDATION.md). Those older reports retain their dates and do not serve as current installation instructions.
 
 October 19, 2026 update: the [licensing and service terms release checklist](#licensing-and-service-terms-release-checklist) adds open gates from the beta 19 source and archive review. The beta 16 scope table below remains historical; earlier beta acceptance does not resolve these gates.
 

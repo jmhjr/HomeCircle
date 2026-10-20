@@ -56,14 +56,14 @@ Infrastructure failures receive one bounded diagnosis before any reasoned retry.
 | Stage | Current status / dependency | Responsible | Completion evidence |
 | --- | --- | --- | --- |
 | 1. Freeze scope and support | Both direct providers selected October 20; platform/support proposal open | Maintainer, agent records | Signed-off feature/provider list, supported target matrix, upgrade baselines, exclusions and `1.0.0` naming |
-| 2. Consolidate release source and blockers | Product-only branch prepared; focused fixes reviewed; native full-suite acceptance pending | Agent; maintainer review | Clean canonical release branch, reviewed product-only diff, notices included, recorded defect dispositions |
+| 2. Consolidate release source and blockers | Clean source in draft PR #36; focused fixes independently reviewed; exact-source native suite passed | Agent; maintainer review | Clean canonical release branch, reviewed product-only diff, notices included, recorded defect dispositions |
 | 3. Close provenance and provider decisions | Open; inventory and notice preview complete; depends on stage 1 for final scope | Maintainer/specialist, agent supplies evidence | Exact-source/installed-dependency notices and obligations disposition; source/permission/service/name decisions for shipped scope |
-| 4. Enabled backup/restore safety | First native experiment incomplete; bounded diagnosis underway | Agent | Ordinary enabled startup after restore, restored data/identities, stale-backup safeguard result and bounded request evidence |
+| 4. Enabled backup/restore safety | Both published-beta and exact-development prepared investigations completed; operational/manual repair passed, automatic guard protection failed | Agent | Ordinary enabled startup after restore, restored data/identities, stale-backup safeguard result and bounded request evidence |
 | 5. Cryptographic and format assurance | Synthetic independent source review complete; external assurance open if Find My ships | Specialist, agent fixes; owner only for controlled acceptance | Review disposition, independent format vectors, authenticated rejection/recovery cases and fixes rechecked |
-| 6. Advertised compatibility | Partial target evidence complete; depends on stage 1 and consolidated candidate | Agent | All advertised cells have candidate dependency/install/start/restart evidence; unsupported cells excluded explicitly |
+| 6. Advertised compatibility | Four native endpoint QA-container lifecycle cells passed; exact-C managed amd64 investigation completed; remaining support cells open | Agent | All advertised cells have candidate dependency/install/start/restart evidence; unsupported cells excluded explicitly |
 | 7. Real-account acceptance | Open for included providers; requires stages 3/5 disposition and owner participation | Owner, agent guides/records | Controlled setup, discovery, selections, session lifecycle and successful recovery receipts without deliberately wrong passcodes |
 | 8. Sustained field acceptance | Earlier observations exist; final scope incomplete; depends on stages 6/7 as applicable | Owner observes, agent analyzes | Agreed observation window and movement/outage/renewal/staleness cases with genuine source-report times |
-| 9. Dashboard, access and privacy | Existing checks retained; final candidate acceptance open | Agent plus owner for real displays | Desktop/mobile/physical display, admin/household permissions, privacy/deletion, real attribution/request checks |
+| 9. Dashboard, access and privacy | Exact-source privacy and scoped desktop Safari picture checks passed; remaining final acceptance open | Agent plus owner for real displays | Desktop/mobile/physical display, admin/household permissions, privacy/deletion, real attribution/request checks |
 | 10. Real installed-state upgrade | Synthetic published-beta transport complete; fresh installed-state acceptance open | Agent, owner/maintainer for actual instance | Fresh baseline inspection/backup, upgrade/rollback/removal receipts, preserved storage/Recorder/resource identities |
 | 11. Finish user and support documents | Open; draft in parallel, finalize after scope/results | Agent, maintainer accepts | Consistent installation/privacy/support/migration/recovery documents and known limitations |
 | 12. Freeze and qualify RC | Pending stages 1–11 or explicit tested exclusions | Agent, maintainer accepts | Identified RC, exact artifact, final check receipt and bounded RC acceptance with no unresolved blockers |
@@ -80,7 +80,7 @@ Infrastructure failures receive one bounded diagnosis before any reasoned retry.
 
 ### 2. Canonical source and defect triage
 
-- [ ] Create a clean release branch using the actual main/product ancestry.
+- [x] Create a clean release branch using the actual main/product ancestry: [draft PR #36](https://github.com/jmhjr/HomeCircle/pull/36), tested source `9bf03eb45d2cf43274074534e9dfe2de841f4011`.
   Review and consolidate accepted beta 20 hardening plus the notice correction.
   Do not merge the validation branch wholesale: it also carries CI payloads,
   runner workarounds and evidence that require separate disposition.
@@ -89,10 +89,10 @@ Infrastructure failures receive one bounded diagnosis before any reasoned retry.
 - [x] Fix the confirmed picture-picker filename continuity issue: beta 20's
   `settings-dialog.js` clears the file input after successful decoding while the
   crop remains active. Verify filename while cropping, failed upload retention,
-  save/remove/cancel clearing and selection of the same file again. The [focused validation](PICTURE-FILENAME-VALIDATION.md) records before/after failure proof and 110 passing frontend tests; real-browser acceptance remains open.
+  save/remove/cancel clearing and selection of the same file again. The [focused validation](PICTURE-FILENAME-VALIDATION.md) records before/after failure proof and 110 passing frontend tests. The [scoped Safari check](PICTURE-BROWSER-VALIDATION.md) also passed; native-picker completion, mobile and physical-display acceptance remain open.
 - [x] Triage the roadmap's source oscillation, passive-zone legacy fallback,
   cached-city projection and shutdown cache-save cases against the consolidated
-  code. The [triage record](RELEASE-1.0-TRIAGE.md) distinguishes the confirmed corrections from retained policies. Real-Core qualification remains open.
+  code. The [triage record](RELEASE-1.0-TRIAGE.md) distinguishes the confirmed corrections from retained policies. The [exact-source Linux qualification](RELEASE-1.0-CORE-VALIDATION.md) passed all 1,452 backend tests, including the new regressions.
 
 Status icons, additional landscape polish, trip trails, traffic/ETA, adaptive
 freshness and additional providers remain optional post-1.0 work unless the
@@ -117,6 +117,21 @@ maintainer changes the scope. Do not convert the old wishlist into new blockers.
 
 ### 4. Enabled restore and rollback safety
 
+The [first native attempt](ENABLED-RESTORE-VALIDATION.md) genuinely observed an
+older enabled backup replacing guard three with its exact earlier two. Real
+Supervisor backup/restore completed, but the operational phase timed out and
+manual repair was not reached. That failure is retained; it is not restore
+safety acceptance. The [prepared followup](ENABLED-RESTORE-PREPARED.md) completed all six operational
+phases and manual repair, but automatic guard protection still failed. That
+account-free offline partial scope is separate from default dependency
+reinstallation and full-system recovery. The [exact development-artifact
+investigation](RELEASE-1.0-HAOS-RESTORE.md) then completed the same six managed
+phases and manual repair with C, independently reproducing guard rollback.
+
+- [x] Complete and independently verify the exact-C prepared-dependency managed
+  experiment, preserving all six phase, identity/history, byte and cleanup
+  receipts and explicit negative automatic-safety disposition.
+
 - [ ] Rehearse an ordinary Supervisor backup with HomeCircle enabled, restore
   it, and observe the first automatic startup in a disposable synthetic HAOS
   instance. Preserve entry/Person/tracker/settings/places/pictures/history and
@@ -133,6 +148,10 @@ maintainer changes the scope. Do not convert the old wishlist into new blockers.
 
 ### 5. Independent security and format acceptance
 
+The [assurance handoff](RELEASE-1.0-ASSURANCE-HANDOFF.md) identifies the exact
+source, all 74 unchanged Find My Python members and the remaining trust/format
+questions. It is prepared evidence, not completion of external assurance.
+
 - [ ] Give the independent reviewer the identified source, prior findings,
   limits, threat boundaries and exact unresolved questions.
 - [ ] Add independently sourced supported-format cases and safe unsupported/
@@ -143,6 +162,18 @@ maintainer changes the scope. Do not convert the old wishlist into new blockers.
   independent real-format proof.
 
 ### 6. Compatibility qualification
+
+The [exact-source minimum-Core amd64 run](RELEASE-1.0-CORE-VALIDATION.md) passed
+1,452 backend and 110 frontend tests, 337-file privacy and the deterministic
+113-file preview package. Its runtime scope is one official Container image;
+it does not qualify the remaining advertised matrix by itself.
+The [compatibility disposition](RELEASE-1.0-COMPATIBILITY.md) now records
+minimum/current QA-container lifecycle passes on both CPUs and the exact-C
+managed amd64 investigation, with the remaining managed/consumer scopes open.
+
+- [x] Qualify exact-C scripted native Core lifecycle on amd64 and ARM64 at
+  2026.9.4 and 2026.10.2: 12 focused cases and four separate Core processes per
+  cell, preserved settings/source identity, exact served bytes and owned cleanup.
 
 - [ ] Freeze the advertised matrix. The current proposal has eight cells:
   HAOS/Container × amd64/ARM64 × Core 2026.9.4/2026.10.2.
@@ -157,6 +188,10 @@ maintainer changes the scope. Do not convert the old wishlist into new blockers.
   distributions and future Core versions outside the claim until qualified.
 
 ### 7. Controlled owner account acceptance
+
+The [controlled account protocol](RELEASE-1.0-ACCOUNT-ACCEPTANCE.md) is ready.
+Execution awaits an identified HA instance and its test or everyday-use status;
+no new owner account attempt has started during this preparation.
 
 - [ ] For each included direct provider, accept sign-in/verification, discovery,
   explicit item/member selection, cancel/abandon, reconnect, disconnect and
@@ -183,6 +218,13 @@ maintainer changes the scope. Do not convert the old wishlist into new blockers.
   case, including independently configured sources and no inferred associations.
 
 ### 9. Final UI, privacy and access
+
+The [Safari check](PICTURE-BROWSER-VALIDATION.md) passed actual image decoding,
+canvas, filename/upload/navigation and native chooser cancellation. A bounded
+plain-input versus hidden-input A/B reproduced the same native picker automation
+limitation in both; it did not demonstrate a hidden-input regression. Native
+selection completion and the remaining mobile/display/access cases stay open.
+
 
 - [ ] Accept setup with no provider account or manual YAML, desktop/mobile
   layouts, selected-member following, overlap expansion, keyboard/touch and
@@ -240,9 +282,10 @@ maintainer changes the scope. Do not convert the old wishlist into new blockers.
 
 ## Work that can proceed now
 
-Enabled synthetic restore validation, canonical source preparation, confirmed
-picture-picker correction, roadmap case triage and documentation drafts do not
-depend on an owner account prompt or a provider-scope answer. Provider-specific
-shipping claims, account recovery exercises, externally qualified assurance and
-stable publication remain conditional on the corresponding evidence and
-maintainer decisions above.
+Canonical source and confirmed fixes, the full exact-source qualification,
+four native QA-container endpoint cells, the exact-C managed restore investigation
+and scoped Safari checks are recorded. Both providers remain included.
+Next work is the remaining managed/consumer compatibility scope, intended
+installed-state inspection, owner account/field/display acceptance and the
+documented assurance/provenance dispositions, followed by an identified RC.
+No outstanding requirement is silently checked by these completed scoped runs.

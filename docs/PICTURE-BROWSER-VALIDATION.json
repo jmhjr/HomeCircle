@@ -1,0 +1,73 @@
+{
+  "checked_at": "2026-10-20T20:22:37Z",
+  "acceptance_pass": true,
+  "browser": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.2 Safari/605.1.15",
+  "receipt_count": 13,
+  "real_canvas_jpeg_uploads": 2,
+  "source_hashes": {
+    "settings-dialog.js": "cef3006b0e1b9e10a24b58631bdeddd26061176588cc37f7e33266e8f4cfffe5",
+    "picture-crop.js": "399e08582d93722b3dae2df79327ffb00a74eda3dc26c826b133c31580679438"
+  },
+  "native_picker_open_and_cancel": "passed",
+  "native_picker_completed_upload_and_same_file_reselection": "unqualified: Upload remained disabled through available native accessibility actions",
+  "same_file_data_transfer_redecode": "passed; fixture injection does not prove native picker suppression behavior",
+  "owned_tab_closed": true,
+  "owned_server_stopped": true,
+  "files": [
+    {
+      "name": "synthetic-picture.png",
+      "bytes": 1599,
+      "sha256": "0fca8defa31d84dfcd9320b6e53e9c0079f24b51cfbb630810758ef44a3f1584"
+    },
+    {
+      "name": "failed-upload-filename.png",
+      "bytes": 396034,
+      "sha256": "acdde9b599190c4c3cfdf9803265711043e4853e9a1fb4bdb1fb7d36a32102ea"
+    },
+    {
+      "name": "closed-state.png",
+      "bytes": 445605,
+      "sha256": "220f08aa73b7a593d75786a58cea5608984d82d21cb49714fa0228ea7b15206f"
+    },
+    {
+      "name": "reset-filename.png",
+      "bytes": 388779,
+      "sha256": "e8daee6bd33dd891503aafc97a98331d9bcf6397c3140e58a0207bf07fb2a512"
+    },
+    {
+      "name": "crop-filename.png",
+      "bytes": 389225,
+      "sha256": "37282eca89defc1551ece51a7df6be3634f6c920bd39438b22cb1e45932c31ee"
+    },
+    {
+      "name": "index.html",
+      "bytes": 980,
+      "sha256": "16eadecb1bb610fb242a5e02a6483571b3e8884e2b54e83b080f84ba9ba0c410"
+    },
+    {
+      "name": "harness.js",
+      "bytes": 4219,
+      "sha256": "438547136ccf9697b7db590843854d0ff9b47948eefcef382d4a5a04666020a9"
+    },
+    {
+      "name": "server.mjs",
+      "bytes": 4750,
+      "sha256": "7226c58a091917dcf5ad0b908271bd74b240ba3578106e62e5ab188ed5e75178"
+    },
+    {
+      "name": "server-receipt.json",
+      "bytes": 22769,
+      "sha256": "c428c350bbe4a252cf7fbb3caf386308e6af2cb569b18c9db1096d7acbb8c14c"
+    },
+    {
+      "name": "listener-before-cleanup.txt",
+      "bytes": 174,
+      "sha256": "8d7827631a00c2599a782a5d0493de48925f9250773416dc2feb4f1ef01f4812"
+    },
+    {
+      "name": "listener-after-cleanup.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

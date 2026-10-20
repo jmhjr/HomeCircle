@@ -4,14 +4,24 @@ Development toward 1.0 is tracked in the [release plan](RELEASE-1.0-PLAN.md).
 The canonical development branch consolidates beta 20 hardening, notice text
 and the [focused corrections](RELEASE-1.0-TRIAGE.md), with the
 [picture regression](PICTURE-FILENAME-VALIDATION.md) separately documented.
-Its full native validation is pending. It is not a published release, and the
+Its [exact-source native validation](RELEASE-1.0-CORE-VALIDATION.md) passed at
+source `9bf03eb45d2cf43274074534e9dfe2de841f4011`: 1,452 backend tests,
+110 frontend tests, 337-file privacy and a deterministic 113-file preview.
+[Desktop Safari picture acceptance](PICTURE-BROWSER-VALIDATION.md) adds a scoped
+real-browser check. [Minimum](RELEASE-1.0-MINIMUM-LIFECYCLE.md) and
+[current](RELEASE-1.0-CURRENT-LIFECYCLE.md) native QA-container lifecycle checks
+passed on both CPUs. The [exact-preview managed HAOS investigation](RELEASE-1.0-HAOS-RESTORE.md)
+completed operational restore and manual repair, while automatic guard protection
+failed. The [compatibility disposition](RELEASE-1.0-COMPATIBILITY.md) retains the
+remaining target gaps. Both direct providers remain selected for 1.0. This is not a
+published release, and the
 beta 20 evidence below retains its original artifact scope.
 
 Updated October 20, 2026. The published experimental prerelease is
 [v0.1.0-beta.20](https://github.com/jmhjr/HomeCircle/releases/tag/v0.1.0-beta.20),
-from source commit `d02a9bdb9027cb51c99165a09ba50d5b175f5fb9`. No stable version,
-final provider scope or production rollout has been approved. Production, the
-working source checkout and frozen V2 were preserved during validation.
+from source commit `d02a9bdb9027cb51c99165a09ba50d5b175f5fb9`. Both direct providers are selected for 1.0, with their validation still open.
+No stable release or production rollout has been approved. The existing working
+checkout and installed configuration were preserved during validation.
 
 The public 112-file `homecircle.zip` is 604,937 bytes, SHA-256
 `fc0b365d9688459504f874af5c38393e24145d657f15f1def8ada9184f363285`.

@@ -1,13 +1,29 @@
 # Development
 
-Current beta 19 work is documented in [Find My packaging validation](FINDMY-BETA19-PACKAGING-VALIDATION.md); [October 11 changes](RECENT-CHANGES-2026-10-11.md) record beta 18. The repository has published beta history and a remote; milestone sections below are historical records, including the original unborn-branch notes. Build products, deployment backups and private evidence remain ignored.
-
+HomeCircle 1.0 preparation is tracked in the [release plan](RELEASE-1.0-PLAN.md).
+Both direct Apple Find My and Life360 remain in scope by maintainer choice.
+The clean `codex/release-1.0` branch consolidates beta 20 hardening, the separate
+notice correction and focused post-beta corrections; it is an unreleased
+development source, not a stable installation target.
 
 ## Current state
 
-Beta 19 adds experimental HA-only Apple Find My setup, explicit item selection, encrypted passwordless persistence and ordinary item trackers, while retaining beta 18's GPS ranking, places, photos and city lookup. Fresh discovery and selection, restart restoration and automatic decoded report delivery passed on one HA OS Raspberry Pi/aarch64 running Core 2026.10.2 and Python 3.14.7 with two selected items. This is not broad platform, multi-account or movement/latency acceptance.
+The published experimental release remains beta 20. See the
+[current readiness record](CURRENT-RELEASE-READINESS.md) and versioned reports
+for exact tested source, packages, targets and limits. Earlier beta 19 owner
+observations remain historical evidence and do not qualify every later change.
 
-The default automated backend target remains Core 2026.9.4 with Python 3.14.7. The unreleased candidate also has a clean local Core 2026.10.2 test environment; see [platform/upgrade/recovery validation](PLATFORM-UPGRADE-RECOVERY-VALIDATION.md) for its exact scope. Linux dependency wheels are checked separately from still-pending Linux/HAOS native execution. Publication and HACS asset/install verification remain separate release steps; earlier published-version checks are preserved in their own records. Keep development and destructive lifecycle checks in disposable HA instances. See [stable scope audit](STABLE-SCOPE-AUDIT.md) before preparing `v0.1.0`.
+The exact-source development-preview validation uses official native amd64
+Core 2026.9.4/Python 3.14.6, Core constraints and the pinned test plugin. It checks
+the inventoried canonical Git blobs, frontend reproducibility, full offline
+backend suite, required new regressions, privacy guard and deterministic package.
+The preview retains version `0.1.0-beta.20` and must not replace that published
+release. Final supported-target and RC validation remain separate gates.
+
+Use disposable synthetic environments for engineering. Native Linux/HAOS,
+owner account, movement, browser and physical-display evidence retain separate
+scopes. The milestone sections below are dated history, including original
+unborn-branch and earlier standalone-runner notes.
 
 ## Work sequence
 
@@ -35,7 +51,7 @@ git commit -m "Add person selection flow"
 
 The original bootstrap created no remote, deployment, release or tag. The current repository has a public remote and beta releases; do not stage raw reference files.
 
-Use semantic tags `vMAJOR.MINOR.PATCH`, beginning with `v0.1.0` after its release gates pass. Use prerelease tags such as `v0.1.0-beta.1` for tested prereleases. Keep manifest version (without the `v`) and release notes aligned. HACS release distribution also needs an actual GitHub release, not merely a Git tag.
+Use semantic tags `vMAJOR.MINOR.PATCH`; the first stable target is `v1.0.0` after its release gates pass. Preserve older beta tags. Use numbered `v1.0.0-rc.N` prereleases only after the corresponding RC freeze and acceptance prerequisites. Keep manifest version (without the `v`) and release notes aligned. HACS release distribution also needs an actual GitHub release, not merely a Git tag.
 
 Before creating a prerelease tag, merge the version's README, changelog, setup wording, and validation notes into `main`. HACS can display README content from the tagged snapshot, so a documentation update made after tagging may leave older version text on its repository page. Attach the tested installable ZIP to the GitHub prerelease, download that asset back, and compare its checksum with the tested package. Then select the release through HACS in a disposable Home Assistant instance, restart, and verify the loaded version, saved configuration, and card resource URL.
 
