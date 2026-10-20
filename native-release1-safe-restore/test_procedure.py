@@ -1,12 +1,15 @@
 """New procedure barriers and private transfer refusal contracts; no guest work."""
 import base64
+import ast
 from copy import deepcopy
+import hashlib
 import json
 import os
 from pathlib import Path
 import tempfile
+import tarfile
 import unittest
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import accept_procedure as gate
 import controller
@@ -95,6 +98,75 @@ def synthetic_success():
 
 
 class ProcedureContracts(unittest.TestCase):
+    def test_actual_prepare_reuses_only_the_fresh_private_workspace(self):
+        tree=ast.parse(Path(controller.__file__).read_bytes())
+        run=next(n for n in ast.walk(tree) if isinstance(n,ast.FunctionDef) and n.name=='run')
+        create=next(n.args[0] for n in ast.walk(run) if isinstance(n,ast.Call)
+            and isinstance(n.func,ast.Attribute) and n.func.attr=='guest'
+            and n.args and 'mkdir -m 700' in ast.unparse(n.args[0]))
+        inventory=json.loads((controller.ROOT/'payload/inventory.json').read_bytes())['files']
+        for case in ('good','missing','symlink','wrong_mode','wrong_owner'):
+            with self.subTest(case=case),tempfile.TemporaryDirectory(prefix='homecircle-prepare-') as name:
+                root=Path(name).resolve();workspace=root/'guest-control';private=root/'private';private.mkdir()
+                config=root/'config';config.mkdir()
+                host=controller.Controller(type('Args',(),{'branch_commit':'a'*40,
+                    'candidate_zip':controller.ROOT/'payload/homecircle.zip'})())
+                host.private=private;host.config_path=str(config);host.inventories={'candidate':inventory}
+                host.stop_core=Mock()
+                initial=eval(compile(ast.Expression(create),'actual-main-workspace-create','eval'),
+                             {'GUEST_ROOT':str(workspace)})
+                owner=0  # Explicit simulated guest UID; the local Mac owner is not a guest proof.
+                def guest(command,limit):
+                    if command==initial:
+                        try:workspace.mkdir(mode=0o700)
+                        except FileExistsError:raise controller.Refused('guest_command_failed') from None
+                        return b''
+                    if command.startswith('set -eu; test -d '):
+                        self.assertIn('test ! -L '+str(workspace),command)
+                        self.assertIn("stat -c '%u:%a' "+str(workspace),command)
+                        self.assertTrue(command.endswith('= 0:700'))
+                        if (not workspace.is_dir() or workspace.is_symlink()
+                                or workspace.stat().st_mode&0o7777!=0o700 or owner!=0):
+                            raise controller.Refused('guest_command_failed')
+                        return b''
+                    if command.startswith('sha256sum '):
+                        return (hashlib.sha256((workspace/'staging.tgz').read_bytes()).hexdigest()+'  staging.tgz\n').encode()
+                    if command.startswith('set -eu; umask 077; tar -xzf '):
+                        with tarfile.open(workspace/'staging.tgz','r:gz') as archive:
+                            self.assertTrue(all(x.name.startswith('custom_components') for x in archive.getmembers()))
+                            archive.extractall(config,filter='data')
+                        for child in (controller.CONTROL,controller.RESULTS):(config/child).mkdir(mode=0o700)
+                        return b''
+                    if command.startswith('set -eu; chmod 600 '):
+                        for child in (config/'configuration.yaml',config/controller.CONTROL/'inputs.json'):child.chmod(0o600)
+                        (workspace/'staging.tgz').unlink();return b''
+                    if command.startswith('set -eu; find '):
+                        return ('\n'.join(sorted(str(x) for x in (config/'custom_components/homecircle').rglob('*')
+                            if x.is_file() and '__pycache__' not in x.parts and x.suffix!='.pyc'))+'\n').encode()
+                    raise AssertionError('unexpected simulated guest command')
+                def write(path,data):
+                    target=Path(path);self.assertTrue(target.resolve().is_relative_to(root));target.write_bytes(data)
+                host.guest=Mock(side_effect=guest);host.guest_write=Mock(side_effect=write)
+                host.guest_read=Mock(side_effect=lambda path:Path(path).read_bytes())
+                host.guest(initial,30)
+                if case=='missing':workspace.rmdir()
+                elif case=='symlink':
+                    retained=root/'retained';workspace.rename(retained);workspace.symlink_to(retained,target_is_directory=True)
+                elif case=='wrong_mode':workspace.chmod(0o755)
+                elif case=='wrong_owner':owner=1000
+                with patch.object(controller,'GUEST_ROOT',str(workspace)):
+                    if case=='good':
+                        host.prepare(inventory)
+                        self.assertEqual(host.direct_installs,1)
+                        self.assertEqual(len(list((config/'custom_components/homecircle').rglob('manifest.json'))),1)
+                        self.assertTrue((config/controller.CONTROL/'inputs.json').is_file())
+                        self.assertFalse((workspace/'staging.tgz').exists())
+                    else:
+                        with self.assertRaisesRegex(controller.Refused,'^guest_command_failed$'):host.prepare(inventory)
+                        host.guest_write.assert_not_called()
+                        self.assertFalse((private/'guest-staging').exists())
+                host.stop_core.assert_called_once_with()
+
     def test_current_dependency_projector_accepts_current_pin_and_refuses_minimum_pin(self):
         value=dependencies()
         for group in ('direct','closure'):

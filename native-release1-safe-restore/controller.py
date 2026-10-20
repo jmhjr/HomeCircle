@@ -1066,7 +1066,8 @@ print(json.dumps({"connected":connected}))
     def prepare(self, candidate_inventory):
         self.stage = "disposable_configuration"
         self.stop_core()
-        self.guest("umask 077; mkdir -m 700 " + GUEST_ROOT, 30)
+        self.guest("set -eu; test -d " + GUEST_ROOT + "; test ! -L " + GUEST_ROOT
+                   + "; test \"$(stat -c '%u:%a' " + GUEST_ROOT + ")\" = 0:700", 30)
         staging = self.private / "guest-staging"
         staging.mkdir(mode=0o700)
         components = staging / "custom_components"

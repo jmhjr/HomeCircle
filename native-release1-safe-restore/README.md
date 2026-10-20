@@ -109,13 +109,14 @@ requires the same module hashes in the guest before creating the synthetic image
 
 ## Contracts, privacy and limits
 
-Seventy-nine standalone contracts currently pass without skips. They include
+Eighty standalone contracts currently pass without skips. They include
 strict input/archive/OCI/dependency/blank-config checks; actual phase nonce and
 disabled automatic-boot barriers; old/new guard timeline, pending/uncertain and
 early-enable/network refusal; private bundle links/modes/size-before-read;
 Recorder/served/settings failures; allowed owned-ID reuse; fixed canary-safe
 failure projection and plain procedure gate, plus actual-method dependency-probe
-transfer and current-constraint pin regressions. They do not import HA, a native
+transfer and current-constraint pin regressions, and actual preparation through
+an existing private workspace with missing/link/mode/owner refusals. They do not import HA, a native
 provider or run a VM. The future workflow must bind every committed input before
 imports and require exactly the reviewed contract count with zero skips.
 
