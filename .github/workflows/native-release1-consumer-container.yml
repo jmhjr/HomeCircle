@@ -1,0 +1,146 @@
+name: HomeCircle original Container entrypoint pilot
+
+on:
+  push:
+    branches: [codex/native-amd64-validation]
+    paths:
+      - native-release1-consumer-container/**
+      - .github/workflows/native-release1-consumer-container.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: homecircle-release1-consumer-container-pilot-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  current-amd64-pilot:
+    if: github.ref == 'refs/heads/codex/native-amd64-validation'
+    name: Original Container entrypoint / current amd64 pilot
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    steps:
+      - name: Check out reviewed controls and canonical product history
+        timeout-minutes: 3
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Verify exact frozen fixture membership and bytes
+        timeout-minutes: 3
+        shell: bash
+        run: |
+          python3 -I -B - <<'PY'
+          import hashlib
+          from pathlib import Path
+          import subprocess
+          root = Path("native-release1-consumer-container")
+          expected = {
+              "PREPARED.json": "0f58df07ea2b028268f00447cc08d9e7e101b91ffe50c12bf120e72906f1c29b",
+              "README.md": "7b6a835c9e70cd59027063cf7587697447c467d681f6db5c37a668b8537e81dc",
+              "common.py": "63103cae040a2b69b366b36299d92a26fa28a8b3fe8652a8c682f7be06587758",
+              "driver.py": "1a73434ca036969300e2f26a42e1758f6b2a88decf092cba4172584841196a18",
+              "guest.py": "92c70abfcc69c712065bc4a034c783ff5029ba7fc132f9d5025a067c279173d4",
+              "package_support.py": "e97e3f71fc9f7ceb9391f86e0178c59c3b88a2fafe5f397e25a9fb69fe568e59",
+              "payload/homecircle.zip": "c4530d94be3b2996f8d6c8948db88a51868566047d68558eefde7967f270a861",
+              "payload/inventory.json": "9bdfba997d5437d354673a98c8b78d3875d459499281bca3e20bc629369dcb6b",
+              "payload/source-config.json": "bce0379d11d76c53954380c3893a2cf581d539519168492f4235ffee9ba3be0d",
+              "payload/source-inventory.json": "e1e999d3324a896dc84323afe24c1c1c60e694fc61a37e885d4bbdbef964d351",
+              "payload/source.tgz": "a44c7d404a53eb93386715a376d826dc9be447d0cf59639cd19bf2d7b21ed72e",
+              "pins-current-amd64.json": "55a47c56973a6708362575c67cce2114b9330e95d2c0253ee3a06215ff2ab9f0",
+              "pins-current-arm64.json": "b0f60c656329e86574d27fd2bd3fb7f72ed6812bebe698b17d2946997f1f4099",
+              "pins-minimum-amd64.json": "2269d8937d1c24bf08d8414cb040b2ca24a4a896b3ef4857314d1e1f2b2e726e",
+              "pins-minimum-arm64.json": "3e366f04a47b869ea3f2fe40d714257dfa8874616eebe85e26526b3fb2062973",
+              "process_probe.py": "fda1c83041a61d720e9c7c9d9fde2a652eaeb43a5a77efcaf17a97c62e0905b3",
+              "run_host.sh": "677b39f6c554808951149c16e28863bee2b8409f8e4824cabd20f21d4592aa59",
+              "test_controls.py": "99cbc2b90501606fee5130c14e8ddd420c1249b57ad0046f54540a032b26a029"
+          }
+          tracked = subprocess.check_output(["git", "ls-files", "-z", "--", str(root)]).decode().split("\0")
+          assert {name for name in tracked if name} == {str(root / name) for name in expected}, "fixture_tracked_members_refused"
+          assert root.is_dir() and not root.is_symlink(), "fixture_root_refused"
+          nodes = list(root.rglob("*"))
+          assert all(not path.is_symlink() and (path.is_file() or path.is_dir()) for path in nodes), "fixture_file_type_refused"
+          actual = {path.relative_to(root).as_posix() for path in nodes if path.is_file()}
+          assert actual == set(expected) and len(actual) == 18, "fixture_members_refused"
+          for name, digest in expected.items():
+              assert hashlib.sha256((root / name).read_bytes()).hexdigest() == digest, "fixture_bytes_refused"
+          print("Verified 18 frozen fixture files; one current-amd64 pilot target.")
+          PY
+      - name: Check fourteen standalone contracts
+        timeout-minutes: 3
+        shell: bash
+        run: |
+          bash -n native-release1-consumer-container/run_host.sh
+          PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover \
+            -s native-release1-consumer-container -p test_controls.py -v
+      - name: Witness original startup, stop and restart on native amd64
+        timeout-minutes: 43
+        shell: bash
+        run: |
+          timeout --signal=TERM --kill-after=150s 2300s bash native-release1-consumer-container/run_host.sh \
+            --payload native-release1-consumer-container/payload \
+            --pins native-release1-consumer-container/pins-current-amd64.json \
+            --pins-sha 55a47c56973a6708362575c67cce2114b9330e95d2c0253ee3a06215ff2ab9f0 \
+            --source-repository "$GITHUB_WORKSPACE" \
+            --output native-release1-consumer-container-results
+          receipts=native-release1-consumer-container-results/public-summary
+          jq -e '.schema==1 and .outcome=="passed" and .target=="current-amd64" and
+            .stage=="complete" and .exit_code==0 and
+            .pins_sha256=="55a47c56973a6708362575c67cce2114b9330e95d2c0253ee3a06215ff2ab9f0" and
+            .cleanup_failed==false and .owned_containers_stopped==true and
+            .owned_containers_removed==true and .owned_volume_removed==true and
+            .private_workspace_removed==true and .both_containers_offline_during_acceptance==true and
+            .first_service_phase==true and .restart_service_phase==true and .final_clean_stop==true and
+            .acceptance_startups==2 and .tests_repeated==false and .owner_accounts_used==false and
+            .native_apple_worker_executed==false and .prepared_config_cache==true and
+            .fresh_online_resolution_claimed==false' "$receipts/host.json" >/dev/null
+          for phase in first restart; do
+            jq -e --arg phase "$phase" '.schema==1 and .outcome=="passed" and .phase==$phase and
+              .target=="current-amd64" and .architecture=="amd64" and .core=="2026.10.2" and .python=="3.14.6" and
+              .source_commit=="9bf03eb45d2cf43274074534e9dfe2de841f4011" and
+              .package_sha256=="c4530d94be3b2996f8d6c8948db88a51868566047d68558eefde7967f270a861" and
+              .exact_loaded_and_installed_files==113 and .nonempty_options==true and
+              .explicit_people_and_trackers==2 and .normal_config_cache_mounted==true and
+              .served_frontend_sha256=="80b2727d18a0b8edb052c47d2c718850adf19bf5d35c2af6c3eb86c07f1f6cac" and
+              .unload_setup_checked==($phase=="restart") and .resource_id_persistence_claimed==false and
+              .prepared_config_cache==true and .fresh_online_resolution_claimed==false and
+              .owner_accounts_used==false and .native_apple_worker_executed==false and
+              .managed_haos_service_claimed==false and .release_published==false' "$receipts/$phase-receipt.json" >/dev/null
+            jq -e --arg phase "$phase" '.schema==1 and .outcome=="passed" and .phase==$phase and
+              .target=="current-amd64" and .architecture=="amd64" and .core=="2026.10.2" and
+              (.native_s6_pid1=="s6-svscan" or .native_s6_pid1=="s6-linux-init") and
+              .core_under_native_s6_supervisor==true and .core_exact_original_cli_arguments==true and
+              .core_mimalloc_environment==true and .no_import_path_override==true and
+              .finite_default_capabilities==true and .final_startup_files_exact==true' "$receipts/$phase-process.json" >/dev/null
+          done
+          jq -e -s '.[0].identity==.[1].identity and .[0].token_sha256==.[1].token_sha256' \
+            "$receipts/first-receipt.json" "$receipts/restart-receipt.json" >/dev/null
+          jq -e '.outcome=="passed" and .canonical_public_source_files==337 and .package_files_verified==113 and
+            .dependency_packages_pinned==24 and .startup_requirements_pinned==21 and
+            .config_cache_path_verified==true and .startup_sources_and_scripts_verified==true and
+            .preparer_finite_default_capabilities_verified==true' "$receipts/setup-summary.json" >/dev/null
+          test ! -e "$receipts/failure-summary.json" && test ! -e "$receipts/guest-failure.json"
+          actual=$(find "$receipts" -mindepth 1 -maxdepth 1 -type f -printf '%f\n' | LC_ALL=C sort)
+          expected=$(printf '%s\n' first-process.json first-receipt.json host.json restart-process.json restart-receipt.json setup-summary.json source-summary.json)
+          test "$actual" = "$expected"
+      - name: Retain only fixed narrow JSON receipts
+        timeout-minutes: 3
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: release1-consumer-container-current-amd64-pilot
+          path: |
+            native-release1-consumer-container-results/public-summary/source-summary.json
+            native-release1-consumer-container-results/public-summary/setup-summary.json
+            native-release1-consumer-container-results/public-summary/first-receipt.json
+            native-release1-consumer-container-results/public-summary/first-process.json
+            native-release1-consumer-container-results/public-summary/restart-receipt.json
+            native-release1-consumer-container-results/public-summary/restart-process.json
+            native-release1-consumer-container-results/public-summary/host.json
+            native-release1-consumer-container-results/public-summary/failure-summary.json
+            native-release1-consumer-container-results/public-summary/guest-failure.json
+          if-no-files-found: warn
+          retention-days: 7
+          include-hidden-files: false

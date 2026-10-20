@@ -1,0 +1,35 @@
+{
+  "ci_launched": false,
+  "controls": {
+    "common.py": "63103cae040a2b69b366b36299d92a26fa28a8b3fe8652a8c682f7be06587758",
+    "driver.py": "1a73434ca036969300e2f26a42e1758f6b2a88decf092cba4172584841196a18",
+    "guest.py": "92c70abfcc69c712065bc4a034c783ff5029ba7fc132f9d5025a067c279173d4",
+    "process_probe.py": "fda1c83041a61d720e9c7c9d9fde2a652eaeb43a5a77efcaf17a97c62e0905b3",
+    "run_host.sh": "677b39f6c554808951149c16e28863bee2b8409f8e4824cabd20f21d4592aa59"
+  },
+  "pilot_target": "current-amd64",
+  "prepared_only": true,
+  "runtime_executed": false,
+  "targets": {
+    "current-amd64": {
+      "filename": "pins-current-amd64.json",
+      "pilot": true,
+      "sha256": "55a47c56973a6708362575c67cce2114b9330e95d2c0253ee3a06215ff2ab9f0"
+    },
+    "current-arm64": {
+      "filename": "pins-current-arm64.json",
+      "pilot": false,
+      "sha256": "b0f60c656329e86574d27fd2bd3fb7f72ed6812bebe698b17d2946997f1f4099"
+    },
+    "minimum-amd64": {
+      "filename": "pins-minimum-amd64.json",
+      "pilot": false,
+      "sha256": "2269d8937d1c24bf08d8414cb040b2ca24a4a896b3ef4857314d1e1f2b2e726e"
+    },
+    "minimum-arm64": {
+      "filename": "pins-minimum-arm64.json",
+      "pilot": false,
+      "sha256": "3e366f04a47b869ea3f2fe40d714257dfa8874616eebe85e26526b3fb2062973"
+    }
+  }
+}
