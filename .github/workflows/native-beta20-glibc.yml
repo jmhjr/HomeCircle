@@ -1,0 +1,54 @@
+name: Published beta 20 native Ubuntu glibc validation
+
+on:
+  push:
+    branches: [codex/native-amd64-validation]
+    paths:
+      - native-beta20-glibc/**
+      - .github/workflows/native-beta20-glibc.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: homecircle-native-beta20-glibc-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  beta20-ubuntu-glibc:
+    if: github.ref == 'refs/heads/codex/native-amd64-validation'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - name: Check out the isolated validation revision
+        timeout-minutes: 3
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Verify the offline driver safety contracts
+        timeout-minutes: 2
+        shell: bash
+        run: |
+          python3 -I -B -m unittest discover -v -s native-beta20-glibc -p test_driver.py
+      - name: Validate the published prerelease on native Ubuntu glibc
+        timeout-minutes: 78
+        shell: bash
+        run: |
+          timeout --signal=TERM --kill-after=30s 4500s bash native-beta20-glibc/run_host.sh \
+            --payload native-beta20-package/payload --output native-beta20-glibc-results
+          jq -e '.outcome=="passed" and .container_stopped==true and .container_removed==true and
+            .cleanup_failed==false and .private_workspace_removed==true and
+            .backend_network_disconnected==true and .owned_runtime_image_removed==true and .published_release_download_checked==true' \
+            native-beta20-glibc-results/public-summary/host.json
+      - name: Retain only narrow synthetic validation summaries
+        timeout-minutes: 3
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: native-beta20-glibc-sanitized-summary
+          path: native-beta20-glibc-results/public-summary/*.json
+          if-no-files-found: warn
+          retention-days: 7
+          include-hidden-files: false
