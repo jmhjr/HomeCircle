@@ -59,6 +59,14 @@ def canonical(data):
     return json.dumps(data, sort_keys=True, separators=(",", ":")).encode()
 
 
+def public_core_version(value):
+    """Only a Core version or the known initial landing-page marker is public."""
+    if isinstance(value, str) and (value == "landingpage" or re.fullmatch(
+            r"[0-9]{4}\.[0-9]{1,2}\.[0-9]{1,2}(?:[a-z0-9.+-]{0,24})", value)):
+        return value
+    return None
+
+
 def write_json(path, data):
     temporary = path.with_name(path.name + ".tmp")
     with temporary.open("xb") as stream:
@@ -152,6 +160,10 @@ class Controller:
         self.token_injected = False
         self.rollback_restored = False
         self.direct_installs = 0
+        self.core_version_before = None
+        self.core_version_after = None
+        self.container_core_version_after = None
+        self.core_update_result = "not_requested"
 
     def remaining(self, maximum, cleanup=False):
         remaining = self.deadline - time.monotonic() + (120 if cleanup else 0)
@@ -320,19 +332,41 @@ class Controller:
                 time.sleep(5)
         else:
             raise Refused("managed_core_boot_deadline_exceeded")
-        if info.get("data", {}).get("version") != CORE:
-            self.guest(HA + " core update --version " + CORE + " --raw-json", 1200)
-        info = json.loads(self.guest(HA + " core info --raw-json", 30))
-        require(info.get("result") == "ok" and info.get("data", {}).get("version") == CORE,
-                "managed_core_version_refused")
-        limit = time.monotonic() + self.remaining(180)
+        before = info.get("data", {}).get("version")
+        self.core_version_before = public_core_version(before)
+        self.core_version_after = self.core_version_before
+        # One update request only. Its complete JSON result must be accepted;
+        # successful CLI exit alone does not establish a successful API result.
+        # The same monotonic 1,200-second envelope covers update and readiness.
+        limit = time.monotonic() + self.remaining(1200)
+        if before != CORE:
+            self.core_update_result = "response_invalid"
+            update = json.loads(self.guest(HA + " core update --version " + CORE + " --raw-json",
+                                          min(900, limit - time.monotonic())))
+            result = update.get("result")
+            self.core_update_result = result if result in {"ok", "error"} else "response_invalid"
+            require(result == "ok", "managed_core_update_refused")
         while time.monotonic() < limit:
             try:
+                info = json.loads(self.guest(HA + " core info --raw-json",
+                                            min(30, limit - time.monotonic())))
+                version = info.get("data", {}).get("version")
+                self.core_version_after = public_core_version(version)
+                require(info.get("result") == "ok" and version == CORE,
+                        "managed_core_target_not_ready")
                 self.managed_core()
+                # Core info can describe the target while an initial landing
+                # page is still running. Verify the actual managed container's
+                # installed Home Assistant version in a bounded Linux child.
+                actual = self.guest("/usr/bin/docker exec homeassistant python3 -B -c "
+                                    + "'from homeassistant.const import __version__; print(__version__)'",
+                                    min(20, limit - time.monotonic())).decode().strip()
+                self.container_core_version_after = public_core_version(actual)
+                require(actual == CORE, "managed_container_core_target_not_ready")
                 return
             except (Refused, OSError, ValueError):
-                time.sleep(2)
-        raise Refused("managed_core_container_deadline_exceeded")
+                time.sleep(min(2, max(0, limit - time.monotonic())))
+        raise Refused("managed_core_target_deadline_exceeded")
 
     def managed_core(self):
         # Never inspect Config.Env: it contains Supervisor's own internal token.
@@ -665,6 +699,10 @@ class Controller:
                    "failure_type": type(failure).__name__ if failure is not None else None,
                    "failure_code": str(failure) if type(failure) is Refused
                    and re.fullmatch(r"[a-z0-9_]{1,80}", str(failure)) else None,
+                   "core_version_target": CORE, "core_version_before": self.core_version_before,
+                   "core_version_after": self.core_version_after,
+                   "container_core_version_after": self.container_core_version_after,
+                   "core_update_result": self.core_update_result,
                    "host_elapsed_seconds": round(time.monotonic() - self.started, 3),
                    "native_linux_amd64_kvm_required": True, "actual_kvm_confirmed": self.kvm_confirmed,
                    "managed_haos_hacs_rehearsal": passed, "phases": len(self.phases),

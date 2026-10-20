@@ -51,6 +51,14 @@ class ArchiveContracts(unittest.TestCase):
                 controller.check_archive(path, "0" * 64, 1)
 
 
+class PublicDiagnostics(unittest.TestCase):
+    def test_core_version_projection_excludes_arbitrary_response_strings(self):
+        for value in ("2026.10.2", "2026.10.0b1", "landingpage"):
+            self.assertEqual(controller.public_core_version(value), value)
+        for value in (None, {}, "private-value", "2026.10.2 private-value", "https://example.invalid"):
+            self.assertIsNone(controller.public_core_version(value))
+
+
 class PhaseContracts(unittest.TestCase):
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory()
