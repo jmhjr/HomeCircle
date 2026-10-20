@@ -81,6 +81,33 @@ PROBE_CODES = frozenset({
     "linux_lifecycle_probe_timeout", "linux_lifecycle_provider_import_refused",
     "linux_lifecycle_spawn_contract_refused", "linux_lifecycle_worker_cleanup_refused",
 })
+ORIGINAL_PROCESS_GUARD = '''        if event == "subprocess.Popen" and tuple(args[1]) not in launches:
+            raise PermissionError("linux_lifecycle_process_refused")
+        if event in {"os.system", "os.posix_spawn"} or event.startswith("os.exec"):
+            raise PermissionError("linux_lifecycle_process_refused")
+'''
+OWNED_PROCESS_GUARD = '''        counters.setdefault("approved_posix_spawn_events", 0)
+        counters.setdefault("denied_unknown_spawn_events", 0)
+
+        def approved_posix_spawn(event_args):
+            return (isinstance(event_args, (tuple, list)) and len(event_args) >= 2
+                    and event_args[0] == sys.executable
+                    and isinstance(event_args[1], (tuple, list))
+                    and all(type(part) is str for part in event_args[1])
+                    and tuple(event_args[1]) in launches)
+
+        if event == "subprocess.Popen" and tuple(args[1]) not in launches:
+            counters["denied_unknown_spawn_events"] += 1
+            raise PermissionError("linux_lifecycle_process_refused")
+        if event == "os.posix_spawn":
+            if not approved_posix_spawn(args):
+                counters["denied_unknown_spawn_events"] += 1
+                raise PermissionError("linux_lifecycle_process_refused")
+            counters["approved_posix_spawn_events"] += 1
+        if event == "os.system" or event.startswith("os.exec"):
+            counters["denied_unknown_spawn_events"] += 1
+            raise PermissionError("linux_lifecycle_process_refused")
+'''
 SAFE_CHILD_CODES = frozenset({
     "startup_script_hash_refused", "startup_loaded_version_refused", "startup_arguments_required",
     "linux_runtime_refused", "ubuntu_release_refused", "active_glibc_version_refused",
@@ -514,8 +541,12 @@ def lifecycle_result(path):
     workers = value.get("worker_children", [])
     check(len(workers) == 2 and all(item.get("proc_absent") is True and type(item.get("exit_code")) is int
                                   for item in workers), "lifecycle_reap_refused")
+    approved, denied = value.get("approved_posix_spawn_events"), value.get("denied_unknown_spawn_events")
+    check(type(approved) is int and 1 <= approved <= 2 and type(denied) is int and denied == 0,
+          "lifecycle_spawn_audit_refused")
     return {"actual_provider_lifecycle": True, "active_native_cancellation": True,
-            "parent_only_dependency_used": True, "worker_limits_verified": True, "workers_reaped": 2}
+            "parent_only_dependency_used": True, "worker_limits_verified": True, "workers_reaped": 2,
+            "approved_posix_spawn_events": approved, "denied_unknown_spawn_events": denied}
 
 
 def backend_result(path, *, require_pass):
@@ -549,7 +580,9 @@ def lifecycle_copy(args, files):
     before = ('CANDIDATE_SHA256 = "' + OLD_SHA + '"').encode()
     after = ('CANDIDATE_SHA256 = "' + RELEASE_SHA + '"').encode()
     check(original.count(before) == 1, "lifecycle_hash_adapter_count_refused")
-    executed = original.replace(before, after)
+    old_guard, new_guard = ORIGINAL_PROCESS_GUARD.encode(), OWNED_PROCESS_GUARD.encode()
+    check(original.count(old_guard) == 1, "lifecycle_spawn_guard_adapter_count_refused")
+    executed = original.replace(before, after).replace(old_guard, new_guard)
     directory = args.results / "lifecycle-private"
     check(not directory.exists(), "fresh_lifecycle_adapter_required")
     directory.mkdir(mode=0o700)
@@ -558,7 +591,9 @@ def lifecycle_copy(args, files):
     path = directory / "platform_validate_linux_lifecycle.py"
     path.write_bytes(executed)
     return path, {"original_sha256": sha(original), "executed_sha256": sha(executed),
-                  "only_candidate_hash_literal_changed": True, "substitutions": 1}
+                  "semantic_adaptations": ["published_archive_hash", "exact_owned_posix_spawn_audit"],
+                  "archive_hash_literal_substitutions": 1, "spawn_audit_block_substitutions": 1,
+                  "only_declared_harness_adaptations": True, "tagged_source_unchanged": True}
 
 
 def probe_failure(log, stage, code):

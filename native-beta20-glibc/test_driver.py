@@ -49,6 +49,7 @@ class DriverContracts(unittest.TestCase):
                  "candidate_files_modified": False, "network_allowed": False,
                  "apple_binary_executed": False, "owner_data_read": False,
                  "account_requests": 0, "unicorn_version": "2.1.4",
+                 "approved_posix_spawn_events": 2, "denied_unknown_spawn_events": 0,
                  "worker_children": [{"proc_absent": True, "exit_code": 0}, {"proc_absent": True, "exit_code": -9}],
                  "child_limits": {key: {"soft": count, "hard": count} for key, count in
                                   (("cpu_seconds", 90), ("core_bytes", 0), ("address_space_bytes", 3 * 1024**3))}}
@@ -138,14 +139,19 @@ class DriverContracts(unittest.TestCase):
 
     def test_hash_adapter_changes_only_one_literal(self):
         directory = self.temporary()
-        original = b'# unchanged\nCANDIDATE_SHA256 = "' + subject.OLD_SHA.encode() + b'"\nCOUNT = 112\n'
+        original = (b'# unchanged\nCANDIDATE_SHA256 = "' + subject.OLD_SHA.encode() + b'"\nCOUNT = 112\n'
+                    + subject.ORIGINAL_PROCESS_GUARD.encode())
         files = {"scripts/platform_validate_linux_lifecycle.py": original,
                  **{"scripts/" + name: b"unchanged" for name in
                     ("platform_validate_candidate.py", "validate_release.py", "build_release.py", "validate_ha_restart.py")}}
         path, receipt = subject.lifecycle_copy(SimpleNamespace(results=directory), files)
-        self.assertEqual(path.read_bytes(), original.replace(subject.OLD_SHA.encode(), subject.RELEASE_SHA.encode()))
+        expected = original.replace(subject.OLD_SHA.encode(), subject.RELEASE_SHA.encode()).replace(
+            subject.ORIGINAL_PROCESS_GUARD.encode(), subject.OWNED_PROCESS_GUARD.encode())
+        self.assertEqual(path.read_bytes(), expected)
         self.assertEqual(files["scripts/platform_validate_linux_lifecycle.py"], original)
-        self.assertEqual(receipt["substitutions"], 1)
+        self.assertEqual(receipt["archive_hash_literal_substitutions"], 1)
+        self.assertEqual(receipt["spawn_audit_block_substitutions"], 1)
+        self.assertEqual(receipt["semantic_adaptations"], ["published_archive_hash", "exact_owned_posix_spawn_audit"])
 
     def test_adapter_includes_actual_tagged_local_import_closure(self):
         archive = Path(__file__).resolve().parents[1] / "native-beta20-package/payload/source.tgz"
@@ -259,6 +265,53 @@ class DriverContracts(unittest.TestCase):
         result = subject.probe_failure(log, "native", 1)
         self.assertNotIn("CANARY", json.dumps(result))
         self.assertEqual(result["public_frames"], [])
+
+    def process_guard(self):
+        command = ("/approved/python", "-I", "-B", "-c", "public fixture")
+        context = {"sys": SimpleNamespace(executable=command[0]), "launches": {command}, "counters": {}}
+        # Compile only the adapter's pure guard block; install no audit hook,
+        # spawn no process and import no runtime package in this contract suite.
+        exec("def guard(event, args):\n" + subject.OWNED_PROCESS_GUARD, context)
+        return context["guard"], context["counters"], command
+
+    def test_posix_spawn_exact_owned_executable_and_argv_allowed(self):
+        guard, counters, command = self.process_guard()
+        guard("os.posix_spawn", (command[0], list(command), {"IGNORED_PRIVATE_ENV": "CANARY"}))
+        self.assertEqual(counters, {"approved_posix_spawn_events": 1, "denied_unknown_spawn_events": 0})
+        value = self.lifecycle_receipt()
+        self.assertEqual(subject.lifecycle_result(self.write_json("lifecycle.json", value))["approved_posix_spawn_events"], 2)
+        for approved, denied in ((0, 0), (2, 1)):
+            with self.subTest(approved=approved, denied=denied):
+                value["approved_posix_spawn_events"], value["denied_unknown_spawn_events"] = approved, denied
+                with self.assertRaisesRegex(subject.Refused, "^lifecycle_spawn_audit_refused$"):
+                    subject.lifecycle_result(self.write_json("lifecycle.json", value))
+
+    def test_posix_spawn_wrong_executable_refused(self):
+        guard, counters, command = self.process_guard()
+        with self.assertRaisesRegex(PermissionError, "^linux_lifecycle_process_refused$"):
+            guard("os.posix_spawn", ("/unapproved/python", list(command), {}))
+        self.assertEqual(counters, {"approved_posix_spawn_events": 0, "denied_unknown_spawn_events": 1})
+
+    def test_posix_spawn_wrong_argv_refused(self):
+        guard, counters, command = self.process_guard()
+        with self.assertRaisesRegex(PermissionError, "^linux_lifecycle_process_refused$"):
+            guard("os.posix_spawn", (command[0], [command[0], "-c", "unapproved"], {}))
+        self.assertEqual(counters, {"approved_posix_spawn_events": 0, "denied_unknown_spawn_events": 1})
+
+    def test_unknown_popen_launch_refused(self):
+        guard, counters, command = self.process_guard()
+        with self.assertRaisesRegex(PermissionError, "^linux_lifecycle_process_refused$"):
+            guard("subprocess.Popen", (command[0], [command[0], "-c", "unapproved"], None, None))
+        self.assertEqual(counters["denied_unknown_spawn_events"], 1)
+
+    def test_system_and_exec_stay_refused(self):
+        guard, counters, command = self.process_guard()
+        for event in ("os.system", "os.exec"):
+            with self.subTest(event=event):
+                with self.assertRaisesRegex(PermissionError, "^linux_lifecycle_process_refused$"):
+                    guard(event, (command[0], list(command), {}))
+        self.assertEqual(counters["approved_posix_spawn_events"], 0)
+        self.assertEqual(counters["denied_unknown_spawn_events"], 2)
 
 
 if __name__ == "__main__":

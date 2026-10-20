@@ -37,9 +37,14 @@ and test plugin `0.13.373`, whose metadata targets that Core release. Declared
 startup component requirements are installed before networking is disconnected.
 Acceptance covers real synthetic Core/HomeCircle startup, the exact packaged
 native worker and provider lifecycle, and the backend suite. Only the named
-optional retained-Apple-installer fixture may be skipped. A lifecycle-script
-copy may change only the original frozen-candidate archive hash to this exact
-published ZIP hash; original and executed script hashes are recorded.
+optional retained-Apple-installer fixture may be skipped. An isolated copy of
+the lifecycle script has exactly two declared changes: the published ZIP hash,
+and permission for glibc's `os.posix_spawn` audit event only when its executable
+and arguments exactly match the already approved worker command. Unknown
+process launches and the existing file and network restrictions remain
+blocked. Acceptance requires one or two actual approved spawn events and no
+denied unknown launches. Original and executed script hashes and both
+substitution counts are recorded; the tagged script and product are unchanged.
 
 The runtime build and test container are owned by this invocation. Acceptance
 runs without external networking, host mounts, published ports or Linux
