@@ -391,6 +391,250 @@ class Contracts(unittest.TestCase):
             self.assertNotIn(forbidden, source)
 
 
+class DistributionContracts(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+        self.original = json.loads((HERE / "pins-current-amd64.json").read_bytes())
+
+    @staticmethod
+    def guest_function(name, namespace):
+        tree = ast.parse((HERE / "guest.py").read_bytes())
+        node = next(
+            node
+            for node in ast.walk(tree)
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+            and node.name == name
+        )
+        exec(
+            compile(
+                ast.Module(body=[node], type_ignores=[]),
+                "actual-guest-function",
+                "exec",
+            ),
+            namespace,
+        )
+        return namespace[name]
+
+    def test_numeric_distribution_version_projection_excludes_private_text(self):
+        wanted = (
+            self.original["dependency_versions"] | self.original["startup_versions"]
+        )
+        for version in wanted.values():
+            self.assertEqual(guest.public_distribution_version(version), version)
+        for canary in (
+            "PRIVATE-CANARY /owner/private",
+            "bare_private_canary",
+            "1.0+private.canary",
+            "1.0rc1",
+            "1",
+            "1.2.3.4.5",
+            "123456789.1",
+            "1.2\nPRIVATE-CANARY",
+            "",
+            None,
+            True,
+            {"PRIVATE-CANARY": "body"},
+        ):
+            with self.subTest(canary=canary):
+                self.assertEqual(
+                    guest.public_distribution_version(canary), "unavailable"
+                )
+
+    def test_distribution_projection_exact_paths_order_and_index_bounds(self):
+        cache = Path("/config/deps/lib/python3.14/site-packages")
+        system = Path("/usr/local/lib/python3.14/site-packages")
+        fields = {
+            "sorted_package_index",
+            "observed_version",
+            "expected_version_matches",
+            "origin",
+            "cache_precedes_system",
+            "system_precedes_cache",
+        }
+        for origin, path in (
+            ("cache", cache),
+            ("system", system),
+            ("other", Path("/owner/PRIVATE-CANARY")),
+        ):
+            distribution = SimpleNamespace(
+                version="1.0+private.canary", locate_file=lambda _name, path=path: path
+            )
+            value = guest.distribution_failure(
+                44, "1.0", distribution, cache, [str(cache), str(system)]
+            )
+            self.assertEqual(set(value), fields)
+            self.assertEqual(value["origin"], origin)
+            self.assertEqual(value["observed_version"], "unavailable")
+            self.assertFalse(value["expected_version_matches"])
+            self.assertTrue(value["cache_precedes_system"])
+            self.assertFalse(value["system_precedes_cache"])
+            self.assertNotIn("private", json.dumps(value).lower())
+            self.assertNotIn("/owner", json.dumps(value))
+        missing = guest.distribution_failure(
+            0, "1.0", None, cache, [str(system), str(cache)]
+        )
+        self.assertEqual(missing["origin"], "missing")
+        self.assertTrue(missing["system_precedes_cache"])
+        self.assertFalse(missing["cache_precedes_system"])
+        absent = guest.distribution_failure(0, "1.0", None, cache, [str(cache)])
+        self.assertFalse(absent["system_precedes_cache"])
+        self.assertFalse(absent["cache_precedes_system"])
+        for index in (-1, 45, True, "0", None, 2.0):
+            with (
+                self.subTest(index=index),
+                self.assertRaisesRegex(
+                    RuntimeError, "^distribution_diagnostic_index_refused$"
+                ),
+            ):
+                guest.distribution_failure(index, "1.0", None, cache, [])
+
+    def test_actual_cached_origin_predicate_refuses_system_other_stale_missing(self):
+        cache = Path("/config/deps/lib/python3.14/site-packages")
+        system = Path("/usr/local/lib/python3.14/site-packages")
+        versions = (
+            self.original["dependency_versions"] | self.original["startup_versions"]
+        )
+        names = sorted(versions)
+        index = 11
+        bad_name = names[index]
+        for case in ("all_cache", "system", "other", "stale", "missing"):
+            called = []
+            diagnostic = {}
+
+            def distribution(name):
+                called.append(name)
+                if name == bad_name and case == "missing":
+                    raise LookupError("PRIVATE-CANARY")
+                path = (
+                    system
+                    if name == bad_name and case == "system"
+                    else Path("/owner/PRIVATE-CANARY")
+                    if name == bad_name and case == "other"
+                    else cache
+                )
+                version = (
+                    "999.1" if name == bad_name and case == "stale" else versions[name]
+                )
+                return SimpleNamespace(version=version, locate_file=lambda _name: path)
+
+            namespace = {
+                "Path": Path,
+                "runtime": {"cache_site": str(cache)},
+                "control": Path("/config/.homecircle-consumer-qa"),
+                "versions": versions,
+                "sys": SimpleNamespace(path=[str(cache), str(system)]),
+                "c": c,
+                "distribution_check": diagnostic,
+                "distribution_failure": guest.distribution_failure,
+                "importlib": SimpleNamespace(
+                    metadata=SimpleNamespace(
+                        distribution=distribution, PackageNotFoundError=LookupError
+                    )
+                ),
+            }
+            actual = self.guest_function("cached_origins", namespace)
+            with self.subTest(case=case):
+                if case == "all_cache":
+                    actual()
+                    self.assertEqual(called, names)
+                    self.assertEqual(diagnostic, {})
+                else:
+                    error = LookupError if case == "missing" else c.Refused
+                    with self.assertRaises(error):
+                        actual()
+                    self.assertEqual(called, names[: index + 1])
+                    self.assertEqual(diagnostic["sorted_package_index"], index)
+                    self.assertEqual(
+                        diagnostic["origin"], "cache" if case == "stale" else case
+                    )
+                    self.assertEqual(
+                        diagnostic["expected_version_matches"],
+                        case in {"system", "other"},
+                    )
+                    self.assertNotIn("PRIVATE-CANARY", json.dumps(diagnostic))
+
+    def test_actual_cache_presence_gate_and_predicate_are_unchanged(self):
+        tree = ast.parse((HERE / "guest.py").read_bytes())
+        checks = [
+            node
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Call)
+            and len(node.args) == 2
+            and isinstance(node.args[1], ast.Constant)
+            and node.args[1].value == "guest_cached_distribution_origin_refused"
+        ]
+        self.assertEqual(len(checks), 1)
+        expected = ast.parse(
+            'distribution.version == expected and Path(distribution.locate_file("")).resolve() == cache',
+            mode="eval",
+        ).body
+        self.assertEqual(ast.dump(checks[0].args[0]), ast.dump(expected))
+        namespace = {
+            "Path": Path,
+            "runtime": {"cache_site": "/config/deps/lib/python3.14/site-packages"},
+            "control": Path("/config/.homecircle-consumer-qa"),
+            "sys": SimpleNamespace(path=[]),
+            "c": c,
+            "distribution_check": {},
+        }
+        actual = self.guest_function("cached_origins", namespace)
+        with self.assertRaisesRegex(c.Refused, "^normal_config_cache_not_mounted$"):
+            actual()
+        self.assertEqual(namespace["distribution_check"], {})
+
+    def test_guest_failure_retains_only_bounded_distribution_diagnostic(self):
+        for name in (
+            "common.py",
+            "driver.py",
+            "guest.py",
+            "process_probe.py",
+            "package_support.py",
+        ):
+            (self.root / name).write_bytes((HERE / name).read_bytes())
+        cache = Path("/config/deps/lib/python3.14/site-packages")
+        projected = guest.distribution_failure(
+            3,
+            "1.0",
+            SimpleNamespace(
+                version="1.0+private.canary",
+                locate_file=lambda _name: "/owner/PRIVATE-CANARY",
+            ),
+            cache,
+            [str(cache)],
+        )
+
+        async def exercise():
+            raise c.Refused("guest_cached_distribution_origin_refused")
+
+        async def execute(function, *args):
+            return function(*args)
+
+        namespace = {
+            "asyncio": asyncio,
+            "hass": SimpleNamespace(async_add_executor_job=execute),
+            "c": c,
+            "control": self.root,
+            "distribution_check": projected,
+            "exercise": exercise,
+        }
+        actual = self.guest_function("run", namespace)
+        asyncio.run(actual())
+        raw = (self.root / "guest-failure.json").read_text()
+        value = json.loads(raw)
+        self.assertEqual(
+            set(value),
+            {"schema", "outcome", "failure_type", "failure_code", "distribution_check"},
+        )
+        self.assertEqual(
+            value["failure_code"], "guest_cached_distribution_origin_refused"
+        )
+        self.assertEqual(value["distribution_check"], projected)
+        self.assertNotIn("private", raw.lower())
+        self.assertNotIn("/owner", raw)
+
+
 class AsyncContracts(unittest.IsolatedAsyncioTestCase):
     async def test_guest_wait_awaits_async_predicates_and_propagates_cancellation(self):
         calls = []

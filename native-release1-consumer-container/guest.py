@@ -9,6 +9,7 @@ import json
 import os
 from pathlib import Path
 import platform
+import re
 import sys
 
 TRACKERS = (
@@ -25,6 +26,52 @@ def plain(value):
     if isinstance(value, (list, tuple)):
         return [plain(item) for item in value]
     return value
+
+
+def public_distribution_version(value):
+    """The existing numeric-release bound excludes private/local version text."""
+    if isinstance(value, str) and re.fullmatch(
+        r"[0-9]{1,8}(?:\.[0-9]{1,8}){1,3}", value
+    ):
+        return value
+    return "unavailable"
+
+
+def distribution_failure(index, expected, distribution, cache, search_path):
+    """Project only a fixed sorted pin index, numeric version and origin enums."""
+    if type(index) is not int or not 0 <= index < 45:
+        raise RuntimeError("distribution_diagnostic_index_refused")
+    system = Path("/usr/local/lib/python3.14/site-packages")
+    try:
+        version = distribution.version if distribution is not None else None
+    except Exception:
+        version = None
+    try:
+        origin = Path(distribution.locate_file("")).resolve()
+    except Exception:
+        origin = None
+    roots = [str(cache), str(system)]
+    positions = [
+        next(
+            (offset for offset, value in enumerate(search_path) if value == root), None
+        )
+        for root in roots
+    ]
+    comparable = all(position is not None for position in positions)
+    return {
+        "sorted_package_index": index,
+        "observed_version": public_distribution_version(version),
+        "expected_version_matches": isinstance(version, str) and version == expected,
+        "origin": "missing"
+        if distribution is None
+        else "cache"
+        if origin == cache
+        else "system"
+        if origin == system
+        else "other",
+        "cache_precedes_system": comparable and positions[0] < positions[1],
+        "system_precedes_cache": comparable and positions[1] < positions[0],
+    }
 
 
 async def wait(predicate, limit=75):
@@ -86,6 +133,7 @@ async def async_setup(hass, config):
 
     runtime, values, c = await hass.async_add_executor_job(load_controls)
     task = None
+    distribution_check = {}
 
     async def exercise():
         from homeassistant.components.lovelace.const import LOVELACE_DATA
@@ -126,13 +174,27 @@ async def async_setup(hass, config):
                 and str(cache) in sys.path,
                 "normal_config_cache_not_mounted",
             )
-            for name, expected in versions.items():
-                distribution = importlib.metadata.distribution(name)
-                c.check(
-                    distribution.version == expected
-                    and Path(distribution.locate_file("")).resolve() == cache,
-                    "guest_cached_distribution_origin_refused",
-                )
+            for index, (name, expected) in enumerate(sorted(versions.items())):
+                try:
+                    distribution = importlib.metadata.distribution(name)
+                except importlib.metadata.PackageNotFoundError:
+                    distribution_check.update(
+                        distribution_failure(index, expected, None, cache, sys.path)
+                    )
+                    raise
+                try:
+                    c.check(
+                        distribution.version == expected
+                        and Path(distribution.locate_file("")).resolve() == cache,
+                        "guest_cached_distribution_origin_refused",
+                    )
+                except c.Refused:
+                    distribution_check.update(
+                        distribution_failure(
+                            index, expected, distribution, cache, sys.path
+                        )
+                    )
+                    raise
 
         await hass.async_add_executor_job(cached_origins)
         for tracker, source_type in zip(TRACKERS, ("gps", "router"), strict=True):
@@ -366,6 +428,8 @@ async def async_setup(hass, config):
             raise
         except Exception as error:
             failure = await hass.async_add_executor_job(c.safe_failure, error, control)
+            if distribution_check:
+                failure["distribution_check"] = dict(distribution_check)
             await hass.async_add_executor_job(
                 c.atomic, control / "guest-failure.json", failure
             )

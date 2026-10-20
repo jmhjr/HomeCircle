@@ -1,50 +1,73 @@
 {
-  "baseline_control_commit": "80d6872775f60121995972cf88d45efaf69b9306",
-  "baseline_failed_run": 39505904554,
+  "baseline_control_commit": "28c72ccd51d122442541b542c3f27820f9d931f6",
+  "baseline_failed_run": 39507545357,
   "ci_launched": false,
-  "confirmed_configuration_gap": "minimal child environment omitted official extra index; prior real primary exit1 has no retained package/error",
   "controls": {
     "cache_child.py": "73b5eee7f142dbe63374fce280ccadafb65064145b4a6105861070c3be1fa9b8",
     "common.py": "9be103213dc3bbbfdb1e821514f7955faf90e7d4985088a19debc09a51dcef97",
     "driver.py": "95553632c3fb062436d5d3f5e940cde3277a2a9dbb9a1b762a522cc682281978",
-    "guest.py": "92c70abfcc69c712065bc4a034c783ff5029ba7fc132f9d5025a067c279173d4",
+    "guest.py": "03bb896834dbf6caa395c66b8575224fb1445426cc47ef340b3e8fa83ec97747",
     "process_probe.py": "fda1c83041a61d720e9c7c9d9fde2a652eaeb43a5a77efcaf17a97c62e0905b3",
     "run_host.sh": "8cafffa854415234c3401c4ac9d2e8221f1c9b5a5531890b511d6272e87de73f"
   },
+  "distribution_diagnostic": {
+    "artifact": "guest-failure.json",
+    "fields": [
+      "sorted_package_index",
+      "observed_version",
+      "expected_version_matches",
+      "origin",
+      "cache_precedes_system",
+      "system_precedes_cache"
+    ],
+    "observed_version_regex": "[0-9]{1,8}(?:\\.[0-9]{1,8}){1,3}",
+    "observed_version_sentinel": "unavailable",
+    "origin_enum": [
+      "cache",
+      "system",
+      "other",
+      "missing"
+    ],
+    "pin_index_max": 44,
+    "pin_index_min": 0,
+    "sorted_names_bound_to": "dependency_versions union startup_versions of exact hashed target pins"
+  },
+  "distribution_diagnostic_only": true,
   "exact_failed_package_known": false,
   "failure_cause_confirmed": false,
-  "linux_fork_contracts_executed_locally": false,
-  "linux_fork_contracts_prepared": 7,
-  "official_index_revision_only": true,
+  "local_Linux_fork_contracts_run": false,
   "pilot_target": "current-amd64",
   "prepared_only": true,
   "previous_actual_Linux_fork_contracts_passed": {
     "cases": 7,
-    "run": 39505904554,
+    "run": 39507545357,
     "skipped": 0,
-    "wrapper_unchanged": true
+    "wrapper_and_tests_unchanged": true
   },
+  "previous_failure_code": "guest_cached_distribution_origin_refused",
   "runtime_executed": false,
+  "schema": 1,
+  "strict_acceptance_predicate_unchanged": true,
   "targets": {
     "current-amd64": {
       "filename": "pins-current-amd64.json",
       "pilot": true,
-      "sha256": "92edd4b6431b653b2a145eef68b700dde9f320ee175ff6e9ddbcfe9d023646a9"
+      "sha256": "3557954379655dc526d3da9c6c4edaa7933470a24bb992db23c9b2d856fb9153"
     },
     "current-arm64": {
       "filename": "pins-current-arm64.json",
       "pilot": false,
-      "sha256": "0c908eff7d1dbf8cd09097f7e6125a0b08357409984cca3338f0380d2db97f2a"
+      "sha256": "b413043e9fb077529d9c064f802f8af5982315d797f7dfb4ec4c776487af889c"
     },
     "minimum-amd64": {
       "filename": "pins-minimum-amd64.json",
       "pilot": false,
-      "sha256": "48972c436ca42f36d3846f9224c7e596bd812a4d63b2810fcde4ae485edbe2a0"
+      "sha256": "7d193f11bea52862a6e3bfde4ade507e8c773aba3a2f4028855c4ebeed3d54aa"
     },
     "minimum-arm64": {
       "filename": "pins-minimum-arm64.json",
       "pilot": false,
-      "sha256": "8f6af677f540f869bd5ef143f0ddf93feb8b25a08a7c734c61336f499338a62d"
+      "sha256": "695cb6a2f6952fef0c7abd873cba0beebba3156ebf9edac748003faff99706e0"
     }
   }
 }
