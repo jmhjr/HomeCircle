@@ -3,7 +3,11 @@
 import asyncio
 import ast
 import json
+import os
 from pathlib import Path
+import signal
+import subprocess
+import sys
 import tempfile
 from types import MappingProxyType, SimpleNamespace
 import unittest
@@ -293,6 +297,13 @@ class Contracts(unittest.TestCase):
         consumer = source.split("consumer_id=$(call create", 1)[1].split("\n", 1)[0]
         self.assertNotIn("--entrypoint", consumer)
         self.assertTrue(consumer.endswith('"$image_id")'))
+        self.assertNotIn("--init", consumer)
+        preparer = next(
+            line
+            for line in source.splitlines()
+            if line.startswith("prep_id=$(call create")
+        )
+        self.assertIn("--init --entrypoint /bin/sh", preparer)
         for required in (
             "--network none",
             '"type=volume,source=$volume,target=/config"',
@@ -340,6 +351,141 @@ class AsyncContracts(unittest.IsolatedAsyncioTestCase):
     async def test_guest_wait_has_fixed_deadline(self):
         with self.assertRaisesRegex(RuntimeError, "^guest_condition_deadline$"):
             await guest.wait(lambda: False, limit=0)
+
+
+@unittest.skipUnless(sys.platform == "linux", "actual Linux subreaper/pidfd probe")
+class LinuxOwnedChildContracts(unittest.TestCase):
+    def probe(self, command, *, command_seconds=1, drain_seconds=0.2, owned_note=None):
+        code = (
+            "import importlib.util,json,sys; "
+            "s=importlib.util.spec_from_file_location('owned_cache_child',sys.argv[1]); "
+            "m=importlib.util.module_from_spec(s);s.loader.exec_module(m); "
+            "v=m.run(json.loads(sys.argv[2]),command_seconds=float(sys.argv[3]),"
+            "drain_seconds=float(sys.argv[4]),cleanup_seconds=0.5); "
+            "print(json.dumps(v,sort_keys=True))"
+        )
+        process = subprocess.Popen(
+            [
+                sys.executable,
+                "-I",
+                "-B",
+                "-c",
+                code,
+                str(HERE / "cache_child.py"),
+                json.dumps(command),
+                str(command_seconds),
+                str(drain_seconds),
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            start_new_session=True,
+        )
+        undrained_escaped = False
+        try:
+            output, error = process.communicate(timeout=5)
+        finally:
+            if process.poll() is None:
+                os.killpg(process.pid, signal.SIGKILL)
+                process.communicate(timeout=2)
+            if owned_note is not None and owned_note.exists():
+                identity = json.loads(owned_note.read_text())
+                descriptor = None
+                try:
+                    descriptor = os.pidfd_open(identity["pid"])
+                    fields = (
+                        Path(f"/proc/{identity['pid']}/stat")
+                        .read_text()
+                        .rsplit(")", 1)[1]
+                        .split()
+                    )
+                    if int(fields[19]) == identity["start_ticks"]:
+                        undrained_escaped = True
+                        signal.pidfd_send_signal(descriptor, signal.SIGKILL)
+                except (ProcessLookupError, FileNotFoundError):
+                    pass
+                finally:
+                    if descriptor is not None:
+                        os.close(descriptor)
+            try:
+                os.killpg(process.pid, 0)
+            except ProcessLookupError:
+                pass
+            else:
+                os.killpg(process.pid, signal.SIGKILL)
+                self.fail("owned synthetic process group was not drained")
+            self.assertFalse(
+                undrained_escaped, "owned escaped synthetic child was not drained"
+            )
+        self.assertEqual(process.returncode, 0, "synthetic wrapper process failed")
+        self.assertEqual(error, b"")
+        value = json.loads(output)
+        self.assertEqual(value["stage"], "cache_install")
+        self.assertTrue(value["subreaper_verified"])
+        self.assertTrue(value["owned_descendants_drained"])
+        return value
+
+    def test_linux_primary_success_has_no_remaining_children(self):
+        value = self.probe([sys.executable, "-c", "pass"])
+        self.assertEqual(value["outcome"], "passed")
+        self.assertEqual(value["primary_exit_code"], 0)
+        self.assertEqual(value["adopted_children_reaped"], 0)
+
+    def test_linux_exited_orphan_is_adopted_and_reaped_before_success(self):
+        value = self.probe([sys.executable, "-c", "import os; os.fork(); os._exit(0)"])
+        self.assertEqual(value["outcome"], "passed")
+        self.assertGreaterEqual(value["adopted_children_reaped"], 1)
+
+    def test_linux_transient_live_orphan_drains_before_success(self):
+        code = "import os,time; child=os.fork(); time.sleep(0.05) if child==0 else None; os._exit(0)"
+        value = self.probe([sys.executable, "-c", code])
+        self.assertEqual(value["outcome"], "passed")
+        self.assertGreaterEqual(value["adopted_children_reaped"], 1)
+
+    def test_linux_escaped_persistent_owned_child_is_reaped_and_still_fails(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            note = Path(temporary) / "owned-child.json"
+            code = (
+                "import json,os,pathlib,signal,sys,time\n"
+                "child=os.fork()\n"
+                "if child==0:\n"
+                " os.setsid()\n"
+                " signal.signal(signal.SIGTERM,signal.SIG_IGN)\n"
+                " fields=pathlib.Path('/proc/self/stat').read_text().rsplit(')',1)[1].split()\n"
+                " note=pathlib.Path(sys.argv[1]); temporary=note.with_suffix('.tmp')\n"
+                " temporary.write_text(json.dumps({'pid':os.getpid(),'start_ticks':int(fields[19])})); os.replace(temporary,note)\n"
+                " time.sleep(30)\n"
+                "else:\n"
+                " while not pathlib.Path(sys.argv[1]).exists(): time.sleep(0.01)\n"
+                "os._exit(0)\n"
+            )
+            value = self.probe(
+                [sys.executable, "-c", code, str(note)],
+                drain_seconds=0.05,
+                owned_note=note,
+            )
+        self.assertEqual(value["outcome"], "failed")
+        self.assertTrue(value["descendant_deadline_exceeded"])
+        self.assertGreaterEqual(value["adopted_children_reaped"], 1)
+
+    def test_linux_primary_failure_remains_failed(self):
+        value = self.probe([sys.executable, "-c", "raise SystemExit(7)"])
+        self.assertEqual(value["outcome"], "failed")
+        self.assertEqual(value["primary_exit_code"], 7)
+
+    def test_linux_primary_deadline_drains_owned_child_and_remains_failed(self):
+        code = "import signal,time; signal.signal(signal.SIGTERM,signal.SIG_IGN); time.sleep(30)"
+        value = self.probe([sys.executable, "-c", code], command_seconds=0.05)
+        self.assertEqual(value["outcome"], "failed")
+        self.assertTrue(value["primary_timed_out"])
+
+    def test_linux_child_argv_is_preserved_exactly(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            target = Path(temporary) / "argv.json"
+            code = "import json,pathlib,sys; pathlib.Path(sys.argv[1]).write_text(json.dumps(sys.argv[2:]))"
+            arguments = ["two words", "--literal", "synthetic/only"]
+            value = self.probe([sys.executable, "-c", code, str(target), *arguments])
+            self.assertEqual(value["outcome"], "passed")
+            self.assertEqual(json.loads(target.read_text()), arguments)
 
 
 if __name__ == "__main__":

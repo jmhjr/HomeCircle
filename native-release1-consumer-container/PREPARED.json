@@ -1,16 +1,19 @@
 {
-  "baseline_control_commit": "5869404df86af21d39da079b2f7e71ecf3311a0c",
-  "baseline_failed_run": 39502196796,
+  "baseline_control_commit": "c24bf18696c1fb8e651874f668347b50fb3607f4",
+  "baseline_failed_run": 39503727211,
+  "child_reaping_revision_only": true,
   "ci_launched": false,
   "controls": {
-    "common.py": "1e405703a89389879e879d8bb6fc12178b8ffe4bf6ef654207182ee1a4b04aa5",
-    "driver.py": "54a6b0f8dd89779a33c169c9d5ae42b9557dffde1bd4e74825975cdd3209a40f",
+    "cache_child.py": "73b5eee7f142dbe63374fce280ccadafb65064145b4a6105861070c3be1fa9b8",
+    "common.py": "9be103213dc3bbbfdb1e821514f7955faf90e7d4985088a19debc09a51dcef97",
+    "driver.py": "f747b29e6375c2bf84c465ae721432b3123cbe5146d04e14c4bc853f581bccbe",
     "guest.py": "92c70abfcc69c712065bc4a034c783ff5029ba7fc132f9d5025a067c279173d4",
     "process_probe.py": "fda1c83041a61d720e9c7c9d9fde2a652eaeb43a5a77efcaf17a97c62e0905b3",
-    "run_host.sh": "677b39f6c554808951149c16e28863bee2b8409f8e4824cabd20f21d4592aa59"
+    "run_host.sh": "8cafffa854415234c3401c4ac9d2e8221f1c9b5a5531890b511d6272e87de73f"
   },
-  "diagnostic_revision_only": true,
-  "failure_cause_confirmed": false,
+  "failure_cause_confirmed": "owned_child_descendants_not_reaped guard at cache_install; process liveness and cache success unobserved",
+  "linux_fork_contracts_executed_locally": false,
+  "linux_fork_contracts_prepared": 7,
   "pilot_target": "current-amd64",
   "prepared_only": true,
   "runtime_executed": false,
@@ -18,22 +21,22 @@
     "current-amd64": {
       "filename": "pins-current-amd64.json",
       "pilot": true,
-      "sha256": "5a60f31354c4c45b64608a9e15b2306c65626dd55bd9d2ccf4243cb44f46deff"
+      "sha256": "e4d438155defbde2e8cc82d5c7c71353f350550ae8c7ae850a53d9571375e1d6"
     },
     "current-arm64": {
       "filename": "pins-current-arm64.json",
       "pilot": false,
-      "sha256": "46b0eb6d8e4ee6bc4ae6c8b696621e8843d00b0a24f9136d6439f63a9735c889"
+      "sha256": "777c8a8404d06274c1f4894f9c0773b7eb12e899439562a15422cc701952ffe7"
     },
     "minimum-amd64": {
       "filename": "pins-minimum-amd64.json",
       "pilot": false,
-      "sha256": "6825cf633b7733a9e70a06c0aa483304f8e088d5b003e65cae98f8809e75bc70"
+      "sha256": "2ee7c2c0009e64a07926ba12882649fa1fd8b892043af63a05376630cedf96b1"
     },
     "minimum-arm64": {
       "filename": "pins-minimum-arm64.json",
       "pilot": false,
-      "sha256": "77b461879071d7f40a7b83fe52cae20b7eb816cb1e6a312d290000bfcc11f981"
+      "sha256": "d4c0442eeb3309d91e57cfb7b7df3fdb310afbb237950df8abf0626007ce9e9f"
     }
   }
 }

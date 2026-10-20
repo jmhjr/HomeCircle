@@ -168,10 +168,49 @@ def setup(c, values, args):
     args.setup_stage = "cache_install"
     c.check(
         support.run_owned(
-            command, cwd=config, log=control / "cache-install-private.log", limit=660
+            [
+                sys.executable,
+                "-I",
+                "-B",
+                str(HERE / "cache_child.py"),
+                "--receipt",
+                str(control / "cache-child-summary.json"),
+                "--",
+                *command,
+            ],
+            cwd=config,
+            log=control / "cache-install-private.log",
+            limit=660,
         )
         == 0,
         "cache_preparation_refused",
+    )
+    child = json.loads(c.read(control / "cache-child-summary.json", limit=4096))
+    c.check(
+        set(child)
+        == {
+            "schema",
+            "stage",
+            "outcome",
+            "subreaper_verified",
+            "primary_exit_code",
+            "primary_timed_out",
+            "adopted_children_reaped",
+            "descendant_deadline_exceeded",
+            "owned_descendants_drained",
+        }
+        and child["schema"] == 1
+        and child["stage"] == "cache_install"
+        and child["outcome"] == "passed"
+        and type(child["primary_exit_code"]) is int
+        and child["primary_exit_code"] == 0
+        and child["subreaper_verified"] is True
+        and child["primary_timed_out"] is False
+        and type(child["adopted_children_reaped"]) is int
+        and 0 <= child["adopted_children_reaped"] <= 100000
+        and child["descendant_deadline_exceeded"] is False
+        and child["owned_descendants_drained"] is True,
+        "cache_child_reaping_refused",
     )
     args.setup_stage = "cache_versions"
     actual = {
@@ -206,6 +245,7 @@ def setup(c, values, args):
             "config_cache_path_verified": True,
             "startup_sources_and_scripts_verified": True,
             "preparer_finite_default_capabilities_verified": True,
+            "cache_child_reaping_verified": True,
         },
     )
 

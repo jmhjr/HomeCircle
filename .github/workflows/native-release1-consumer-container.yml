@@ -38,10 +38,11 @@ jobs:
           import subprocess
           root = Path("native-release1-consumer-container")
           expected = {
-              "PREPARED.json": "36c939f493302020d3d3cb236d855336533df8bd22f0fe3f6689c0cc33270308",
-              "README.md": "e87491f53e646716dfdaff75bbad8fcb05a82ce6fed5019789f4e2bf7f68e587",
-              "common.py": "1e405703a89389879e879d8bb6fc12178b8ffe4bf6ef654207182ee1a4b04aa5",
-              "driver.py": "54a6b0f8dd89779a33c169c9d5ae42b9557dffde1bd4e74825975cdd3209a40f",
+              "PREPARED.json": "a346798d50d8fe69dccc934969c665cbf7c9ca2fe9528dc196484fc8019cf825",
+              "README.md": "b58a7e73eb96316fddd13a3ba21499a370dea78641acb3d9b7d005416570aaa1",
+              "cache_child.py": "73b5eee7f142dbe63374fce280ccadafb65064145b4a6105861070c3be1fa9b8",
+              "common.py": "9be103213dc3bbbfdb1e821514f7955faf90e7d4985088a19debc09a51dcef97",
+              "driver.py": "f747b29e6375c2bf84c465ae721432b3123cbe5146d04e14c4bc853f581bccbe",
               "guest.py": "92c70abfcc69c712065bc4a034c783ff5029ba7fc132f9d5025a067c279173d4",
               "package_support.py": "e97e3f71fc9f7ceb9391f86e0178c59c3b88a2fafe5f397e25a9fb69fe568e59",
               "payload/homecircle.zip": "c4530d94be3b2996f8d6c8948db88a51868566047d68558eefde7967f270a861",
@@ -49,13 +50,13 @@ jobs:
               "payload/source-config.json": "bce0379d11d76c53954380c3893a2cf581d539519168492f4235ffee9ba3be0d",
               "payload/source-inventory.json": "e1e999d3324a896dc84323afe24c1c1c60e694fc61a37e885d4bbdbef964d351",
               "payload/source.tgz": "a44c7d404a53eb93386715a376d826dc9be447d0cf59639cd19bf2d7b21ed72e",
-              "pins-current-amd64.json": "5a60f31354c4c45b64608a9e15b2306c65626dd55bd9d2ccf4243cb44f46deff",
-              "pins-current-arm64.json": "46b0eb6d8e4ee6bc4ae6c8b696621e8843d00b0a24f9136d6439f63a9735c889",
-              "pins-minimum-amd64.json": "6825cf633b7733a9e70a06c0aa483304f8e088d5b003e65cae98f8809e75bc70",
-              "pins-minimum-arm64.json": "77b461879071d7f40a7b83fe52cae20b7eb816cb1e6a312d290000bfcc11f981",
+              "pins-current-amd64.json": "e4d438155defbde2e8cc82d5c7c71353f350550ae8c7ae850a53d9571375e1d6",
+              "pins-current-arm64.json": "777c8a8404d06274c1f4894f9c0773b7eb12e899439562a15422cc701952ffe7",
+              "pins-minimum-amd64.json": "2ee7c2c0009e64a07926ba12882649fa1fd8b892043af63a05376630cedf96b1",
+              "pins-minimum-arm64.json": "d4c0442eeb3309d91e57cfb7b7df3fdb310afbb237950df8abf0626007ce9e9f",
               "process_probe.py": "fda1c83041a61d720e9c7c9d9fde2a652eaeb43a5a77efcaf17a97c62e0905b3",
-              "run_host.sh": "677b39f6c554808951149c16e28863bee2b8409f8e4824cabd20f21d4592aa59",
-              "test_controls.py": "173db566d428cad35919159a6897cde105d2b0285d7e3f2d818b76e7f9f49b1c"
+              "run_host.sh": "8cafffa854415234c3401c4ac9d2e8221f1c9b5a5531890b511d6272e87de73f",
+              "test_controls.py": "a573ac7c2e87bdb7fe75cbde456443080d35f3e5fba85ee0abd3c184c2e2bac0"
           }
           tracked = subprocess.check_output(["git", "ls-files", "-z", "--", str(root)]).decode().split("\0")
           assert {name for name in tracked if name} == {str(root / name) for name in expected}, "fixture_tracked_members_refused"
@@ -63,12 +64,12 @@ jobs:
           nodes = list(root.rglob("*"))
           assert all(not path.is_symlink() and (path.is_file() or path.is_dir()) for path in nodes), "fixture_file_type_refused"
           actual = {path.relative_to(root).as_posix() for path in nodes if path.is_file()}
-          assert actual == set(expected) and len(actual) == 18, "fixture_members_refused"
+          assert actual == set(expected) and len(actual) == 19, "fixture_members_refused"
           for name, digest in expected.items():
               assert hashlib.sha256((root / name).read_bytes()).hexdigest() == digest, "fixture_bytes_refused"
-          print("Verified 18 frozen fixture files; one current-amd64 pilot target.")
+          print("Verified 19 frozen fixture files; one current-amd64 pilot target.")
           PY
-      - name: Check seventeen standalone contracts
+      - name: Check twenty-four standalone and Linux process contracts
         timeout-minutes: 3
         shell: bash
         run: |
@@ -76,9 +77,11 @@ jobs:
           PYTHONDONTWRITEBYTECODE=1 python3 -B - <<'PY'
           import unittest
           suite = unittest.defaultTestLoader.discover('native-release1-consumer-container', pattern='test_controls.py')
-          if suite.countTestCases() != 17:
+          if suite.countTestCases() != 24:
               raise SystemExit('reviewed_contract_count_refused')
           result = unittest.TextTestRunner(verbosity=2).run(suite)
+          if result.skipped:
+              raise SystemExit('linux_process_probe_skip_refused')
           raise SystemExit(0 if result.wasSuccessful() else 1)
           PY
       - name: Witness original startup, stop and restart on native amd64
@@ -88,13 +91,13 @@ jobs:
           timeout --signal=TERM --kill-after=150s 2300s bash native-release1-consumer-container/run_host.sh \
             --payload native-release1-consumer-container/payload \
             --pins native-release1-consumer-container/pins-current-amd64.json \
-            --pins-sha 5a60f31354c4c45b64608a9e15b2306c65626dd55bd9d2ccf4243cb44f46deff \
+            --pins-sha e4d438155defbde2e8cc82d5c7c71353f350550ae8c7ae850a53d9571375e1d6 \
             --source-repository "$GITHUB_WORKSPACE" \
             --output native-release1-consumer-container-results
           receipts=native-release1-consumer-container-results/public-summary
           jq -e '.schema==1 and .outcome=="passed" and .target=="current-amd64" and
             .stage=="complete" and .exit_code==0 and
-            .pins_sha256=="5a60f31354c4c45b64608a9e15b2306c65626dd55bd9d2ccf4243cb44f46deff" and
+            .pins_sha256=="e4d438155defbde2e8cc82d5c7c71353f350550ae8c7ae850a53d9571375e1d6" and
             .cleanup_failed==false and .owned_containers_stopped==true and
             .owned_containers_removed==true and .owned_volume_removed==true and
             .private_workspace_removed==true and .both_containers_offline_during_acceptance==true and
@@ -126,10 +129,14 @@ jobs:
           jq -e '.outcome=="passed" and .canonical_public_source_files==337 and .package_files_verified==113 and
             .dependency_packages_pinned==24 and .startup_requirements_pinned==21 and
             .config_cache_path_verified==true and .startup_sources_and_scripts_verified==true and
-            .preparer_finite_default_capabilities_verified==true' "$receipts/setup-summary.json" >/dev/null
+            .preparer_finite_default_capabilities_verified==true and .cache_child_reaping_verified==true' "$receipts/setup-summary.json" >/dev/null
+          jq -e '.schema==1 and .stage=="cache_install" and .outcome=="passed" and
+            .subreaper_verified==true and .primary_exit_code==0 and .primary_timed_out==false and
+            (.adopted_children_reaped|type)=="number" and .adopted_children_reaped>=0 and
+            .descendant_deadline_exceeded==false and .owned_descendants_drained==true' "$receipts/cache-child-summary.json" >/dev/null
           test ! -e "$receipts/failure-summary.json" && test ! -e "$receipts/guest-failure.json"
           actual=$(find "$receipts" -mindepth 1 -maxdepth 1 -type f -printf '%f\n' | LC_ALL=C sort)
-          expected=$(printf '%s\n' first-process.json first-receipt.json host.json restart-process.json restart-receipt.json setup-summary.json source-summary.json)
+          expected=$(printf '%s\n' cache-child-summary.json first-process.json first-receipt.json host.json restart-process.json restart-receipt.json setup-summary.json source-summary.json)
           test "$actual" = "$expected"
       - name: Retain only fixed narrow JSON receipts
         timeout-minutes: 3
@@ -138,6 +145,7 @@ jobs:
         with:
           name: release1-consumer-container-current-amd64-pilot
           path: |
+            native-release1-consumer-container-results/public-summary/cache-child-summary.json
             native-release1-consumer-container-results/public-summary/source-summary.json
             native-release1-consumer-container-results/public-summary/setup-summary.json
             native-release1-consumer-container-results/public-summary/first-receipt.json

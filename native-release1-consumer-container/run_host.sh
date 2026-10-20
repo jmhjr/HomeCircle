@@ -47,7 +47,7 @@ owned_container() {
 }
 boundary() {
   local id=$1 mode=$2
-  call inspect "$id" | jq -e --arg image "$image_id" --arg mode "$mode" --argjson offline "$offline" '.[0].Image==$image and .[0].HostConfig.Privileged==false and .[0].HostConfig.PidMode=="" and .[0].HostConfig.IpcMode=="private" and (.[0].HostConfig.Devices|length)==0 and (.[0].HostConfig.PortBindings|length)==0 and (.[0].HostConfig.CapAdd|length)==0 and (.[0].HostConfig.CapDrop|length)==0 and .[0].HostConfig.RestartPolicy.Name=="no" and .[0].HostConfig.NetworkMode==$mode and ((.[0].NetworkSettings.Networks|keys) as $networks | if $mode=="none" then ($networks|all(.=="none")) elif $offline then ($networks|length)==0 else true end)' >/dev/null
+  call inspect "$id" | jq -e --arg image "$image_id" --arg mode "$mode" --argjson offline "$offline" '.[0].Image==$image and .[0].HostConfig.Privileged==false and .[0].HostConfig.PidMode=="" and .[0].HostConfig.IpcMode=="private" and (if $mode=="bridge" then .[0].HostConfig.Init==true else .[0].HostConfig.Init!=true end) and (.[0].HostConfig.Devices|length)==0 and (.[0].HostConfig.PortBindings|length)==0 and (.[0].HostConfig.CapAdd|length)==0 and (.[0].HostConfig.CapDrop|length)==0 and .[0].HostConfig.RestartPolicy.Name=="no" and .[0].HostConfig.NetworkMode==$mode and ((.[0].NetworkSettings.Networks|keys) as $networks | if $mode=="none" then ($networks|all(.=="none")) elif $offline then ($networks|length)==0 else true end)' >/dev/null
 }
 finish() {
   local status=$? id name data attempted stopped=true removed=true volume_removed=false identities=true
@@ -55,6 +55,7 @@ finish() {
   if [[ -n $prep_id ]] && owned_container "$prep_name" "$prep_id" && owned_volume; then
     for name in failure-summary.json; do clean_call cp "$prep_id:/qa/$name" "$public/$name" >"$workspace/failure-collect-private.log" 2>&1; done
     clean_call cp "$prep_id:/config/.homecircle-consumer-qa/guest-failure.json" "$public/guest-failure.json" >"$workspace/failure-collect-private.log" 2>&1
+    clean_call cp "$prep_id:/config/.homecircle-consumer-qa/cache-child-summary.json" "$public/cache-child-summary.json" >"$workspace/failure-collect-private.log" 2>&1
   fi
   for name in "$consumer_name" "$prep_name"; do
     if [[ $name == "$consumer_name" ]]; then id=$consumer_id; attempted=$consumer_attempted; else id=$prep_id; attempted=$prep_attempted; fi
@@ -112,11 +113,11 @@ volume_attempted=true
 call volume create --driver local --label "$label=$token" "$volume" >"$workspace/volume-private.log"; volume_created=true; owned_volume
 stage=preparer
 prep_attempted=true
-prep_id=$(call create --name "$prep_name" --label "$label=$token" --platform "linux/$arch" --network bridge --mount "type=volume,source=$volume,target=/config" --cpus 2 --memory 4g --pids-limit 512 --security-opt no-new-privileges --entrypoint /bin/sh "$image_id" -c 'exec sleep 2600')
+prep_id=$(call create --name "$prep_name" --label "$label=$token" --platform "linux/$arch" --network bridge --mount "type=volume,source=$volume,target=/config" --cpus 2 --memory 4g --pids-limit 512 --security-opt no-new-privileges --init --entrypoint /bin/sh "$image_id" -c 'exec sleep 2600')
 owned_container "$prep_name" "$prep_id"; boundary "$prep_id" bridge
 call start "$prep_id" >"$workspace/start-private.log"
 call exec "$prep_id" mkdir -m 700 /qa /qa/input
-for name in common.py driver.py guest.py process_probe.py run_host.sh package_support.py; do call cp "$here/$name" "$prep_id:/qa/$name" >"$workspace/stage-private.log" 2>&1; done
+for name in common.py cache_child.py driver.py guest.py process_probe.py run_host.sh package_support.py; do call cp "$here/$name" "$prep_id:/qa/$name" >"$workspace/stage-private.log" 2>&1; done
 [[ -z $(find "$payload" -mindepth 1 ! -type f -print -quit) ]] || exit 2
 find "$payload" -type f -printf '%P\n' | LC_ALL=C sort >"$workspace/members"
 printf '%s\n' homecircle.zip inventory.json source-config.json source-inventory.json source.tgz >"$workspace/expected"
@@ -155,5 +156,6 @@ for phase in first restart; do
 done
 final_stop=true
 call cp "$prep_id:/config/.homecircle-consumer-qa/setup-summary.json" "$public/setup-summary.json" >"$workspace/collect-private.log" 2>&1
+call cp "$prep_id:/config/.homecircle-consumer-qa/cache-child-summary.json" "$public/cache-child-summary.json" >"$workspace/collect-private.log" 2>&1
 jq -e -s '.[0].outcome=="passed" and .[1].outcome=="passed" and .[0].identity==.[1].identity and .[1].unload_setup_checked==true and .[0].package_sha256=="c4530d94be3b2996f8d6c8948db88a51868566047d68558eefde7967f270a861" and .[0].exact_loaded_and_installed_files==113 and .[1].exact_loaded_and_installed_files==113' "$public/first-receipt.json" "$public/restart-receipt.json" >/dev/null
 complete=true; stage=complete

@@ -133,7 +133,7 @@ def pins(path, expected):
         ("startup_sources", 5),
         ("startup_scripts", 3),
         ("native_s6", 3),
-        ("controls", 5),
+        ("controls", 6),
     ):
         check(
             isinstance(value[key], dict) and len(value[key]) == count,
@@ -172,6 +172,7 @@ def controls(folder, value):
             name
             in {
                 "common.py",
+                "cache_child.py",
                 "driver.py",
                 "guest.py",
                 "process_probe.py",
