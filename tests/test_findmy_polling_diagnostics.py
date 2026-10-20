@@ -122,7 +122,7 @@ async def test_failure_or_cancellation_does_not_reuse_previous_success(failure, 
     assert "canary" not in repr(value.poll_diagnostics()) + caplog.text
 
 
-async def test_partial_fetch_failure_keeps_partial_counts_but_no_committed_item_success():
+async def test_partial_fetch_failure_retains_committed_item_success():
     value = make_client(count=201)
     calls = 0
 
@@ -134,13 +134,15 @@ async def test_partial_fetch_failure_keeps_partial_counts_but_no_committed_item_
         return {keys[0]: report(datetime.now(UTC) - timedelta(minutes=1))}
 
     value.account.fetch_location.side_effect = fetch
-    with pytest.raises(RuntimeError):
-        await value.poll()
+    result = await value.poll()
     assert value.poll_diagnostics() == observation(
-        status="failed", fetch_calls=2, decoded_reports=1,
-        items_retaining_previous_report=0,
+        status="partial", fetch_calls=2, decoded_reports=1,
+        items_retaining_previous_report=0, items_with_returned_valid_reports=1,
+        items_with_advanced_reports=1,
     )
-    assert value.clients["private-item-canary"].report is None
+    assert result["private-item-canary"] == value.clients["private-item-canary"].report
+    assert value.clients["private-item-canary"].report is not None
+    assert value.failed_items == {"private-item-canary"}
 
 
 async def test_existing_lock_serializes_observations_and_active_cancel_is_terminal():
@@ -204,7 +206,7 @@ async def test_provider_aggregate_has_no_account_item_location_time_or_error_val
     result = provider.polling_snapshot()
     assert result == {
         "schema": 1, "accounts": 5, "accounts_without_observation": 2,
-        "status_counts": {"not_polled": 1, "in_progress": 0, "success": 1, "failed": 1, "cancelled": 0},
+        "status_counts": {"not_polled": 1, "in_progress": 0, "success": 1, "partial": 0, "failed": 1, "cancelled": 0},
         "fetch_calls": 2, "decoded_reports": 0, "selected_items": 3,
         "items_with_returned_valid_reports": 0, "items_with_advanced_reports": 0,
         "items_retaining_previous_report": 1, "items_without_report": 0,

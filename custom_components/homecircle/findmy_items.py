@@ -6,7 +6,9 @@ from .const import (
     CONF_FINDMY_ACCOUNTS,
     CONF_ITEMS,
     CONF_MEMBERS,
+    CONF_PEOPLE,
     CONF_TRACKER_PEOPLE,
+    CONF_TRACKERS,
     CONF_PETS,
 )
 from .findmy_provider import tracker_unique_id
@@ -16,6 +18,12 @@ def item_config(hass, config):
     result = deepcopy(dict(config))
     registry = er.async_get(hass)
     saved_members = deepcopy(result.get(CONF_MEMBERS, {}))
+    person_trackers = {
+        tracker
+        for person_id in result.get(CONF_PEOPLE, [])
+        if person_id.startswith("person.")
+        for tracker in saved_members.get(person_id, {}).get(CONF_TRACKERS, [])
+    }
     existing = []
     for entity_id in result.get(CONF_ITEMS, []):
         entity = registry.async_get(entity_id)
@@ -45,10 +53,18 @@ def item_config(hass, config):
                     entity_id, {}
                 )
                 continue
+            if entity_id in person_trackers:
+                # Store inactive display settings outside members so final
+                # selection validation sees only the Person's assignment.
+                previous = saved_members.get(entity_id, item.get("display_preferences", {}))
+                if previous.get("kind") == "item":
+                    item["display_preferences"] = deepcopy(previous)
+                result.get(CONF_MEMBERS, {}).pop(entity_id, None)
+                continue
             if entity_id not in existing:
                 existing.append(entity_id)
             members = result.setdefault(CONF_MEMBERS, {})
-            previous = saved_members.get(entity_id, {})
+            previous = saved_members.get(entity_id, item.get("display_preferences", {}))
             members[entity_id] = {
                 "trackers": [entity_id],
                 "additional_residences": [],

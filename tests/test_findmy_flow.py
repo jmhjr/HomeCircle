@@ -10,6 +10,19 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 from custom_components.homecircle.findmy_setup import FindMySetup, FindMySetupError
 
 
+async def finish_background_progress(manager, result):
+    """Durable recovery work may span several real progress notifications."""
+    import asyncio
+
+    async with asyncio.timeout(5):
+        while result["type"] in (
+            FlowResultType.SHOW_PROGRESS, FlowResultType.SHOW_PROGRESS_DONE
+        ):
+            await asyncio.sleep(.005)
+            result = await manager.async_configure(result["flow_id"])
+    return result
+
+
 def fake_setup():
     account = SimpleNamespace(
         login=AsyncMock(return_value=3),
@@ -169,20 +182,27 @@ async def test_native_progress_device_selection_and_explicit_selected_store(hass
         result = await manager.async_configure(
             result["flow_id"], {"label": "Example account", "consent": True}
         )
+        from custom_components.homecircle.findmy_recovery_guard import get_recovery_guard
+        assert fake.recovery_guard is get_recovery_guard(hass)
+        assert fake.recovery_guard_required
         result = await manager.async_configure(
             result["flow_id"],
             {"username": "example@example.invalid", "password": "example-secret"},
         )
         assert result["type"] == FlowResultType.SHOW_PROGRESS
         await hass.async_block_till_done()
-        result = await manager.async_configure(result["flow_id"])
+        result = await finish_background_progress(
+            manager, await manager.async_configure(result["flow_id"])
+        )
         assert result["step_id"] == "findmy_device"
         result = await manager.async_configure(result["flow_id"], {"device": "0"})
         result = await manager.async_configure(
             result["flow_id"], {"passcode": "synthetic-passcode"}
         )
         await hass.async_block_till_done()
-        result = await manager.async_configure(result["flow_id"])
+        result = await finish_background_progress(
+            manager, await manager.async_configure(result["flow_id"])
+        )
         assert result["step_id"] == "findmy_select"
         result = await manager.async_configure(result["flow_id"], {"items": []})
         assert result["errors"]["base"] == "findmy_select_items"
@@ -246,13 +266,17 @@ async def test_findmy_in_household_flow_continues_member_setup_and_abort_leaves_
             {"username": "example@example.invalid", "password": "example-secret"},
         )
         await hass.async_block_till_done()
-        result = await manager.async_configure(result["flow_id"])
+        result = await finish_background_progress(
+            manager, await manager.async_configure(result["flow_id"])
+        )
         result = await manager.async_configure(result["flow_id"], {"device": "0"})
         result = await manager.async_configure(
             result["flow_id"], {"passcode": "synthetic-passcode"}
         )
         await hass.async_block_till_done()
-        result = await manager.async_configure(result["flow_id"])
+        result = await finish_background_progress(
+            manager, await manager.async_configure(result["flow_id"])
+        )
         result = await manager.async_configure(
             result["flow_id"], {"items": [fake.item_choices()[0]["value"]]}
         )
@@ -284,11 +308,9 @@ async def test_reconnect_changes_session_revision_for_framework_reload(hass):
     provider = SimpleNamespace(
         pause_account=AsyncMock(return_value=paused), resume_account=lambda *_: None
     )
-    entry = SimpleNamespace(
-        entry_id="example-entry",
-        options=deepcopy(initial),
-        runtime_data=SimpleNamespace(managed_trackers={"findmy": provider}),
-    )
+    entry = MockConfigEntry(domain="homecircle", data=deepcopy(initial), options=deepcopy(initial))
+    entry.add_to_hass(hass)
+    entry.runtime_data = SimpleNamespace(managed_trackers={"findmy": provider})
     fake = SimpleNamespace(
         accessories={identifier: SimpleNamespace(name="Example item")},
         close=AsyncMock(),
@@ -299,7 +321,7 @@ async def test_reconnect_changes_session_revision_for_framework_reload(hass):
     )
 
     class Flow(FindMyFlow):
-        def save(self):
+        def async_create_entry(self, **kwargs):
             return {"saved": True}
 
     flow = Flow()
@@ -312,16 +334,18 @@ async def test_reconnect_changes_session_revision_for_framework_reload(hass):
     flow.findmy_types = {identifier: "airtag"}
     flow.findmy_account_id = account_id
     flow.findmy_label = "Example account"
+    previous_session, previous_items = fake.selected_payload([identifier])
     with (
         patch("custom_components.homecircle.findmy_flow.Vault.save_account"),
+        patch("custom_components.homecircle.findmy_flow.Vault.load", return_value={"version": 2, "session": previous_session, "items": previous_items}),
         patch.object(hass.config_entries, "async_schedule_reload") as reload,
     ):
         assert await flow.async_step_findmy_confirm({"confirm": True}) == {
             "saved": True
         }
         assert flow.draft["findmy_accounts"][account_id]["session_revision"] == 1
-        assert flow.draft != entry.options
-        reload.assert_not_called()
+        assert flow.draft == entry.options
+        reload.assert_called_once_with(entry.entry_id)
         paused.close.assert_awaited_once()
         fake.close.assert_awaited_once()
 
@@ -360,17 +384,23 @@ async def test_discovery_error_routes_to_retry_without_another_passcode(hass):
         result = await manager.async_configure(result['flow_id'], {'label': 'Example', 'consent': True})
         result = await manager.async_configure(result['flow_id'], {'username': 'example@example.invalid', 'password': 'synthetic'})
         await hass.async_block_till_done()
-        result = await manager.async_configure(result['flow_id'])
+        result = await finish_background_progress(
+            manager, await manager.async_configure(result["flow_id"])
+        )
         result = await manager.async_configure(result['flow_id'], {'device': '0'})
         fake.client.accessories.side_effect = RuntimeError('synthetic-private-response')
         result = await manager.async_configure(result['flow_id'], {'passcode': 'synthetic'})
         await hass.async_block_till_done()
-        result = await manager.async_configure(result['flow_id'])
+        result = await finish_background_progress(
+            manager, await manager.async_configure(result["flow_id"])
+        )
         assert result['step_id'] == 'findmy_discovery'
         fake.client.accessories.side_effect = None
         result = await manager.async_configure(result['flow_id'], {})
         await hass.async_block_till_done()
-        result = await manager.async_configure(result['flow_id'])
+        result = await finish_background_progress(
+            manager, await manager.async_configure(result["flow_id"])
+        )
         assert result['step_id'] == 'findmy_select'
         fake.client.unlock.assert_awaited_once()
         assert fake.unlock_attempts == 1

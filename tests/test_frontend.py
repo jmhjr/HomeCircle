@@ -19,7 +19,7 @@ from custom_components.homecircle.api import (
     snapshot,
 )
 from custom_components.homecircle.tracker_providers import ProviderHealth
-from test_config_flow import start, finish
+from tests.test_config_flow import start, finish
 
 
 async def setup(hass, household):

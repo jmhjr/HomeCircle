@@ -1,0 +1,134 @@
+# Platform, upgrade and recovery validation
+
+October 19–20, 2026. This continues the [independent cryptographic review](INDEPENDENT-CRYPTO-VALIDATION.md) using the same unreleased 112-file candidate, manifest `0.1.0-beta.19`, SHA-256:
+
+`f0477a91e78181fe1f8d80ada176a1739e10a7502abe7ee6ee2240571280d1f5`
+
+No production Home Assistant storage, owner account, release version or tag was changed. At the October 19 local checkpoint no commit or publication was made; October 20's authorized isolated validation-branch publication and native CI result are recorded below. All upgrade and recovery records use newly generated synthetic state. The earlier local Mac anonymous runtime check used a new disposable device identity without signing into an Apple account; no further Mac Python was used for Linux validation.
+
+## Platform evidence
+
+| Scope | Evidence | Limit |
+| --- | --- | --- |
+| macOS arm64, Python 3.14.7, Core 2026.9.4 | Packaged imports and actual Unicorn worker execution; isolated dependency overlay matches this Core's constraints | Local development runtime, not HA OS |
+| macOS arm64, Python 3.14.7, Core 2026.10.2 | Fresh environment with matching pytest plugin, frontend, cryptography 50.0.1, protobuf 7.36.0 and setuptools 84; packaged imports and actual synthetic worker execution | Local development runtime, not Linux |
+| Linux amd64/aarch64, glibc/musl, both Core targets | Eight official-wheel resolutions, 24 wheels each; every wheel digest matched PyPI metadata; native ELF architecture/dependencies inspected | Historical wheel-only checkpoint; the subsequent ARM64 execution phase is recorded separately below |
+| Fresh HAOS 18.3 aarch64, Alpine 3.24.1/musl, Python 3.14.6, Core 2026.10.2 | Separate same-image QA container passed exact-candidate imports, native worker/lifecycle, public anonymous runtime, 1,443 backend tests and synthetic upgrade/recovery checks. Actual managed Core installed manifest dependencies, loaded the candidate and retained its synthetic setup across restart | Fresh ARM64 synthetic scope; amd64/glibc, other Core and production/HACS acceptance remain separate; see [Linux/HAOS validation](LINUX-HAOS-VALIDATION.md) |
+| Parallel official ARM64 Core 2026.9.4 container, Python 3.14.6, Alpine 3.24.1/musl | Exact candidate passed native/lifecycle, 1,443 backend tests, both upgrade baselines and full synthetic recovery/repair | Container qualification; the HAOS-managed Core service remained 2026.10.2 |
+| Fresh HAOS 18.3 x86_64 under QEMU/TCG, Core 2026.10.2 | Actual Linux native/lifecycle, 1,443 backend tests and managed Core dependency installation, real flow, restart retention and synthetic native checks passed | Emulated CPU scope; the separate full AMD64 upgrade/recovery follow-up failed its bounded checks and remains unqualified; see [Linux/HAOS validation](LINUX-HAOS-VALIDATION.md) |
+| Native x86_64 Ubuntu 24.04 CI host, official Alpine/musl Core 2026.10.2 Docker container, Python 3.14.6 | Both exact ten-phase upgrade/rollback baselines and full twenty-process synthetic recovery passed; all 40 recovery probes blocked, input pins matched and owned container stopped/removed | Native AMD64 musl container only; no native HAOS-managed service, glibc Core, backend-suite or separate worker/lifecycle rerun claim |
+| Native x86_64 Ubuntu 24.04 CI host, official Alpine/musl Core 2026.9.4 Docker container, Python 3.14.6 | Full 1,443-test backend suite plus one named optional skip, actual native worker/lifecycle, both ten-phase upgrades/rollbacks and full twenty-process recovery passed; all 40 probes blocked and cleanup passed | Advertised minimum-Core native AMD64 container scope; distinct from managed HAOS, glibc, anonymous/live Apple and production/HACS acceptance |
+| Native x86_64/KVM HAOS 18.3, managed Core 2026.10.2, HACS 2.0.5 | Eight phases passed genuine HACS beta 19 install/rollback, two stopped exact-112-file candidate installs, restart/options/selection/identity persistence and latest-guard continuity | Synthetic managed service; candidate HACS delivery, OAuth and owner/production acceptance remain open. This run excluded Supervisor backups/Recorder; the prepared partial scope is recorded separately below |
+| Native x86_64/KVM HAOS 18.3, managed Core/Supervisor 2026.10.2, prepared disabled-entry partial backup | Actual Supervisor backup/restore including Recorder passed six phases, exact history rollback and new recording/restart, saved selections/identities and manual newest-guard preservation | Prepared synthetic partial scope; enabled-entry/full-system restoration, automatic anti-rollback and production history remain unqualified |
+| Public Apple identity runtime on this Mac | Exact installer/library verification, fresh anonymous provisioning, OTP, encrypted vault round trip, cold restoration with stable identifiers; four workers reaped | No owner sign-in, Keychain recovery or location reports |
+
+The original Core 2026.9.4 development environment had setuptools 84 while that Core requires setuptools 81 and less than 82. This was a test-environment mismatch. An isolated overlay corrects it without changing the shared environment, and `requirements-test.txt` now pins 81 for that target. The final 9.4 upgrade rehearsals use that corrected overlay. The legacy export/namespace reference SDK was also absent from the fresh 10.2 environment; test requirements now explicitly include its pinned `findmy==0.10.2`. This package is a test reference and is not added to the integration manifest. The default test requirements now also explicitly install the integration imports needed during collection, with protobuf 6.32 matching Core 9.4; the separate 10.2 environment uses its own constraints and protobuf 7.36. The clean Core 2026.10.2 environment uses its own matching constraints. No manifest dependency change was needed.
+
+The portable [platform validator](../scripts/platform_validate_candidate.py) binds results to the candidate digest, inspects the active installed dependency closure and Core constraints, and exercises a tiny generated Mach-O through the actual packaged worker, Unicorn, bounded IPC and process cleanup. It also verifies that the production library verifier refuses this synthetic fixture without the deliberate test-only hash substitution. This is distinct from the separately run public Apple-binary acceptance check.
+
+Official Core [2026.10.2 build configuration](https://github.com/home-assistant/core/blob/2026.10.2/.github/workflows/builder.yml) and the tagged [base image Dockerfile](https://github.com/home-assistant/docker/blob/2026.07.0/Dockerfile) establish the relevant amd64/aarch64 and Alpine/musl scope. Wheel metadata and symbol inspection do not establish runtime acceptance. At the earlier wheel-only checkpoint no Linux runner was qualified. A new disposable HAOS ARM64 runner now supplies actual Linux evidence; [Linux/HAOS validation](LINUX-HAOS-VALIDATION.md) records completed QA-container checks separately from the actual HAOS-managed Core candidate load and restart. Existing UTM virtual machines remain unchanged.
+
+## Exact baseline upgrade and rollback
+
+The [upgrade validator](../scripts/validate_candidate_upgrade.py) installs the exact frozen published beta 19 archive (`5f20d536e1b5378bef7f0b972bbfbc7ced911063aea16a0a8f56d2ffa1210cd2`), then the current candidate. It verifies every installed package file, including removal of candidate-only modules on rollback. A second path uses reconstructed, previously recorded installed patch bytes: canonical beta 19 plus the two Ruby-related files whose before/after hashes match the retained deployment manifest. That 109-file reconstruction has SHA-256 `0362a71b0d12e12bbe38c20192f130f505011500e9a1d31a3531547c5055d80a`. It is not a fresh inspection or copy of the current production installation.
+
+Both baselines passed ten fresh Core processes on **each** of Core **2026.9.4**
+and **2026.10.2** (40 final upgrade/rollback processes total), covering upgrade, restart, candidate ledger persistence, package-only rollback, re-upgrade, coherent candidate backup restoration, coherent original backup rollback and final upgrade. The checked state includes selected people/items, options, places, registry identities, encrypted session/accessory contents and encryption key, HomeCircle activity, prior request reservation, uploaded portrait bytes and HTTP delivery, dashboard, resource identity and served card bytes. Only the final report transport is substituted with an empty response; actual account/session restoration, accessory decoding, provider polling, encrypted writes, HA entities and local HTTP remain active. External connections are blocked.
+
+**Confirmed rollback limitation:** published beta 19 rewrites its known vault fields and drops the candidate's newer identity ledger on an ordinary poll. Package-only rollback therefore cannot preserve omitted-item identity evidence. Restoring the matching stopped package and storage backup restores that ledger. The [setup guide](FINDMY-SETUP.md#upgrade-backups-and-rollback-for-the-unreleased-candidate) now describes this boundary. The test uses complete synthetic storage backups; real recovery must retain the newest independent recovery-safeguard directory separately instead of rolling it back with older account data.
+
+These local upgrade results prove HomeCircle activity preservation. A later prepared Supervisor partial-backup rehearsal separately proves synthetic HA Recorder history rollback and renewed recording across restart. Production Recorder, candidate HACS delivery, the current production installation and physical DAKboard acceptance remain untested for this candidate. The native HAOS/HACS rehearsal separately qualifies published-release HACS install/rollback and stopped candidate activation.
+
+## Recovery restart and local Python shutdown failures
+
+Four local recovery-harness children crashed during CPython 3.14.7 interpreter finalization. The user's screenshot is consistent with these shutdown failures; the original harness did not retain phase-to-PID receipts. The Mac crash reports show SIGSEGV in dictionary cleanup during `gc_collect_main` / `finalize_modules`, after the storage assertions completed. This is a failed test process, not a passing result. The precise interpreter/extension cause remains unassigned. The same failure occurred with the provider omitted, so the evidence does not establish a HomeCircle provider defect.
+
+All further process launches were paused when the user reported the dialogs. No crash-reporting setting was changed and no interpreter shutdown failure was masked. The replacement uses normal Core bootstrap/start/drain/stop, supported config-entry insertion, and per-phase PID/exit receipts. A bounded smoke check passed in the clean Core 2026.10.2 environment: one intentional exit 73 after fixture creation, then the recovered-state child exited normally with status zero. The earlier failing Core 2026.9.4 path was not repeated. This validates the replacement path without attributing or claiming to repair an underlying CPython fault. The complete replacement recovery/repair sequence then passed **20 distinct processes** on clean Core 2026.10.2. It covered unresolved thresholds after abrupt exit/restart, active cross-process locks, explicit acknowledgment, corrupt-guard refusal and latest-ledger repair, interrupted registry migration, encrypted-vault corruption/wrong-key/foreign-account refusal, and matching account/config-entry/registry backup restoration while retaining the newer guard. All 40 network-denial probes were blocked, no unexpected network attempt or Apple request occurred, and temporary storage was removed. Fault exits were explicitly expected; all ordinary children exited zero. No new Mac crash report appeared. The default automated runner remains the smaller 13-process guard-only suite; full storage is an explicit mode.
+
+## Final checks and remaining acceptance
+
+- **1,430 backend tests passed on Core 2026.9.4 and 1,430 on Core 2026.10.2**, with one optional public-installer fixture test skipped in each run. These are the same suite on two targets, not 2,860 distinct tests. The socket-denied default suite includes the new 13-process guard test, actual synthetic packaged-worker check, exact-source replacement and newer-guard restoration regressions.
+- Full manual recovery/repair passed on clean Core 2026.10.2 in 20 distinct processes; the earlier bounded smoke also passed. No additional shutdown crash report appeared after replacing the partial lifecycle.
+- Four exact-artifact upgrade rehearsals passed: two source baselines on each Core version. All 109/112 package files, runtime loaded version and frontend bytes were independently checked within each Core phase.
+- Ruff, whitespace checks and public-file privacy scanning of **322 files** passed. Automated scans do not replace manual privacy review.
+- Exact archive/inventory/source matching and frozen Ruby/published-beta/review hashes remain valid. The production ZIP was not rebuilt or changed. The prior **110 frontend tests** remain the unchanged frontend's checkpoint; they were not rerun for these validation-only changes.
+
+The acquisition harness now recognizes active installed `site-packages`/`dist-packages` roots outside the interpreter prefix, while retaining disposable-only writes and external-file restrictions. Its existing 50-case suite passed in the corrected dependency overlay; the earlier six import-stage failures were harness path-boundary errors, not native-runtime failures. Fresh 10.2's only initial full-suite failure was the missing test-reference SDK. These setup/validation defects were fixed before the final complete runs.
+
+The candidate package is unchanged and unreleased. The [Linux/HAOS phase](LINUX-HAOS-VALIDATION.md) passed ARM64 container execution on Core 2026.9.4 and 2026.10.2: each target passed 24-dependency constraint agreement, 1,443 backend tests, 20 upgrade/rollback Core processes and 20 recovery processes. The anonymous public Apple runtime passed on ARM64 Core 2026.10.2. Actual HAOS-managed Core 2026.10.2 installation, synthetic setup/restart retention and native execution also passed on ARM64 and emulated AMD64, with all 112 installed hashes verified on each. The corrected emulated AMD64 full suite passed 1,443 tests with one optional fixture skipped; its first failed invocation and QA aggregate-deadline correction remain recorded. The separate October 20 native AMD64 Core 2026.10.2 container run now passes both exact-baseline upgrade/rollback sequences and full synthetic recovery. The subsequent native AMD64 Core 2026.9.4 container run also passed the full backend suite, separate native/lifecycle checks and both upgrade/full-recovery sequences, as recorded below. Native AMD64 HAOS synthetic managed-service activation, persistence and rollback now pass below. Glibc Core, additional runtime scopes and candidate HACS delivery remain open. Live recovery, current production installed-state and HACS upgrade, production Recorder continuity, physical display acceptance, long-term report behavior and the remaining license/service-use gates also remain open. These checks do not provide an external specialist audit or establish Apple's remaining recovery allowance.
+
+The [October 19 emulated AMD64 follow-up](LINUX-HAOS-VALIDATION.md#october-19-follow-up-amd64-upgrade-rollback-and-full-recovery) **failed and remains unqualified within that emulated scope** in the disposable HAOS 18.3 x86_64/Core 2026.10.2 guest. Both upgrade attempts timed out in the older published baseline's first child at the unchanged 180-second bound, without a completed phase receipt. The reconstructed baseline was not reached. Independent full recovery failed in its first `guard_verified` child at the unchanged 45-second bound, killed with exit -9; zero recovery phases completed, so no 20-process/40-probe result is claimed for those attempts. A diagnostic stopped after 203.737 guest-reported seconds within its configured 240-second total bound, retaining the 180-second phase limit and `acceptance_pass: false`; sampled startup and published-key paths do not establish the cause. All three archive/script/source inputs matched before and after the diagnostic. The candidate and prior passing evidence remain unchanged. Its disposition required a faster/native AMD64 runner or a confirmed runner issue and fix before another attempt; no blind rerun or relaxed limit was used for the separate native result below. The rollback, live-account, production/HACS and other platform limits above still apply.
+
+Cleanup subsequently confirmed a guest clock-integrity problem on the affected AMD64 boot; its recorded elapsed times are not reliable host-duration measurements. Enabling HPET through the disposable VM's supported UTM machine-property setting was the only configuration change. A revised host-clock gate passed for runner clock behavior only after preserving the first gate's overstrict-criterion failure. The corrected-clock upgrade attempt then **failed after 260.377106 independently measured host seconds**: all eight workload clock checks passed with TSC selected, but the first published-baseline child still exceeded its unchanged 180-second deadline, with no completed phase or candidate result. The single corrected-clock full recovery attempt also **failed after 110.627503 host seconds**: all three workload clock checks passed with TSC selected, but its first `guard_verified` child hit the unchanged 45-second deadline and was killed with exit -9. Zero recovery phases completed; no 20-process/40-probe result is claimed for that attempt. Recovery input pins matched before and after, and each exact QA container was confirmed stopped with no host cleanup failure. Both emulated full scopes remain unqualified; no candidate defect or sole timeout cause is established, and no further emulated retries were made. See the [clock incident and gate scope](LINUX-HAOS-VALIDATION.md#runner-clock-incident-and-gated-retry) and [corrected-clock outcomes](LINUX-HAOS-VALIDATION.md#corrected-clock-upgrade-and-recovery-outcomes).
+
+The separate [October 20 native AMD64 container run](LINUX-HAOS-VALIDATION.md#october-20-native-amd64-container-upgrade-and-recovery), [Actions run 39426549335](https://github.com/jmhjr/HomeCircle/actions/runs/39426549335) at revision `50f9fa38ca3f88e68a9734637ec1ec84203ce8dc`, **passed** in **223.990 host seconds**. The unchanged pinned Core 2026.10.2/Python 3.14.6 musl image passed all 20 upgrade phases across the canonical published and reconstructed baselines, followed by 20 recovery processes and 40 blocked probes, with no unexpected network attempt or Apple request. All 112 candidate files, archives, inventory and script pins matched. Dependency setup satisfied the same 24-package closure and active Core constraints; acceptance then ran with Docker networking disconnected. The host receipt records exit zero, exact owned-container stop/removal and no cleanup failure. The registry digest `45f009d6ff1061971102e81f0802cf2762bdd5c5007231c938bd36030cbd0a12` and distinct local image ID `e1acee126eee45b3007494ad7f806d12535dc7d733624b681ed29a505f8c2b98` are recorded separately.
+
+The authorized public validation branch received payload/workflow commits only; main, the local working checkout/HEAD, release/tag/version and production were unchanged. Three sanitized JSON summaries were retained as the seven-day CI artifact and downloaded locally; raw synthetic configurations and per-phase logs/receipts were collected in the ephemeral runner but not persisted in the artifact. A nonblocking upload-action Node 20 deprecation/forced-Node-24 annotation did not prevent successful upload. This run did not rerun the backend suite, separate native worker/lifecycle checks or anonymous Apple runtime, and it does not establish native HAOS-managed service or glibc Core acceptance. Package-only rollback's ledger loss, latest-guard retention and all owner/production/HACS/Recorder/field/licensing limits above remain in force. No candidate runtime fix or further Mac Python was needed.
+
+The [minimum-Core native AMD64 run](LINUX-HAOS-VALIDATION.md#october-20-minimum-core-native-amd64-validation),
+[39433931788](https://github.com/jmhjr/HomeCircle/actions/runs/39433931788), passed
+at revision `c92a0c579ea7c03dd0ed238dfb5ede2c7661d73b` in **534.500 host seconds**.
+It adds the full 1,443-test backend suite with one named optional fixture skip,
+actual packaged native worker/lifecycle, both exact upgrade/rollback baselines
+and full twenty-process recovery on Core **2026.9.4**/Python **3.14.6**, with all
+40 probes blocked, unchanged 112-file candidate/input pins, matching 24-package
+Core-constrained dependency closure, offline acceptance and clean container
+stop/removal. The original child limits remained unchanged. The two preceding
+source-staging failures were fixed in the validation wrapper and retained as
+failed setup runs; the candidate was not changed. Three downloaded sanitized
+JSON summaries matched artifact ZIP SHA-256
+`e89d6ad1835d6ef07d187396bdbd4c2edae742e196250a48bd734a5e9f3c94fe`.
+Raw synthetic phase evidence was not uploaded. This closes the minimum-Core
+native AMD64 container scope, while the other platform, managed-service,
+release-transport, owner, production and field limits retain their scope.
+
+The [native HAOS/HACS rehearsal](LINUX-HAOS-VALIDATION.md#october-20-native-haos-and-hacs-rehearsal),
+[run 39441631322](https://github.com/jmhjr/HomeCircle/actions/runs/39441631322),
+passed all eight phases in **344.041 host seconds** on native x86_64/KVM HAOS
+**18.3**, managed Core **2026.10.2**, observed Supervisor **2026.10.2** and CLI
+**2026.09.0**, with unmodified HACS **2.0.5**. Genuine HACS installed and
+redownloaded canonical published beta 19 (all 109 files); two candidate installs
+used the unchanged 112 ZIP files only while Core was stopped. Real-flow selections,
+nonempty options/reload, registry/resource/dashboard identities, served bundle
+and restart assertions passed. Matching stopped storage/image restoration
+retained the latest guard, whose actual candidate API remained blocked at three
+after reinstallation. All 23 controller contracts and owned-VM/private cleanup
+passed. Eleven sanitized receipts matched artifact ZIP SHA-256
+196a571eeda1b672e50d415bb3c7c1391164d20e4208712bc0489a7458feef50.
+
+Five preceding incomplete HAOS runs and confirmed helper corrections remain
+recorded; no candidate or acceptance-limit change was needed. HACS's actual
+prerelease-only catalog resolved the candidate branch to main, so candidate
+HACS delivery/release-ZIP transport remains open. Direct disposable HACS entry
+setup does not qualify OAuth onboarding, and stopped filesystem restoration
+does not qualify Supervisor backups or Recorder. No managed full-backend/native
+worker rerun, owner/live Apple, production, field, glibc, physical-display or
+license/service acceptance is added by this rehearsal. No Mac Python was used.
+
+The [prepared Supervisor partial-backup and Recorder restore](LINUX-HAOS-VALIDATION.md#october-20-guarded-supervisor-backup-and-recorder-restore),
+[run 39452393848](https://github.com/jmhjr/HomeCircle/actions/runs/39452393848)
+at revision `a11542b52d1b2020586da57b091978cd8176f4fb`, passed **six phases
+in 309.430 host seconds**, plus **42 offline contracts**. On fresh native KVM
+HAOS 18.3/Core and Supervisor 2026.10.2, the real partial archive included the
+database, exact 112-file candidate, saved disabled entry and old guard. Both
+exact returned backup/restore job trees finished without errors. Ten committed
+pre-backup history rows returned exactly; ten post-backup-only rows disappeared;
+ten new post-restore rows survived restart, with SQLite integrity and genuine
+Recorder hooks verified. Saved selections/options/identities/dashboard and
+unrelated resources returned exactly. The owned card resource was recreated on
+enable and then persisted across restart.
+
+Supervisor's automatic restored boot was observed with HomeCircle disabled,
+unloaded and not imported. The actual old guard was verified before the
+independently retained newest guard was manually restored while Core was
+stopped, before the next disabled boot and sole explicit enable. The real API
+remained blocked at three through restart. This is a prepared disabled-entry
+partial protocol, not automatic anti-rollback. Owned VM/private cleanup passed.
+Seven sanitized receipts matched artifact ZIP SHA-256
+`79c7ec7c77e4fe2282b8d5593687a0c0cb2b17262edc693f7ffb7f773107c3a0`.
+The earlier failed backup CLI attempt and confirmed helper fixes remain in the
+linked record. Candidate code and operation bounds were unchanged. Ordinary
+enabled-entry, full-system/add-on, encrypted/cloud, owner and production restore
+remain unqualified. No Mac Python was used.
+
+Ignored evidence and reproducible receipts are retained under `work/stable-platform-upgrade-validation/` and `work/linux-haos-validation/`; they include per-target wheel inventories, actual packaged-worker results, anonymous runtime results, exact-baseline upgrade receipts, native CI summaries and sanitized local shutdown-failure details. Public fixtures contain no owner records, credentials, private identifiers or locations.

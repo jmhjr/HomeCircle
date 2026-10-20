@@ -11,6 +11,7 @@ from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from typing import TYPE_CHECKING, Literal, TypedDict, overload
 
+from cryptography.exceptions import InvalidTag
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from typing_extensions import override
@@ -536,11 +537,16 @@ class LocationReportsFetcher:
         id_to_key: dict[bytes, HasHashedPublicKey] = {key.hashed_adv_key_bytes: key for key in keys}
         reports: dict[HasHashedPublicKey, list[LocationReport]] = {key: [] for key in keys}
         for report in encrypted_reports:
-            key = id_to_key[report.hashed_adv_key_bytes]
-            bisect.insort(reports[key], report)
-
-            # pre-decrypt report if possible
-            if isinstance(key, KeyPair):
-                report.decrypt(key)
+            key = id_to_key.get(report.hashed_adv_key_bytes)
+            if key is None:
+                continue
+            # Authenticate and decode before inserting. A corrupt report must not
+            # hide a valid older report for this key or another selected item.
+            try:
+                if isinstance(key, KeyPair):
+                    report.decrypt(key)
+                bisect.insort(reports[key], report)
+            except (InvalidTag, ValueError, OverflowError, struct.error):
+                continue
 
         return reports

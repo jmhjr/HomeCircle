@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+## 0.1.0-beta.20 — October 20, 2026
+
+Experimental prerelease; see the [versioned validation boundary](docs/BETA20-VALIDATION.md).
+This packages the separately reviewed hardening candidate. Publication and genuine HACS
+delivery/restart are separate acceptance steps; it is not a stable-release approval.
+
+- Preserve polling progress and older authenticated reports across later failures; isolate provider startup and shutdown failures.
+- Keep GSA/recovery SRP state separate, verify peer/key and account/session bindings, authenticate protected records, and bound recovery/native-worker resources.
+- Persist a separate recovery submission safeguard and preserve selected-item identities and safe display settings without keeping omitted tracking keys. Reject ambiguous identity matches and stale/concurrent selection saves.
+- Correct verified-byte worker loading, native cleanup, entropy and buffer bounds; retain complete inherited notices.
+- Document package-only rollback's identity-ledger limit and the requirement to preserve the newest independent recovery safeguard. Prepared disabled-entry Supervisor partial-backup/Recorder restoration passed with synthetic data; ordinary enabled-entry/full-system and owner recovery remain unqualified.
+- Retain the frozen V2 reference, ordinary HA tracker selection, existing provider choices and genuine source report times. No production rollout is part of this prerelease.
+
 ## 0.1.0-beta.19 — October 19, 2026
 
 Experimental prerelease. See [package and functional acceptance](docs/FINDMY-BETA19-PACKAGING-VALIDATION.md) and the [earlier candidate record](docs/BETA19-CANDIDATE-VALIDATION.md). Publication and HACS verification are separate release steps.

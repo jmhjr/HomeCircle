@@ -4,15 +4,15 @@ Who is in the trust circle, and what they sign with.
 Implements Stage 3 §5.3 of the Find My key-export protocol specification: an incremental
 feed of the circle's peers, and the directory built from it.
 
-**This is not optional bookkeeping.** Two checks depend on it and neither can be done
-without it: a key share's signature is verified against its *sending* peer's key, and a
-recovered bottle carries a signature from its *sponsoring* peer. Both name a peer by hash
-and nothing else in the protocol says what that peer's key is. That is why a recovery
-sequence begins by syncing trust -- to populate this before anything needs to consult it.
+The directory provides the sending key used to verify a key share and, when present,
+the sponsoring peer identity checked during bottle recovery. Entries bind their peer
+ID to the original permanent-info bytes and a typed self-signature before insertion.
 
-A peer genuinely absent from the directory is a reason to **reject** the share or bottle
-that names it, not to proceed. Unwrapping the user's keychain with material from a party
-nothing can identify is not a small thing to wave through.
+A share from an unknown sender is rejected. A retired bottle sponsor may be absent
+from the current directory: strict recovery instead binds its decrypted private keys
+to the signed public keys and verifies its peer signature with the recovered key.
+Directory self-signatures bind peer identities; circle membership still depends on
+the authenticated account service rather than independent voucher validation.
 """
 
 from __future__ import annotations
@@ -24,7 +24,8 @@ import logging
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
-from cryptography.exceptions import UnsupportedAlgorithm
+from cryptography.exceptions import InvalidSignature, UnsupportedAlgorithm
+from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.serialization import load_der_public_key
 from google.protobuf.message import DecodeError
@@ -265,6 +266,27 @@ def _peer_from_proto(peer: cf.CuttlefishPeer) -> Peer | None:
         logger.warning("Peer %s carries no signing key", peer.hash)
         return None
 
+    # A service listing supplies account membership, but cannot replace the immutable
+    # binding between the peer id, its permanent info, and the key signing that info.
+    # The writer in join.py uses this same typed signature, over the original bytes.
+    public_key = load_public_key(info.signing_key)
+    if (
+        public_key is None
+        or not peer.permanent_info.signature
+        or peer_identifier(peer.permanent_info.info, peer.permanent_info.signature) != peer.hash
+    ):
+        logger.warning("A directory peer has no valid permanent identity binding")
+        return None
+    try:
+        public_key.verify(
+            peer.permanent_info.signature,
+            b"TPPB.PeerPermanentInfo" + peer.permanent_info.info,
+            ec.ECDSA(hashes.SHA384()),
+        )
+    except (InvalidSignature, ValueError, UnsupportedAlgorithm):
+        logger.warning("A directory peer's permanent signature did not verify")
+        return None
+
     dynamic = _dynamic_info(peer)
 
     return Peer(
@@ -396,9 +418,10 @@ async def fetch_peer_directory(
     """
     Read the circle's peers.
 
-    Read-only, and creates nothing. Note that the signed blobs a peer carries are **not
-    verified here** -- this establishes who exists and what they claim to sign with, which
-    is the prerequisite for verifying anything else.
+    Read-only, and creates nothing. Permanent identity hashes and signatures are checked
+    before a key enters the directory. This authenticates each peer's immutable identity;
+    account membership still comes from the authenticated service, not from a self-signature.
+    Stable and dynamic trust statements are not authenticated by this directory reader.
 
     :param client: A CloudKit client on the keychain container.
     :param sync_token: Resume from a previous read rather than starting over.

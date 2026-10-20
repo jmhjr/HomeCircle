@@ -402,11 +402,20 @@ def _child(mode, package):
     workers, providers = [], []
     current_host, addresses = [None], set()
     loop = asyncio.new_event_loop()
+    # Core and test environments can install dependencies in a separate site
+    # directory. Permit those active installed-package roots, never arbitrary
+    # search paths or the checkout. Writes remain confined to disposable work.
+    dependency_roots = tuple(
+        Path(entry).resolve()
+        for entry in sys.path
+        if Path(entry).name in {"site-packages", "dist-packages"}
+    )
     allowed = (
         package,
         work,
         Path(sys.prefix).resolve(),
         Path(sys.base_prefix).resolve(),
+        *dependency_roots,
     )
     ca = ssl.get_default_verify_paths()
     ca_paths = tuple(Path(path).resolve() for path in (ca.cafile, ca.capath) if path)

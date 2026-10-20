@@ -63,8 +63,8 @@ def make_account(policy=WINDOWS_ONBOARDING_V1):
 async def test_new_policy_matches_published_gsa_bytes_with_only_windows_declaration(parameters):
     # These are actual published composer bodies, extracted from the verified wheel;
     # the fixture digest makes accidental edits explicit rather than silently mirroring
-    # a runtime implementation change.
-    assert hashlib.sha256(REFERENCE.read_bytes()).hexdigest() == '336ae221bfa1e8a8630bfe398e64a8bf0205eb3f6aacff3605f708e0b39ba0fe'
+    # a runtime implementation change. See fixtures/findmy_0102_gsa_reference.provenance.md.
+    assert hashlib.sha256(REFERENCE.read_bytes()).hexdigest() == '059fb9d6f6b9dfcc813961db6435e3bf71b21e782bdf47dacf2be8def94b4705'
     spec = importlib.util.spec_from_file_location('published_gsa_reference', REFERENCE)
     reference = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(reference)

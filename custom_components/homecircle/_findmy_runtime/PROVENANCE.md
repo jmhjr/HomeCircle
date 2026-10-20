@@ -46,3 +46,22 @@ Required library slice SHA-256:
 The library is a locally cached Apple binary, separate from the MIT emulator.
 The source license does not purport to license Apple's binary.
 Its acquisition and platform acceptance must be included in release validation.
+
+## Local hardening adaptations (unreleased stable candidate)
+
+The worker authenticates one bounded, regular-file descriptor snapshot and passes
+those exact immutable bytes to the emulator; the loader does not reopen the
+library pathname. The parent resolves the installed Unicorn package in an
+executor and passes only that package path to the child, including when Core
+uses a private dependency directory. This is synthetic import coverage, not
+qualification of native execution on every supported platform.
+
+Default and Mac random hooks use the host OS-backed `secrets` source and fail
+without a fallback pattern. Guest scratch, object and heap allocations are
+bounded; combined provisioning inputs and dispatcher metadata must fit the
+256 KiB scratch budget before writes. Guest output and random buffers are
+bounded before host allocation/read. The child retains its existing operation
+and process resource limits. Its Python audit hooks restrict ordinary Python
+network, subprocess and write operations; they are not an OS sandbox for native
+dependencies. See the repository's focused hardening validation for synthetic
+controls and the still-open real Apple provisioning/platform acceptance.

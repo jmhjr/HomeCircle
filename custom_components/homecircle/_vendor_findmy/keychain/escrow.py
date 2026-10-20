@@ -35,9 +35,12 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any
 
+from aiohttp import ClientError
 from typing_extensions import override
 
-from custom_components.homecircle._vendor_findmy.errors import UnhandledProtocolError
+from custom_components.homecircle._vendor_findmy.errors import (
+    AppleServiceUnavailableError, UnauthorizedError, UnhandledProtocolError,
+)
 from custom_components.homecircle._vendor_findmy.util.abc import Closable
 
 if TYPE_CHECKING:
@@ -125,6 +128,44 @@ class EscrowError(UnhandledProtocolError):
         """
         super().__init__(message)
         self.reported = reported
+
+
+
+class EscrowRecoveryError(EscrowError):
+    """A fixed recovery stage; never retain remote text or authentication material."""
+
+    def __init__(
+        self, stage: str, dispatch_state: str, *, http_status: object = None,
+        service_code: object = None, reason: str = "protocol",
+    ) -> None:
+        self.reason = reason if reason in {"transient", "protocol"} else "protocol"
+        self.stage = stage
+        self.dispatch_state = dispatch_state
+        self.server_verified = False
+        self.http_status = http_status if type(http_status) is int and 100 <= http_status <= 599 else None
+        self.service_code = service_code if type(service_code) is int and abs(service_code) <= 1000000 else None
+        super().__init__("Recovery exchange " + stage, reported=dispatch_state == "refused")
+
+
+def recovery_attempt(account: object) -> Any:
+    """Borrow the active local guard; explicitly guarded clients fail closed."""
+    attempt = getattr(account, "_homecircle_recovery_attempt", None)
+    if attempt is not None and all(callable(getattr(attempt, name, None)) for name in (
+        "before_dispatch", "refused", "verified",
+    )):
+        return attempt
+    if attempt is not None or getattr(account, "_homecircle_recovery_guard_required", False):
+        raise EscrowRecoveryError("preproof", "not_dispatched")
+    return None
+
+
+def _recover_refusal(data: object, *, http_ok: bool) -> bool:
+    """Only an explicit service refusal resolves an uncertain submission."""
+    return isinstance(data, dict) and (
+        data.get("success") is False
+        or type(data.get("errorCode")) is int and data["errorCode"] != 0
+        or not http_ok and type(data.get("status")) is int and data["status"] != 0
+    )
 
 
 def _cert_versions() -> dict[str, list[int]]:
@@ -677,17 +718,70 @@ class AsyncEscrowProxy(Closable):
             **(extra or {}),
         }
 
-        resp = await self._http.post(
-            f"{self._host}/escrowproxy/api/{command}",
-            auth=(self._account.account_name or "", self._pet),
-            headers=await self._headers(),
-            data=plistlib.dumps(body),
-        )
+        # Finish every local/credential preparation before reserving a proof. The
+        # reservation deliberately precedes the transport await: a lost response or
+        # cancellation cannot prove that the server did not receive the proof.
+        try:
+            headers = await self._headers()
+            encoded = plistlib.dumps(body)
+            auth = (self._account.account_name or "", self._pet)
+        except UnauthorizedError:
+            raise
+        except Exception as error:
+            if command == "recover":
+                raise EscrowRecoveryError(
+                    "preproof", "not_dispatched", reason=(
+                        "transient" if isinstance(error, (OSError, ClientError, AppleServiceUnavailableError)) else "protocol"
+                    ),
+                ) from None
+            raise
+        attempt = recovery_attempt(self._account) if command == "recover" else None
+        if attempt is not None:
+            await attempt.before_dispatch()
+        try:
+            resp = await self._http.post(
+                f"{self._host}/escrowproxy/api/{command}",
+                auth=auth,
+                headers=headers,
+                data=encoded,
+                # A proof submission is never automatically replayed or redirected.
+                **({"auto_retry": False, "allow_redirects": False} if command == "recover" else {}),
+            )
+        except Exception:
+            if command == "recover":
+                raise EscrowRecoveryError("dispatch", "uncertain") from None
+            raise
+        if command == "recover":
+            try:
+                data = resp.plist()
+            except Exception:
+                raise EscrowRecoveryError(
+                    "dispatch", "uncertain", http_status=resp.status_code,
+                ) from None
+            if _recover_refusal(data, http_ok=resp.ok):
+                if attempt is not None:
+                    await attempt.refused()
+                raise EscrowRecoveryError(
+                    "refusal", "refused", http_status=resp.status_code,
+                    service_code=data.get("errorCode", data.get("status")),
+                )
+            if not resp.ok or not isinstance(data, dict):
+                raise EscrowRecoveryError(
+                    "dispatch", "uncertain", http_status=resp.status_code,
+                )
+            return data
+
         diagnostics = getattr(self._account, "_recovery_diagnostics", None)
         if isinstance(diagnostics, dict):
             diagnostics["escrow_http"] = resp.status_code
 
         if not resp.ok:
+            if command == "srp_init" and (
+                resp.status_code == 429 or 500 <= resp.status_code <= 599
+            ):
+                raise EscrowRecoveryError(
+                    "preproof", "not_dispatched", reason="transient", http_status=resp.status_code,
+                )
             raise _failure(command, resp)
 
         data = resp.plist()

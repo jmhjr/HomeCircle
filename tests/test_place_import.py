@@ -7,7 +7,7 @@ from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
 from homeassistant.data_entry_flow import FlowResultType, InvalidData
 
 from custom_components.homecircle.place_import import parse_places
-from test_config_flow import create, start_options
+from tests.test_config_flow import create, start_options
 
 
 PLACES = [

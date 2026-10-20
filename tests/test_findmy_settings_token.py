@@ -306,8 +306,11 @@ async def test_valid_container_without_code_routes_uses_shared_apple_gateway(tmp
 
 async def test_item_recovery_failure_logs_only_safe_phase_metadata(tmp_path, caplog):
     from types import SimpleNamespace
+    from custom_components.homecircle.findmy_recovery_guard import RecoveryGuard
     from custom_components.homecircle.findmy_setup import FindMySetupError
     flow = FindMySetup.create(tmp_path / 'unused.bin', onboarding=False)
+    flow.recovery_guard = RecoveryGuard(tmp_path / 'guard')
+    flow.account._set_login_state(LoginState.LOGGED_IN, {'dsid': 'synthetic-dsid'})
     flow.records = [object()]
     async def failed_unlock(*args):
         flow.account._recovery_diagnostics.update({

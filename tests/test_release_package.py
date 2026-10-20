@@ -94,6 +94,35 @@ def test_recursive_runtime_and_vendor_provenance_are_packaged(tmp_path):
     )
 
 
+def test_derived_plist_and_complete_inherited_notice_survive_release_archive(tmp_path):
+    root = Path(__file__).resolve().parents[1]
+    actual = root / "custom_components/homecircle"
+    source, license_path = fixture_source(tmp_path)
+    # Use the real derived code and notices with disposable frontend fixtures,
+    # so backend verification also works before an npm build on a fresh clone.
+    for name in ("plist.py", "LICENSE.md", "README.md"):
+        write_member(source, f"_vendor_findmy/{name}",
+                     (actual / "_vendor_findmy" / name).read_bytes())
+    payload = build.collect_payload(source, license_path)
+    archive, _ = build.write_archive(payload, tmp_path / "release")
+    packaged = validate.inspect_archive(archive, archive.with_name("inventory.json"))
+    origin = b"08a59cab551721afb9dc9f829ad31dae8d5bd400"
+    assert packaged["_vendor_findmy/plist.py"] == (
+        actual / "_vendor_findmy/plist.py"
+    ).read_bytes()
+    assert origin in packaged["_vendor_findmy/plist.py"]
+    notices = packaged["_vendor_findmy/LICENSE.md"]
+    beginning = b"MIT License\n\nCopyright (c) 2025 Shane B.\n"
+    assert notices.count(beginning) == 1
+    # Exact 1,065-byte LICENSE.TXT from the pinned OpenTagViewer origin above.
+    # Verify the complete copyright, permission, condition, and disclaimer text.
+    offset = notices.index(beginning)
+    assert hashlib.sha256(notices[offset:offset + 1065]).hexdigest() == (
+        "e5d3404f06c194c08bfd18bfe4d42ece466f28098177b38c14aeb2bfe6b39597"
+    )
+    assert origin in packaged["_vendor_findmy/README.md"]
+
+
 def test_labs_state_identity_and_binaries_never_enter_archive(tmp_path):
     source, license_path = fixture_source(tmp_path, runtime=True)
     excluded = [

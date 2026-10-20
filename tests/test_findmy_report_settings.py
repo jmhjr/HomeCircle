@@ -223,7 +223,7 @@ async def test_account_identity_guard_precedes_missing_token_settings_request(
 async def test_missing_grant_at_final_confirmation_routes_to_terminal_abort(
     hass, saved
 ):
-    from test_findmy_saved_flow import flow_for
+    from tests.test_findmy_saved_flow import flow_for
 
     flow, transient, provider, _, _ = flow_for(hass)
     flow.findmy_setup = transient

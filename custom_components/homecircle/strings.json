@@ -288,14 +288,14 @@
       },
       "findmy_passcode": {
         "title": "Recover Find My item keys",
-        "description": "Enter the selected device\u2019s unlock passcode. HomeCircle allows three recovery attempts in this setup and never retries a passcode automatically.",
+        "description": "Enter the selected device\u2019s unlock passcode. HomeCircle never retries it automatically. Rejected or uncertain submissions are retained locally across setup restarts; Apple\u2019s own retry allowance is unknown.",
         "data": {
           "passcode": "Trusted device unlock passcode"
         }
       },
       "findmy_select": {
         "title": "Choose Find My items",
-        "description": "Select the items this account should expose to Home Assistant. Unselected keys are discarded when setup closes. Reconnecting replaces the previous item selection; removed trackers retain their history.",
+        "description": "Your current items are already selected. Add items or deliberately uncheck any that should stop polling. Saving replaces the selection. Unchecked tracking keys are discarded; existing history and saved display settings are kept.",
         "data": {
           "items": "Find My items"
         }
@@ -306,14 +306,14 @@
       },
       "findmy_confirm": {
         "title": "Save selected Find My items",
-        "description": "Account: {account}\n\nSelected items:\n{items}\n\nEach item gets a separate tracker under this Apple account. Find My reports may arrive later than the Apple app; polling cannot force a new location. If this is part of Household setup, finish saving the household within 15 minutes; expiry discards the entire unfinished edit.",
+        "description": "Account: {account}\n\nSelected items:\n{items}\n\nEach item gets a separate tracker under this Apple account. Find My reports may arrive later than the Apple app; polling cannot force a new location. If this is part of Household setup, finish saving the household within 15 minutes; expiry discards the entire unfinished edit.\n\nItems that will stop polling:\n{removed_items}",
         "data": {
           "confirm": "Save this account and these selected items"
         }
       },
       "findmy_disconnect": {
         "title": "Disconnect Apple account",
-        "description": "Disconnect {account}? Its polling and HomeCircle item cards stop. The HomeCircle account session and item keys are deleted from HA storage; existing backups are not changed. Tracker history is retained.",
+        "description": "Disconnect {account}? Its polling and HomeCircle item cards stop. The HomeCircle account session and item keys are deleted from HA storage; existing backups are not changed. Tracker history is retained. Local recovery safeguard counts are retained.",
         "data": {
           "confirm": "Disconnect this account"
         }
@@ -332,6 +332,17 @@
         "data": {
           "consent": "Open this account\u2019s saved items"
         }
+      },
+      "findmy_recovery_reset": {
+        "title": "Review the recovery safeguard",
+        "description": "This installation recorded {rejected} refused exchanges and {uncertain} uncertain submissions for this Apple account. Starting setup again does not clear them. Apple may limit recovery attempts; HomeCircle cannot determine its remaining allowance. Clear this local safeguard only after reviewing the device and passcode you intend to use. This does not reset Apple\u2019s allowance or submit another passcode.",
+        "data": {
+          "acknowledge": "I understand the limits and want to clear this local safeguard"
+        }
+      },
+      "findmy_recovery_resume": {
+        "title": "Finish recovering item keys",
+        "description": "The recovery exchange was verified and its material is still held in this setup. Continue to retry the remaining key download without another device-passcode proof."
       }
     },
     "error": {
@@ -382,7 +393,7 @@
       "findmy_code_failed": "Could not complete Apple code verification. This may be a connection or protocol error; it does not necessarily mean the code is incorrect.",
       "findmy_no_recovery_device": "Apple did not provide a recoverable trusted device.",
       "findmy_recovery_failed": "Apple sign-in completed, but Find My key recovery could not open. Check HomeCircle diagnostics before starting a new attempt.",
-      "findmy_recovery_limit": "Three recovery attempts have been used. Close setup before starting again.",
+      "findmy_recovery_limit": "HomeCircle has recorded three rejected or uncertain recovery submissions for this Apple account. Starting setup again does not clear this local safeguard.",
       "findmy_setup_closed": "This setup has expired. Start a new setup.",
       "findmy_select_items": "Select at least one Find My item.",
       "findmy_account_mismatch": "Use the same Apple account when reconnecting. An account already connected must be managed from its existing entry.",
@@ -403,7 +414,20 @@
       "findmy_verification_limit": "Apple kept requesting more verification. Close this setup before starting another sign-in attempt.",
       "findmy_saved_session_unavailable": "This account does not contain a reusable Find My report session and item keys. Its saved data was not replaced.",
       "findmy_report_access_unavailable": "HomeCircle could not obtain a usable Find My tracking credential after Apple sign-in. The existing connection was not replaced.",
-      "findmy_initial_refused": "Apple rejected the initial sign-in challenge before checking the password proof. This response does not establish that your password is incorrect. Close setup and review the integration diagnostics before another attempt."
+      "findmy_initial_refused": "Apple rejected the initial sign-in challenge before checking the password proof. This response does not establish that your password is incorrect. Close setup and review the integration diagnostics before another attempt.",
+      "findmy_recovery_storage": "HomeCircle could not safely read or save its recovery safeguard. Recovery has stopped; a submission already in progress may have an unknown outcome. Check local storage permissions and available space before continuing.",
+      "findmy_recovery_signin_required": "Recovery needs a fresh Apple sign-in or another verification step. Start a new setup and sign in again. This local failure does not establish that a device passcode was wrong.",
+      "findmy_recovery_transient": "A temporary connection or service problem interrupted recovery preparation. No automatic passcode retry was sent.",
+      "findmy_recovery_protocol": "HomeCircle could not safely prepare or validate the recovery exchange. Check diagnostics before trying again; this does not establish a wrong passcode.",
+      "findmy_recovery_refused": "Apple refused the recovery exchange. This does not establish that the device passcode was wrong. Check the chosen device and diagnostics before another deliberate attempt.",
+      "findmy_recovery_uncertain": "The recovery submission outcome could not be verified. It is retained as uncertain by the local safeguard; no automatic retry was sent.",
+      "findmy_recovery_material_failed": "The recovery exchange was verified, but its recovered material could not be opened. Check diagnostics before starting a new setup. No automatic passcode retry was sent.",
+      "findmy_recovery_resume": "The recovery exchange was verified. The remaining key download can be retried without another passcode proof.",
+      "findmy_recovery_acknowledge": "Acknowledge the local reset and its limits before continuing.",
+      "findmy_recovery_busy": "Recovery for this Apple account is still active. Wait for it to finish before clearing this safeguard.",
+      "findmy_identity_unavailable": "HomeCircle could not safely verify the saved item identities. The existing selection was not replaced.",
+      "findmy_duplicate_item": "More than one item matched the same saved identity. The existing selection was not replaced.",
+      "findmy_missing_item_identity": "This item has no usable identity. The existing selection was not replaced."
     },
     "abort": {
       "already_configured": "HomeCircle is already configured. Use Options to edit the household.",
@@ -421,7 +445,12 @@
       "findmy_signin_state": "This setup session cannot sign in again. Close setup and start a new attempt. No connection was saved or replaced.",
       "findmy_account_mismatch": "Use the same Apple account when reconnecting. An account already connected must be managed from its existing entry. No connection was saved or replaced.",
       "findmy_initial_refused": "Apple rejected the initial sign-in challenge before checking the password proof. This response does not establish that your password is incorrect. Close setup and review the integration diagnostics before another attempt. No connection was saved or replaced.",
-      "findmy_identity_failed": "HomeCircle could not prepare its Apple identity. No Apple account credentials were checked or saved. Start setup again after checking the HA connection and HomeCircle diagnostics."
+      "findmy_identity_failed": "HomeCircle could not prepare its Apple identity. No Apple account credentials were checked or saved. Start setup again after checking the HA connection and HomeCircle diagnostics.",
+      "findmy_recovery_storage": "HomeCircle could not safely read or save its recovery safeguard. Recovery has stopped; a submission already in progress may have an unknown outcome. Check local storage permissions and available space before continuing.",
+      "findmy_recovery_signin_required": "Recovery needs a fresh Apple sign-in or another verification step. Start a new setup and sign in again. This local failure does not establish that a device passcode was wrong.",
+      "findmy_recovery_material_failed": "The recovery exchange was verified, but its recovered material could not be opened. Check diagnostics before starting a new setup. No automatic passcode retry was sent.",
+      "findmy_identity_unavailable": "HomeCircle could not safely verify the saved item identities. The existing selection was not replaced.",
+      "findmy_settings_changed": "Find My settings changed in another setup. Reopen HomeCircle settings before saving this draft."
     },
     "progress": {
       "findmy_connecting": "Connecting to Apple. Keep this window open; you may cancel to discard this setup."
@@ -818,14 +847,14 @@
       },
       "findmy_passcode": {
         "title": "Recover Find My item keys",
-        "description": "Enter the selected device\u2019s unlock passcode. HomeCircle allows three recovery attempts in this setup and never retries a passcode automatically.",
+        "description": "Enter the selected device\u2019s unlock passcode. HomeCircle never retries it automatically. Rejected or uncertain submissions are retained locally across setup restarts; Apple\u2019s own retry allowance is unknown.",
         "data": {
           "passcode": "Trusted device unlock passcode"
         }
       },
       "findmy_select": {
         "title": "Choose Find My items",
-        "description": "Select the items this account should expose to Home Assistant. Unselected keys are discarded when setup closes. Reconnecting replaces the previous item selection; removed trackers retain their history.",
+        "description": "Your current items are already selected. Add items or deliberately uncheck any that should stop polling. Saving replaces the selection. Unchecked tracking keys are discarded; existing history and saved display settings are kept.",
         "data": {
           "items": "Find My items"
         }
@@ -836,14 +865,14 @@
       },
       "findmy_confirm": {
         "title": "Save selected Find My items",
-        "description": "Account: {account}\n\nSelected items:\n{items}\n\nEach item gets a separate tracker under this Apple account. Find My reports may arrive later than the Apple app; polling cannot force a new location. If this is part of Household setup, finish saving the household within 15 minutes; expiry discards the entire unfinished edit.",
+        "description": "Account: {account}\n\nSelected items:\n{items}\n\nEach item gets a separate tracker under this Apple account. Find My reports may arrive later than the Apple app; polling cannot force a new location. If this is part of Household setup, finish saving the household within 15 minutes; expiry discards the entire unfinished edit.\n\nItems that will stop polling:\n{removed_items}",
         "data": {
           "confirm": "Save this account and these selected items"
         }
       },
       "findmy_disconnect": {
         "title": "Disconnect Apple account",
-        "description": "Disconnect {account}? Its polling and HomeCircle item cards stop. The HomeCircle account session and item keys are deleted from HA storage; existing backups are not changed. Tracker history is retained.",
+        "description": "Disconnect {account}? Its polling and HomeCircle item cards stop. The HomeCircle account session and item keys are deleted from HA storage; existing backups are not changed. Tracker history is retained. Local recovery safeguard counts are retained.",
         "data": {
           "confirm": "Disconnect this account"
         }
@@ -862,6 +891,17 @@
         "data": {
           "consent": "Open this account\u2019s saved items"
         }
+      },
+      "findmy_recovery_reset": {
+        "title": "Review the recovery safeguard",
+        "description": "This installation recorded {rejected} refused exchanges and {uncertain} uncertain submissions for this Apple account. Starting setup again does not clear them. Apple may limit recovery attempts; HomeCircle cannot determine its remaining allowance. Clear this local safeguard only after reviewing the device and passcode you intend to use. This does not reset Apple\u2019s allowance or submit another passcode.",
+        "data": {
+          "acknowledge": "I understand the limits and want to clear this local safeguard"
+        }
+      },
+      "findmy_recovery_resume": {
+        "title": "Finish recovering item keys",
+        "description": "The recovery exchange was verified and its material is still held in this setup. Continue to retry the remaining key download without another device-passcode proof."
       }
     },
     "error": {
@@ -919,7 +959,7 @@
       "findmy_code_failed": "Could not complete Apple code verification. This may be a connection or protocol error; it does not necessarily mean the code is incorrect.",
       "findmy_no_recovery_device": "Apple did not provide a recoverable trusted device.",
       "findmy_recovery_failed": "Apple sign-in completed, but Find My key recovery could not open. Check HomeCircle diagnostics before starting a new attempt.",
-      "findmy_recovery_limit": "Three recovery attempts have been used. Close setup before starting again.",
+      "findmy_recovery_limit": "HomeCircle has recorded three rejected or uncertain recovery submissions for this Apple account. Starting setup again does not clear this local safeguard.",
       "findmy_setup_closed": "This setup has expired. Start a new setup.",
       "findmy_select_items": "Select at least one Find My item.",
       "findmy_account_mismatch": "Use the same Apple account when reconnecting. An account already connected must be managed from its existing entry.",
@@ -940,7 +980,20 @@
       "findmy_verification_limit": "Apple kept requesting more verification. Close this setup before starting another sign-in attempt.",
       "findmy_saved_session_unavailable": "This account does not contain a reusable Find My report session and item keys. Its saved data was not replaced.",
       "findmy_report_access_unavailable": "HomeCircle could not obtain a usable Find My tracking credential after Apple sign-in. The existing connection was not replaced.",
-      "findmy_initial_refused": "Apple rejected the initial sign-in challenge before checking the password proof. This response does not establish that your password is incorrect. Close setup and review the integration diagnostics before another attempt."
+      "findmy_initial_refused": "Apple rejected the initial sign-in challenge before checking the password proof. This response does not establish that your password is incorrect. Close setup and review the integration diagnostics before another attempt.",
+      "findmy_recovery_storage": "HomeCircle could not safely read or save its recovery safeguard. Recovery has stopped; a submission already in progress may have an unknown outcome. Check local storage permissions and available space before continuing.",
+      "findmy_recovery_signin_required": "Recovery needs a fresh Apple sign-in or another verification step. Start a new setup and sign in again. This local failure does not establish that a device passcode was wrong.",
+      "findmy_recovery_transient": "A temporary connection or service problem interrupted recovery preparation. No automatic passcode retry was sent.",
+      "findmy_recovery_protocol": "HomeCircle could not safely prepare or validate the recovery exchange. Check diagnostics before trying again; this does not establish a wrong passcode.",
+      "findmy_recovery_refused": "Apple refused the recovery exchange. This does not establish that the device passcode was wrong. Check the chosen device and diagnostics before another deliberate attempt.",
+      "findmy_recovery_uncertain": "The recovery submission outcome could not be verified. It is retained as uncertain by the local safeguard; no automatic retry was sent.",
+      "findmy_recovery_material_failed": "The recovery exchange was verified, but its recovered material could not be opened. Check diagnostics before starting a new setup. No automatic passcode retry was sent.",
+      "findmy_recovery_resume": "The recovery exchange was verified. The remaining key download can be retried without another passcode proof.",
+      "findmy_recovery_acknowledge": "Acknowledge the local reset and its limits before continuing.",
+      "findmy_recovery_busy": "Recovery for this Apple account is still active. Wait for it to finish before clearing this safeguard.",
+      "findmy_identity_unavailable": "HomeCircle could not safely verify the saved item identities. The existing selection was not replaced.",
+      "findmy_duplicate_item": "More than one item matched the same saved identity. The existing selection was not replaced.",
+      "findmy_missing_item_identity": "This item has no usable identity. The existing selection was not replaced."
     },
     "abort": {
       "place_import_no_account": "No saved Life360 connection is available. Connect Life360 first, then try again.",
@@ -956,13 +1009,22 @@
       "findmy_signin_state": "This setup session cannot sign in again. Close setup and start a new attempt. No connection was saved or replaced.",
       "findmy_account_mismatch": "Use the same Apple account when reconnecting. An account already connected must be managed from its existing entry. No connection was saved or replaced.",
       "findmy_initial_refused": "Apple rejected the initial sign-in challenge before checking the password proof. This response does not establish that your password is incorrect. Close setup and review the integration diagnostics before another attempt. No connection was saved or replaced.",
-      "findmy_identity_failed": "HomeCircle could not prepare its Apple identity. No Apple account credentials were checked or saved. Start setup again after checking the HA connection and HomeCircle diagnostics."
+      "findmy_identity_failed": "HomeCircle could not prepare its Apple identity. No Apple account credentials were checked or saved. Start setup again after checking the HA connection and HomeCircle diagnostics.",
+      "findmy_recovery_storage": "HomeCircle could not safely read or save its recovery safeguard. Recovery has stopped; a submission already in progress may have an unknown outcome. Check local storage permissions and available space before continuing.",
+      "findmy_recovery_signin_required": "Recovery needs a fresh Apple sign-in or another verification step. Start a new setup and sign in again. This local failure does not establish that a device passcode was wrong.",
+      "findmy_recovery_material_failed": "The recovery exchange was verified, but its recovered material could not be opened. Check diagnostics before starting a new setup. No automatic passcode retry was sent.",
+      "findmy_identity_unavailable": "HomeCircle could not safely verify the saved item identities. The existing selection was not replaced.",
+      "findmy_settings_changed": "Find My settings changed in another setup. Reopen HomeCircle settings before saving this draft."
     },
     "progress": {
       "findmy_connecting": "Connecting to Apple. Keep this window open; you may cancel to discard this setup."
     }
   },
   "issues": {
+    "tracker_provider_start_failed": {
+      "title": "HomeCircle tracker connection could not start",
+      "description": "HomeCircle could not start {provider}. Its managed trackers may be unavailable. Other tracker connections and selected Home Assistant sources continue running. Check Home Assistant dependency and startup logs, resolve the startup problem, then reload HomeCircle."
+    },
     "missing_entities": {
       "title": "HomeCircle selections need attention",
       "description": "{count} selected entities are missing or disabled. Sources may still be starting. If they do not return, open HomeCircle Options to remove or replace them. Renamed entities must be selected again. Saved selections are retained; missing sources are not treated as Away."

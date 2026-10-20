@@ -36,6 +36,10 @@ def require_nonempty_report_grant(account, session=None):
 
 def signin_error(error, stage):
     """Map failures to fixed codes; never expose exception text or responses."""
+    if stage == "recovery":
+        code = recovery_error(error)
+        _LOGGER.warning("Find My setup failed: stage=recovery code=%s", code)
+        return code
     from aiohttp import ClientError
     from ._vendor_findmy.errors import (
         InvalidCredentialsError,
@@ -97,6 +101,45 @@ def signin_error(error, stage):
 
 class FindMySetupError(RuntimeError):
     """Only fixed error codes may reach the UI."""
+
+
+def recovery_error(error):
+    """Use structured outcomes, never a provider message or old diagnostics."""
+    from aiohttp import ClientError
+    from .findmy_identity import IdentityError
+    from .findmy_recovery_guard import RecoveryGuardBlocked, RecoveryGuardStorageError
+    from ._findmy_runtime.onboarding import RecoveryPETError
+    from ._vendor_findmy.errors import UnauthorizedError
+    from ._vendor_findmy.keychain.recovery import RecoveryProtocolError
+
+    if isinstance(error, RecoveryGuardBlocked):
+        return "findmy_recovery_limit"
+    if isinstance(error, RecoveryGuardStorageError):
+        return "findmy_recovery_storage"
+    if isinstance(error, IdentityError):
+        return str(error) if str(error) in {
+            "findmy_identity_unavailable", "findmy_duplicate_item",
+            "findmy_missing_item_identity",
+        } else "findmy_identity_unavailable"
+    if isinstance(error, RecoveryPETError):
+        return {
+            "identity_mismatch": "findmy_account_mismatch",
+            "transient": "findmy_recovery_transient",
+            "protocol": "findmy_recovery_protocol",
+        }.get(error.reason, "findmy_recovery_signin_required")
+    if isinstance(error, RecoveryProtocolError):
+        if error.dispatch_state == "not_dispatched" and error.reason == "transient":
+            return "findmy_recovery_transient"
+        return {
+            "refused": "findmy_recovery_refused",
+            "uncertain": "findmy_recovery_uncertain",
+            "verified": "findmy_recovery_material_failed",
+        }.get(error.dispatch_state, "findmy_recovery_protocol")
+    if isinstance(error, (TimeoutError, ClientError, OSError)):
+        return "findmy_recovery_transient"
+    if isinstance(error, UnauthorizedError):
+        return "findmy_recovery_signin_required"
+    return "findmy_recovery_failed"
 
 
 def log_identity_failure(account):
@@ -221,6 +264,9 @@ class FindMySetup:
         self.factor = None
         self.closed = False
         self.unlock_attempts = 0
+        self.recovery_guard = None
+        self.recovery_guard_required = False
+        self.recovery_outcome = None
         self.previous_items = {}
         self.discover_new = True
         self.account_guard = None
@@ -281,6 +327,7 @@ class FindMySetup:
                 )
             account = account_type.from_json(state, anisette_libs_path=libraries)
         setup = cls(account, client_type.open, states)
+        setup.recovery_guard_required = True
         configure_account(account)
         return setup
 
@@ -684,48 +731,107 @@ class FindMySetup:
             for i, record in enumerate(self.records)
         ]
 
+    async def _unlock(self, index, passcode):
+        """Scope the durable proof guard to one authenticated account's unlock."""
+        from .findmy_identity import authenticated_identity
+
+        self.recovery_outcome = None
+        guard = self.recovery_guard
+        if guard is None and self.recovery_guard_required:
+            raise FindMySetupError("findmy_recovery_storage")
+        self.unlock_attempts += 1  # Invocation diagnostic, not Apple's attempt count.
+        record = self.records[int(index)]
+        if guard is None:
+            return await self.client.unlock(record, passcode)
+        identity = authenticated_identity(self.account.to_json())
+        if identity is None or (
+            self.account_guard and not self.account_guard(self.account.to_json())
+        ):
+            raise FindMySetupError("findmy_account_mismatch")
+        self.account._homecircle_recovery_guard_required = True
+        async with guard.attempt(identity) as attempt:
+            self.account._homecircle_recovery_attempt = attempt
+            try:
+                keys = await self.client.unlock(record, passcode)
+                self.recovery_outcome = getattr(attempt, "outcome", None)
+                return keys
+            except BaseException:
+                self.recovery_outcome = getattr(attempt, "outcome", None) or (
+                    "uncertain" if getattr(attempt, "ready", False)
+                    else "not_dispatched"
+                )
+                raise
+            finally:
+                self.account._homecircle_recovery_attempt = None
+
+    def can_resume_recovery(self, index):
+        """Only the SDK's same-record verified in-memory material permits retry."""
+        checker = getattr(self.client, "can_resume_unlock", None)
+        try:
+            return callable(checker) and checker(self.records[int(index)]) is True
+        except (ValueError, TypeError, IndexError):
+            return False
+
     async def discover(self, index, passcode):
-        if self.closed or (not self.keys_recovered and self.unlock_attempts >= 3):
+        if self.closed:
+            raise FindMySetupError("findmy_setup_closed")
+        if (
+            self.recovery_guard is None and not self.keys_recovered
+            and self.unlock_attempts >= 3
+        ):
             raise FindMySetupError("findmy_recovery_limit")
-        if not self.keys_recovered:
-            self.unlock_attempts += 1
         self.account._recovery_diagnostics["unlock_phase"] = "unlock"
         try:
             async with asyncio.timeout(120):
                 if not self.keys_recovered:
                     self.account._recovery_diagnostics.pop("recovered_keys_present", None)
-                    keys = await self.client.unlock(self.records[int(index)], passcode)
+                    keys = await self._unlock(index, passcode)
                     self.account._recovery_diagnostics["recovered_keys_present"] = bool(keys)
                     if not keys:
                         from ._vendor_findmy.keychain import KeychainSessionError
 
                         self.account._recovery_diagnostics["unlock_phase"] = "pcs_keys"
+                        if self.recovery_outcome == "verified":
+                            from ._vendor_findmy.keychain.recovery import RecoveryProtocolError
+
+                            raise RecoveryProtocolError("material", "verified")
                         raise KeychainSessionError("Recovery returned no keychain keys")
                     self.keys_recovered = True
                 self.account._recovery_diagnostics["unlock_phase"] = "accessories"
                 found = await self.client.accessories()
                 if self.closed:
                     raise FindMySetupError("findmy_setup_closed")
+                from .findmy_identity import (
+                    accessory_material, new_state, prepare_state, resolve_identifier,
+                )
+
+                session = self.account.to_json()
+                self.identity_state = prepare_state(
+                    session, self.previous_items, {}, getattr(self, "identity_state", None)
+                )
+                if self.identity_state is None and any(
+                    accessory_material(item.to_json()) for item in found
+                ):
+                    self.identity_state = new_state(session)
                 discovered = {}
+                discovered_material = set()
                 for item in found:
-                    identifier = accessory_id(item)
                     exported = item.to_json()
-                    matches = [
-                        key
-                        for key, saved in self.previous_items.items()
-                        if saved["accessory"].get("master_key")
-                        and saved["accessory"].get("master_key")
-                        == exported.get("master_key")
-                    ]
-                    if len(matches) > 1:
-                        raise FindMySetupError("findmy_duplicate_item")
-                    if matches:
-                        identifier = matches[0]
+                    material = accessory_material(exported)
+                    if material is not None:
+                        if material in discovered_material:
+                            raise FindMySetupError("findmy_duplicate_item")
+                        discovered_material.add(material)
+                    identifier = resolve_identifier(
+                        exported, accessory_id(item), self.previous_items, self.identity_state
+                    )
                     if identifier in discovered:
                         raise FindMySetupError("findmy_duplicate_item")
                     discovered[identifier] = item
                 self.accessories = discovered
             return self.item_choices()
+        except FindMySetupError:
+            raise
         except Exception as error:
             raw = self.account._recovery_diagnostics
             phase = raw.get("unlock_phase")
@@ -743,7 +849,19 @@ class FindMySetup:
             value = raw.get("escrow_code")
             safe["escrow_code"] = value if type(value) is int and abs(value) <= 1000000 else None
             _LOGGER.warning("Find My item recovery failed: diagnostics=%s", safe)
-            raise FindMySetupError("findmy_recovery_failed") from None
+            code = recovery_error(error)
+            if self.recovery_outcome == "uncertain" and isinstance(error, TimeoutError):
+                code = "findmy_recovery_uncertain"
+            if not self.keys_recovered and (
+                code == "findmy_recovery_material_failed" or (
+                    isinstance(error, TimeoutError) and self.recovery_outcome == "verified"
+                )
+            ):
+                code = (
+                    "findmy_recovery_resume" if self.can_resume_recovery(index)
+                    else "findmy_recovery_material_failed"
+                )
+            raise FindMySetupError(code) from None
         finally:
             # Report fetching must never silently retry using a retained password.
             if hasattr(self.account, "_password"):
@@ -766,7 +884,7 @@ class FindMySetup:
         require_nonempty_report_grant(self.account)
         session = passwordless(self.account.to_json())
         require_nonempty_report_grant(self.account, session)
-        return session, {
+        items = {
             identifier: {
                 "accessory": self.accessories[identifier].to_json(),
                 "report": deepcopy(
@@ -775,12 +893,20 @@ class FindMySetup:
             }
             for identifier in chosen
         }
+        from .findmy_identity import selection_state
+
+        self.identity_state = selection_state(
+            session, items, {}, getattr(self, "identity_state", None)
+        )
+        return session, items
 
     async def close(self):
         if self.closed:
             return
         self.closed = True
         self.keys_recovered = False
+        self.account._homecircle_recovery_attempt = None
+        self.identity_state = None
         self.accessories.clear()
         self.previous_items.clear()
         self.records.clear()

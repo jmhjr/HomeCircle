@@ -213,7 +213,7 @@ async def test_duplicate_identity_does_not_silently_drop_an_item():
     first = client.accessories.return_value[0]
     client.accessories.return_value = [first, first]
     await flow.open_recovery()
-    with pytest.raises(FindMySetupError, match="findmy_recovery_failed"):
+    with pytest.raises(FindMySetupError, match="findmy_duplicate_item"):
         await flow.discover("0", "synthetic-passcode")
     assert not flow.accessories
     await flow.close()
@@ -243,7 +243,8 @@ def test_reconnection_reuses_identity_and_discards_old_login(monkeypatch):
         "login": {"state": 3, "data": {"example": True}},
         "anisette": {},
     }
-    FindMySetup.create("example-libraries", session)
+    created = FindMySetup.create("example-libraries", session)
+    assert created.recovery_guard_required
     assert seen["ids"] == session["ids"]
     assert seen["login"] == {"state": 0, "data": {}}
     assert seen["account"]["info"] is None
@@ -252,16 +253,17 @@ def test_reconnection_reuses_identity_and_discards_old_login(monkeypatch):
 
 async def test_recovery_preserves_migrated_identifiers_and_actual_report():
     flow, _, client = setup()
+    material = {"master_key": "01" * 28, "skn": "02" * 32, "sks": "03" * 32}
     client.accessories.return_value = [
         SimpleNamespace(
             identifier="new-sdk-identity",
             name="Renamed item",
-            to_json=lambda: {"master_key": "example-key-a"},
+            to_json=lambda: deepcopy(material),
         )
     ]
     flow.previous_items = {
         "legacy": {
-            "accessory": {"master_key": "example-key-a"},
+            "accessory": deepcopy(material),
             "report": {"last_seen": "2026-10-01T12:00:00+00:00"},
         }
     }

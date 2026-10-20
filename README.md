@@ -4,13 +4,13 @@ Family location and presence for Home Assistant, independent of the tracking pro
 
 **Experimental development software — not a stable release.**
 
-Use a test Home Assistant dashboard. Beta 19 adds optional HA-only Apple Find My setup, explicitly selected item trackers, and passwordless report polling after restart. It retains beta 18's verified GPS ranking, Life360 saved-place import, tracker pictures, battery categories and optional city lookup. Background iPhone departure/return and stable release gates remain open. See the [changelog](CHANGELOG.md).
+Use a test Home Assistant dashboard. Beta 20 hardens polling, native-worker cleanup, recovery safeguards and explicitly selected item identity continuity. It retains optional HA-only Apple Find My, existing HA trackers, Life360, places, pictures and source report times. Background iPhone departure/return and stable release gates remain open. See the [changelog](CHANGELOG.md).
 
-**Status: experimental beta 19 prerelease; stable release gates remain open.** HomeCircle is a working name; public naming remains a release decision.
+**Status: experimental beta 20 prerelease; stable release gates remain open.** HomeCircle is a working name; public naming remains a release decision.
 
 HomeCircle consumes standard HA `person` and `device_tracker` entities, with optional explicitly selected supporting sensors. Optional direct Life360 and Apple Find My connections use the built in tracker provider contract. Existing HA trackers remain selectable without a HomeCircle provider account.
 
-See [beta 19 validation](docs/BETA19-VALIDATION.md) for the tested package, release checks and live Find My scope. Earlier features and their release checks are recorded in [beta 18 validation](docs/BETA18-VALIDATION.md).
+See [beta 20 validation](docs/BETA20-VALIDATION.md) for the versioned package boundary and remaining acceptance. Historical live Find My proof belongs to [beta 19](docs/BETA19-VALIDATION.md). Earlier features and their release checks are recorded in [beta 18 validation](docs/BETA18-VALIDATION.md).
 
 ## Start here
 
@@ -34,7 +34,7 @@ See [beta 19 validation](docs/BETA19-VALIDATION.md) for the tested package, rele
 
 ## Experimental release
 
-Maintainer: [@jmhjr](https://github.com/jmhjr). Version `v0.1.0-beta.19` is experimental. Use the installable ZIP from [GitHub releases](https://github.com/jmhjr/HomeCircle/releases), then follow [HACS setup](docs/SETUP.md). See [beta 19 validation](docs/BETA19-VALIDATION.md) for the tested package, environments and limits.
+Maintainer: [@jmhjr](https://github.com/jmhjr). Version `v0.1.0-beta.20` is experimental. Use the installable ZIP from [GitHub releases](https://github.com/jmhjr/HomeCircle/releases), then follow [HACS setup](docs/SETUP.md). See [beta 20 validation](docs/BETA20-VALIDATION.md) for the package, inherited evidence and limits.
 
 ## Repository
 

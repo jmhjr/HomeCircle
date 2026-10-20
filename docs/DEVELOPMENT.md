@@ -7,13 +7,13 @@ Current beta 19 work is documented in [Find My packaging validation](FINDMY-BETA
 
 Beta 19 adds experimental HA-only Apple Find My setup, explicit item selection, encrypted passwordless persistence and ordinary item trackers, while retaining beta 18's GPS ranking, places, photos and city lookup. Fresh discovery and selection, restart restoration and automatic decoded report delivery passed on one HA OS Raspberry Pi/aarch64 running Core 2026.10.2 and Python 3.14.7 with two selected items. This is not broad platform, multi-account or movement/latency acceptance.
 
-The automated backend and disposable lifecycle target remains Core 2026.9.4 with Python 3.14.7. Other installation types and versions are not established by these checks. Publication and HACS asset/install verification remain separate release steps; earlier published-version checks are preserved in their own records. Keep development and destructive lifecycle checks in disposable HA instances. See [stable scope audit](STABLE-SCOPE-AUDIT.md) before preparing `v0.1.0`.
+The default automated backend target remains Core 2026.9.4 with Python 3.14.7. The unreleased candidate also has a clean local Core 2026.10.2 test environment; see [platform/upgrade/recovery validation](PLATFORM-UPGRADE-RECOVERY-VALIDATION.md) for its exact scope. Linux dependency wheels are checked separately from still-pending Linux/HAOS native execution. Publication and HACS asset/install verification remain separate release steps; earlier published-version checks are preserved in their own records. Keep development and destructive lifecycle checks in disposable HA instances. See [stable scope audit](STABLE-SCOPE-AUDIT.md) before preparing `v0.1.0`.
 
 ## Work sequence
 
 Read PRODUCT, ADR-001, and PRIVACY first. Implement one roadmap milestone per focused branch. Use a disposable HA instance with synthetic entities. No credentials, family entities, photos or raw snapshot files belong in fixtures.
 
-Use Python 3.14.7 with pinned Home Assistant Core 2026.9.4 and pytest-homeassistant-custom-component 0.13.367 from `requirements-test.txt`. The live HA OS check above is separate from this disposable development target. The frontend uses pinned Leaflet/esbuild and native custom elements. Beta release archive and HACS validation are recorded in the versioned reports; stable release validation remains open. The bootstrap privacy checker needs Python 3.10+ and Git. On a fresh clone, enable the local guard:
+Use Python 3.14.7 with pinned Home Assistant Core 2026.9.4 and pytest-homeassistant-custom-component 0.13.367 from `requirements-test.txt`. The live HA OS check above is separate from this disposable development target. The default test requirements also pin setuptools 81 to match Core 2026.9.4 and findmy 0.10.2 solely for legacy namespace/export compatibility tests. Use a separate environment for Core 2026.10.2, with its tagged package constraints, pytest-homeassistant-custom-component 0.13.373 and frontend 20260930.4; do not upgrade the shared 9.4 environment in place. The frontend uses pinned Leaflet/esbuild and native custom elements. Beta release archive and HACS validation are recorded in the versioned reports; stable release validation remains open. The bootstrap privacy checker needs Python 3.10+ and Git. On a fresh clone, enable the local guard:
 
 ```sh
 git config core.hooksPath .githooks
@@ -38,6 +38,15 @@ The original bootstrap created no remote, deployment, release or tag. The curren
 Use semantic tags `vMAJOR.MINOR.PATCH`, beginning with `v0.1.0` after its release gates pass. Use prerelease tags such as `v0.1.0-beta.1` for tested prereleases. Keep manifest version (without the `v`) and release notes aligned. HACS release distribution also needs an actual GitHub release, not merely a Git tag.
 
 Before creating a prerelease tag, merge the version's README, changelog, setup wording, and validation notes into `main`. HACS can display README content from the tagged snapshot, so a documentation update made after tagging may leave older version text on its repository page. Attach the tested installable ZIP to the GitHub prerelease, download that asset back, and compare its checksum with the tested package. Then select the release through HACS in a disposable Home Assistant instance, restart, and verify the loaded version, saved configuration, and card resource URL.
+
+
+Beta 20 validation exception: the maintainer authorized a separately versioned
+prerelease and genuine HACS delivery rehearsal while preserving main and the
+existing working checkout. Its tag therefore names the reviewed isolated release
+commit, including the updated README, changelog, setup and validation record.
+This follows the tagged-documentation purpose of the usual main-first sequence
+without merging the experimental hardening candidate into main. Production and
+the frozen beta 19-manifest candidate remain unchanged.
 
 ## Packaging and checks
 

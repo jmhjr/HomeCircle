@@ -36,7 +36,7 @@ from google.protobuf.message import DecodeError
 from custom_components.homecircle._vendor_findmy.cloudkit.constants import CUTTLEFISH_SERVICE
 from custom_components.homecircle._vendor_findmy.cloudkit.proto import cloudkit_pb2 as ck
 from custom_components.homecircle._vendor_findmy.cloudkit.proto import cuttlefish_pb2 as cf
-from custom_components.homecircle._vendor_findmy.cloudkit.records import describe_wire, named_fields
+from custom_components.homecircle._vendor_findmy.cloudkit.records import describe_wire, named_fields, reference_name
 from custom_components.homecircle._vendor_findmy.errors import UnhandledProtocolError
 
 from .items import VIEW_MANATEE, VIEW_PROTECTED_CLOUD_STORAGE
@@ -401,9 +401,9 @@ class ShareRecord:
     """
     A key share, read out of the CloudKit record that carries it.
 
-    The record is of type `tlkshare` and its members are addressed **by name**. Note what
-    is *not* on it: no service and no key id. Both live on the message wrapping it, which
-    is why a reader looking here for the view name finds nothing.
+    The record is of type `tlkshare` and its members are addressed **by name**. Its view
+    comes from the wrapping message; an optional `parentkeyref` also names the key UUID.
+    Both must agree with the key material inside the signed ciphertext before key use.
     """
 
     sender: str
@@ -415,6 +415,9 @@ class ShareRecord:
     epoch: int
     poisoned: int
     version: int
+
+    key_id: str = ""
+    """The unsigned parent key reference, checked against authenticated key material."""
 
     @classmethod
     def from_record(cls, record: ck.Record) -> ShareRecord:
@@ -439,6 +442,14 @@ class ShareRecord:
             epoch=number("epoch"),
             poisoned=number("poisoned"),
             version=number("version"),
+            key_id=next(
+                (
+                    reference_name(field.value)
+                    for field in record.record_field
+                    if field.identifier.name == "parentkeyref"
+                ),
+                "",
+            ),
         )
 
 
@@ -742,6 +753,7 @@ def unwrap_share(
     *,
     alternates: Mapping[str, ec.EllipticCurvePrivateKey] | None = None,
     expected_receiver: str | None = None,
+    require_signature: bool = False,
 ) -> KeyShare:
     """
     Unwrap one share with the recovered peer's encryption key.
@@ -763,6 +775,9 @@ def unwrap_share(
         depending on that field being populated -- and it is worth having independently,
         because if the receiver does not match then no cipher parameter was ever going to
         help and the ECIES failure says nothing about the construction.
+    :param require_signature: Require a known sender and a verified signature before
+        unwrapping any key material. Key-use callers enable this; the default retains
+        the standalone helper's diagnostic behavior with an unavailable directory.
     """
     share = entry.share
     candidates: dict[str, ec.EllipticCurvePrivateKey] = {"encryption": encryption_key}
@@ -783,6 +798,9 @@ def unwrap_share(
             sender_verified=sender_verified,
             error=reason,
         )
+
+    if require_signature and not sender_verified:
+        return failed("the share has no verified signature from a known sending peer")
 
     if directory is not None and len(directory) and not sender_known:
         return failed(
@@ -835,9 +853,21 @@ def unwrap_share(
 
     wrapped = share.wrapped_key
 
+    if require_signature:
+        try:
+            material = parse_key_material(plaintext)
+        except ShareError:
+            return failed("the authenticated share carries no usable key material", wrapped)
+        if not material.uuid or not material.zone_name or material.zone_name != entry.view:
+            return failed("the authenticated key view does not match the share's view", wrapped)
+        if share.key_id and share.key_id != material.uuid:
+            return failed("the authenticated key UUID does not match the share's key reference", wrapped)
+        if any(key.slot == "tlk" and key.uuid and key.uuid != material.uuid for key in entry.view_keys):
+            return failed("the authenticated key UUID does not match the view's top-level key", wrapped)
+
     return KeyShare(
         service=entry.view,
-        key_id="",
+        key_id=material.uuid if require_signature else "",
         sender=share.sender,
         receiver=share.receiver,
         wrapped_key=wrapped,
@@ -1020,11 +1050,10 @@ def unwrap_view_keys(keys: list[ViewKey], share_plaintext: bytes) -> ViewKeyring
 
     for key in keys:
         if key.slot == "tlk":
-            # Already held: this record carries the key the share itself decrypted to.
-            # Note its UUID is still worth taking, since the message and the record are
-            # two sources for the same identifier and either may be the one an item names.
-            if key.uuid:
-                by_uuid[key.uuid] = material.key
+            # The UUID inside the signed ciphertext is authoritative. The wrapper cannot
+            # create aliases that would make a different item's parent reference match.
+            if key.uuid and key.uuid != material.uuid:
+                logger.warning("Ignoring a top-level key wrapper with a mismatched UUID")
             continue
         if not key.wrapped_key:
             continue
