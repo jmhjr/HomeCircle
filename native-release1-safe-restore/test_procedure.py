@@ -114,10 +114,10 @@ class ProcedureContracts(unittest.TestCase):
         def entry(domain,source='system',disabled=None):
             return SimpleNamespace(domain=domain,source=source,disabled_by=disabled,
                                    title='PRIVATE-CANARY',data={'PRIVATE-CANARY':'not exported'})
-        base=[entry('hassio'),entry('backup')]
+        base=[entry('hassio'),entry('backup'),entry('analytics')]
         scope=observe(base)
         self.assertTrue(scope['system_entries_ready'] and scope['entry_scope_allowed'])
-        self.assertEqual(scope['domains'],{'homecircle':0,'hassio':1,'backup':1,'other':0})
+        self.assertEqual(scope['domains'],{'homecircle':0,'hassio':1,'backup':1,'analytics':1,'other':0})
         self.assertTrue(observe(base+[entry('homecircle','user')])['system_entries_ready'])
         cases=[base+[entry('backup')],[entry('hassio'),entry('backup','user')],
                [entry('hassio'),entry('backup','system','user')],
@@ -132,10 +132,37 @@ class ProcedureContracts(unittest.TestCase):
         self.assertFalse(observe([entry('hassio')])['system_entries_ready'])
         with self.assertRaises(controller.Refused):observe(base*9)
 
+    def test_tagged_system_analytics_creation_requires_no_consent_or_entry_metadata_assumptions(self):
+        # Exact tagged upstream method body only; no Core import or actual analytics call.
+        source='async def async_step_system(\n    self, user_input: dict[str, Any] | None = None\n) -> ConfigFlowResult:\n    """Handle the initial step."""\n    return self.async_create_entry(title="Analytics", data={})\n'
+        self.assertEqual(hashlib.sha256(source.encode()).hexdigest(),'829fa02c77069df0ac0573a17734ac23579bb5d8bcd31626d333fdd124edc9f6')
+        namespace={}
+        exec(compile('from __future__ import annotations\n'+source,'tagged_analytics_system_flow','exec'),namespace)
+        calls=[]
+        def create_entry(**kwargs):calls.append(kwargs);return kwargs
+        result=asyncio.run(namespace['async_step_system'](SimpleNamespace(async_create_entry=create_entry)))
+        self.assertEqual(calls,[{'title':'Analytics','data':{}}]);self.assertEqual(result,calls[0])
+        def entry(domain,source='system',disabled=None):
+            return SimpleNamespace(domain=domain,source=source,disabled_by=disabled,
+                title='PRIVATE-CANARY',data={'preferences':'PRIVATE-CANARY'},options={'enabled':True},unique_id='PRIVATE-CANARY')
+        observe=entry_helpers()['entry_scope'];base=[entry('hassio'),entry('backup')]
+        good=observe(base+[entry('analytics')])
+        self.assertTrue(good['system_entries_ready'] and good['entry_scope_allowed'])
+        self.assertEqual(good['sources'],{'system':3,'user':0,'other':0})
+        self.assertEqual(good['domains']['analytics'],1)
+        for analytics in ([entry('analytics','user')],[entry('analytics','import')],
+                          [entry('analytics',disabled='user')],[entry('analytics'),entry('analytics')],
+                          [entry('analytics'),entry('PRIVATE-CANARY','system')]):
+            value=observe(base+analytics)
+            self.assertFalse(value['entry_scope_allowed'] or value['system_entries_ready'])
+            self.assertNotIn('PRIVATE',json.dumps(value))
+        self.assertFalse(observe(base)['system_entries_ready'])
+
     def test_public_entry_scope_projects_only_finite_counts_and_strict_types(self):
         scope=entry_helpers()['entry_scope']([
             SimpleNamespace(domain='hassio',source='system',disabled_by=None),
-            SimpleNamespace(domain='backup',source='system',disabled_by=None)])
+            SimpleNamespace(domain='backup',source='system',disabled_by=None),
+            SimpleNamespace(domain='analytics',source='system',disabled_by=None)])
         self.assertEqual(controller.public_entry_scope(scope),scope)
         cases=[{**scope,'PRIVATE-CANARY':'body'}, {**scope,'total':True},
                {**scope,'total':17},{**scope,'system_entries_ready':'PRIVATE-CANARY'},
@@ -394,7 +421,8 @@ class EntryReadinessContracts(unittest.IsolatedAsyncioTestCase):
     async def test_actual_wait_observes_delayed_backup_and_refuses_invalid_or_expired_scope(self):
         functions=entry_helpers();hassio=SimpleNamespace(domain='hassio',source='system',disabled_by=None)
         backup=SimpleNamespace(domain='backup',source='system',disabled_by=None)
-        states=iter(([hassio],[hassio,backup]));receipt={}
+        analytics=SimpleNamespace(domain='analytics',source='system',disabled_by=None)
+        states=iter(([hassio,analytics],[hassio,backup,analytics]));receipt={}
         hass=SimpleNamespace(config_entries=SimpleNamespace(async_entries=lambda:next(states)))
         await functions['ensure_entry_scope'](hass,receipt)
         self.assertTrue(receipt['entry_scope']['system_entries_ready'])
@@ -408,6 +436,26 @@ class EntryReadinessContracts(unittest.IsolatedAsyncioTestCase):
         functions['wait_for']=expire;hass.config_entries.async_entries=lambda:[hassio]
         with self.assertRaises(TimeoutError):await functions['ensure_entry_scope'](hass,receipt)
         self.assertEqual(receipt['entry_scope']['domains']['backup'],0)
+
+
+    async def test_actual_readiness_waits_for_analytics_and_refuses_wrong_system_scope(self):
+        functions=entry_helpers()
+        def entry(domain,source='system',disabled=None):return SimpleNamespace(domain=domain,source=source,disabled_by=disabled)
+        base=[entry('hassio'),entry('backup')];states=iter((base,base+[entry('analytics')]))
+        receipt={};hass=SimpleNamespace(config_entries=SimpleNamespace(async_entries=lambda:next(states)))
+        await functions['ensure_entry_scope'](hass,receipt)
+        self.assertEqual(receipt['entry_scope']['domains']['analytics'],1)
+        self.assertEqual(receipt['entry_scope']['sources']['system'],3)
+        for analytics in (entry('analytics','user'),entry('analytics',disabled='user')):
+            hass.config_entries.async_entries=lambda:base+[analytics]
+            with self.assertRaisesRegex(controller.Refused,'^qa_only_owned_or_system_entries$'):
+                await functions['ensure_entry_scope'](hass,receipt)
+            self.assertFalse(receipt['entry_scope']['entry_scope_allowed'])
+        async def expire(predicate,seconds):
+            self.assertEqual(seconds,60);self.assertFalse(predicate());raise TimeoutError()
+        functions['wait_for']=expire;hass.config_entries.async_entries=lambda:base
+        with self.assertRaises(TimeoutError):await functions['ensure_entry_scope'](hass,receipt)
+        self.assertEqual(receipt['entry_scope']['domains']['analytics'],0)
 
 
 if __name__=='__main__':unittest.main()

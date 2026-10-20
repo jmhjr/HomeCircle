@@ -73,7 +73,7 @@ def check(condition, label):
 def entry_scope(entries):
     """Count only fixed categories; permit the normal enabled system entries."""
     check(type(entries) is list and len(entries) <= 16, 'qa_entry_count_bound')
-    domains = dict.fromkeys(('homecircle', 'hassio', 'backup', 'other'), 0)
+    domains = dict.fromkeys(('homecircle', 'hassio', 'backup', 'analytics', 'other'), 0)
     sources = dict.fromkeys(('system', 'user', 'other'), 0)
     allowed = True
     for entry in entries:
@@ -84,11 +84,11 @@ def entry_scope(entries):
         if domain == 'homecircle':
             allowed = allowed and source == 'user'
             continue
-        if domain not in {'hassio', 'backup'} or source != 'system' or entry.disabled_by is not None:
+        if domain not in {'hassio', 'backup', 'analytics'} or source != 'system' or entry.disabled_by is not None:
             allowed = False
-    allowed = allowed and all(domains[name] <= 1 for name in ('homecircle', 'hassio', 'backup'))
+    allowed = allowed and all(domains[name] <= 1 for name in ('homecircle', 'hassio', 'backup', 'analytics'))
     return {'total': len(entries), 'domains': domains, 'sources': sources,
-            'system_entries_ready': allowed and domains['hassio'] == domains['backup'] == 1,
+            'system_entries_ready': allowed and domains['hassio'] == domains['backup'] == domains['analytics'] == 1,
             'entry_scope_allowed': allowed}
 
 

@@ -31,11 +31,11 @@ jobs:
           import hashlib,subprocess
           root=Path('native-release1-safe-restore')
           expected={
-            "README.md": "0e5456620aa42a69697e844ecbd869cdb7b9ef0ce80f61b139af1218cf52f1a1",
+            "README.md": "12127a181c4fb93b124e9405da2dcf5fd8acebc361ee6ef4823461ce9c15cc71",
             "accept_procedure.py": "71038cf5fcdcf914be271c5b5de9cdfb89c59b5e0bd147f07cc519a402614fb3",
-            "controller.py": "0b4ef21cd68b1cd32b7e9bb15ff9ebe33e5746d5f3fa9ac0ac99f8f1e4fffe5a",
+            "controller.py": "d3e0c44e1ce2946a9196f83b4354eb289f9a687f2a559acd722ca06a67bd72a8",
             "guard_transfer.py": "134437f6451f43ec9563077583f6528c15a2e45087606afd2b8811f36dc178c9",
-            "guest_helper/homecircle_safe_restore_qa/__init__.py": "1074abea250ff7e3c9639bbb5d96ec7edd008f8c6e81c69a2c84e64b75f20d6b",
+            "guest_helper/homecircle_safe_restore_qa/__init__.py": "bc768c3b3ac22cd6d0bd8c667a85ed78aaf2d408853fe76de3f0d3aaaa9fa5c4",
             "guest_helper/homecircle_safe_restore_qa/dependency_probe.py": "7ac8e79aa5aea1868801e9273d9d1300db525b51bd7fe70a0a03a836a506a8d6",
             "guest_helper/homecircle_safe_restore_qa/manifest.json": "081ef7cc5799e6b7adea6ee90a0f6d95c8c898372f8da25932f4690748b3cf7a",
             "payload/homecircle.zip": "c4530d94be3b2996f8d6c8948db88a51868566047d68558eefde7967f270a861",
@@ -45,7 +45,7 @@ jobs:
             "run_host.sh": "19e047f20d970b1728b790fba65354335b6a957a74362f457379d40e2f55ac1f",
             "test_inherited.py": "5ff850f550c8b1271a614211683ba983e5c8640a75e791fd2213f8a7ebb6a0d0",
             "test_phases.py": "7e375c09f7520f596ab42f8775291acdebc32b958da6b5852054abb5cd5403af",
-            "test_procedure.py": "dd59dbfe79395ef11a128f14e60e1283d2761c3b8dbb36284fa02ea7169e1b1d"
+            "test_procedure.py": "dcf73369be64a07ed77d13840cb2fb21af10955e3370e4ed0aa5b0a42a9a23d8"
           }
           tracked=subprocess.check_output(['git','ls-files','-z','--',str(root)]).decode().split('\0')
           assert {n for n in tracked if n}=={str(root/n) for n in expected},'tracked_members_refused'
@@ -70,7 +70,7 @@ jobs:
           test -r /usr/share/OVMF/OVMF_CODE_4M.fd
           test -f /usr/share/OVMF/OVMF_VARS_4M.fd
           test -r /usr/share/OVMF/OVMF_VARS_4M.fd
-      - name: Require exactly eighty-three zero-skip contracts
+      - name: Require exactly eighty-five zero-skip contracts
         timeout-minutes: 3
         shell: bash
         run: |
@@ -78,7 +78,7 @@ jobs:
           PYTHONDONTWRITEBYTECODE=1 python3 -B - <<'PY'
           import unittest
           suite=unittest.defaultTestLoader.discover('native-release1-safe-restore',pattern='test_*.py')
-          assert suite.countTestCases()==83,'contract_count_refused'
+          assert suite.countTestCases()==85,'contract_count_refused'
           result=unittest.TextTestRunner(verbosity=2).run(suite)
           assert result.wasSuccessful() and not result.skipped,'contract_failure_or_skip'
           PY

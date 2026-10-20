@@ -80,14 +80,17 @@ Positive/negative TCP controls and responsive QGA are required; uninterrupted
 isolation is not claimed. All deadlines, uncertain Docker states and cleanup
 failures remain failures. No mutation is retried, including backup and restore.
 
-Normal Core startup creates a system Backup entry, and Supervisor supplies its
-system Hassio entry. The helper waits up to 60 seconds for their normal discovery
+Normal Core startup creates system Backup and Analytics entries, and Supervisor
+supplies its system Hassio entry. The helper waits up to 60 seconds for their normal discovery
 flows, then requires exactly one enabled system entry of each kind. At most one
 synthetic user-source HomeCircle entry is permitted; its enabled/disabled state
 is checked separately by each procedure phase. Foreign domains, user-source
 system entries, disabled system entries and duplicates refuse. Diagnostics contain
 only fixed domain/source-category counts and readiness booleans; no raw entry
-names, titles, IDs or configuration data are exported.
+names, titles, IDs or configuration data are exported. Analytics entry setup is
+separate from analytics sharing consent; the fixture does not call preference or
+onboarding APIs. No zero-request claim follows from this entry policy. The prior
+run recorded one unknown system domain; it did not retain that domain's identity.
 
 ## Exact runtime and reuse
 
@@ -118,7 +121,7 @@ requires the same module hashes in the guest before creating the synthetic image
 
 ## Contracts, privacy and limits
 
-Eighty-three standalone contracts currently pass without skips. They include
+Eighty-five standalone contracts currently pass without skips. They include
 strict input/archive/OCI/dependency/blank-config checks; actual phase nonce and
 disabled automatic-boot barriers; old/new guard timeline, pending/uncertain and
 early-enable/network refusal; private bundle links/modes/size-before-read;
@@ -127,7 +130,8 @@ failure projection and plain procedure gate, plus actual-method dependency-probe
 transfer and current-constraint pin regressions, and actual preparation through
 an existing private workspace with missing/link/mode/owner refusals. The actual
 system-entry predicate, delayed discovery readiness and finite count-only failure
-projection are also tested. They do not import HA, a native
+projection are also tested, including the exact tagged Analytics system-flow
+body and delayed Analytics readiness. They do not import HA, a native
 provider or run a VM. The future workflow must bind every committed input before
 imports and require exactly the reviewed contract count with zero skips.
 

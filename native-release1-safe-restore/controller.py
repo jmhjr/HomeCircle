@@ -239,7 +239,7 @@ def public_entry_scope(value):
     keys = {'total', 'domains', 'sources', 'system_entries_ready', 'entry_scope_allowed'}
     if type(value) is not dict or set(value) != keys or type(value['total']) is not int or not 0 <= value['total'] <= 16:
         return None
-    for key, names in (('domains', {'homecircle', 'hassio', 'backup', 'other'}), ('sources', {'system', 'user', 'other'})):
+    for key, names in (('domains', {'homecircle', 'hassio', 'backup', 'analytics', 'other'}), ('sources', {'system', 'user', 'other'})):
         counts = value[key]
         if (type(counts) is not dict or set(counts) != names
                 or any(type(x) is not int or not 0 <= x <= 16 for x in counts.values())
