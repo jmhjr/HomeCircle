@@ -179,6 +179,12 @@ class DirectFindMy:
                 )
                 vault = Vault(root)
                 data = await self.hass.async_add_executor_job(vault.load)
+                expected_identity = metadata.get("account_identity")
+                if expected_identity is not None:
+                    from .findmy_identity import authenticated_identity
+
+                    if authenticated_identity(data.get("session")) != expected_identity:
+                        raise VaultError("Stored session belongs to a different account")
                 items = account_items(data)
                 chosen = metadata["items"]
                 if not chosen or any(identifier not in items for identifier in chosen):
@@ -255,6 +261,7 @@ class DirectFindMy:
         from .findmy_reports import ReauthenticationRequired
 
         client = self.clients[account_id]
+        save_attempted = False
         try:
             async with self.poll_slots:
                 if self.stopped:
@@ -262,28 +269,35 @@ class DirectFindMy:
                 reports = await client.poll()
             if self.stopped:
                 return
-            write = self.hass.async_add_executor_job(
-                self.vaults[account_id].save_account,
-                client.account.to_json(),
-                client.items,
-            )
-            try:
-                await asyncio.shield(write)
-            except asyncio.CancelledError:
-                # An executor write cannot be cancelled. Finish it before allowing
-                # reconnect or unload to start a second writer for this account.
-                await write
-                raise
-            self.states[account_id] = "connected"
+            save_attempted = True
+            await self.save_poll_progress(account_id, client)
+            failed_items = getattr(client, "failed_items", set())
+            self.states[account_id] = "partial" if failed_items else "connected"
+            if failed_items:
+                self.last_error = dt_util.utcnow()
             ir.async_delete_issue(
                 self.hass, "homecircle", f"findmy_auth_{self.entry_id}_{account_id}"
             )
             self.last_success = dt_util.utcnow()
             for identifier, tracker in self.trackers[account_id].items():
-                tracker.update(reports.get(identifier))
+                tracker.update(reports.get(identifier), failed=identifier in failed_items)
         except asyncio.CancelledError:
+            # Unload/reconnect waits for this task before replacing a session.
+            # Retain completed batches before releasing that writer ownership.
+            if not save_attempted and getattr(client, "poll_progress", False):
+                try:
+                    await self.save_poll_progress(account_id, client)
+                except Exception:
+                    pass
             raise
         except Exception as error:
+            # Completed batch results remain valuable even when authentication
+            # expires later in the poll. Persist them before reporting failure.
+            if not save_attempted and getattr(client, "poll_progress", False):
+                try:
+                    await self.save_poll_progress(account_id, client)
+                except Exception:
+                    pass
             self.states[account_id] = (
                 "auth_required"
                 if isinstance(error, ReauthenticationRequired)
@@ -304,8 +318,33 @@ class DirectFindMy:
                         )
                     },
                 )
-            for tracker in self.trackers[account_id].values():
-                tracker.update(None, failed=True)
+            for identifier, tracker in self.trackers[account_id].items():
+                tracker.update(client.items.get(identifier, {}).get("report"), failed=True)
+
+    async def save_poll_progress(self, account_id, client):
+        """Drain an atomic vault write before reconnect/unload can replace it."""
+        write = self.hass.async_add_executor_job(
+            self.vaults[account_id].save_account,
+            client.account.to_json(),
+            client.items,
+        )
+        # Never shield a potentially failing executor future directly: on Python
+        # 3.14 a failure after cancellation can be logged before it is consumed.
+        pending = asyncio.gather(write, return_exceptions=True)
+        cancellation = None
+        while not pending.done():
+            try:
+                await asyncio.shield(pending)
+            except asyncio.CancelledError as error:
+                # An executor write cannot be cancelled; repeated cancellation
+                # must not let reconnect begin a second write before it finishes.
+                if cancellation is None:
+                    cancellation = error
+        result = pending.result()[0]
+        if cancellation is not None:
+            raise cancellation
+        if isinstance(result, BaseException):
+            raise result
 
     async def pause_account(self, account_id):
         """Stop this account's poll before replacing its encrypted session."""
@@ -329,7 +368,7 @@ class DirectFindMy:
             "connected"
             if values and all(v == "connected" for v in values)
             else "partial"
-            if "connected" in values
+            if "connected" in values or "partial" in values
             else "auth_required"
             if "auth_required" in values
             else "network_error"

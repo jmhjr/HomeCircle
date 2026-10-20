@@ -312,12 +312,10 @@ class MacStubs:
         return 0
 
     def arc4random(self, h: "Harness") -> int:
-        return 0x12345678
+        return self.h.random_u32()
 
     def arc4random_buf(self, h: "Harness") -> int:
-        buf, n = self._a(0), self._a(1)
-        self.h.mem_write(buf, bytes((i * 7 + 3) & 0xFF for i in range(n)))
-        return 0
+        return self.h.random_buffer(self._a(0), self._a(1))
 
     # -- CoreFoundation ---------------------------------------------------
     def cfurl_create(self, h: "Harness") -> int:

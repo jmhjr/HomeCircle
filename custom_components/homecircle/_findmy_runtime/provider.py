@@ -1,4 +1,5 @@
 """Account-bound Mac identity with transient provisioning and encrypted serialization."""
+
 from __future__ import annotations
 
 import asyncio
@@ -6,6 +7,7 @@ import base64
 from copy import deepcopy
 from datetime import datetime, timezone
 import json
+import importlib.util
 from pathlib import Path
 import plistlib
 import re
@@ -18,24 +20,59 @@ from .._vendor_findmy.util.onboarding_anisette import _provision_url
 from .._vendor_findmy.util.onboarding_http import BoundedHttpSession
 
 PROFILE = DeviceIdentity(
-    model="MacBookPro13,2", os_name="macOS", os_version="13.1", os_build="22C65",
-    cfnetwork="1404.0.5", darwin="22.2.0",
+    model="MacBookPro13,2",
+    os_name="macOS",
+    os_version="13.1",
+    os_build="22C65",
+    cfnetwork="1404.0.5",
+    darwin="22.2.0",
 )
 CLIENT_INFO = PROFILE.client_info("com.apple.AuthKit/1 (com.apple.akd/1.0)")
 LOOKUP = "https://gsa.apple.com/grandslam/GsService2/lookup"
 MAX_IPC = 2 * 1024 * 1024
-PROVISION_STAGES = frozenset({
-    "runtime", "library", "initialize", "lookup", "start_request", "start_native",
-    "finish_request", "finish_native", "validate_state", "complete",
-})
-PROVISION_FAILURES = frozenset({
-    "library_unavailable", "native_unavailable", "http_refused", "response_shape",
-    "apple_refused", "state_refused", "cleanup_failed", "cancelled", "timeout", "other",
-})
+PROVISION_STAGES = frozenset(
+    {
+        "runtime",
+        "library",
+        "initialize",
+        "lookup",
+        "start_request",
+        "start_native",
+        "finish_request",
+        "finish_native",
+        "validate_state",
+        "complete",
+    }
+)
+PROVISION_FAILURES = frozenset(
+    {
+        "library_unavailable",
+        "native_unavailable",
+        "http_refused",
+        "response_shape",
+        "apple_refused",
+        "state_refused",
+        "cleanup_failed",
+        "cancelled",
+        "timeout",
+        "other",
+    }
+)
 
 
 class IdentityUnavailable(RuntimeError):
     """Fixed diagnostics only, never native input or provisioning response text."""
+
+
+def _unicorn_package_directory():
+    """Resolve the parent's one child dependency entirely off the event loop."""
+    spec = importlib.util.find_spec("unicorn")
+    if spec is None or not spec.submodule_search_locations or not spec.origin:
+        raise ValueError
+    directory = Path(spec.origin).resolve(strict=True).parent
+    if not (directory / "__init__.py").is_file():
+        raise ValueError
+    return str(directory)
 
 
 def new_identity():
@@ -43,7 +80,10 @@ def new_identity():
         "device_id": "00006000-" + secrets.token_hex(8).upper(),
         "local_user_uuid": secrets.token_hex(16).upper(),
         "host_uuid": secrets.token_hex(16),
-        "serial": "C02" + "".join(secrets.choice("0123456789ABCDEFGHJKLMNPQRSTUVWXYZ") for _ in range(9)),
+        "serial": "C02"
+        + "".join(
+            secrets.choice("0123456789ABCDEFGHJKLMNPQRSTUVWXYZ") for _ in range(9)
+        ),
         "routing": None,
     }
 
@@ -61,7 +101,10 @@ def validate_machine(value):
     }
     if type(identity) is not dict or set(identity) != set(patterns) | {"routing"}:
         raise IdentityUnavailable("identity_state_refused")
-    if any(type(identity[k]) is not str or re.fullmatch(pattern, identity[k]) is None for k, pattern in patterns.items()):
+    if any(
+        type(identity[k]) is not str or re.fullmatch(pattern, identity[k]) is None
+        for k, pattern in patterns.items()
+    ):
         raise IdentityUnavailable("identity_state_refused")
     routing = identity["routing"]
     if type(routing) is not int or not 0 < routing < 2**64:
@@ -70,7 +113,11 @@ def validate_machine(value):
         raise IdentityUnavailable("identity_state_refused")
     total = 0
     for name, encoded in stores.items():
-        if type(name) is not str or re.fullmatch(r"[A-Za-z0-9._-]{1,100}", name) is None or name in (".", "..", "adi.pb"):
+        if (
+            type(name) is not str
+            or re.fullmatch(r"[A-Za-z0-9._-]{1,100}", name) is None
+            or name in (".", "..", "adi.pb")
+        ):
             raise IdentityUnavailable("identity_state_refused")
         if type(encoded) is not str or len(encoded) > 1400000:
             raise IdentityUnavailable("identity_state_refused")
@@ -98,18 +145,45 @@ class Worker:
     async def open(self, library, identity, stores):
         if self._closed or self.process is not None or self._spawn is not None:
             raise IdentityUnavailable("identity_worker_unavailable")
-        self._spawn = asyncio.create_task(asyncio.create_subprocess_exec(
-            sys.executable, "-B", str(Path(__file__).with_name("worker.py")),
-            stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.DEVNULL, limit=MAX_IPC + 1,
-        ))
         try:
-            self.process = await asyncio.shield(self._spawn)
+            # Core installs may add manifest dependencies outside Python's default
+            # sites (for example /config/deps). Resolve only the one dependency
+            # this child uses; never copy cwd or the entire parent search path.
+            unicorn_package = await asyncio.to_thread(_unicorn_package_directory)
+        except Exception:
+            raise IdentityUnavailable("identity_worker_unavailable") from None
+        if self._closed:
+            raise IdentityUnavailable("identity_worker_unavailable")
+        self._spawn = asyncio.gather(
+            asyncio.create_subprocess_exec(
+                sys.executable,
+                "-B",
+                str(Path(__file__).with_name("worker.py")),
+                stdin=asyncio.subprocess.PIPE,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.DEVNULL,
+                limit=MAX_IPC + 1,
+            ),
+            return_exceptions=True,
+        )
+        try:
+            result = (await asyncio.shield(self._spawn))[0]
             self._spawn = None
+            if isinstance(result, BaseException):
+                raise result
+            self.process = result
             if self._closed:
                 await self.close()
                 raise IdentityUnavailable("identity_worker_unavailable")
-            return await self.call({"op": "open", "library": str(library), "host_uuid": identity["host_uuid"], "store": stores})
+            return await self.call(
+                {
+                    "op": "open",
+                    "library": str(library),
+                    "unicorn_package": unicorn_package,
+                    "host_uuid": identity["host_uuid"],
+                    "store": stores,
+                }
+            )
         except asyncio.CancelledError:
             try:
                 await self.close()
@@ -157,8 +231,8 @@ class Worker:
     async def _finish_close(self):
         if self._spawn is not None:
             try:
-                child = await self._spawn
-                if self.process is None:
+                child = (await self._spawn)[0]
+                if not isinstance(child, BaseException) and self.process is None:
                     self.process = child
             except Exception:
                 pass
@@ -179,14 +253,18 @@ class Worker:
     async def close(self):
         self._closed = True
         if self._close_task is None or (
-            self._close_task.done() and (
-                self._close_task.cancelled() or self._close_task.exception() is not None
+            self._close_task.done()
+            and (
+                self._close_task.cancelled()
+                or isinstance(self._close_task.result()[0], BaseException)
             )
         ):
-            self._close_task = asyncio.create_task(self._finish_close())
+            self._close_task = asyncio.gather(
+                self._finish_close(), return_exceptions=True
+            )
         task = self._close_task
         try:
-            await asyncio.shield(task)
+            result = (await asyncio.shield(task))[0]
         except asyncio.CancelledError:
             while not task.done():
                 try:
@@ -196,9 +274,11 @@ class Worker:
                 except Exception:
                     break
             if task.done() and not task.cancelled():
-                task.exception()
+                task.result()
             raise
-        except Exception:
+        if isinstance(result, asyncio.CancelledError):
+            raise result
+        if isinstance(result, BaseException):
             raise IdentityUnavailable("identity_worker_cleanup_failed") from None
 
 
@@ -213,7 +293,9 @@ class MacAnisetteProvider(BaseAnisetteProvider):
             raise IdentityUnavailable("identity_cache_required")
         machine = validate_machine(state) if state is not None else None
         self._machine_state = machine
-        self._machine_identity = deepcopy(machine["identity"]) if machine else new_identity()
+        self._machine_identity = (
+            deepcopy(machine["identity"]) if machine else new_identity()
+        )
         super().__init__(serial=self._machine_identity["serial"], identity=PROFILE)
         self._is_new_session = machine is None
         self._attempted = False
@@ -224,8 +306,12 @@ class MacAnisetteProvider(BaseAnisetteProvider):
         self._cache_window = None
         self._machine_id = None
         self._provision_diagnostics = {
-            "schema": 1, "stage": "runtime", "request_count": 0,
-            "last_http": None, "last_apple_code": None, "last_apple_hsc": None,
+            "schema": 1,
+            "stage": "runtime",
+            "request_count": 0,
+            "last_http": None,
+            "last_apple_code": None,
+            "last_apple_hsc": None,
             "failure": None,
         }
 
@@ -237,17 +323,26 @@ class MacAnisetteProvider(BaseAnisetteProvider):
 
         def number(name, low, high):
             candidate = value.get(name)
-            return candidate if type(candidate) is int and low <= candidate <= high else None
+            return (
+                candidate
+                if type(candidate) is int and low <= candidate <= high
+                else None
+            )
 
         count = number("request_count", 0, 3)
         return {
             "schema": 1,
-            "stage": value.get("stage") if type(value.get("stage")) is str and value["stage"] in PROVISION_STAGES else "runtime",
+            "stage": value.get("stage")
+            if type(value.get("stage")) is str and value["stage"] in PROVISION_STAGES
+            else "runtime",
             "request_count": count if count is not None else 0,
             "last_http": number("last_http", 100, 599),
             "last_apple_code": number("last_apple_code", -1000000, 1000000),
             "last_apple_hsc": number("last_apple_hsc", -1000000, 1000000),
-            "failure": value.get("failure") if type(value.get("failure")) is str and value["failure"] in PROVISION_FAILURES else None,
+            "failure": value.get("failure")
+            if type(value.get("failure")) is str
+            and value["failure"] in PROVISION_FAILURES
+            else None,
         }
 
     @property
@@ -284,6 +379,7 @@ class MacAnisetteProvider(BaseAnisetteProvider):
 
     async def _library(self):
         from .bootstrap import ensure_library
+
         return await ensure_library(self._libraries)
 
     async def _get_ani(self):
@@ -314,7 +410,8 @@ class MacAnisetteProvider(BaseAnisetteProvider):
                 headers = {
                     "User-Agent": PROFILE.user_agent("akd/1.0"),
                     "Content-Type": "application/x-www-form-urlencoded",
-                    "Accept": "*/*", "X-Mme-Device-Id": self.device_uuid,
+                    "Accept": "*/*",
+                    "X-Mme-Device-Id": self.device_uuid,
                     "X-MMe-Client-Info": CLIENT_INFO,
                     "X-Apple-I-MD-LU": self.local_user_uuid,
                     "X-Apple-I-SRL-NO": self.serial,
@@ -329,8 +426,12 @@ class MacAnisetteProvider(BaseAnisetteProvider):
                         diagnostics["failure"] = "state_refused"
                         raise IdentityUnavailable("identity_provisioning_refused")
                     diagnostics["request_count"] += 1
-                    diagnostics["last_http"] = diagnostics["last_apple_code"] = diagnostics["last_apple_hsc"] = None
-                    response = await transport.request(method, url, headers=headers, data=body)
+                    diagnostics["last_http"] = diagnostics[
+                        "last_apple_code"
+                    ] = diagnostics["last_apple_hsc"] = None
+                    response = await transport.request(
+                        method, url, headers=headers, data=body
+                    )
                     status = response.status_code
                     if type(status) is int and 100 <= status <= 599:
                         diagnostics["last_http"] = status
@@ -341,7 +442,9 @@ class MacAnisetteProvider(BaseAnisetteProvider):
                         value = response.plist()
                     except Exception:
                         diagnostics["failure"] = "response_shape"
-                        raise IdentityUnavailable("identity_provisioning_refused") from None
+                        raise IdentityUnavailable(
+                            "identity_provisioning_refused"
+                        ) from None
                     if type(value) is not dict:
                         diagnostics["failure"] = "response_shape"
                         raise IdentityUnavailable("identity_provisioning_refused")
@@ -354,23 +457,44 @@ class MacAnisetteProvider(BaseAnisetteProvider):
 
                 async def provision(url, payload, stage):
                     diagnostics["stage"] = stage
-                    headers["X-Apple-I-Client-Time"] = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-                    value = (await request("POST", url, plistlib.dumps({"Header": {}, "Request": payload})))["Response"]
+                    headers["X-Apple-I-Client-Time"] = datetime.now(
+                        timezone.utc
+                    ).strftime("%Y-%m-%dT%H:%M:%SZ")
+                    value = (
+                        await request(
+                            "POST",
+                            url,
+                            plistlib.dumps({"Header": {}, "Request": payload}),
+                        )
+                    )["Response"]
                     status = value.get("Status", {})
                     if type(status) is dict:
-                        for source, target in (("ec", "last_apple_code"), ("hsc", "last_apple_hsc")):
+                        for source, target in (
+                            ("ec", "last_apple_code"),
+                            ("hsc", "last_apple_hsc"),
+                        ):
                             code = status.get(source)
                             if type(code) is int and -1000000 <= code <= 1000000:
                                 diagnostics[target] = code
-                    if type(status) is not dict or status.get("ec", 0) != 0 or status.get("hsc", 200) != 200:
-                        diagnostics["failure"] = "apple_refused" if type(status) is dict else "response_shape"
+                    if (
+                        type(status) is not dict
+                        or status.get("ec", 0) != 0
+                        or status.get("hsc", 200) != 200
+                    ):
+                        diagnostics["failure"] = (
+                            "apple_refused"
+                            if type(status) is dict
+                            else "response_shape"
+                        )
                         raise IdentityUnavailable("identity_provisioning_refused")
                     return value
 
                 first = await provision(start, {}, "start_request")
                 diagnostics["stage"] = "start_native"
                 result = await worker.call({"op": "start", "spim": first["spim"]})
-                last = await provision(finish, {"cpim": result["cpim"]}, "finish_request")
+                last = await provision(
+                    finish, {"cpim": result["cpim"]}, "finish_request"
+                )
                 routing = last["X-Apple-I-MD-RINFO"]
                 if type(routing) is str and routing.isdecimal():
                     routing = int(routing)
@@ -378,13 +502,22 @@ class MacAnisetteProvider(BaseAnisetteProvider):
                     diagnostics["failure"] = "response_shape"
                     raise IdentityUnavailable("identity_provisioning_refused")
                 diagnostics["stage"] = "finish_native"
-                result = await worker.call({"op": "finish", "ptm": last["ptm"], "tk": last["tk"], "routing": routing})
+                result = await worker.call(
+                    {
+                        "op": "finish",
+                        "ptm": last["ptm"],
+                        "tk": last["tk"],
+                        "routing": routing,
+                    }
+                )
                 if self._closed:
                     diagnostics["failure"] = "state_refused"
                     raise IdentityUnavailable("identity_closed")
                 diagnostics["stage"] = "validate_state"
                 self._machine_identity["routing"] = routing
-                self._machine_state = validate_machine({"identity": self._machine_identity, "store": result["store"]})
+                self._machine_state = validate_machine(
+                    {"identity": self._machine_identity, "store": result["store"]}
+                )
         except asyncio.CancelledError:
             if diagnostics["failure"] is None:
                 diagnostics["failure"] = "cancelled"
@@ -397,11 +530,19 @@ class MacAnisetteProvider(BaseAnisetteProvider):
                     failure = "response_shape"
                 elif diagnostics["stage"] == "library":
                     failure = "library_unavailable"
-                elif diagnostics["stage"] in {"initialize", "start_native", "finish_native"}:
+                elif diagnostics["stage"] in {
+                    "initialize",
+                    "start_native",
+                    "finish_native",
+                }:
                     failure = "native_unavailable"
                 elif diagnostics["stage"] == "validate_state":
                     failure = "state_refused"
-                elif diagnostics["stage"] in {"lookup", "start_request", "finish_request"}:
+                elif diagnostics["stage"] in {
+                    "lookup",
+                    "start_request",
+                    "finish_request",
+                }:
                     failure = "response_shape"
                 else:
                     failure = "other"
@@ -417,9 +558,9 @@ class MacAnisetteProvider(BaseAnisetteProvider):
                     await worker.close()
                     self._worker = None
 
-            closing = asyncio.create_task(cleanup())
+            closing = asyncio.gather(cleanup(), return_exceptions=True)
             try:
-                await asyncio.shield(closing)
+                result = (await asyncio.shield(closing))[0]
             except asyncio.CancelledError:
                 if diagnostics["failure"] is None:
                     diagnostics["failure"] = "cancelled"
@@ -431,15 +572,23 @@ class MacAnisetteProvider(BaseAnisetteProvider):
                     except Exception:
                         break
                 if closing.done() and not closing.cancelled():
-                    closing.exception()
+                    closing.result()
                 raise
-            except Exception:
+            if isinstance(result, asyncio.CancelledError):
+                if diagnostics["failure"] is None:
+                    diagnostics["failure"] = "cancelled"
+                raise result
+            if isinstance(result, BaseException):
                 if not unwinding:
                     diagnostics["failure"] = "cleanup_failed"
-                    raise IdentityUnavailable("identity_worker_cleanup_failed") from None
+                    raise IdentityUnavailable(
+                        "identity_worker_cleanup_failed"
+                    ) from None
         diagnostics["stage"] = "complete"
 
-    async def get_headers(self, user_id, device_id, serial=None, with_client_info=False):
+    async def get_headers(
+        self, user_id, device_id, serial=None, with_client_info=False
+    ):
         async with self._lock:
             if user_id != self.local_user_uuid or device_id.upper() != self.device_uuid:
                 raise IdentityUnavailable("identity_account_mismatch")
@@ -450,16 +599,27 @@ class MacAnisetteProvider(BaseAnisetteProvider):
                 self._worker = worker
                 try:
                     library = await self._library()
-                    opened = await worker.open(library, self._machine_identity, self._machine_state["store"])
+                    opened = await worker.open(
+                        library, self._machine_identity, self._machine_state["store"]
+                    )
                     if opened != {"provisioned": True}:
                         raise IdentityUnavailable("identity_state_refused")
-                    output = await worker.call({"op": "otp", "routing": self._machine_identity["routing"]})
+                    output = await worker.call(
+                        {"op": "otp", "routing": self._machine_identity["routing"]}
+                    )
                     if set(output) != {"otp", "mid"}:
                         raise IdentityUnavailable("identity_output_refused")
                     for value in output.values():
-                        if type(value) is not str or not 0 < len(value) <= 2048 or not base64.b64decode(value, validate=True):
+                        if (
+                            type(value) is not str
+                            or not 0 < len(value) <= 2048
+                            or not base64.b64decode(value, validate=True)
+                        ):
                             raise IdentityUnavailable("identity_output_refused")
-                    if self._machine_id is not None and self._machine_id != output["mid"]:
+                    if (
+                        self._machine_id is not None
+                        and self._machine_id != output["mid"]
+                    ):
                         raise IdentityUnavailable("identity_binding_changed")
                     if self._closed:
                         raise IdentityUnavailable("identity_closed")
@@ -475,17 +635,27 @@ class MacAnisetteProvider(BaseAnisetteProvider):
                         await worker.close()
                     except Exception:
                         if not unwinding:
-                            raise IdentityUnavailable("identity_worker_cleanup_failed") from None
+                            raise IdentityUnavailable(
+                                "identity_worker_cleanup_failed"
+                            ) from None
                     else:
                         self._worker = None
             # Matching the proven wire profile includes UTC and a base64 local UID.
             headers = {
-                "X-Apple-I-Client-Time": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "X-Apple-I-TimeZone": "UTC", "loc": "en_US", "X-Apple-Locale": "en_US",
-                "X-Apple-I-MD": self.otp, "X-Apple-I-MD-M": self.machine,
-                "X-Apple-I-MD-LU": base64.b64encode(self.local_user_uuid.encode()).decode(),
+                "X-Apple-I-Client-Time": datetime.now(timezone.utc).strftime(
+                    "%Y-%m-%dT%H:%M:%SZ"
+                ),
+                "X-Apple-I-TimeZone": "UTC",
+                "loc": "en_US",
+                "X-Apple-Locale": "en_US",
+                "X-Apple-I-MD": self.otp,
+                "X-Apple-I-MD-M": self.machine,
+                "X-Apple-I-MD-LU": base64.b64encode(
+                    self.local_user_uuid.encode()
+                ).decode(),
                 "X-Apple-I-MD-RINFO": self.router,
-                "X-Mme-Device-Id": self.device_uuid, "X-Apple-I-SRL-NO": self.serial,
+                "X-Mme-Device-Id": self.device_uuid,
+                "X-Apple-I-SRL-NO": self.serial,
             }
             if with_client_info:
                 headers["X-Mme-Client-Info"] = CLIENT_INFO
@@ -495,20 +665,48 @@ class MacAnisetteProvider(BaseAnisetteProvider):
         if path is not None or self._machine_state is None or self._closed:
             raise IdentityUnavailable("identity_serialization_refused")
         # The caller embeds this in its already encrypted selected-item vault.
-        return {"type": "aniMac", "version": 1, "machine": deepcopy(self._machine_state)}
+        return {
+            "type": "aniMac",
+            "version": 1,
+            "machine": deepcopy(self._machine_state),
+        }
 
     @classmethod
     def from_json(cls, mapping, *, libs_path):
-        if type(mapping) is not dict or set(mapping) != {"type", "version", "machine"} or mapping["type"] != "aniMac" or type(mapping["version"]) is not int or mapping["version"] != 1:
+        if (
+            type(mapping) is not dict
+            or set(mapping) != {"type", "version", "machine"}
+            or mapping["type"] != "aniMac"
+            or type(mapping["version"]) is not int
+            or mapping["version"] != 1
+        ):
             raise IdentityUnavailable("identity_state_refused")
         return cls(libs_path=libs_path, state=mapping["machine"])
 
     async def close(self):
         self._closed = True
-        if self._worker is not None:
-            await self._worker.close()
-            self._worker = None
-        async with self._lock:
-            self._cache = self._machine_id = self._cache_window = None
-            self._machine_state = None
-            self._machine_identity.clear()
+        try:
+            if self._worker is not None:
+                await self._worker.close()
+                self._worker = None
+        finally:
+
+            async def clear():
+                async with self._lock:
+                    self._cache = self._machine_id = self._cache_window = None
+                    self._machine_state = None
+                    self._machine_identity.clear()
+
+            clearing = asyncio.gather(clear(), return_exceptions=True)
+            try:
+                result = (await asyncio.shield(clearing))[0]
+            except asyncio.CancelledError:
+                while not clearing.done():
+                    try:
+                        await asyncio.shield(clearing)
+                    except asyncio.CancelledError:
+                        continue
+                clearing.result()
+                raise
+            if isinstance(result, BaseException):
+                raise result

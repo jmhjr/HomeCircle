@@ -30,10 +30,12 @@ part that matters -- see its docstring.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import plistlib
 import time
 import uuid
+from copy import deepcopy
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
@@ -45,7 +47,7 @@ from custom_components.homecircle._vendor_findmy.cloudkit.client import AsyncClo
 from custom_components.homecircle._vendor_findmy.cloudkit.constants import CUTTLEFISH_SERVICE
 from custom_components.homecircle._vendor_findmy.cloudkit.pcs import public_key_forms
 from custom_components.homecircle._vendor_findmy.cloudkit.proto import cuttlefish_pb2 as cf
-from custom_components.homecircle._vendor_findmy.errors import UnhandledProtocolError
+from custom_components.homecircle._vendor_findmy.errors import InvalidStateError, UnhandledProtocolError
 from custom_components.homecircle._vendor_findmy.util.abc import Closable
 
 from .bottle import (
@@ -97,7 +99,7 @@ from .join import (
     next_stable_clock,
 )
 from .peers import PeerDirectory, check_peer_identifiers, fetch_peer_directory
-from .recovery import recover_bottled_peer
+from .recovery import RecoveryProtocolError, recover_bottled_peer
 from .servicekey import ServiceKeyError, ServiceKeys, service_keys_from_der
 from .shares import (
     KeyShare,
@@ -164,6 +166,17 @@ the user's existing trust. Its request message is deliberately undefined in
 
 class KeychainSessionError(UnhandledProtocolError):
     """Raised when a keychain session cannot be established or used."""
+
+
+def recovery_account_binding(account: object) -> tuple[str, str] | None:
+    """Bind in-memory retry material to the account's authenticated identifiers."""
+    try:
+        adsid, dsid = account.adsid, account.dsid
+    except (AttributeError, KeyError, ValueError, InvalidStateError):
+        return None
+    if not isinstance(adsid, str) or not adsid or not isinstance(dsid, str) or not dsid:
+        return None
+    return adsid, dsid
 
 
 def _require_partition(partition: str | None) -> str:
@@ -263,6 +276,24 @@ class RecoveredPeer:
         return self.bottle.encryption()
 
 
+async def _close_transports(*clients):
+    """Finish all owned closes, then preserve the first failure or cancellation."""
+    pending = asyncio.gather(*(client.close() for client in clients), return_exceptions=True)
+    cancellation = None
+    while not pending.done():
+        try:
+            await asyncio.shield(pending)
+        except asyncio.CancelledError as error:
+            if cancellation is None:
+                cancellation = error
+    results = pending.result()
+    if cancellation is not None:
+        raise cancellation
+    for result in results:
+        if isinstance(result, BaseException):
+            raise result
+
+
 class AsyncKeychainSession(Closable):
     """
     A live session against the services that describe an account's escrow records.
@@ -287,11 +318,15 @@ class AsyncKeychainSession(Closable):
         self._cuttlefish = cuttlefish
         self._securityd = securityd
         self._proxy = proxy
+        self._closed = False
         self._pet_obtained_at = time.monotonic()
 
         self._options: RecoveryOptions | None = None
         self._bottles: ViableBottles | None = None
         self._peers: PeerDirectory | None = None
+        self._verified_recovery_record: EscrowRecord | None = None
+        self._verified_recovery_material: bytes | None = None
+        self._verified_recovery_account: tuple[str, str] | None = None
 
     @classmethod
     async def open(cls, account: AsyncAppleAccount) -> Self:
@@ -327,10 +362,11 @@ class AsyncKeychainSession(Closable):
             if isinstance(diagnostics, dict):
                 diagnostics["phase"] = "escrow_client"
             proxy = AsyncEscrowProxy(account, escrow_host(partition), pet)
-        except Exception:
-            await cloudkit.close()
-            await cuttlefish.close()
-            await securityd.close()
+        except BaseException:
+            try:
+                await _close_transports(cloudkit, cuttlefish, securityd)
+            except BaseException:
+                pass  # A cleanup failure must not replace the failed open or cancellation.
             raise
 
         logger.info("Keychain session open on partition %s", info.partition)
@@ -339,10 +375,13 @@ class AsyncKeychainSession(Closable):
     @override
     async def close(self) -> None:
         """Close everything this session opened. Does not close the account."""
-        await self._proxy.close()
-        await self._securityd.close()
-        await self._cuttlefish.close()
-        await self._cloudkit.close()
+        if getattr(self, "_closed", False):
+            return
+        self._verified_recovery_record = None
+        self._verified_recovery_material = None
+        self._verified_recovery_account = None
+        await _close_transports(self._proxy, self._securityd, self._cuttlefish, self._cloudkit)
+        self._closed = True
 
     async def __aenter__(self) -> Self:
         """Enter a context that closes this session on exit."""
@@ -393,10 +432,9 @@ class AsyncKeychainSession(Closable):
         """
         Read who is in the trust circle.
 
-        Read-only. This is a prerequisite rather than an extra: a key share names its
-        sender by hash and a bottle names its sponsor by hash, and nothing else in the
-        protocol says what those peers' keys are. Syncing trust first is what makes those
-        names checkable at all.
+        Read-only. Shares need a known sending peer. Bottle recovery checks a known
+        sponsor against this directory, while a retired sponsor can instead be verified
+        using its recovered keys bound to the signed bottle public keys.
 
         :param refresh: Read again rather than reusing the previous answer.
         """
@@ -431,17 +469,43 @@ class AsyncKeychainSession(Closable):
         :raises KeychainSessionError: If the record is not one this session listed, or the
             recovered material is not shaped as expected.
         """
-        options = await self.recovery_options()
-        if record not in options.recoverable:
-            msg = (
-                f"{record.label} is not among the records this session found recoverable."
-                " Recovering from a record whose bottle is not usable cannot succeed."
-            )
-            raise KeychainSessionError(msg)
+        if self.can_resume_recovery(record):
+            material = self._verified_recovery_material
+        else:
+            # Different records never reuse one another's verified material.
+            self._verified_recovery_record = None
+            self._verified_recovery_material = None
+            self._verified_recovery_account = None
+            options = await self.recovery_options()
+            if record not in options.recoverable:
+                raise RecoveryProtocolError("preproof", "not_dispatched")
+            await self._renew_token_if_stale()
+            material = await recover_bottled_peer(self._proxy, record, passcode)
+            self._verified_recovery_record = deepcopy(record)
+            self._verified_recovery_material = material
+            self._verified_recovery_account = recovery_account_binding(self._account)
+        try:
+            peer = await self._recovered_material(record, material)
+        except Exception:
+            raise RecoveryProtocolError("material", "verified") from None
+        # Keep plaintext only while a failed material/directory step needs retry.
+        # The client can retain the opened peer for PCS retries after this returns.
+        self._verified_recovery_record = None
+        self._verified_recovery_material = None
+        self._verified_recovery_account = None
+        return peer
 
-        await self._renew_token_if_stale()
+    def can_resume_recovery(self, record: EscrowRecord) -> bool:
+        """A same-account, exact-record retry can reuse already verified material."""
+        return (
+            self._verified_recovery_material is not None
+            and self._verified_recovery_account is not None
+            and self._verified_recovery_account == recovery_account_binding(self._account)
+            and self._verified_recovery_record == record
+        )
 
-        material = await recover_bottled_peer(self._proxy, record, passcode)
+    async def _recovered_material(self, record: EscrowRecord, material: bytes) -> RecoveredPeer:
+        """Open material only after the recovery server's proof authenticated."""
         if isinstance(getattr(self._account, "_recovery_diagnostics", None), dict):
             self._account._recovery_diagnostics["unlock_phase"] = "bottle_material"
 
@@ -463,11 +527,10 @@ class AsyncKeychainSession(Closable):
         sealed = self._sealed_bottle(record)
         inner = cf.OTBottle.FromString(sealed.bottle)
 
-        # Who sealed this bottle, and under which of its two ids. Looked up before it is
-        # opened, so that key material from a party the circle does not contain is refused
-        # rather than used -- and **the id and the sponsor come out of one lookup**, so
-        # that the peer this addresses and the peer whose signature is checked cannot be
-        # two different peers. Issue #140 was that pair disagreeing.
+        # Resolve both names through one lookup so the addressed peer and known
+        # sponsor cannot disagree (issue #140). A retired sponsor may be absent;
+        # strict bottle recovery still verifies its signature with recovered keys
+        # bound to the signed public keys before any recovered material is used.
         if isinstance(getattr(self._account, "_recovery_diagnostics", None), dict):
             self._account._recovery_diagnostics["unlock_phase"] = "peer_directory"
         directory = await self.peer_directory()
@@ -503,7 +566,7 @@ class AsyncKeychainSession(Closable):
             fields=fields,
             salt=salt,
             keys=keys,
-            bottle=open_bottle(sealed, keys, sponsor=sponsor),
+            bottle=open_bottle(sealed, keys, sponsor=sponsor, require_signatures=True),
             cuttlefish_peer_id=cuttlefish_peer_id,
         )
 
@@ -551,6 +614,7 @@ class AsyncKeychainSession(Closable):
                 directory,
                 alternates=alternates,
                 expected_receiver=peer.peer_id,
+                require_signature=True,
             )
             for entry in entries
         ]

@@ -1,0 +1,43 @@
+name: Disposable native HAOS capability preflight
+
+on:
+  push:
+    branches: [codex/native-amd64-validation]
+    paths:
+      - native-haos-preflight/**
+      - .github/workflows/native-haos-preflight.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  preflight:
+    if: github.ref == 'refs/heads/codex/native-amd64-validation'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Permit this disposable runner to open its KVM device
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = x86_64
+          test -c /dev/kvm
+          sudo chgrp "$(id -gn)" /dev/kvm
+          sudo chmod g+rw /dev/kvm
+      - name: Check hardware acceleration and ephemeral public repository access
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: timeout --signal=TERM --kill-after=5s 180s python3 -I -B native-haos-preflight/preflight.py
+      - name: Retain capability receipt only
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: native-haos-preflight-summary
+          path: preflight-results/preflight.json
+          if-no-files-found: warn
+          retention-days: 7

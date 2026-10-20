@@ -23,34 +23,36 @@ stops at the sealed material.
 from __future__ import annotations
 
 import base64
+import asyncio
 import binascii
 import hashlib
 import logging
 import secrets
-import textwrap
 import uuid
-from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
-import srp._pysrp as srp
+from aiohttp import ClientError
 from cryptography.exceptions import InvalidTag
 from cryptography.hazmat.primitives import padding
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
-from custom_components.homecircle._vendor_findmy.errors import UnhandledProtocolError
+from custom_components.homecircle._vendor_findmy.errors import (
+    AppleServiceUnavailableError, UnauthorizedError, UnhandledProtocolError,
+)
+from custom_components.homecircle._vendor_findmy.util.srp import recovery as srp
 
 from .escrow import (
     EscrowError,
+    EscrowRecoveryError,
     KeyVaultSection,
     build_keyvault_message,
     parse_keyvault_message,
     split_keyvault_message,
+    recovery_attempt,
 )
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
-
     from .escrow import AsyncEscrowProxy, EscrowRecord
 
 logger = logging.getLogger(__name__)
@@ -79,6 +81,11 @@ INNER_SECTIONS = 6
 INNER_KEY_LENGTH = 16
 INNER_IV_LENGTH = 16
 
+# A local CPU-work ceiling, not a claimed Apple protocol maximum. The bundled
+# enrollment writer uses 10,000 rounds; allow 100 times that work while refusing
+# an authenticated response that asks for up to 2**32-1 synchronous rounds.
+MAX_PBKDF2_ITERATIONS = 1_000_000
+
 # §6.4's cipher table.
 BLOB_VERSION_CBC = 0
 BLOB_VERSION_UNKNOWN = 1
@@ -90,10 +97,30 @@ GCM_TAG_LENGTH = 16
 # integer, so the value is left-padded rather than lengthened.
 CLIENT_SECRET_LENGTH = 32
 _PYSRP_SECRET_LENGTH = 256
+SRP_MODULUS_BYTES = 256
 
 
 class RecoveryError(UnhandledProtocolError):
     """Raised when a recovery cannot be completed."""
+
+
+
+class RecoveryProtocolError(RecoveryError):
+    """Safe structured recovery outcome, independent of stale diagnostics or text."""
+
+    def __init__(
+        self, stage: str, dispatch_state: str, *, http_status: object = None,
+        service_code: object = None, reason: str = "protocol",
+    ) -> None:
+        self.reason = reason if reason in {"transient", "protocol"} else "protocol"
+        self.stage = stage if stage in {"preproof", "dispatch", "refusal", "serverproof", "material"} else "preproof"
+        self.dispatch_state = dispatch_state if dispatch_state in {
+            "not_dispatched", "uncertain", "refused", "verified",
+        } else "uncertain"
+        self.server_verified = self.dispatch_state == "verified"
+        self.http_status = http_status if type(http_status) is int and 100 <= http_status <= 599 else None
+        self.service_code = service_code if type(service_code) is int and abs(service_code) <= 1000000 else None
+        super().__init__("Recovery exchange " + self.stage)
 
 
 def _blob_bytes(value: object, name: str) -> bytes:
@@ -115,30 +142,6 @@ def _blob_bytes(value: object, name: str) -> bytes:
 
     msg = f"{name} is a {type(value).__name__}, which is neither bytes nor base64 text"
     raise RecoveryError(msg)
-
-
-@contextmanager
-def _identity_in_private_key() -> Iterator[None]:
-    """
-    Include the identity in SRP's private-key hash, for as long as this is held.
-
-    Recovery is **standard SRP-6a**, unlike Grand Slam authentication, which omits the
-    identity from that hash. The distinction matters and is invisible when wrong: a client
-    that gets it backwards fails to authenticate in a way indistinguishable from a wrong
-    passcode.
-
-    The awkward part is that the SRP library carries this as a **process-global**, and
-    :mod:`findmy.reports.account` sets it the other way at import time. So it is flipped
-    for the duration and put back afterwards, including on failure. Two SRP exchanges of
-    different kinds running concurrently in one process would interfere; that does not
-    happen here, and this is the narrowest place to contain it.
-    """
-    previous = srp._no_username_in_x  # noqa: SLF001
-    srp.no_username_in_x(False)
-    try:
-        yield
-    finally:
-        srp.no_username_in_x(previous)
 
 
 @dataclass(frozen=True)
@@ -196,6 +199,15 @@ def parse_challenge(response: dict[str, Any], label: str, transaction_id: str) -
         SRP_INIT_HEADER_LENGTH,
         SRP_INIT_SECTIONS,
     )
+    # This exchange always uses the fixed 2048-bit group. The installed backend
+    # converts B a byte at a time with growing integers before checking its
+    # width; an oversized unauthenticated challenge would block HA's event loop.
+    # Retain one optional zero sign octet, which has the same integer value.
+    server_public = sections[2]
+    if not (1 <= len(server_public) <= SRP_MODULUS_BYTES or (
+        len(server_public) == SRP_MODULUS_BYTES + 1 and server_public[0] == 0
+    )):
+        raise RecoveryError("The recovery public value exceeds the supported fixed group")
     logger.debug(
         "srp_init framing: prefix %s, header %s, section lengths %s",
         prefix.hex(),
@@ -210,7 +222,7 @@ def parse_challenge(response: dict[str, Any], label: str, transaction_id: str) -
         header=header,
         exchange_token=sections[0],
         salt=sections[1],
-        server_public=sections[2],
+        server_public=server_public,
         dsid=str(dsid),
         club_type_id=response.get("clubTypeID"),
     )
@@ -318,11 +330,13 @@ def unwrap_inner_blob(blob: bytes, passcode: str) -> bytes:
     header, sections = parse_keyvault_message(blob, INNER_HEADER_LENGTH, INNER_SECTIONS)
 
     iterations = int.from_bytes(header[8:12], "big")
-    if iterations <= 0:
-        msg = f"The inner blob asks for {iterations} PBKDF2 iterations, which cannot be right"
+    if not 1 <= iterations <= MAX_PBKDF2_ITERATIONS:
+        msg = "The inner blob's PBKDF2 iterations exceed the supported local work policy"
         raise RecoveryError(msg)
 
     salt = sections[1]
+    if len(salt) < INNER_IV_LENGTH or not sections[3] or len(sections[3]) % INNER_IV_LENGTH:
+        raise RecoveryError("The inner blob carries invalid CBC parameters")
     derived = hashlib.pbkdf2_hmac("sha256", passcode.encode(), salt, iterations, INNER_KEY_LENGTH)
 
     decryptor = Cipher(algorithms.AES(derived), modes.CBC(salt[:INNER_IV_LENGTH])).decryptor()
@@ -331,47 +345,26 @@ def unwrap_inner_blob(blob: bytes, passcode: str) -> bytes:
     return _strip_padding(plaintext)
 
 
-# **[observed] This call fails intermittently, and the same passcode succeeds on a retry.**
-# Seen as HTTP 409 with `status` -6015 and a `message` beginning `CLUBH ERROR:`, on an
-# account where the recovery had worked before and worked again immediately after.
-#
-# That reorders the advice. The specification's point -- that a wrong passcode and a
-# mis-parameterised exchange fail identically -- is still true and still worth saying, but
-# it is no longer the first thing to suspect, and leading with it sends somebody to check
-# a passcode that was right.
-TRANSIENT_STATUS = "-6015"
-
-_ADVICE = (
-    "Try again first: this call fails intermittently and the same passcode then works.",
-    "If it keeps failing, note that a wrong passcode and a mis-parameterised exchange"
-    " are indistinguishable here by design, so this says which half is at fault and not"
-    " which fault. srp_init was answered, so the record, the label and the transport are"
-    " right; only the proof or the passcode is in question.",
-    "Attempts may be a limited resource. Apple's escrow services generally cap them, and"
-    " what this one allows is not established here -- so prefer being sure of a passcode"
-    " over trying variations of one.",
-)
-
-
-def _rejected(error: EscrowError) -> RecoveryError:
-    """
-    Explain a rejection the service reported, in the order worth acting on.
-
-    Not in the order of likelihood-of-being-interesting: the intermittent case goes first
-    because it is both the most common and the cheapest to rule out, and because the
-    alternative -- leading with the passcode -- sends somebody to re-examine something
-    that was already right.
-    """
-    lines = "\n".join(
-        textwrap.fill(
-            f"{index}. {advice}",
-            width=78,
-            initial_indent="  ",
-            subsequent_indent="     ",
-        )
-        for index, advice in enumerate(_ADVICE, start=1)
-    )
-    return RecoveryError(f"{error}\n\n{lines}")
+async def _unwrap_inner_off_loop(blob: bytes, passcode: str) -> bytes:
+    """Drain bounded local work before propagating cancellation or releasing inputs."""
+    # Shield the outcome container, not a task that can raise: Python 3.14 logs
+    # exceptions from a shielded task after caller cancellation even if drained.
+    task = asyncio.gather(asyncio.to_thread(unwrap_inner_blob, blob, passcode), return_exceptions=True)
+    cancellation = None
+    while not task.done():
+        try:
+            await asyncio.shield(task)
+        except asyncio.CancelledError as error:
+            if cancellation is None:
+                cancellation = error
+    if cancellation is not None:
+        if not task.cancelled():
+            task.result()  # Consume a worker failure when cancellation takes priority.
+        raise cancellation
+    result = task.result()[0]
+    if isinstance(result, BaseException):
+        raise result
+    return result
 
 
 async def recover_bottled_peer(
@@ -397,14 +390,9 @@ async def recover_bottled_peer(
         the passcode was wrong.
     """
     if not record.is_recovery_candidate:
-        msg = (
-            f"{record.label} carries no bottle, so there is nothing to recover from it."
-            " It is a different kind of record, not a broken one."
-        )
-        raise RecoveryError(msg)
+        raise RecoveryProtocolError("preproof", "not_dispatched")
     if not passcode:
-        msg = "A passcode is required; the escrowed material is encrypted under it"
-        raise RecoveryError(msg)
+        raise RecoveryProtocolError("preproof", "not_dispatched")
 
     transaction_id = str(uuid.uuid4()).upper()
 
@@ -413,77 +401,116 @@ async def recover_bottled_peer(
         if isinstance(diagnostics, dict):
             diagnostics["unlock_phase"] = phase
 
-    with _identity_in_private_key():
-        # A 32-byte secret, left-padded because the library wants 256 bytes and reads
-        # them as an integer.
-        secret = secrets.token_bytes(CLIENT_SECRET_LENGTH).rjust(_PYSRP_SECRET_LENGTH, b"\x00")
-        user = srp.User(
-            "",  # replaced below: the identity is only known once srp_init has answered
-            passcode,
-            hash_alg=srp.SHA256,
-            ng_type=srp.NG_2048,
-            bytes_a=secret,
-        )
-        _, client_public = user.start_authentication()
+    # A 32-byte secret, left-padded because the library wants 256 bytes and reads
+    # them as an integer.
+    secret = secrets.token_bytes(CLIENT_SECRET_LENGTH).rjust(_PYSRP_SECRET_LENGTH, b"\x00")
+    user = srp.User(
+        "",  # replaced below: the identity is only known once srp_init has answered
+        passcode,
+        hash_alg=srp.SHA256,
+        ng_type=srp.NG_2048,
+        bytes_a=secret,
+    )
+    _, client_public = user.start_authentication()
 
-        logger.info("Beginning escrow recovery for %s", record.label)
-        mark("srp_init")
+    logger.info("Beginning escrow recovery for %s", record.label)
+    mark("srp_init")
+    try:
         challenge = parse_challenge(
             await proxy.srp_init(record.label, client_public, transaction_id),
             record.label,
             transaction_id,
         )
+    except UnauthorizedError:
+        raise
+    except EscrowRecoveryError as error:
+        raise RecoveryProtocolError(
+            error.stage, error.dispatch_state, http_status=error.http_status,
+            service_code=error.service_code, reason=error.reason,
+        ) from None
+    except Exception as error:
+        if getattr(getattr(proxy, "_account", None), "_homecircle_recovery_guard_required", False):
+            raise RecoveryProtocolError(
+                "preproof", "not_dispatched", reason=(
+                    "transient" if isinstance(error, (OSError, ClientError, AppleServiceUnavailableError)) else "protocol"
+                ),
+            ) from None
+        raise
 
-        # The identity is the dsid the reply carried, which is why it is set here rather
-        # than at construction. The library accepts either a string or bytes and encodes
-        # as needed; the annotation says otherwise.
-        user.I = challenge.dsid  # pyright: ignore [reportAttributeAccessIssue]
+    # The identity is the dsid the reply carried, which is why it is set here rather
+    # than at construction. The library accepts either a string or bytes and encodes
+    # as needed; the annotation says otherwise.
+    user.I = challenge.dsid  # pyright: ignore [reportAttributeAccessIssue]
 
-        mark("srp_proof")
+    mark("srp_proof")
+    try:
         proof = user.process_challenge(challenge.salt, challenge.server_public)
         if proof is None:
-            msg = "Could not compute an SRP proof from the challenge"
-            raise RecoveryError(msg)
+            raise RecoveryError("Invalid recovery challenge")
+        proof_blob = build_recovery_proof(challenge, proof)
+    except Exception:
+        raise RecoveryProtocolError("preproof", "not_dispatched") from None
 
-        try:
-            mark("escrow_recover")
-            response = await proxy.recover(
-                record.label,
-                build_recovery_proof(challenge, proof),
-                transaction_id,
-                dsid=challenge.dsid,
-            )
-        except EscrowError as e:
-            raise _rejected(e) from None
+    try:
+        mark("escrow_recover")
+        response = await proxy.recover(
+            record.label,
+            proof_blob,
+            transaction_id,
+            dsid=challenge.dsid,
+        )
+    except EscrowRecoveryError as error:
+        raise RecoveryProtocolError(
+            error.stage, error.dispatch_state, http_status=error.http_status,
+            service_code=error.service_code, reason=error.reason,
+        ) from None
+    except EscrowError:
+        # A proxy without structured outcome evidence cannot establish refusal.
+        raise RecoveryProtocolError("dispatch", "uncertain") from None
 
+    try:
         blob = _blob_bytes(response.get("respBlob"), "recover's respBlob")
-
         header_length = (
             RECOVER_HEADER_LENGTH_CLUB
             if challenge.club_type_id == RECOVERY_CLUB_TYPE
             else RECOVER_HEADER_LENGTH
         )
         _, _, sections = split_keyvault_message(blob, header_length, RECOVER_SECTIONS)
+    except Exception:
+        raise RecoveryProtocolError("serverproof", "uncertain") from None
 
-        # Verify the server before decrypting anything with the session key it implies.
-        mark("server_proof")
+    # Verify the server before decrypting anything with the session key it implies.
+    mark("server_proof")
+    try:
         user.verify_session(sections[0])
-        if not user.authenticated():
-            msg = (
-                "The escrow proxy's proof did not verify. Either the passcode is wrong or"
-                " this exchange is mis-parameterised; the two are indistinguishable here."
-            )
-            raise RecoveryError(msg)
+        authenticated = user.authenticated()
+    except Exception:
+        raise RecoveryProtocolError("serverproof", "uncertain") from None
+    if not authenticated:
+        raise RecoveryProtocolError("serverproof", "uncertain")
 
+    # Clear the pending reservation at the first authenticated server proof. Later
+    # material/discovery errors are not another rejected passcode exchange.
+    try:
+        attempt = recovery_attempt(getattr(proxy, "_account", None))
+    except EscrowRecoveryError as error:
+        raise RecoveryProtocolError(error.stage, "verified") from None
+    if attempt is not None:
+        await attempt.verified()
+
+    try:
         session_key = user.get_session_key()
         if session_key is None:
-            msg = "SRP produced no session key"
-            raise RecoveryError(msg)
-
-    mark("outer_decrypt")
-    outer = unwrap_outer_blob(blob, session_key, club_type_id=challenge.club_type_id)
-    mark("inner_decrypt")
-    material = unwrap_inner_blob(outer, passcode)
+            raise RecoveryError("SRP produced no session key")
+        mark("outer_decrypt")
+        outer = unwrap_outer_blob(blob, session_key, club_type_id=challenge.club_type_id)
+        mark("inner_decrypt")
+        # Hashlib's PBKDF2 runs to completion in native code. Keep its bounded
+        # work off HA's loop and finish it before returning cancellation so the
+        # worker cannot keep these inputs after this recovery call has ended.
+        material = await _unwrap_inner_off_loop(outer, passcode)
+    except Exception:
+        raise RecoveryProtocolError("material", "verified") from None
 
     logger.info("Recovered %d bytes of sealed material from %s", len(material), record.label)
     return material
@@ -492,6 +519,7 @@ async def recover_bottled_peer(
 __all__ = [
     "RecoveryChallenge",
     "RecoveryError",
+    "RecoveryProtocolError",
     "build_recovery_proof",
     "parse_challenge",
     "recover_bottled_peer",

@@ -801,6 +801,8 @@ def describe_protection_signature(protection: ShareProtection, master_key: bytes
             continue
 
         considered += 1
+        if candidate.digest != 1:
+            continue
         try:
             public_key.verify(candidate.signature, signed, ec.ECDSA(hashes.SHA256()))
         except InvalidSignature:
@@ -817,6 +819,38 @@ def verify_protection_signature(protection: ShareProtection, master_key: bytes) 
     See :func:`describe_protection_signature`, which says *why* when this is False.
     """
     return describe_protection_signature(protection, master_key) is None
+
+
+def describe_outer_protection_signature(
+    protection: ShareProtection,
+    trusted_key: ec.EllipticCurvePublicKey,
+) -> str | None:
+    """Check supplied outer authentication using the matched local key.
+
+    The known producer makes this signature optional. A separate signing key
+    requires explicit trusted caller context, which this reader does not carry;
+    neither a record-supplied key nor an owner-review attribute creates that trust.
+    """
+    if any(attribute.key == 7 for attribute in protection.attributes):
+        return "an owner-review signature requires a separate trusted signer context"
+
+    candidate = protection.signature
+    if candidate is None:
+        return None
+    if candidate.digest != 1:
+        return "the outer signature declares an unsupported digest"
+    if candidate.key_id and candidate.key_id != compress_public_key(trusted_key):
+        return "the outer signature names a signer other than the matched local key"
+    try:
+        object_signature = ObjectSignature.from_der(protection.signature_data.data)
+        signed = build_signed_data(protection, object_signature)
+    except (PCSError, der.DerError, ValueError, struct.error):
+        return "the outer signature's covered data could not be interpreted"
+    try:
+        trusted_key.verify(candidate.signature, signed, ec.ECDSA(hashes.SHA256()))
+    except InvalidSignature:
+        return "the outer signature did not verify under the matched local key"
+    return None
 
 
 def verify_protection_hmac(protection: ShareProtection, master_key: bytes) -> bool:
@@ -839,13 +873,15 @@ def verify_protection_hmac(protection: ShareProtection, master_key: bytes) -> bo
     still matches. That asymmetry is the signature of this mistake: a wrong key fails both
     checks, and only a wrong construction fails one.
     """
-    if not protection.hmac:
+    # The known producer emits the entire SHA-256 result. Accepting a prefix here
+    # silently weakens authentication according to a length supplied by the record.
+    if len(protection.hmac) != hashlib.sha256().digest_size:
         return False
 
     signed = protection.keyset_der + protection.meta + protection.signature_data.data
     expected = hmac.new(derive_hmac_key(master_key), signed, hashlib.sha256).digest()
 
-    return hmac.compare_digest(expected[: len(protection.hmac)], protection.hmac)
+    return hmac.compare_digest(expected, protection.hmac)
 
 
 @dataclass(frozen=True)
@@ -924,17 +960,27 @@ def unwrap_protection(
 
     :param private_keys: Keys held locally, from the `Manatee` keychain view. The one
         whose public part appears in the structure is used; the rest are ignored.
-    :param require_hmac: Fail if the structure's HMAC does not verify. Off by default
-        because neither check has been exercised against a real record, and a key that
-        passes the truncated key id is already strong evidence.
-    :param require_signature: Fail if the structure's signature does not verify. Skipped
-        entirely, rather than failed, when our keyset entry is read-only.
+    :param require_hmac: Fail if the structure's full SHA-256 HMAC does not verify.
+        Diagnostic callers may leave this off; key-use callers require it.
+    :param require_signature: Require the inner master-key signature except for
+        read-only entries, and verify any supplied outer signature with the matched
+        local key. Owner-review attributes needing separate signer trust are refused.
     :raises MissingKeyError: If no key held locally appears in the structure.
     :raises PCSError: If a key matched but the resulting master key fails its checks.
     """
     share_key, private_key = _find_our_key(protection, private_keys)
 
-    master_key = unwrap_share_key(private_key, share_key.ciphertext)
+    outer_reason = describe_outer_protection_signature(protection, private_key.public_key())
+    if outer_reason is not None:
+        message = f"Protection structure's outer authentication was not confirmed: {outer_reason}."
+        if require_signature:
+            raise PCSError(message)
+        logger.warning(message)
+
+    # The inner signature uses the raw recovered key, while HMAC, meta and fields
+    # use the potentially derived share key. They differ for writable shared data.
+    signing_master_key = unwrap_share_key(private_key, share_key.ciphertext)
+    master_key = signing_master_key
 
     # The share-key derivation is easy to miss and produces a key that fails every
     # subsequent check, which is why the check below exists rather than pressing on.
@@ -959,11 +1005,7 @@ def unwrap_protection(
 
     hmac_verified = verify_protection_hmac(protection, master_key)
     if not hmac_verified:
-        message = (
-            "Protection structure's HMAC did not verify. The key id matched, so the key"
-            " is most likely right and this module's reading of what the HMAC covers is"
-            " most likely wrong."
-        )
+        message = "Protection structure's full SHA-256 HMAC did not verify."
         if require_hmac:
             raise PCSError(message)
         logger.warning(message)
@@ -972,7 +1014,7 @@ def unwrap_protection(
     # to fail: there is nothing to verify against in that case.
     signature_verified: bool | None = None
     if not share_key.read_only:
-        reason = describe_protection_signature(protection, master_key)
+        reason = describe_protection_signature(protection, signing_master_key)
         signature_verified = reason is None
         if reason is not None:
             # The layout diagnosis belongs to exactly one of the four causes. Offering it
@@ -1021,7 +1063,12 @@ def unwrap_zone(
     :raises MissingKeyError: If no service key appears in the zone's keyset.
     :raises PCSError: If the structure cannot be unwrapped.
     """
-    unwrapped = unwrap_protection(ShareProtection.from_der(protection_info), service_keys)
+    unwrapped = unwrap_protection(
+        ShareProtection.from_der(protection_info),
+        service_keys,
+        require_hmac=True,
+        require_signature=True,
+    )
 
     # The identity keys, plus the one construction in this protocol that turns a
     # zone-level *secret* into an elliptic-curve key: §5's master EC key, derived from each
@@ -1082,7 +1129,12 @@ def unwrap_zone_record_defaults(
     :raises MissingKeyError: If no zone key appears in its keyset.
     :raises PCSError: If the structure cannot be unwrapped.
     """
-    unwrapped = unwrap_protection(ShareProtection.from_der(record_protection_info), zone_keys)
+    unwrapped = unwrap_protection(
+        ShareProtection.from_der(record_protection_info),
+        zone_keys,
+        require_hmac=True,
+        require_signature=True,
+    )
     keys = unwrapped.master_keys
 
     logger.warning(
@@ -1497,16 +1549,29 @@ def _find_our_key(
     protection: ShareProtection,
     private_keys: Sequence[ec.EllipticCurvePrivateKey],
 ) -> tuple[ShareKey, ec.EllipticCurvePrivateKey]:
-    """Find the keyset entry whose public key is one we hold the private half of."""
+    """Find a locally held recipient consistent with supplied outer authentication."""
     by_public: dict[bytes, ec.EllipticCurvePrivateKey] = {}
     for key in private_keys:
         for form in public_key_forms(key.public_key()):
             by_public[form] = key
 
+    matching: list[tuple[ShareKey, ec.EllipticCurvePrivateKey]] = []
     for share_key in protection.keys:
         private_key = by_public.get(share_key.public_key)
         if private_key is not None:
-            return share_key, private_key
+            matching.append((share_key, private_key))
+
+    if matching:
+        if protection.signature is not None:
+            # A zone may protect the same material for several keys we hold. Its
+            # outer signer can select any of those actual recipients; SET ordering
+            # must not make adding another local recipient break a valid structure.
+            for share_key, private_key in matching:
+                if describe_outer_protection_signature(protection, private_key.public_key()) is None:
+                    return share_key, private_key
+        # The caller enforces outer authentication (or reports it diagnostically).
+        # Never try an unrelated local key that the protection keyset did not name.
+        return matching[0]
 
     # Naming the sizes distinguishes the two reasons this fails, which lead in opposite
     # directions: an entry the same size as one of our forms means the record really is
@@ -1657,16 +1722,24 @@ def decrypt_field(
     """
     parsed = parse_encrypted_field(data)
 
+    master_key = unwrapped.master_key
     if check_key_id and parsed.key_id:
-        expected = compute_key_id(unwrapped.master_key)
-        if expected[: len(parsed.key_id)] != parsed.key_id:
+        # Meta can carry older symmetric keys after rotation. The field header,
+        # rather than the current-key position, names the key that decrypts it.
+        matching = [
+            candidate
+            for candidate in unwrapped.master_keys
+            if compute_key_id(candidate)[: len(parsed.key_id)] == parsed.key_id
+        ]
+        if not matching:
             msg = (
-                "This field is encrypted under a different key than the one recovered"
-                " from the record's protection structure."
+                "This field names none of the keys recovered from the record's"
+                " protection structure."
             )
             raise PCSError(msg)
+        master_key = matching[0]
 
-    key = derive_encryption_key(unwrapped.master_key)
+    key = derive_encryption_key(master_key)
 
     # min_tag_length is the whole point: the default rejects a 12-byte tag outright, and
     # the high-level AESGCM helper cannot express one at all.

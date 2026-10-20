@@ -7,6 +7,7 @@ from typing import Any
 
 import voluptuous as vol
 from homeassistant import config_entries
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.core import callback
 from homeassistant.helpers import selector
 from homeassistant.helpers import entity_registry as er
@@ -477,6 +478,26 @@ def review_summary(hass, draft: dict[str, Any], pending_links=None) -> dict[str,
 
 class SelectionFlow:
     """Shared draft editor; cancellation never modifies a config entry."""
+
+    def _reset_findmy_snapshot(self):
+        """A household draft may not undo a later confirmed item selection."""
+        entry = self._findmy_config_entry()
+        key = "findmy_accounts"
+        self._findmy_accounts_at_start = deepcopy(
+            (entry.options or entry.data).get(key, {})
+        )
+        self._findmy_data_at_start = deepcopy(entry.data.get(key, {}))
+
+    def _findmy_snapshot_current(self):
+        if not hasattr(self, "_findmy_accounts_at_start"):
+            return True
+        entry = self._findmy_config_entry()
+        key = "findmy_accounts"
+        return (
+            (entry.options or entry.data).get(key, {})
+            == self._findmy_accounts_at_start
+            and entry.data.get(key, {}) == self._findmy_data_at_start
+        )
 
     def start(self, config: dict[str, Any]) -> None:
         self.draft = deepcopy(dict(config))
@@ -1554,6 +1575,7 @@ class SelectionFlow:
 
     async def async_step_confirm_save(self, user_input=None):
         """Validate the final draft before persisting it."""
+        self.draft = item_config(self.hass, self.draft)
         dependencies = selected_entities(self.draft)
         for person_id in self.draft.get(CONF_PEOPLE, []):
             linked, active = person_tracker_references(self.hass, person_id)
@@ -1585,14 +1607,19 @@ class SelectionFlow:
                     result = await self.async_step_household()
                     result["errors"] = {"base": link_error}
                     return result
+        async def finalize():
+            for person_id, trackers in self.pending_person_links.items():
+                for tracker_id in trackers:
+                    await async_link_tracker(self.hass, person_id, tracker_id)
+            return self.save()
+
         try:
-            await self.async_commit_findmy()
+            checker = getattr(self, "_findmy_snapshot_current", None)
+            if checker is not None and not checker():
+                return self.async_abort(reason="findmy_settings_changed")
+            return await self.async_commit_findmy(finalizer=finalize)
         except Exception:
             return self.async_abort(reason="findmy_storage_failed")
-        for person_id, trackers in self.pending_person_links.items():
-            for tracker_id in trackers:
-                await async_link_tracker(self.hass, person_id, tracker_id)
-        return self.save()
 
 
 class HomeCircleConfigFlow(
@@ -1612,6 +1639,7 @@ class HomeCircleConfigFlow(
 
     async def async_step_reconfigure(self, user_input=None):
         entry = self._get_reconfigure_entry()
+        self._reset_findmy_snapshot()
         self.start(entry.options or entry.data)
         return await self.async_step_household(user_input)
 
@@ -1667,6 +1695,16 @@ class HomeCircleConfigFlow(
     @callback
     def save(self):
         if self.source == config_entries.SOURCE_RECONFIGURE:
+            if not self._findmy_snapshot_current():
+                return self.async_abort(reason="findmy_settings_changed")
+            if getattr(self, "_findmy_defer_save", False):
+                # Internal draft result consumed by the guarded staged commit;
+                # Core forbids async_create_entry during Reconfigure.
+                return {
+                    "type": FlowResultType.CREATE_ENTRY,
+                    "title": "",
+                    "data": self.draft,
+                }
             entry = self._get_reconfigure_entry()
             # HA reloads after Reconfigure even when the saved selection is identical.
             frontend.preserve_for_reload(self.hass, entry.entry_id)
@@ -1690,6 +1728,7 @@ class HomeCircleOptionsFlow(
     """Persist a complete selection snapshot; reload only after saving."""
 
     async def async_step_init(self, user_input=None):
+        self._reset_findmy_snapshot()
         self.start(
             item_config(self.hass, self.config_entry.options or self.config_entry.data)
         )
@@ -2137,6 +2176,10 @@ class HomeCircleOptionsFlow(
 
     @callback
     def save(self):
+        if not self._findmy_snapshot_current():
+            return self.async_abort(reason="findmy_settings_changed")
+        if getattr(self, "_findmy_defer_save", False):
+            return self.async_create_entry(title="", data=self.draft)
         if self.draft != dict(self.config_entry.options):
             frontend.preserve_for_reload(self.hass, self.config_entry.entry_id)
         # Options hold the effective snapshot. Keep entry.data free of old

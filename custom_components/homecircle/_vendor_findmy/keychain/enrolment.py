@@ -522,10 +522,11 @@ def srp_verifier(identity: str, password: str, salt: bytes) -> bytes:
     proving against this verifier.
 
     The derivation is written out rather than taken from the SRP library because the
-    library carries "is the identity in the private-key hash" as a **process-global** which
-    :mod:`findmy.reports.account` sets the other way at import time. A verifier computed
-    under the wrong setting is accepted by the service and then fails every future
-    recovery, so this does not depend on which way that flag happens to be pointing.
+    ordinary library carries "is the identity in the private-key hash" as a
+    **process-global** setting. HomeCircle sign-in and recovery use private fixed-mode
+    namespaces, while this verifier remains independent of either backend's flags.
+    A verifier computed under the wrong setting is accepted by the service and then
+    fails future recovery, so this does not depend on ambient library settings.
 
     :param identity: The dsid, as a string.
     :param password: The passcode this record will be recoverable with. Not retained.
