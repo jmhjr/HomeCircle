@@ -65,3 +65,16 @@ and process resource limits. Its Python audit hooks restrict ordinary Python
 network, subprocess and write operations; they are not an OS sandbox for native
 dependencies. See the repository's focused hardening validation for synthetic
 controls and the still-open real Apple provisioning/platform acceptance.
+
+## Supplemental dependency notices (prospective correction, October 20, 2026)
+
+[`LICENSE.md`](LICENSE.md) retains the complete pinned Unicorn 2.1.4 core
+`COPYING` and the Construct MIT notice for the code included in the inspected
+pyelftools 0.33 dependency. These are supplemental notices for separately
+fetched dependencies; HomeCircle does not bundle their wheels/native
+libraries or Apple's CoreADI binary. The bindings' precise BSD notice,
+corresponding-source/source-offer and combined distribution obligations,
+upstream packaging corrections and final installed-artifact notice locations
+remain open. This addition supplies no invented BSD text or source offer and
+does not establish Apple software/service authorization or stable-release
+clearance. The published beta 20 archive remains unchanged.

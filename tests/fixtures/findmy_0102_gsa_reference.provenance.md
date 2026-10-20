@@ -18,9 +18,14 @@ the verified wheel after excluding source-location attributes:
 | `findmy/reports/anisette.py` | `BaseAnisetteProvider.get_cpd` | `PublishedProvider.get_cpd` |
 | `findmy/reports/account.py` | `AsyncAppleAccount._gsa_request` | `PublishedAccount._gsa_request` |
 
-The wheel's `findmy-0.10.2.dist-info/licenses/LICENSE.md` is byte-for-byte equal
-to `custom_components/homecircle/_vendor_findmy/LICENSE.md` (SHA256
+The wheel's `findmy-0.10.2.dist-info/licenses/LICENSE.md` is the original
+1,079-byte FindMy MIT notice (SHA256
 `51396fd82204e1d844bbff2019054d8c3712e53c3ed8485c9f19dd73990eb46e`).
+That notice is retained byte-for-byte at the start of
+`custom_components/homecircle/_vendor_findmy/LICENSE.md`. The combined SDK
+license also retains inherited notices, so it is not byte-for-byte equal to
+the wheel's original license. This notice comparison was corrected on
+October 20, 2026; the fixture bytes and method-parity comparison are unchanged.
 
 The fixture bytes are also identical in its original commit `dc6c713`, the
 published `v0.1.0-beta.19` source tag, and pre-fix HEAD `373203a`. The previously
@@ -67,9 +72,15 @@ with zipfile.ZipFile(io.BytesIO(wheel)) as archive:
         assert method(ast.parse(archive.read(member)), owner, name) == method(
             ast.parse(fixture), fixture_owner, name
         ), name
-    assert archive.read("findmy-0.10.2.dist-info/licenses/LICENSE.md") == Path(
+    wheel_notice = archive.read("findmy-0.10.2.dist-info/licenses/LICENSE.md")
+    assert len(wheel_notice) == 1079
+    assert hashlib.sha256(wheel_notice).hexdigest() == (
+        "51396fd82204e1d844bbff2019054d8c3712e53c3ed8485c9f19dd73990eb46e"
+    )
+    combined_notice = Path(
         "custom_components/homecircle/_vendor_findmy/LICENSE.md"
     ).read_bytes()
+    assert combined_notice.startswith(wheel_notice)
 ```
 
 This verifies the fixture's derivation and the scope of its parity tests. It
