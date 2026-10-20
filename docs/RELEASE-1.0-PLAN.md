@@ -251,6 +251,9 @@ selection completion and the remaining mobile/display/access cases stay open.
 
 ### 11. User documentation and support
 
+- [x] Enable and verify private GitHub vulnerability reporting and prepare the
+  [security/support route](SECURITY.md), without promising an unstaffed response
+  deadline or declaring a stable release.
 - [ ] Reconcile UI setup, included providers, platform/version matrix, dependency
   and network scope, privacy/retention, unsupported formats and service limits.
 - [ ] Publish installation, upgrade, rollback, backup/restore, troubleshooting
