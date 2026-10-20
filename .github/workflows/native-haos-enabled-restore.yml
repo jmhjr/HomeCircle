@@ -1,0 +1,75 @@
+name: Native HAOS enabled restore investigation
+
+on:
+  push:
+    branches: [codex/native-amd64-validation]
+    paths:
+      - native-haos-enabled-restore/**
+      - .github/workflows/native-haos-enabled-restore.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: homecircle-native-haos-enabled-restore-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  enabled-restore-investigation:
+    if: github.ref == 'refs/heads/codex/native-amd64-validation'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 125
+    steps:
+      - name: Check out reviewed investigation source
+        timeout-minutes: 3
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Install native VM tools
+        timeout-minutes: 10
+        shell: bash
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq qemu-system-x86 qemu-utils ovmf
+          test -c /dev/kvm
+          sudo chown "$(id -u):$(id -g)" /dev/kvm
+          test -r /dev/kvm && test -w /dev/kvm
+      - name: Check investigation contracts without starting HA
+        timeout-minutes: 2
+        working-directory: native-haos-enabled-restore
+        run: python3 -B -m unittest discover -v -p 'test*.py'
+      - name: Download and verify the immutable beta20 package
+        timeout-minutes: 3
+        shell: bash
+        run: |
+          mkdir enabled-restore-inputs
+          curl --fail --silent --show-error --location --max-time 120 \
+            https://github.com/jmhjr/HomeCircle/releases/download/v0.1.0-beta.20/homecircle.zip \
+            --output enabled-restore-inputs/homecircle.zip
+          printf '%s  %s\n' fc0b365d9688459504f874af5c38393e24145d657f15f1def8ada9184f363285 \
+            enabled-restore-inputs/homecircle.zip | sha256sum --check --status
+      - name: Record operational restore and safeguard rollback separately
+        timeout-minutes: 97
+        shell: bash
+        run: |
+          set +e
+          bash native-haos-enabled-restore/run_host.sh \
+            --candidate-zip enabled-restore-inputs/homecircle.zip \
+            --branch-commit "$GITHUB_SHA" --output native-haos-enabled-restore-results
+          investigation_status=$?
+          set -e
+          python3 -B native-haos-enabled-restore/accept_investigation.py \
+            --exit-code "$investigation_status" \
+            --summary native-haos-enabled-restore-results/public-summary/host.json
+      - name: Retain only narrow investigation receipts
+        timeout-minutes: 3
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: native-haos-enabled-restore-investigation
+          path: native-haos-enabled-restore-results/public-summary/*.json
+          if-no-files-found: warn
+          retention-days: 7
+          include-hidden-files: false
