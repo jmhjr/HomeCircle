@@ -40,6 +40,7 @@ CONSTRAINTS_SHA = "7baa9a8f39ddeb9c5bb60a1036f6d5e33f4b84267f151f53cc2b95ef031a2
 NATIVE_SHA = "4aa7e0763bef2e6a52d5a891167e551126d922d46a836d002696f89a4f2e7485"
 LIFECYCLE_SHA = "11da124b436f30337cd4ea6b4b9b49b6b0dd4aba7dd3402d23d6df73d5ddcf6d"
 STARTUP_SHA = "3714a31ea0f87b8c77086a4a28a3a4e93a396d3359dacd87ec6d2a0e7eeb3519"
+BACKEND_QA_SHA = "b8c0d729517a6129c6fb53cc5076276267851dc68cc056196a80067f778b47d2"
 OLD_SHA = "f0477a91e78181fe1f8d80ada176a1739e10a7502abe7ee6ee2240571280d1f5"
 CORE = "2026.10.2"
 VERSION = "0.1.0-beta.20"
@@ -112,6 +113,52 @@ OWNED_PROCESS_GUARD = '''        counters.setdefault("approved_posix_spawn_event
             counters["denied_unknown_spawn_events"] += 1
             raise PermissionError("linux_lifecycle_process_refused")
 '''
+ORIGINAL_BACKEND_PROCESS_GUARD = '''        if event == "subprocess.Popen":
+            if (
+                mode == "readiness"
+                or list(args[1]) != [sys.executable, "-B", expected_worker]
+                or result["worker_children"] >= 8
+            ):
+                refuse()
+            result["worker_children"] += 1
+        if event in {"os.system", "os.posix_spawn"} or event.startswith("os.exec"):
+            refuse()
+'''
+OWNED_BACKEND_PROCESS_GUARD = '''        if not hasattr(guard, "qa_spawn_counts"):
+            guard.qa_spawn_counts = {"approved": 0, "denied": 0}
+            guard.qa_pending_launch = None
+        if event not in {"subprocess.Popen", "os.posix_spawn"}:
+            guard.qa_pending_launch = None
+
+        def approved_worker(event_args):
+            return (mode in {"acquire", "provision"}
+                    and isinstance(event_args, (tuple, list)) and len(event_args) >= 2
+                    and event_args[0] == sys.executable
+                    and isinstance(event_args[1], (tuple, list))
+                    and all(type(part) is str for part in event_args[1])
+                    and tuple(event_args[1]) == (sys.executable, "-B", expected_worker))
+
+        if event == "subprocess.Popen":
+            if (not approved_worker(args) or len(args) < 3 or args[2] is not None
+                    or result["worker_children"] >= 8):
+                guard.qa_spawn_counts["denied"] = min(64, guard.qa_spawn_counts["denied"] + 1)
+                guard.qa_pending_launch = None
+                refuse()
+            result["worker_children"] += 1
+            guard.qa_pending_launch = tuple(args[1])
+        if event == "os.posix_spawn":
+            pending = guard.qa_pending_launch
+            guard.qa_pending_launch = None
+            if (not approved_worker(args) or pending != tuple(args[1])
+                    or not 1 <= result["worker_children"] <= 8
+                    or guard.qa_spawn_counts["approved"] >= result["worker_children"]):
+                guard.qa_spawn_counts["denied"] = min(64, guard.qa_spawn_counts["denied"] + 1)
+                refuse()
+            guard.qa_spawn_counts["approved"] += 1
+        if event == "os.system" or event.startswith("os.exec"):
+            guard.qa_spawn_counts["denied"] = min(64, guard.qa_spawn_counts["denied"] + 1)
+            refuse()
+'''
 SAFE_CHILD_CODES = frozenset({
     "startup_script_hash_refused", "startup_loaded_version_refused", "startup_arguments_required",
     "linux_runtime_refused", "ubuntu_release_refused", "active_glibc_version_refused",
@@ -122,6 +169,9 @@ SAFE_CHILD_CODES = frozenset({
     "tree_special_file_refused", "tree_bytes_changed", "input_path_refused", "input_hash_refused",
     "startup_requirement_missing", "startup_requirement_version_refused", "core_literal_declaration_refused",
     "default_auth_declaration_refused", "default_auth_requirements_refused", "declared_requirements_refused",
+    "backend_qa_probe_arguments_refused", "backend_qa_child_declaration_refused",
+    "backend_qa_guard_declaration_refused", "backend_qa_guard_source_refused",
+    "backend_qa_worker_stdout_refused", "backend_qa_worker_reap_refused", "backend_qa_actual_spawn_refused",
 })
 CORE_LOGGERS = frozenset({"homeassistant.bootstrap", "homeassistant.setup", "homeassistant.requirements",
                           "homeassistant.loader", "homeassistant.config", "homeassistant.core_config",
@@ -255,7 +305,8 @@ def inputs(directory):
         check(files.get(source_name) == content, "published_source_delta_refused")
     for name, pin in (("platform_validate_candidate.py", NATIVE_SHA),
                       ("platform_validate_linux_lifecycle.py", LIFECYCLE_SHA),
-                      ("validate_ha_restart.py", STARTUP_SHA)):
+                      ("validate_ha_restart.py", STARTUP_SHA),
+                      ("validate_findmy_runtime.py", BACKEND_QA_SHA)):
         check(sha(files["scripts/" + name]) == pin, "validator_source_hash_refused")
     read_pinned(directory / "core-constraints.txt", CONSTRAINTS_SHA, 2 * 1024**2)
     return files, payload
@@ -286,7 +337,21 @@ def runtime_files(files, payload):
     result = {name: raw for name, raw in files.items()
               if not name.startswith("custom_components/homecircle/")}
     result.update({"custom_components/homecircle/" + name: raw for name, raw in payload.items()})
+    result["scripts/validate_findmy_runtime.py"] = backend_qa_adapter(files)[0]
     return result
+
+
+def backend_qa_adapter(files):
+    original = files.get("scripts/validate_findmy_runtime.py")
+    check(type(original) is bytes and sha(original) == BACKEND_QA_SHA, "backend_qa_source_hash_refused")
+    before, after = ORIGINAL_BACKEND_PROCESS_GUARD.encode(), OWNED_BACKEND_PROCESS_GUARD.encode()
+    check(original.count(before) == 1, "backend_qa_guard_adapter_count_refused")
+    executed = original.replace(before, after)
+    return executed, {"script": "scripts/validate_findmy_runtime.py", "original_sha256": sha(original),
+                      "executed_sha256": sha(executed), "audit_block_substitutions": 1,
+                      "semantic_adaptations": ["exact_owned_posix_spawn_audit"],
+                      "tagged_source_unchanged": True, "tagged_tests_unchanged": True,
+                      "public_receipt_schema_unchanged": True}
 
 
 def run_owned(command, *, cwd, log, limit):
@@ -578,6 +643,7 @@ def common(args, files, payload):
             "release_inventory_sha256": RELEASE_INVENTORY_SHA, "release_files": 112,
             "source_sha256": SOURCE_SHA, "source_inventory_sha256": INVENTORY_SHA,
             "source_files": COUNT, "all_runtime_files_from_published_zip": True,
+            "backend_qa_validator_adaptation": backend_qa_adapter(files)[1],
             "tagged_source_unchanged": True, "owner_accounts_used": False,
             "production_configuration_used": False}
 
@@ -710,6 +776,111 @@ def lifecycle_copy(args, files):
                   "semantic_adaptations": ["published_archive_hash", "exact_owned_posix_spawn_audit"],
                   "archive_hash_literal_substitutions": 1, "spawn_audit_block_substitutions": 1,
                   "only_declared_harness_adaptations": True, "tagged_source_unchanged": True}
+
+
+def backend_guard_source(raw):
+    module = ast.parse(raw)
+    children = [node for node in module.body if isinstance(node, ast.FunctionDef) and node.name == "_child"]
+    check(len(children) == 1, "backend_qa_child_declaration_refused")
+    guards = [node for node in children[0].body if isinstance(node, ast.FunctionDef) and node.name == "guard"]
+    check(len(guards) == 1, "backend_qa_guard_declaration_refused")
+    source = ast.get_source_segment(raw.decode("utf-8"), guards[0])
+    check(isinstance(source, str), "backend_qa_guard_source_refused")
+    return guards[0], sha(source.encode())
+
+
+def backend_qa_spawn_child(args):
+    """Exercise the exact adapted full audit function using the natural glibc launch."""
+    check(args.config is not None and args.receipt is not None
+          and args.receipt.parent == args.config and args.config.is_dir()
+          and not args.config.is_symlink(), "backend_qa_probe_arguments_refused")
+    raw = (args.runtime_tree / "scripts/validate_findmy_runtime.py").read_bytes()
+    node, guard_sha = backend_guard_source(raw)
+    work = args.config.resolve()
+    worker = work / "worker.py"
+    worker.write_text('import sys\nprint("qa fixture stderr", file=sys.stderr)\n'
+                      'print(\'{"qa_worker":true}\', flush=True)\n')
+    result = {"worker_children": 0, "network_attempts_blocked": 0}
+
+    def refuse():
+        result["network_attempts_blocked"] = min(64, result["network_attempts_blocked"] + 1)
+        raise PermissionError("runtime_probe_boundary")
+
+    namespace = {"Path": Path, "os": os, "sys": sys, "mode": "acquire", "work": work,
+                 "expected_worker": str(worker), "result": result, "refuse": refuse,
+                 "current_host": [None], "addresses": set(), "ca_paths": (),
+                 "allowed": (work, Path(sys.prefix).resolve(), Path(sys.base_prefix).resolve())}
+    exec(compile(ast.Module(body=[node], type_ignores=[]), "validate_findmy_runtime.py", "exec"), namespace)
+    guard = namespace["guard"]
+    loop = asyncio.new_event_loop()
+
+    async def execute():
+        child = await asyncio.create_subprocess_exec(
+            sys.executable, "-B", str(worker), stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.DEVNULL)
+        try:
+            output = await asyncio.wait_for(child.stdout.read(128), timeout=10)
+            code = await asyncio.wait_for(child.wait(), timeout=10)
+            check(code == 0 and output == b'{"qa_worker":true}\n', "backend_qa_worker_stdout_refused")
+            try:
+                os.kill(child.pid, 0)
+            except ProcessLookupError:
+                pass
+            else:
+                raise Refused("backend_qa_worker_reap_refused")
+        finally:
+            if child.returncode is None:
+                child.kill()
+            await child.wait()
+            if child.stdout is not None:
+                await child.stdout.read()
+
+    sys.addaudithook(guard)
+    try:
+        loop.run_until_complete(execute())
+    finally:
+        loop.close()
+    counts = getattr(guard, "qa_spawn_counts", {})
+    check(counts == {"approved": 1, "denied": 0} and result == {
+        "worker_children": 1, "network_attempts_blocked": 0}, "backend_qa_actual_spawn_refused")
+    atomic_json(args.receipt, {"schema": 1, "outcome": "passed", "script_sha256": sha(raw),
+                              "guard_sha256": guard_sha, "approved_posix_spawn_events": 1,
+                              "denied_unknown_spawn_events": 0, "worker_children": 1,
+                              "worker_stdout_verified": True, "stderr_devnull": True,
+                              "workers_reaped": True})
+
+
+def backend_qa_spawn_result(path, raw):
+    value = private_json(path)
+    expected = {"schema": 1, "outcome": "passed", "script_sha256": sha(raw),
+                "guard_sha256": backend_guard_source(raw)[1], "approved_posix_spawn_events": 1,
+                "denied_unknown_spawn_events": 0, "worker_children": 1,
+                "worker_stdout_verified": True, "stderr_devnull": True, "workers_reaped": True}
+    check(type(value) is dict and set(value) == set(expected)
+          and all(type(value[name]) is type(item) and value[name] == item for name, item in expected.items()),
+          "backend_qa_spawn_receipt_refused")
+    return expected
+
+
+def backend_qa_spawn(args, files):
+    global STARTUP_FAILURE
+    raw, _ = backend_qa_adapter(files)
+    with tempfile.TemporaryDirectory(prefix="backend-qa-spawn-private-", dir=args.results) as directory:
+        work = Path(directory)
+        work.chmod(0o700)
+        receipt = work / "receipt.json"
+        command = [sys.executable, "-I", "-B", str(Path(__file__).resolve()), "backend-qa-child",
+                   "--payload", str(args.payload), "--tree", str(args.tree),
+                   "--runtime-tree", str(args.runtime_tree), "--results", str(args.results),
+                   "--config", str(work), "--receipt", str(receipt)]
+        code = run_owned(command, cwd=args.runtime_tree, log=args.results / "backend-qa-spawn-private.log", limit=30)
+        if code != 0:
+            if receipt.is_file():
+                STARTUP_FAILURE = {"phase": "backend_qa_spawn", **project_child_failure(private_json(receipt))}
+            raise Refused("backend_qa_spawn_child_refused")
+        result = backend_qa_spawn_result(receipt, raw)
+    check(not work.exists(), "backend_qa_spawn_cleanup_refused")
+    return {**result, "private_fixture_removed": True}
 
 
 def project_core_diagnostics(records):
@@ -968,6 +1139,11 @@ def acceptance(args, files, payload):
     atomic_json(output, result)
     result["core_startup"] = startup(args)
     common(args, files, payload)
+    result["current_stage"] = "backend_qa_spawn"
+    CURRENT_STAGE = "backend_qa_spawn"
+    atomic_json(output, result)
+    result["backend_qa_spawn_proof"] = backend_qa_spawn(args, files)
+    common(args, files, payload)
     result["current_stage"] = "backend"
     CURRENT_STAGE = "backend"
     atomic_json(output, result)
@@ -1025,7 +1201,7 @@ def project_child_failure(value):
 def main():
     global DEADLINE, CURRENT_STAGE
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("mode", choices=("setup", "acceptance", "startup-child"))
+    parser.add_argument("mode", choices=("setup", "acceptance", "startup-child", "backend-qa-child"))
     parser.add_argument("--payload", type=Path, required=True)
     parser.add_argument("--tree", type=Path, required=True)
     parser.add_argument("--runtime-tree", type=Path, required=True)
@@ -1049,12 +1225,16 @@ def main():
             setup(args, files, payload)
         elif args.mode == "acceptance":
             acceptance(args, files, payload)
-        else:
+        elif args.mode == "startup-child":
             check(args.config is not None and args.phase is not None and args.receipt is not None,
                   "startup_arguments_required")
             common(args, files, payload)
             CURRENT_STAGE = "core_startup_" + args.phase
             startup_child(args)
+        else:
+            common(args, files, payload)
+            CURRENT_STAGE = "backend_qa_spawn_child"
+            backend_qa_spawn_child(args)
     except BaseException as error:
         failure = {"schema": 1, "outcome": "failed", "completed": False, "mode": args.mode,
                    "failure_stage": CURRENT_STAGE, "failure_type": type(error).__name__,
@@ -1081,7 +1261,7 @@ def main():
                     and re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]{0,79}", frame.f_code.co_name)):
                 frames.append({"script": Path(filename).name, "function": frame.f_code.co_name, "line": line})
         failure["public_frames"] = frames[-6:]
-        if args.mode == "startup-child" and args.receipt is not None:
+        if args.mode in {"startup-child", "backend-qa-child"} and args.receipt is not None:
             atomic_json(args.receipt, project_child_failure(failure))
         else:
             atomic_json(args.results / "failure-summary.json", failure)

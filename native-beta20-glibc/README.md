@@ -51,6 +51,17 @@ blocked. Acceptance requires one or two actual approved spawn events and no
 denied unknown launches. Original and executed script hashes and both
 substitution counts are recorded; the tagged script and product are unchanged.
 
+The backend suite retains all tagged tests and assertions. One separate QA
+helper, `scripts/validate_findmy_runtime.py`, runs from an explicitly derived
+copy whose audit block permits only the exact expected worker launch in the
+approved modes, with a single-use pending launch and the existing child
+budget. Original/executed hashes and its sole block substitution are recorded.
+Runtime integrity checks compare the complete derived bytes. A focused Linux
+proof executes that exact guard and requires one observed approved spawn,
+verified worker output, the error-output sink and complete cleanup. The
+original 327-file source tree and all 112 published integration files remain
+unchanged.
+
 The runtime build and test container are owned by this invocation. Acceptance
 runs without external networking, host mounts, published ports or Linux
 capabilities. Each phase and the whole invocation have fixed deadlines and

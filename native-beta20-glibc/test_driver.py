@@ -5,6 +5,7 @@ import importlib.util
 import io
 import json
 import logging
+import os
 from pathlib import Path
 import struct
 import sys
@@ -102,9 +103,11 @@ class DriverContracts(unittest.TestCase):
 
     def test_runtime_overlay_uses_only_release_integration(self):
         source = {"README.md": b"public", "custom_components/homecircle/old.py": b"unpublished"}
-        result = subject.runtime_files(source, {"manifest.json": b"published", "LICENSE": b"notice"})
+        with patch.object(subject, "backend_qa_adapter", return_value=(b"derived QA", {})):
+            result = subject.runtime_files(source, {"manifest.json": b"published", "LICENSE": b"notice"})
         self.assertEqual(result, {"README.md": b"public", "custom_components/homecircle/manifest.json": b"published",
-                                  "custom_components/homecircle/LICENSE": b"notice"})
+                                  "custom_components/homecircle/LICENSE": b"notice",
+                                  "scripts/validate_findmy_runtime.py": b"derived QA"})
 
     def test_tree_verification_refuses_added_integration_file(self):
         directory = self.temporary() / "tree"
@@ -418,6 +421,145 @@ class DriverContracts(unittest.TestCase):
         with patch.object(subject, "core_log_projection", side_effect=ValueError("PRIVATE_CANARY")):
             capture.emit(record)
         self.assertEqual(capture.records, [])
+
+    def backend_tagged_files(self):
+        path = Path(__file__).resolve().parents[1] / "native-beta20-package/payload/source.tgz"
+        raw = path.read_bytes()
+        self.assertEqual(subject.sha(raw), subject.SOURCE_SHA)
+        with tarfile.open(fileobj=io.BytesIO(raw), mode="r:gz") as archive:
+            return {member.name: archive.extractfile(member).read() for member in archive.getmembers()}
+
+    def backend_guard(self, *, mode="acquire", children=0):
+        raw = subject.backend_qa_adapter(self.backend_tagged_files())[0]
+        node, _ = subject.backend_guard_source(raw)
+        result = {"worker_children": children, "network_attempts_blocked": 0}
+
+        def refuse():
+            result["network_attempts_blocked"] += 1
+            raise PermissionError("runtime_probe_boundary")
+
+        command = ("/approved/python", "-B", "/owned/work/worker.py")
+        context = {"sys": SimpleNamespace(executable=command[0]), "mode": mode, "result": result,
+                   "expected_worker": command[2], "refuse": refuse, "Path": Path, "os": os,
+                   "work": Path("/owned/work"), "allowed": (Path("/owned/work"),), "ca_paths": (),
+                   "current_host": [None], "addresses": set()}
+        exec(compile(ast.Module(body=[node], type_ignores=[]), "validate_findmy_runtime.py", "exec"), context)
+        return context["guard"], result, command
+
+    def test_backend_adapter_changes_exactly_one_actual_tagged_guard(self):
+        files = self.backend_tagged_files()
+        before = files["scripts/validate_findmy_runtime.py"]
+        after, metadata = subject.backend_qa_adapter(files)
+        self.assertEqual(after.count(subject.OWNED_BACKEND_PROCESS_GUARD.encode()), 1)
+        self.assertEqual(after.replace(subject.OWNED_BACKEND_PROCESS_GUARD.encode(),
+                                       subject.ORIGINAL_BACKEND_PROCESS_GUARD.encode()), before)
+        self.assertEqual(metadata["audit_block_substitutions"], 1)
+        self.assertEqual(metadata["original_sha256"], subject.BACKEND_QA_SHA)
+        derived = subject.runtime_files(files, {"manifest.json": b"published"})
+        self.assertEqual(derived["scripts/validate_findmy_runtime.py"], after)
+        self.assertEqual(files["scripts/validate_findmy_runtime.py"], before)
+        for name, raw in files.items():
+            if not name.startswith("custom_components/homecircle/") and name != "scripts/validate_findmy_runtime.py":
+                self.assertEqual(derived[name], raw)
+
+    def test_backend_adapter_refuses_changed_source_or_ambiguous_guard(self):
+        files = self.backend_tagged_files()
+        name = "scripts/validate_findmy_runtime.py"
+        files[name] += b"\n# unreviewed\n"
+        with self.assertRaisesRegex(subject.Refused, "^backend_qa_source_hash_refused$"):
+            subject.backend_qa_adapter(files)
+        files[name] += subject.ORIGINAL_BACKEND_PROCESS_GUARD.encode()
+        with patch.object(subject, "BACKEND_QA_SHA", subject.sha(files[name])):
+            with self.assertRaisesRegex(subject.Refused, "^backend_qa_guard_adapter_count_refused$"):
+                subject.backend_qa_adapter(files)
+
+    def test_backend_guard_permits_exact_once_for_both_explicit_modes(self):
+        for mode in ("acquire", "provision"):
+            guard, result, command = self.backend_guard(mode=mode)
+            guard("subprocess.Popen", (command[0], list(command), None, {}))
+            guard("os.posix_spawn", (command[0], list(command), {}))
+            self.assertEqual(result, {"worker_children": 1, "network_attempts_blocked": 0})
+            self.assertEqual(guard.qa_spawn_counts, {"approved": 1, "denied": 0})
+            self.assertIsNone(guard.qa_pending_launch)
+
+    def test_backend_guard_refuses_wrong_executable_argv_or_cwd(self):
+        for executable, tail, cwd in (("/unapproved/python", None, None),
+                                      (None, ["-c", "unapproved"], None),
+                                      (None, None, "/forced-fork-cwd")):
+            guard, result, command = self.backend_guard()
+            argv = list(command) if tail is None else [command[0], *tail]
+            with self.assertRaisesRegex(PermissionError, "^runtime_probe_boundary$"):
+                guard("subprocess.Popen", (executable or command[0], argv, cwd, {}))
+            self.assertEqual(result["worker_children"], 0)
+            self.assertEqual(guard.qa_spawn_counts["approved"], 0)
+
+    def test_backend_guard_readiness_and_ninth_worker_stay_refused(self):
+        for mode, children in (("readiness", 0), ("acquire", 8), ("unapproved", 0)):
+            guard, result, command = self.backend_guard(mode=mode, children=children)
+            with self.assertRaisesRegex(PermissionError, "^runtime_probe_boundary$"):
+                guard("subprocess.Popen", (command[0], list(command), None, {}))
+            self.assertEqual(result["worker_children"], children)
+        guard, result, command = self.backend_guard()
+        for _ in range(8):
+            guard("subprocess.Popen", (command[0], list(command), None, {}))
+            guard("os.posix_spawn", (command[0], list(command), {}))
+        self.assertEqual(guard.qa_spawn_counts["approved"], 8)
+        with self.assertRaises(PermissionError):
+            guard("subprocess.Popen", (command[0], list(command), None, {}))
+
+    def test_backend_guard_direct_and_repeated_posix_spawns_refused(self):
+        guard, result, command = self.backend_guard()
+        with self.assertRaises(PermissionError):
+            guard("os.posix_spawn", (command[0], list(command), {}))
+        guard("subprocess.Popen", (command[0], list(command), None, {}))
+        guard("os.posix_spawn", (command[0], list(command), {}))
+        with self.assertRaises(PermissionError):
+            guard("os.posix_spawn", (command[0], list(command), {}))
+        self.assertEqual(guard.qa_spawn_counts, {"approved": 1, "denied": 2})
+
+    def test_backend_guard_wrong_posix_arguments_consume_permission(self):
+        for executable, argv in (("/wrong/python", None), (None, ["/approved/python", "-c", "unapproved"]),
+                                  (None, ["/approved/python", None])):
+            guard, result, command = self.backend_guard()
+            guard("subprocess.Popen", (command[0], list(command), None, {}))
+            with self.assertRaises(PermissionError):
+                guard("os.posix_spawn", (executable or command[0], argv or list(command), {}))
+            with self.assertRaises(PermissionError):
+                guard("os.posix_spawn", (command[0], list(command), {}))
+            self.assertEqual(guard.qa_spawn_counts["approved"], 0)
+
+    def test_backend_guard_intervening_events_clear_pending_permission(self):
+        guard, result, command = self.backend_guard()
+        guard("subprocess.Popen", (command[0], list(command), None, {}))
+        guard("unrelated.audit", ())
+        with self.assertRaises(PermissionError):
+            guard("os.posix_spawn", (command[0], list(command), {}))
+        self.assertEqual(guard.qa_spawn_counts["approved"], 0)
+
+    def test_backend_guard_system_exec_socket_and_private_file_stay_refused(self):
+        for event, args in (("os.system", ("unapproved",)), ("os.exec", ("unapproved", [], {})),
+                            ("socket.connect", (None, ("example.invalid", 443))),
+                            ("open", ("/unrelated-private-file", "r", 0)),
+                            ("open", ("/unrelated-private-file", "w", os.O_WRONLY))):
+            guard, result, command = self.backend_guard()
+            with self.assertRaises(PermissionError):
+                guard(event, args)
+
+    def test_backend_probe_strict_receipt_requires_actual_event_stdout_and_reap(self):
+        raw = subject.backend_qa_adapter(self.backend_tagged_files())[0]
+        value = {"schema": 1, "outcome": "passed", "script_sha256": subject.sha(raw),
+                 "guard_sha256": subject.backend_guard_source(raw)[1], "approved_posix_spawn_events": 1,
+                 "denied_unknown_spawn_events": 0, "worker_children": 1,
+                 "worker_stdout_verified": True, "stderr_devnull": True, "workers_reaped": True}
+        self.assertEqual(subject.backend_qa_spawn_result(self.write_json("proof.json", value), raw), value)
+        for key, bad in (("approved_posix_spawn_events", 0), ("approved_posix_spawn_events", True),
+                         ("denied_unknown_spawn_events", 1), ("worker_children", 2),
+                         ("worker_stdout_verified", False), ("stderr_devnull", False), ("workers_reaped", False),
+                         ("script_sha256", subject.BACKEND_QA_SHA), ("private", "CANARY")):
+            with self.subTest(field=key):
+                changed = {**value, key: bad}
+                with self.assertRaisesRegex(subject.Refused, "^backend_qa_spawn_receipt_refused$"):
+                    subject.backend_qa_spawn_result(self.write_json("proof.json", changed), raw)
 
 
 if __name__ == "__main__":
