@@ -3,6 +3,9 @@
 import asyncio
 import ast
 import json
+import logging
+import re
+import shutil
 import os
 from pathlib import Path
 import signal
@@ -915,6 +918,179 @@ class LinuxOwnedChildContracts(unittest.TestCase):
             value = self.probe([sys.executable, "-c", code, str(target), *arguments])
             self.assertEqual(value["outcome"], "passed")
             self.assertEqual(json.loads(target.read_text()), arguments)
+
+
+# Exact process_ha_config_upgrade AST extracted from both pinned config.py files.
+# NumericVersionFixture only models the fixed numeric fixture comparisons; it
+# does not import HA or replace the real Core version parser during acceptance.
+CORE_UPGRADE_SOURCE = 'def process_ha_config_upgrade(hass: HomeAssistant) -> None:\n    """Upgrade configuration if necessary.\n\n    This method needs to run in an executor.\n    """\n    version_path = hass.config.path(VERSION_FILE)\n\n    try:\n        with open(version_path, encoding="utf8") as inp:\n            conf_version = inp.readline().strip()\n    except FileNotFoundError:\n        # Last version to not have this file\n        conf_version = "0.7.7"\n\n    if conf_version == __version__:\n        return\n\n    _LOGGER.info(\n        "Upgrading configuration directory from %s to %s", conf_version, __version__\n    )\n\n    version_obj = AwesomeVersion(conf_version)\n\n    if version_obj < AwesomeVersion("0.50"):\n        # 0.50 introduced persistent deps dir.\n        lib_path = hass.config.path("deps")\n        if os.path.isdir(lib_path):\n            shutil.rmtree(lib_path)\n\n    if version_obj < AwesomeVersion("0.92"):\n        # 0.92 moved google/tts.py to google_translate/tts.py\n        config_path = hass.config.path(YAML_CONFIG_FILE)\n\n        with open(config_path, encoding="utf-8") as config_file:\n            config_raw = config_file.read()\n\n        if TTS_PRE_92 in config_raw:\n            _LOGGER.info("Migrating google tts to google_translate tts")\n            config_raw = config_raw.replace(TTS_PRE_92, TTS_92)\n            try:\n                with open(config_path, "w", encoding="utf-8") as config_file:\n                    config_file.write(config_raw)\n            except OSError:\n                _LOGGER.exception("Migrating to google_translate tts failed")\n\n    if version_obj < AwesomeVersion("0.94") and is_docker_env():\n        # In 0.94 we no longer install packages inside the deps folder when\n        # running inside a Docker container.\n        lib_path = hass.config.path("deps")\n        if os.path.isdir(lib_path):\n            shutil.rmtree(lib_path)\n\n    with open(version_path, "w", encoding="utf8") as outp:\n        outp.write(__version__)\n'
+CORE_CONFIG_SHA256 = {
+    "2026.10.2": "c196cf81792f2d8d998b2595ff9d5d3ed8be3628327dde1d4720860c4f3bba2b",
+    "2026.9.4": "7f62be48f6030f63abc59c73afbbf69f6d4c6dda2a081f60e6382554e9c53d35",
+}
+
+
+class NumericVersionFixture:
+    def __init__(self, value):
+        if re.fullmatch(r"[0-9]+(?:\.[0-9]+)+", value) is None:
+            raise ValueError("numeric_fixture_only")
+        self.parts = tuple(int(part) for part in value.split("."))
+
+    def __lt__(self, other):
+        return self.parts < other.parts
+
+
+class ConfigMarkerContracts(unittest.TestCase):
+    def upgrade(self, root, target):
+        tree = ast.parse(CORE_UPGRADE_SOURCE)
+        self.assertEqual(
+            c.sha(CORE_UPGRADE_SOURCE.encode()),
+            "6ba6c3754ec05aa0b5d304513ee638e23555cbcb4adfb0dc8fc61cbf73bf0cd1",
+        )
+        namespace = {
+            "HomeAssistant": SimpleNamespace,
+            "VERSION_FILE": ".HA_VERSION",
+            "YAML_CONFIG_FILE": "configuration.yaml",
+            "__version__": target,
+            "_LOGGER": logging.getLogger("consumer_config_fixture"),
+            "AwesomeVersion": NumericVersionFixture,
+            "os": os,
+            "shutil": shutil,
+            "is_docker_env": lambda: True,
+            "TTS_PRE_92": "unused_numeric_fixture_tts",
+            "TTS_92": "unused_numeric_fixture_replacement",
+        }
+        exec(compile(tree, "exact_pinned_Core_config_upgrade", "exec"), namespace)
+        namespace["process_ha_config_upgrade"](
+            SimpleNamespace(config=SimpleNamespace(path=lambda name: str(root / name)))
+        )
+
+    def config(self, root):
+        (root / "configuration.yaml").write_text("homeassistant: {}\n")
+        cache = root / "deps/lib/python3.14/site-packages"
+        cache.mkdir(parents=True)
+        sentinel = cache / "synthetic-metadata-sentinel"
+        sentinel.write_text("prepared-cache")
+        return sentinel
+
+    def test_actual_upgrade_missing_marker_removes_prepared_cache_at_both_targets(self):
+        for target in CORE_CONFIG_SHA256:
+            with self.subTest(target=target), tempfile.TemporaryDirectory() as folder:
+                root = Path(folder)
+                sentinel = self.config(root)
+                self.upgrade(root, target)
+                self.assertFalse(sentinel.exists())
+                self.assertEqual((root / ".HA_VERSION").read_text(), target)
+
+    def test_actual_upgrade_old_docker_marker_removes_cache_at_both_targets(self):
+        for target in CORE_CONFIG_SHA256:
+            with self.subTest(target=target), tempfile.TemporaryDirectory() as folder:
+                root = Path(folder)
+                sentinel = self.config(root)
+                # 0.93 skips the pre-0.50 branch and takes Docker's pre-0.94 branch.
+                (root / ".HA_VERSION").write_text("0.93")
+                self.upgrade(root, target)
+                self.assertFalse(sentinel.exists())
+                self.assertEqual((root / ".HA_VERSION").read_text(), target)
+
+    def test_exact_new_marker_readback_preserves_cache_on_first_and_restart_upgrade(
+        self,
+    ):
+        for target in CORE_CONFIG_SHA256:
+            with self.subTest(target=target), tempfile.TemporaryDirectory() as folder:
+                root = Path(folder)
+                sentinel = self.config(root)
+                driver.seed_config_version(c, root, target)
+                for _ in range(2):
+                    self.upgrade(root, target)
+                    self.assertEqual(sentinel.read_text(), "prepared-cache")
+                    self.assertEqual((root / ".HA_VERSION").read_text(), target)
+
+    def test_marker_seed_refuses_existing_stale_future_private_symlink_and_unknown_target(
+        self,
+    ):
+        for existing in ("2026.10.2", "0.93", "2099.1.0", "PRIVATE-CANARY"):
+            with (
+                self.subTest(existing=existing),
+                tempfile.TemporaryDirectory() as folder,
+            ):
+                root = Path(folder)
+                marker = root / ".HA_VERSION"
+                marker.write_text(existing)
+                with self.assertRaisesRegex(
+                    c.Refused, "^prepared_config_version_refused$"
+                ):
+                    driver.seed_config_version(c, root, "2026.10.2")
+                self.assertEqual(marker.read_text(), existing)
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            foreign = root / "foreign"
+            foreign.write_text("PRIVATE-CANARY")
+            (root / ".HA_VERSION").symlink_to(foreign)
+            with self.assertRaisesRegex(c.Refused, "^prepared_config_version_refused$"):
+                driver.seed_config_version(c, root, "2026.10.2")
+            self.assertEqual(foreign.read_text(), "PRIVATE-CANARY")
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            with self.assertRaisesRegex(c.Refused, "^prepared_config_version_refused$"):
+                driver.seed_config_version(c, root, "2099.1.0")
+            self.assertEqual(list(root.iterdir()), [])
+
+    def test_exact_endpoint_config_source_pin_is_bound_and_retargeting_refused(self):
+        for path in HERE.glob("pins-*.json"):
+            original = c.pins(path, c.sha(path.read_bytes()))
+            self.assertEqual(
+                original["startup_sources"]["config.py"],
+                CORE_CONFIG_SHA256[original["core"]],
+            )
+            self.assertEqual(len(original["startup_sources"]), 6)
+            original["startup_sources"]["config.py"] = "0" * 64
+            with tempfile.TemporaryDirectory() as folder:
+                altered = Path(folder) / "pins.json"
+                altered.write_text(json.dumps(original))
+                with self.assertRaisesRegex(
+                    c.Refused, "^endpoint_requirement_pin_refused$"
+                ):
+                    c.pins(altered, c.sha(altered.read_bytes()))
+
+    def test_actual_setup_seeds_before_cache_install_and_only_reports_after_readback(
+        self,
+    ):
+        tree = ast.parse((HERE / "driver.py").read_bytes())
+        setup = next(
+            node
+            for node in tree.body
+            if isinstance(node, ast.FunctionDef) and node.name == "setup"
+        )
+        calls = [node for node in ast.walk(setup) if isinstance(node, ast.Call)]
+        seed = [
+            node
+            for node in calls
+            if isinstance(node.func, ast.Name) and node.func.id == "seed_config_version"
+        ]
+        cache = [
+            node
+            for node in calls
+            if isinstance(node.func, ast.Name) and node.func.id == "cache_command"
+        ]
+        self.assertEqual(len(seed), 1)
+        self.assertEqual(
+            ast.unparse(seed[0]), "seed_config_version(c, config, values['core'])"
+        )
+        self.assertEqual(len(cache), 1)
+        self.assertLess(seed[0].lineno, cache[0].lineno)
+        marker_receipts = [
+            node
+            for node in ast.walk(setup)
+            if isinstance(node, ast.Dict)
+            and any(
+                isinstance(key, ast.Constant)
+                and key.value == "prepared_config_version_verified"
+                for key in node.keys
+            )
+        ]
+        self.assertEqual(len(marker_receipts), 1)
+        self.assertGreater(marker_receipts[0].lineno, cache[0].lineno)
 
 
 if __name__ == "__main__":

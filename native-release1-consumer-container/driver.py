@@ -70,6 +70,21 @@ def cache_command(wanted, executable, constraints):
     ]
 
 
+def seed_config_version(c, config, version):
+    """Bind only a newly owned synthetic config to its exact prepared Core."""
+    c.check(version in {"2026.9.4", "2026.10.2"}, "prepared_config_version_refused")
+    marker = config / ".HA_VERSION"
+    try:
+        with marker.open("x", encoding="utf8") as stream:
+            stream.write(version)
+    except FileExistsError:
+        c.check(False, "prepared_config_version_refused")
+    c.check(
+        c.read(marker, limit=64) == version.encode(),
+        "prepared_config_version_refused",
+    )
+
+
 def setup(c, values, args):
     args.setup_stage = "preparer_boundary"
     status = dict(
@@ -157,6 +172,7 @@ def setup(c, values, args):
     (config / "configuration.yaml").write_text(
         "homeassistant:\n  name: Example consumer household\n  latitude: 0\n  longitude: 0\n  elevation: 0\n  unit_system: metric\n  time_zone: UTC\nhttp:\n  server_host: 127.0.0.1\n  server_port: 18123\nperson:\n  - id: consumer_example_a\n    name: Consumer Example A\n    device_trackers: [device_tracker.consumer_example_phone]\n  - id: consumer_example_b\n    name: Consumer Example B\n    device_trackers: [device_tracker.consumer_example_router]\nzone: []\nhomecircle_consumer_qa:\n  disposable: true\n"
     )
+    seed_config_version(c, config, values["core"])
     args.setup_stage = "cache_layout"
     env = dict(os.environ, PYTHONUSERBASE="/config/deps")
     cache = (
@@ -250,6 +266,7 @@ def setup(c, values, args):
             "canonical_public_source_files": len(files),
             "package_files_verified": 113,
             "config_cache_path_verified": True,
+            "prepared_config_version_verified": True,
             "startup_sources_and_scripts_verified": True,
             "preparer_finite_default_capabilities_verified": True,
             "cache_child_reaping_verified": True,

@@ -1,67 +1,82 @@
 {
-  "baseline_control_commit": "96c042b8fa82e53df2cd2397d7e745015011433e",
-  "baseline_failed_run": 39509292483,
+  "all_33_prior_methods_AST_unchanged": true,
+  "baseline_control_commit": "383e618ff8ce3290029f729c3912979245bc889f",
+  "baseline_failed_run": 39510994867,
   "ci_launched": false,
-  "confirmed_first_failure": {
-    "cache_precedes_system": true,
-    "expected_version": "2.7.1",
-    "observed_version": "2.7.1",
-    "origin": "system",
-    "package": "aiohappyeyeballs",
-    "sorted_package_index": 0,
-    "why_system_selected_known": false
-  },
+  "confirmed_preparation_omission": "new synthetic configuration omitted exact target .HA_VERSION, taking Core legacy cache deletion path",
   "controls": {
     "cache_child.py": "73b5eee7f142dbe63374fce280ccadafb65064145b4a6105861070c3be1fa9b8",
-    "common.py": "9be103213dc3bbbfdb1e821514f7955faf90e7d4985088a19debc09a51dcef97",
-    "driver.py": "95553632c3fb062436d5d3f5e940cde3277a2a9dbb9a1b762a522cc682281978",
+    "common.py": "8110ea01d544427557f8ece10976973f23cbfbaf7cb5c4270002897cb08bc2e8",
+    "driver.py": "c98388c57c0ba7bf25d70d78940391f5d78717ae582f0075bd99387ebaf0a5d4",
     "guest.py": "d31249126a542cef5005c23b8d3e84f1d4eca73d17f3cbeab735bafcd2178aec",
     "process_probe.py": "fda1c83041a61d720e9c7c9d9fde2a652eaeb43a5a77efcaf17a97c62e0905b3",
     "run_host.sh": "8cafffa854415234c3401c4ac9d2e8221f1c9b5a5531890b511d6272e87de73f"
   },
-  "correction": "exact expected version with exact normal-cache or reviewed-system metadata root",
-  "first_failure_diagnostic_unchanged": true,
-  "local_Linux_fork_contracts_run": false,
+  "correction": "exclusive exact-target marker create/readback before cache preparation; official config.py hash readback",
+  "local_Linux_skipped": 7,
+  "local_contract_interpreters": {
+    "3.12": {
+      "Linux_skipped": 7,
+      "discovered": 39,
+      "passed": 32
+    },
+    "3.14": {
+      "Linux_skipped": 7,
+      "discovered": 39,
+      "passed": 32
+    }
+  },
+  "local_discovered": 39,
+  "local_passed": 32,
   "pilot_target": "current-amd64",
+  "portable_exact_upgrade_source_sha256": "6ba6c3754ec05aa0b5d304513ee638e23555cbcb4adfb0dc8fc61cbf73bf0cd1",
+  "portable_source_bytes": 1945,
   "prepared_only": true,
   "previous_actual_Linux_fork_contracts_passed": {
     "cases": 7,
-    "run": 39509292483,
+    "run": 39510994867,
     "skipped": 0,
-    "wrapper_and_tests_unchanged": true
+    "wrapper_and_cases_unchanged": true
   },
+  "prior_unshipped_cross_version_test_defect_preserved": true,
+  "runtime_deletion_directly_observed": false,
   "runtime_executed": false,
   "schema": 1,
-  "successful_origin_receipt": {
-    "legacy_cached_field_removed": true,
-    "mixed_counts_required": false,
-    "resolved_distributions_origin_checked": 45,
-    "resolved_distributions_origin_counts": {
-      "cache": "integer0..45",
-      "system": "integer0..45"
-    },
-    "sum": 45
+  "setup_readback_receipt": "prepared_config_version_verified",
+  "six_previous_negative_ZIPs": {
+    "39502196796": "adb4c2bcafa21627f004cf6abd7a5a53d82e666f1013b2d97c6576412a572e2b",
+    "39503727211": "6b44e0140ff1fc93b18d129ba5e756b8d9664568efb67c7ab88eab09ac963ff3",
+    "39505904554": "5a68f7f5cdb17a97d7012d93063e01f8b490984bf121a5d4c8230593dd8f897a",
+    "39507545357": "845b3a6b260b1fcd9e85b00117431cdbba2ca4741c6e8b5a9ff1d03c021dbd72",
+    "39509292483": "d75ad1485af6614b18faeabb5a583965744dcc5392d9a8a62e23dbcfdd882069",
+    "39510994867": "b1028b739f3831f01718a5e701aabbb4c4a1d16daf833e8f9a5ecb1230d70632"
   },
+  "startup_source_object_count": 6,
   "targets": {
     "current-amd64": {
       "filename": "pins-current-amd64.json",
       "pilot": true,
-      "sha256": "b3f13eedb83b838efd9471959f3de7ca1f60d22f58a1a5073e0a66cec28a52f7"
+      "sha256": "09e537f3709896a3a7641afc8741047fa266cb94d8f04fd059a2248445f5b4b5"
     },
     "current-arm64": {
       "filename": "pins-current-arm64.json",
       "pilot": false,
-      "sha256": "0852be674b5de1a68455dbf4ac03dd9a478277c34a6fd48e4eb54079c190ae90"
+      "sha256": "fc4e3931e12f489235101e07b85f3844cde8b5ac8bf3c08e66eee7ef13b0a8cd"
     },
     "minimum-amd64": {
       "filename": "pins-minimum-amd64.json",
       "pilot": false,
-      "sha256": "829b60c05a36910f2c24fa2f9276e9ab64704119d3c8e56354d98c34969e0632"
+      "sha256": "b4731a4e9187897399e4f63762d2818c963b9ae50c53d15822b11704f0090ae0"
     },
     "minimum-arm64": {
       "filename": "pins-minimum-arm64.json",
       "pilot": false,
-      "sha256": "e1f376cbe4e5cf492b93bdbf89b28bdcbac8913cd2066ce2b13078306fbc10ee"
+      "sha256": "82d3ac0c67bb9f9cf69691c62de0e9106ec263ae03451a74838b6bbbd7e59069"
     }
-  }
+  },
+  "two_official_config_sha256": {
+    "2026.10.2": "c196cf81792f2d8d998b2595ff9d5d3ed8be3628327dde1d4720860c4f3bba2b",
+    "2026.9.4": "7f62be48f6030f63abc59c73afbbf69f6d4c6dda2a081f60e6382554e9c53d35"
+  },
+  "unchanged_45_pins_constraints_indexes_acceptance": true
 }

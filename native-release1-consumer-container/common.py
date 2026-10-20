@@ -130,7 +130,7 @@ def pins(path, expected):
     for key, count in (
         ("dependency_versions", 24),
         ("startup_versions", 21),
-        ("startup_sources", 5),
+        ("startup_sources", 6),
         ("startup_scripts", 3),
         ("native_s6", 3),
         ("controls", 6),
@@ -148,6 +148,11 @@ def pins(path, expected):
         == {
             "2026.10.2": "7baa9a8f39ddeb9c5bb60a1036f6d5e33f4b84267f151f53cc2b95ef031a21b5",
             "2026.9.4": "962c9ccaf398e0b92b10ac9f765ac0f17e22238adc4e768deebc051ee8b60651",
+        }[value["core"]]
+        and value["startup_sources"].get("config.py")
+        == {
+            "2026.10.2": "c196cf81792f2d8d998b2595ff9d5d3ed8be3628327dde1d4720860c4f3bba2b",
+            "2026.9.4": "7f62be48f6030f63abc59c73afbbf69f6d4c6dda2a081f60e6382554e9c53d35",
         }[value["core"]]
         and value["startup_versions"].get("pyotp")
         == ("2.10.0" if value["core"] == "2026.10.2" else "2.9.0"),
