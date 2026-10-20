@@ -1,0 +1,79 @@
+name: Frozen native HAOS HACS rehearsal
+
+on:
+  push:
+    branches: [codex/native-amd64-validation]
+    paths:
+      - native-haos-hacs/**
+      - .github/workflows/native-haos-hacs.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: homecircle-native-haos-hacs-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  frozen-haos-hacs:
+    if: github.ref == 'refs/heads/codex/native-amd64-validation'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 125
+    steps:
+      - name: Check out the isolated validation revision
+        timeout-minutes: 3
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Install native virtual machine tools
+        timeout-minutes: 10
+        shell: bash
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq qemu-system-x86 qemu-utils ovmf
+          test -c /dev/kvm
+          sudo chown "$(id -u):$(id -g)" /dev/kvm
+          test -r /dev/kvm && test -w /dev/kvm
+      - name: Fetch and verify unmodified official HACS
+        timeout-minutes: 5
+        shell: bash
+        run: |
+          mkdir -p native-haos-hacs/assets
+          curl --fail --location --proto '=https' --tlsv1.2 --max-time 180 --retry 2 \
+            https://github.com/hacs/integration/releases/download/2.0.5/hacs.zip \
+            --output native-haos-hacs/assets/hacs.zip
+          printf '%s  %s\n' \
+            97be6b824a4f38e683728cc6dd72367f6b8bad0a43428b1b3b987a3087adf413 \
+            native-haos-hacs/assets/hacs.zip | sha256sum --check --strict
+      - name: Verify offline controller safety contracts
+        timeout-minutes: 2
+        shell: bash
+        run: |
+          cd native-haos-hacs
+          python3 -B -m unittest -v test_controller.py
+      - name: Rehearse HACS baseline and frozen candidate on HAOS
+        timeout-minutes: 97
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          bash native-haos-hacs/run_host.sh \
+            --candidate-zip native-validation/payload/homecircle-candidate.zip \
+            --baseline-zip native-validation/payload/published-homecircle.zip \
+            --hacs-zip native-haos-hacs/assets/hacs.zip \
+            --branch-commit "$GITHUB_SHA" \
+            --output native-haos-hacs-results
+          jq -e '.outcome=="passed" and .phases==8 and .qemu_stopped==true and .private_workspace_removed==true' \
+            native-haos-hacs-results/public-summary/host.json
+      - name: Retain only narrow synthetic summaries
+        timeout-minutes: 3
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: native-haos-hacs-sanitized-summary
+          path: native-haos-hacs-results/public-summary/*.json
+          if-no-files-found: warn
+          retention-days: 7
+          include-hidden-files: false

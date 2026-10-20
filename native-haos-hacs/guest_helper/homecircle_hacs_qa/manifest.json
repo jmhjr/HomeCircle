@@ -1,0 +1,9 @@
+{
+  "domain": "homecircle_hacs_qa",
+  "name": "Disposable HomeCircle HACS QA",
+  "version": "0.0.0",
+  "documentation": "https://github.com/jmhjr/HomeCircle",
+  "dependencies": ["frontend", "http", "image_upload", "lovelace", "person", "websocket_api", "zone"],
+  "codeowners": [],
+  "requirements": []
+}
