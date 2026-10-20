@@ -1,0 +1,10 @@
+{
+  "architecture": "amd64",
+  "driver_sha256": "96a439dbe8384c03b454465eb003db5ace1bbfb061615f8b2f67045d83e7a186",
+  "image_digest": "sha256:45f009d6ff1061971102e81f0802cf2762bdd5c5007231c938bd36030cbd0a12",
+  "image_id": "sha256:e1acee126eee45b3007494ad7f806d12535dc7d733624b681ed29a505f8c2b98",
+  "image_repository": "ghcr.io/home-assistant/qemux86-64-homeassistant",
+  "machine": "x86_64",
+  "requirements_support_sha256": "91bb0d92bfeef8021184275369d8923e8b951d2cb7b85a31bd34414101e3a513",
+  "schema": 1
+}

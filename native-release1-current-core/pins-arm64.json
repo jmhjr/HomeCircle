@@ -1,0 +1,10 @@
+{
+  "architecture": "arm64",
+  "driver_sha256": "96a439dbe8384c03b454465eb003db5ace1bbfb061615f8b2f67045d83e7a186",
+  "image_digest": "sha256:5958cd8bcf451966db72682c2d715db1e5a10d66f0e2c3d580dccffd86124e23",
+  "image_id": "sha256:6a416e09a080df07b82fa00e010ca5416d6d5b146a681243ef26f3280e29a991",
+  "image_repository": "ghcr.io/home-assistant/qemuarm-64-homeassistant",
+  "machine": "aarch64",
+  "requirements_support_sha256": "91bb0d92bfeef8021184275369d8923e8b951d2cb7b85a31bd34414101e3a513",
+  "schema": 1
+}
