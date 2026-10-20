@@ -1,6 +1,7 @@
 """New procedure barriers and private transfer refusal contracts; no guest work."""
 import base64
 import ast
+import asyncio
 from copy import deepcopy
 import hashlib
 import json
@@ -10,6 +11,7 @@ import tempfile
 import tarfile
 import unittest
 from unittest.mock import Mock, patch
+from types import SimpleNamespace
 
 import accept_procedure as gate
 import controller
@@ -22,6 +24,15 @@ def bundle():
     return transfer.canonical({'schema':1,'files':{
         'ledger.json':base64.b64encode(b'fictional-test-bytes').decode(),
         'ledger.lock':'','account-'+transfer.IDENTITY+'.lock':''}})
+
+
+def entry_helpers():
+    tree=ast.parse((controller.ROOT/'guest_helper/homecircle_safe_restore_qa/__init__.py').read_bytes())
+    nodes=[n for n in tree.body if isinstance(n,(ast.FunctionDef,ast.AsyncFunctionDef))
+           and n.name in {'entry_scope','ensure_entry_scope','wait_for'}]
+    namespace={'asyncio':asyncio,'check':controller.require}
+    exec(compile(ast.Module(body=nodes,type_ignores=[]),'actual_helper_entry_scope','exec'),namespace)
+    return namespace
 
 
 def synthetic_success():
@@ -98,6 +109,55 @@ def synthetic_success():
 
 
 class ProcedureContracts(unittest.TestCase):
+    def test_actual_entry_scope_accepts_only_normal_enabled_system_entries(self):
+        observe=entry_helpers()['entry_scope']
+        def entry(domain,source='system',disabled=None):
+            return SimpleNamespace(domain=domain,source=source,disabled_by=disabled,
+                                   title='PRIVATE-CANARY',data={'PRIVATE-CANARY':'not exported'})
+        base=[entry('hassio'),entry('backup')]
+        scope=observe(base)
+        self.assertTrue(scope['system_entries_ready'] and scope['entry_scope_allowed'])
+        self.assertEqual(scope['domains'],{'homecircle':0,'hassio':1,'backup':1,'other':0})
+        self.assertTrue(observe(base+[entry('homecircle','user')])['system_entries_ready'])
+        cases=[base+[entry('backup')],[entry('hassio'),entry('backup','user')],
+               [entry('hassio'),entry('backup','system','user')],
+               base+[entry('PRIVATE-CANARY','PRIVATE-CANARY')],
+               base+[entry('homecircle','system')],[entry('hassio','user'),entry('backup')],
+               base+[entry('homecircle','user'),entry('homecircle','user')]]
+        for entries in cases:
+            with self.subTest(entries=len(entries)):
+                value=observe(entries)
+                self.assertFalse(value['entry_scope_allowed'] or value['system_entries_ready'])
+                self.assertNotIn('PRIVATE',json.dumps(value))
+        self.assertFalse(observe([entry('hassio')])['system_entries_ready'])
+        with self.assertRaises(controller.Refused):observe(base*9)
+
+    def test_public_entry_scope_projects_only_finite_counts_and_strict_types(self):
+        scope=entry_helpers()['entry_scope']([
+            SimpleNamespace(domain='hassio',source='system',disabled_by=None),
+            SimpleNamespace(domain='backup',source='system',disabled_by=None)])
+        self.assertEqual(controller.public_entry_scope(scope),scope)
+        cases=[{**scope,'PRIVATE-CANARY':'body'}, {**scope,'total':True},
+               {**scope,'total':17},{**scope,'system_entries_ready':'PRIVATE-CANARY'},
+               {**scope,'domains':{**scope['domains'],'other':True}},
+               {**scope,'sources':{'system':1,'user':0,'other':0}},
+               {**scope,'domains':{'PRIVATE-CANARY':2}}]
+        for value in cases:
+            self.assertIsNone(controller.public_entry_scope(value))
+        for value in (scope,{**scope,'PRIVATE-CANARY':'body'}):
+            with tempfile.TemporaryDirectory() as name:
+                host=controller.Controller(type('Args',(),{'branch_commit':'a'*40})())
+                host.public=Path(name);host.config_path='/mnt/data/supervisor/homeassistant'
+                host.guest_write=Mock();host.guest=Mock()
+                failed={'schema':1,'token':host.phase_token,'phase':'initialize','generation':host.generation,
+                    'branch_commit':'a'*40,'outcome':'failed','stage':'system_entries_ready',
+                    'failure_code':'qa_only_owned_or_system_entries','failure_type':'Refused','entry_scope':value}
+                host.guest_read=Mock(return_value=controller.canonical(failed))
+                with self.assertRaisesRegex(controller.Refused,'^guest_acceptance_failed$'):host.phase('initialize')
+                retained=json.loads((Path(name)/'initialize.json').read_bytes())
+                self.assertEqual('entry_scope' in retained,value is scope)
+                self.assertNotIn('PRIVATE',json.dumps(retained))
+
     def test_actual_prepare_reuses_only_the_fresh_private_workspace(self):
         tree=ast.parse(Path(controller.__file__).read_bytes())
         run=next(n for n in ast.walk(tree) if isinstance(n,ast.FunctionDef) and n.name=='run')
@@ -328,6 +388,26 @@ class PrivateTransferContracts(unittest.TestCase):
             with self.assertRaises(ValueError):transfer.private_files(root)
             (root/'symlink').unlink();os.mkfifo(root/'fifo')
             with self.assertRaises(ValueError):transfer.private_files(root)
+
+
+class EntryReadinessContracts(unittest.IsolatedAsyncioTestCase):
+    async def test_actual_wait_observes_delayed_backup_and_refuses_invalid_or_expired_scope(self):
+        functions=entry_helpers();hassio=SimpleNamespace(domain='hassio',source='system',disabled_by=None)
+        backup=SimpleNamespace(domain='backup',source='system',disabled_by=None)
+        states=iter(([hassio],[hassio,backup]));receipt={}
+        hass=SimpleNamespace(config_entries=SimpleNamespace(async_entries=lambda:next(states)))
+        await functions['ensure_entry_scope'](hass,receipt)
+        self.assertTrue(receipt['entry_scope']['system_entries_ready'])
+        invalid=SimpleNamespace(domain='backup',source='user',disabled_by=None)
+        hass.config_entries.async_entries=lambda:[hassio,invalid]
+        with self.assertRaisesRegex(controller.Refused,'^qa_only_owned_or_system_entries$'):
+            await functions['ensure_entry_scope'](hass,receipt)
+        self.assertFalse(receipt['entry_scope']['entry_scope_allowed'])
+        async def expire(predicate,seconds):
+            self.assertEqual(seconds,60);self.assertFalse(predicate());raise TimeoutError()
+        functions['wait_for']=expire;hass.config_entries.async_entries=lambda:[hassio]
+        with self.assertRaises(TimeoutError):await functions['ensure_entry_scope'](hass,receipt)
+        self.assertEqual(receipt['entry_scope']['domains']['backup'],0)
 
 
 if __name__=='__main__':unittest.main()

@@ -70,6 +70,38 @@ def check(condition, label):
         raise Refused(label)
 
 
+def entry_scope(entries):
+    """Count only fixed categories; permit the normal enabled system entries."""
+    check(type(entries) is list and len(entries) <= 16, 'qa_entry_count_bound')
+    domains = dict.fromkeys(('homecircle', 'hassio', 'backup', 'other'), 0)
+    sources = dict.fromkeys(('system', 'user', 'other'), 0)
+    allowed = True
+    for entry in entries:
+        domain = entry.domain if entry.domain in domains else 'other'
+        source = entry.source if entry.source in sources else 'other'
+        domains[domain] += 1
+        sources[source] += 1
+        if domain == 'homecircle':
+            allowed = allowed and source == 'user'
+            continue
+        if domain not in {'hassio', 'backup'} or source != 'system' or entry.disabled_by is not None:
+            allowed = False
+    allowed = allowed and all(domains[name] <= 1 for name in ('homecircle', 'hassio', 'backup'))
+    return {'total': len(entries), 'domains': domains, 'sources': sources,
+            'system_entries_ready': allowed and domains['hassio'] == domains['backup'] == 1,
+            'entry_scope_allowed': allowed}
+
+
+async def ensure_entry_scope(hass, receipt):
+    """The normal discovery dispatcher creates system entries at the started event."""
+    def ready():
+        value = entry_scope(hass.config_entries.async_entries())
+        receipt['entry_scope'] = value
+        check(value['entry_scope_allowed'], 'qa_only_owned_or_system_entries')
+        return value['system_entries_ready']
+    await wait_for(ready, 60)
+
+
 def digest(value):
     if not isinstance(value, bytes):
         value = json.dumps(value, sort_keys=True, separators=(",", ":")).encode()
@@ -567,8 +599,8 @@ class Rehearsal:
                 receipt.update(await hass.async_add_executor_job(package_at, directory, inputs))
                 users = await hass.auth.async_get_users()
                 check(not any(user.is_owner or not user.system_generated for user in users), 'qa_no_owner_accounts')
-                check(all(entry.domain == 'homecircle' or (entry.domain == 'hassio' and entry.source == 'system')
-                          for entry in hass.config_entries.async_entries()), 'qa_only_owned_or_system_entries')
+                stage = 'system_entries_ready'
+                await ensure_entry_scope(hass, receipt)
                 stage = "recorder"
                 await recorder_ready(hass)
                 registry = er.async_get(hass)

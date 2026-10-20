@@ -80,6 +80,15 @@ Positive/negative TCP controls and responsive QGA are required; uninterrupted
 isolation is not claimed. All deadlines, uncertain Docker states and cleanup
 failures remain failures. No mutation is retried, including backup and restore.
 
+Normal Core startup creates a system Backup entry, and Supervisor supplies its
+system Hassio entry. The helper waits up to 60 seconds for their normal discovery
+flows, then requires exactly one enabled system entry of each kind. At most one
+synthetic user-source HomeCircle entry is permitted; its enabled/disabled state
+is checked separately by each procedure phase. Foreign domains, user-source
+system entries, disabled system entries and duplicates refuse. Diagnostics contain
+only fixed domain/source-category counts and readiness booleans; no raw entry
+names, titles, IDs or configuration data are exported.
+
 ## Exact runtime and reuse
 
 The official machine reference is
@@ -109,14 +118,16 @@ requires the same module hashes in the guest before creating the synthetic image
 
 ## Contracts, privacy and limits
 
-Eighty standalone contracts currently pass without skips. They include
+Eighty-three standalone contracts currently pass without skips. They include
 strict input/archive/OCI/dependency/blank-config checks; actual phase nonce and
 disabled automatic-boot barriers; old/new guard timeline, pending/uncertain and
 early-enable/network refusal; private bundle links/modes/size-before-read;
 Recorder/served/settings failures; allowed owned-ID reuse; fixed canary-safe
 failure projection and plain procedure gate, plus actual-method dependency-probe
 transfer and current-constraint pin regressions, and actual preparation through
-an existing private workspace with missing/link/mode/owner refusals. They do not import HA, a native
+an existing private workspace with missing/link/mode/owner refusals. The actual
+system-entry predicate, delayed discovery readiness and finite count-only failure
+projection are also tested. They do not import HA, a native
 provider or run a VM. The future workflow must bind every committed input before
 imports and require exactly the reviewed contract count with zero skips.
 

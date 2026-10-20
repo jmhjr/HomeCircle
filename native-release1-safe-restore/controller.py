@@ -234,6 +234,23 @@ def backup_info(value, slug):
             "protected": False, "compressed": False}
 
 
+def public_entry_scope(value):
+    """A finite count-only projection; unknown names and private fields never leave."""
+    keys = {'total', 'domains', 'sources', 'system_entries_ready', 'entry_scope_allowed'}
+    if type(value) is not dict or set(value) != keys or type(value['total']) is not int or not 0 <= value['total'] <= 16:
+        return None
+    for key, names in (('domains', {'homecircle', 'hassio', 'backup', 'other'}), ('sources', {'system', 'user', 'other'})):
+        counts = value[key]
+        if (type(counts) is not dict or set(counts) != names
+                or any(type(x) is not int or not 0 <= x <= 16 for x in counts.values())
+                or sum(counts.values()) != value['total']):
+            return None
+    if any(type(value[key]) is not bool for key in ('system_entries_ready', 'entry_scope_allowed')):
+        return None
+    return {'total': value['total'], 'domains': dict(value['domains']), 'sources': dict(value['sources']),
+            'system_entries_ready': value['system_entries_ready'], 'entry_scope_allowed': value['entry_scope_allowed']}
+
+
 def backup_error_categories(value):
     """Classify reviewed public source constants without exporting message text."""
     if not isinstance(value, dict):
@@ -1138,6 +1155,8 @@ print(json.dumps({"connected":connected}))
                 failure.update(failure_projection(receipt))
                 if probe := public_http_probe(receipt.get("http_probe")):
                     failure["http_probe"] = probe
+                if scope := public_entry_scope(receipt.get('entry_scope')):
+                    failure['entry_scope'] = scope
                 write_json(self.public / (name + ".json"), failure)
                 raise Refused("guest_acceptance_failed")
             projected = self.accept_phase(name, receipt)
@@ -1261,6 +1280,8 @@ print(json.dumps({"connected":connected}))
                 "quarantine_snapshot_sha256": quarantine, "entry_disabled": not active, "entry_loaded": active,
                 "process": {key: process[key] for key in ("pid", "start_ticks")},
                 "recorder": public_recorder, "guard": public_guard}
+        if scope := public_entry_scope(receipt.get('entry_scope')):
+            public['entry_scope'] = scope
         if name == "quarantine":
             public["persisted_storage_checked"] = True
         public.update(provider_request_attempt_counts_measured=False, recovery_proof_attempt_counts_measured=False,
