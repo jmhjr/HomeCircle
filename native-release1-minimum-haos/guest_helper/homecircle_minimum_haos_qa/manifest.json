@@ -1,0 +1,17 @@
+{
+  "domain": "homecircle_minimum_haos_qa",
+  "name": "Disposable HomeCircle Minimum Core Managed QA",
+  "version": "0.0.0",
+  "documentation": "https://github.com/jmhjr/HomeCircle",
+  "dependencies": [
+    "frontend",
+    "http",
+    "image_upload",
+    "lovelace",
+    "person",
+    "websocket_api",
+    "zone"
+  ],
+  "codeowners": [],
+  "requirements": []
+}
