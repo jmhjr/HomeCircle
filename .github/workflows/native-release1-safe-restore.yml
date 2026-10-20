@@ -1,0 +1,109 @@
+name: HomeCircle explicit disabled-entry partial restore
+on:
+  push:
+    branches: [codex/native-amd64-validation]
+    paths:
+      - native-release1-safe-restore/**
+      - .github/workflows/native-release1-safe-restore.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: homecircle-safe-restore-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  explicit-disabled-procedure:
+    if: github.ref == 'refs/heads/codex/native-amd64-validation'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 125
+    steps:
+      - name: Check out exact reviewed procedure and preview
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Verify frozen fixture before imports
+        timeout-minutes: 3
+        shell: bash
+        run: |
+          python3 -I -B - <<'PY'
+          from pathlib import Path
+          import hashlib,subprocess
+          root=Path('native-release1-safe-restore')
+          expected={
+            "README.md": "5c08c349526cadb9897d7d840907abcf70b71d1fc3a235b90fe6c9b3fd1cab70",
+            "accept_procedure.py": "71038cf5fcdcf914be271c5b5de9cdfb89c59b5e0bd147f07cc519a402614fb3",
+            "controller.py": "89404e67282a21463dc680e1a1112a46f2bc9752e1a22e0fd1958a4608227e35",
+            "guard_transfer.py": "134437f6451f43ec9563077583f6528c15a2e45087606afd2b8811f36dc178c9",
+            "guest_helper/homecircle_safe_restore_qa/__init__.py": "a5e9441eb15a6be6fb33c1f9c42e3191bdadacd82b914c08fdb7f04dc12e9a61",
+            "guest_helper/homecircle_safe_restore_qa/dependency_probe.py": "7ac8e79aa5aea1868801e9273d9d1300db525b51bd7fe70a0a03a836a506a8d6",
+            "guest_helper/homecircle_safe_restore_qa/manifest.json": "081ef7cc5799e6b7adea6ee90a0f6d95c8c898372f8da25932f4690748b3cf7a",
+            "payload/homecircle.zip": "c4530d94be3b2996f8d6c8948db88a51868566047d68558eefde7967f270a861",
+            "payload/inventory.json": "9bdfba997d5437d354673a98c8b78d3875d459499281bca3e20bc629369dcb6b",
+            "payload/provenance.json": "1fa4d1ccdcef3e10ca4defb5295bc96035cc853776c85623d5eda05b39ca5696",
+            "reset_fresh_config.py": "df600d5695de2d09feabcded9e59d81dcc8149be2082b19b7931e0f11f12aa3c",
+            "run_host.sh": "19e047f20d970b1728b790fba65354335b6a957a74362f457379d40e2f55ac1f",
+            "test_inherited.py": "5ff850f550c8b1271a614211683ba983e5c8640a75e791fd2213f8a7ebb6a0d0",
+            "test_phases.py": "7e375c09f7520f596ab42f8775291acdebc32b958da6b5852054abb5cd5403af",
+            "test_procedure.py": "f3d854481cdd01638f86e74dd13c71f42c7ba0ebabd8ff558d984e8554b5f2f7"
+          }
+          tracked=subprocess.check_output(['git','ls-files','-z','--',str(root)]).decode().split('\0')
+          assert {n for n in tracked if n}=={str(root/n) for n in expected},'tracked_members_refused'
+          assert root.is_dir() and not root.is_symlink()
+          nodes=list(root.rglob('*'))
+          assert all(not p.is_symlink() and (p.is_file() or p.is_dir()) for p in nodes)
+          assert {p.relative_to(root).as_posix() for p in nodes if p.is_file()}==set(expected)
+          assert len(expected)==15
+          for n,digest in expected.items():assert hashlib.sha256((root/n).read_bytes()).hexdigest()==digest,'input_bytes_refused'
+          print('Verified all 15 frozen procedure inputs.')
+          PY
+      - name: Install native VM tools
+        timeout-minutes: 5
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq qemu-system-x86 qemu-utils
+          test -r /dev/kvm && test -w /dev/kvm
+      - name: Require exactly seventy-nine zero-skip contracts
+        timeout-minutes: 3
+        shell: bash
+        run: |
+          bash -n native-release1-safe-restore/run_host.sh
+          PYTHONDONTWRITEBYTECODE=1 python3 -B - <<'PY'
+          import unittest
+          suite=unittest.defaultTestLoader.discover('native-release1-safe-restore',pattern='test_*.py')
+          assert suite.countTestCases()==79,'contract_count_refused'
+          result=unittest.TextTestRunner(verbosity=2).run(suite)
+          assert result.wasSuccessful() and not result.skipped,'contract_failure_or_skip'
+          PY
+      - name: Witness ordinary install and explicit disabled-entry restore
+        timeout-minutes: 103
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          timeout --signal=TERM --kill-after=150s 5900s bash native-release1-safe-restore/run_host.sh \
+            --candidate-zip native-release1-safe-restore/payload/homecircle.zip \
+            --branch-commit "$GITHUB_SHA" --output native-release1-safe-restore-results
+          receipts=native-release1-safe-restore-results/public-summary
+          python3 -I -B native-release1-safe-restore/accept_procedure.py "$receipts"
+          actual=$(find "$receipts" -mindepth 1 -maxdepth 1 -type f -printf '%f\n' | LC_ALL=C sort)
+          expected=$(printf '%s\n' host.json initialize.json initial_restart.json quarantine.json mutate.json automatic_disabled.json repaired_disabled.json reenabled.json restart.json | LC_ALL=C sort)
+          test "$actual" = "$expected"
+      - name: Retain only fixed procedure receipts
+        if: always()
+        timeout-minutes: 3
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: release1-explicit-disabled-partial-restore
+          path: |
+            native-release1-safe-restore-results/public-summary/host.json
+            native-release1-safe-restore-results/public-summary/initialize.json
+            native-release1-safe-restore-results/public-summary/initial_restart.json
+            native-release1-safe-restore-results/public-summary/quarantine.json
+            native-release1-safe-restore-results/public-summary/mutate.json
+            native-release1-safe-restore-results/public-summary/automatic_disabled.json
+            native-release1-safe-restore-results/public-summary/repaired_disabled.json
+            native-release1-safe-restore-results/public-summary/reenabled.json
+            native-release1-safe-restore-results/public-summary/restart.json
+          if-no-files-found: warn
+          retention-days: 7
+          include-hidden-files: false

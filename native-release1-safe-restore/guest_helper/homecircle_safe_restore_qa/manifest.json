@@ -1,0 +1,9 @@
+{
+  "domain": "homecircle_safe_restore_qa",
+  "name": "Disposable HomeCircle Safe Restore QA",
+  "version": "0.0.0",
+  "documentation": "https://github.com/jmhjr/HomeCircle",
+  "dependencies": ["backup", "frontend", "http", "image_upload", "lovelace", "person", "recorder", "websocket_api", "zone"],
+  "codeowners": [],
+  "requirements": []
+}
