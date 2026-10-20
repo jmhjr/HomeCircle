@@ -9,6 +9,13 @@ import accept_investigation as gate
 def receipt():
     return {
         "schema": 1, "diagnostic_completed": True, "operational_restore_passed": True,
+        "prepared_dependency_enabled_partial_restore": True, "ordinary_default_dependency_reinstallation_tested": False,
+        "prepared_enabled_restore_safety_accepted": False,
+        "prepared_dependency_fixture": {"outcome": "passed", "core": "2026.10.2", "closure_count": 24,
+            "constraints_sha256": "7baa9a8f39ddeb9c5bb60a1036f6d5e33f4b84267f151f53cc2b95ef031a21b5",
+            "inventory_scope": "dependency_regular_files_excluding_generated_bytecode",
+            "inventory_sha256": "d" * 64, "inventory_files": 123},
+        "backup": {"archive": {"prepared_dependency_sha256": "d" * 64, "prepared_dependency_files": 123}},
         "manual_newest_guard_repair_passed": True, "actual_kvm_confirmed": True,
         "qemu_stopped": True, "private_workspace_removed": True, "cleanup_failed": False,
         "enabled_entry_restore_tested": True, "automatic_guard_antirollback_tested": True,
@@ -61,12 +68,25 @@ class DiagnosticGate(unittest.TestCase):
         with self.assertRaises(ValueError):
             gate.evaluate(body, 1)
 
+    def test_prepared_dependency_fixture_and_archive_hash_are_mandatory(self):
+        for mutate in (
+            lambda body: body.update(prepared_dependency_enabled_partial_restore=False),
+            lambda body: body.update(ordinary_default_dependency_reinstallation_tested=True),
+            lambda body: body["prepared_dependency_fixture"].update(closure_count=23),
+            lambda body: body["backup"]["archive"].update(prepared_dependency_sha256="a" * 64),
+        ):
+            body = deepcopy(receipt())
+            mutate(body)
+            with self.subTest(body=body), self.assertRaises(ValueError):
+                gate.evaluate(body, 1)
+
     def test_actual_protection_requires_matching_result_and_exit_status(self):
         body = receipt()
         body.update(automatic_guard_antirollback_passed=True,
-                    ordinary_enabled_restore_safety_accepted=True, outcome="passed")
+                    prepared_enabled_restore_safety_accepted=True, outcome="passed")
         result = gate.evaluate(body, 0)
-        self.assertTrue(result["ordinary_enabled_restore_safety_accepted"])
+        self.assertTrue(result["prepared_enabled_restore_safety_accepted"])
+        self.assertFalse(result["ordinary_enabled_restore_safety_accepted"])
         self.assertFalse(result["stable_release_approval"])
         with self.assertRaises(ValueError):
             gate.evaluate(body, 1)

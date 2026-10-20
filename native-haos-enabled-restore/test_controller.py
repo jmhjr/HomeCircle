@@ -188,6 +188,7 @@ class EnabledRestoreContracts(unittest.TestCase):
     def controller(self):
         value = controller.Controller(SimpleNamespace(branch_commit="c" * 40))
         value.inventories = {"candidate": {"__init__.py": {"bytes": 1, "sha256": "d" * 64}}}
+        value.dependency_fixture = {"inventory_sha256": "6" * 64}
         return value
 
     def receipt(self, name, restored_count=2):
@@ -201,6 +202,9 @@ class EnabledRestoreContracts(unittest.TestCase):
                  "owner_accounts_used": False, "production_configuration_used": False,
                  "provider_accounts_configured": False, "entry_disabled": False, "entry_loaded": True,
                  "nonempty_options": True, "package_files_count": 112,
+                 "prepared_dependencies": {"inventoried_non_bytecode_bytes_checked": True, "origins_config_deps": True,
+                     "normal_bootstrap_library": True, "skip_pip": False, "inventory_sha256": "6" * 64,
+                     "inventory_scope": "dependency_regular_files_excluding_generated_bytecode"},
                  "package_payload_sha256": controller.sha(controller.canonical(self.controller().inventories["candidate"])),
                  "loaded_source_sha256": "d" * 64, "runtime_config_sha256": "e" * 64,
                  "served_bundle_sha256": "f" * 64, "static_served_bundle_matches": True,

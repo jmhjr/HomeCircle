@@ -2,6 +2,7 @@
 
 import argparse
 import json
+import re
 from pathlib import Path
 
 EXPECTED_ZIP = "fc0b365d9688459504f874af5c38393e24145d657f15f1def8ada9184f363285"
@@ -12,8 +13,22 @@ def evaluate(value, exit_code):
         if not condition:
             raise ValueError("incomplete_or_inconsistent_investigation")
 
-    require(type(value) is dict and value.get("schema") == 1)
+    require(type(value) is dict and type(value.get("schema")) is int and value["schema"] == 1)
     require(value.get("diagnostic_completed") is True)
+    require(value.get("prepared_dependency_enabled_partial_restore") is True
+            and value.get("ordinary_default_dependency_reinstallation_tested") is False
+            and value.get("ordinary_enabled_restore_safety_accepted") is False)
+    fixture = value.get("prepared_dependency_fixture", {})
+    require(fixture.get("outcome") == "passed" and fixture.get("core") == "2026.10.2"
+            and fixture.get("constraints_sha256") == "7baa9a8f39ddeb9c5bb60a1036f6d5e33f4b84267f151f53cc2b95ef031a21b5"
+            and type(fixture.get("closure_count")) is int and fixture["closure_count"] == 24
+            and fixture.get("inventory_scope") == "dependency_regular_files_excluding_generated_bytecode"
+            and isinstance(fixture.get("inventory_sha256"), str)
+            and re.fullmatch(r"[0-9a-f]{64}", fixture["inventory_sha256"])
+            and type(fixture.get("inventory_files")) is int and fixture["inventory_files"] > 0)
+    archived = value.get("backup", {}).get("archive", {})
+    require(archived.get("prepared_dependency_sha256") == fixture["inventory_sha256"]
+            and archived.get("prepared_dependency_files") == fixture["inventory_files"])
     for key in (
         "operational_restore_passed", "manual_newest_guard_repair_passed",
         "actual_kvm_confirmed", "qemu_stopped", "private_workspace_removed",
@@ -35,7 +50,7 @@ def evaluate(value, exit_code):
             and boundary["closed_probe_observations"] >= 3)
     protected = value.get("automatic_guard_antirollback_passed")
     require(type(protected) is bool and type(exit_code) is int)
-    require(value.get("ordinary_enabled_restore_safety_accepted") is protected)
+    require(value.get("prepared_enabled_restore_safety_accepted") is protected)
     if protected:
         require(exit_code == 0 and value.get("outcome") == "passed")
     else:
@@ -48,10 +63,13 @@ def evaluate(value, exit_code):
         "operational_restore_passed": True,
         "manual_newest_guard_repair_passed": True,
         "automatic_guard_antirollback_passed": protected,
-        "ordinary_enabled_restore_safety_accepted": protected,
+        "ordinary_enabled_restore_safety_accepted": False,
+        "prepared_enabled_restore_safety_accepted": protected,
+        "prepared_dependency_enabled_partial_restore": True,
+        "ordinary_default_dependency_reinstallation_tested": False,
         "stable_release_approval": False,
         "interpretation": (
-            "observed_restore_scope_only" if protected
+            "observed_prepared_dependency_restore_scope_only" if protected
             else "older_backup_rolls_back_local_guard_requires_release_disposition"
         ),
     }
@@ -69,7 +87,7 @@ def main():
     except (ValueError, KeyError, TypeError):
         raise SystemExit("Investigation incomplete or inconsistent; acceptance refused.") from None
     (args.summary.parent / "investigation.json").write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")
-    print("Investigation completed; ordinary restored safeguard protection=" +
+    print("Prepared-dependency investigation completed; restored safeguard protection=" +
           str(result["automatic_guard_antirollback_passed"]).lower())
 
 

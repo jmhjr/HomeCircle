@@ -1,4 +1,4 @@
-"""Native KVM HAOS enabled-entry partial restore and guard rollback diagnostic.
+"""Prepared-dependency native KVM HAOS enabled partial restore and guard rollback diagnostic.
 
 Only one newly created, synthetic and network-closed owned guest is controlled.
 Operational continuity and automatic recovery-guard rollback safety are separate.
@@ -33,6 +33,13 @@ HAOS_XZ_SHA = "fae6a728768cc10aff60d4820bfcd40d64cd77fab82c8bd92af13b3d9d414090"
 CANDIDATE_SHA = "fc0b365d9688459504f874af5c38393e24145d657f15f1def8ada9184f363285"
 BRANCH = "codex/native-amd64-validation"
 CORE = "2026.10.2"
+CONSTRAINTS_SHA = "7baa9a8f39ddeb9c5bb60a1036f6d5e33f4b84267f151f53cc2b95ef031a21b5"
+DEPS_SITE = "/config/deps/lib/python3.14/site-packages"
+REQUIREMENTS = ["life360==7.2.0", "protobuf>=6.32.0,<8.0.0", "anisette==1.2.4",
+                "unicorn==2.1.4", "srp==1.0.22", "beautifulsoup4==4.13.3"]
+PACKAGE_NAMES = {"life360", "protobuf", "anisette", "unicorn", "srp", "beautifulsoup4"}
+ENTRY_STATES = {"loaded", "not_loaded", "setup_in_progress", "setup_error", "setup_retry",
+                "migration_error", "failed_unload", "unload_in_progress", "unrecognized"}
 HA = "/usr/bin/docker exec hassio_cli ha"
 GUEST_ROOT = "/mnt/data/homecircle-enabled-restore-qa"
 CONTROL = "homecircle-enabled-restore-qa-control"
@@ -306,6 +313,87 @@ def public_guard(value):
                                         "uncertain", "api_status_checked", "retained_bytes_checked")}
 
 
+def public_dependency_preload(value):
+    require(isinstance(value, dict) and value.get("schema") == 1 and value.get("outcome") == "passed"
+            and value.get("core") == CORE and value.get("python") == "3.14.6"
+            and value.get("constraints_sha256") == CONSTRAINTS_SHA and value.get("site") == DEPS_SITE
+            and value.get("normal_bootstrap_library") is True and value.get("virtual_env") is False
+            and value.get("requirements") == REQUIREMENTS
+            and value.get("inventory_scope") == "dependency_regular_files_excluding_generated_bytecode",
+            "dependency_preload_scope_refused")
+    closure = value.get("closure")
+    require(isinstance(closure, dict) and len(closure) == 24 and value.get("closure_count") == 24,
+            "dependency_preload_closure_refused")
+    require(PACKAGE_NAMES <= closure.keys(), "dependency_preload_direct_closure_refused")
+    for name, version in closure.items():
+        require(isinstance(name, str) and re.fullmatch(r"[a-z0-9][a-z0-9.-]{0,79}", name)
+                and isinstance(version, str) and re.fullmatch(r"[A-Za-z0-9_.+-]{1,64}", version),
+                "dependency_preload_metadata_refused")
+    for key, maximum in (("inventory_files", 8192), ("inventory_bytes", 96 * 1024**2)):
+        require(type(value.get(key)) is int and 0 < value[key] <= maximum, "dependency_preload_count_refused")
+    require(isinstance(value.get("inventory_sha256"), str)
+            and re.fullmatch(r"[0-9a-f]{64}", value["inventory_sha256"]), "dependency_preload_hash_refused")
+    return {key: value[key] for key in ("schema", "outcome", "core", "python", "constraints_sha256", "site",
+            "normal_bootstrap_library", "virtual_env", "requirements", "closure", "closure_count",
+            "inventory_sha256", "inventory_files", "inventory_bytes", "inventory_scope")}
+
+
+def checked_dependency_preload(value):
+    public = public_dependency_preload(value)
+    inventory = value.get("inventory")
+    require(isinstance(inventory, dict) and len(inventory) == public["inventory_files"],
+            "dependency_inventory_refused")
+    total = 0
+    for name, item in inventory.items():
+        path = PurePosixPath(name)
+        require(isinstance(name, str) and name == path.as_posix()
+                and name.startswith("lib/python3.14/site-packages/") and not path.is_absolute()
+                and ".." not in path.parts and not any(char in name for char in "\\\0\r\n")
+                and isinstance(item, dict) and set(item) == {"bytes", "sha256"}
+                and type(item["bytes"]) is int and 0 <= item["bytes"] <= 64 * 1024**2
+                and isinstance(item["sha256"], str) and re.fullmatch(r"[0-9a-f]{64}", item["sha256"]),
+                "dependency_inventory_member_refused")
+        total += item["bytes"]
+    require(total == public["inventory_bytes"] and sha(canonical(inventory)) == public["inventory_sha256"],
+            "dependency_inventory_binding_refused")
+    return public, inventory
+
+
+def public_startup_diagnostics(value):
+    require(isinstance(value, dict) and set(value) <= {"before_entry_wait", "before_sources_wait", "failure"}
+            and len(value) <= 3, "startup_diagnostics_refused")
+    result = {}
+    for label, item in value.items():
+        require(isinstance(item, dict) and item.get("entry_state") in ENTRY_STATES
+                and type(item.get("entry_disabled")) is bool and type(item.get("skip_pip")) is bool,
+                "startup_entry_diagnostic_refused")
+        projected = {key: item[key] for key in ("entry_state", "entry_disabled", "skip_pip")}
+        for key in ("tracker_states_present", "person_states_present", "person_sources_match"):
+            require(type(item.get(key)) is int and 0 <= item[key] <= 2, "startup_state_count_refused")
+            projected[key] = item[key]
+        require(type(item.get("config_deps_on_path")) is bool, "startup_path_diagnostic_refused")
+        projected["config_deps_on_path"] = item["config_deps_on_path"]
+        packages = item.get("packages")
+        require(isinstance(packages, dict) and set(packages) == PACKAGE_NAMES, "startup_package_set_refused")
+        projected["packages"] = {}
+        for name, package in packages.items():
+            require(isinstance(package, dict), "startup_package_diagnostic_refused")
+            copied = {}
+            for key in ("available", "satisfies_requirement", "origin_config_deps", "metadata_error", "loaded_module_present"):
+                require(type(package.get(key)) is bool, "startup_package_boolean_refused")
+                copied[key] = package[key]
+            version = package.get("version")
+            require(version is None or isinstance(version, str) and re.fullmatch(r"[A-Za-z0-9_.+-]{1,64}", version),
+                    "startup_version_diagnostic_refused")
+            copied["version"] = version
+            require(package.get("origin_probe") in {"loaded_module", "import_spec", "unavailable"},
+                    "startup_origin_probe_refused")
+            copied["origin_probe"] = package["origin_probe"]
+            projected["packages"][name] = copied
+        result[label] = projected
+    return result
+
+
 def write_json(path, data):
     temporary = path.with_name(path.name + ".tmp")
     with temporary.open("xb") as stream:
@@ -421,6 +509,8 @@ class Controller:
         self.cli_version_observed = None
         self.core_actions = []
         self.backup_requests = []
+        self.dependency_fixture = None
+        self.dependency_inventory = None
 
     def remaining(self, maximum, cleanup=False):
         remaining = self.deadline - time.monotonic() + (120 if cleanup else 0)
@@ -762,10 +852,18 @@ class Controller:
     def start_core(self):
         self.core_action("start")
 
+    def prepare_dependencies(self):
+        self.stage = "prepare_config_local_dependencies"
+        script = (ROOT / "prepare_dependencies.py").read_bytes()
+        self.provenance["dependency_preparer_sha256"] = sha(script)
+        self.guest_write(GUEST_ROOT + "/prepare-dependencies.py", script)
+        value = json.loads(self.guest("/usr/bin/docker exec -i homeassistant python3 -B - < "
+                                     + GUEST_ROOT + "/prepare-dependencies.py", 600))
+        self.dependency_fixture, self.dependency_inventory = checked_dependency_preload(value)
+
     def prepare(self, candidate_inventory):
         self.stage = "disposable_configuration"
         self.stop_core()
-        self.guest("umask 077; mkdir -m 700 " + GUEST_ROOT, 30)
         staging = self.private / "guest-staging"
         staging.mkdir(mode=0o700)
         components = staging / "custom_components"
@@ -786,7 +884,8 @@ class Controller:
                    + self.config_path + "/" + RESULTS, 60)
         self.inputs = {"schema": 1, "candidate_sha256": CANDIDATE_SHA,
                        "candidate_inventory": candidate_inventory, "core_version": CORE,
-                       "branch_commit": self.args.branch_commit, "generation": self.generation}
+                       "branch_commit": self.args.branch_commit, "generation": self.generation,
+                       "dependency_fixture": self.dependency_fixture, "dependency_inventory": self.dependency_inventory}
         self.guest_write(self.config_path + "/" + CONTROL + "/inputs.json", canonical(self.inputs))
         config = {"homeassistant": {"name": "Disposable HomeCircle Backup QA", "latitude": 0.0,
                                    "longitude": 0.0, "elevation": 0, "unit_system": "metric", "time_zone": "UTC"},
@@ -839,6 +938,10 @@ class Controller:
                         failure[key] = value
                 if probe := public_http_probe(receipt.get("http_probe")):
                     failure["http_probe"] = probe
+                if receipt.get("startup_diagnostics") is not None:
+                    failure["startup_diagnostics"] = public_startup_diagnostics(receipt["startup_diagnostics"])
+                if type(receipt.get("failure_diagnostics_unavailable")) is bool:
+                    failure["failure_diagnostics_unavailable"] = receipt["failure_diagnostics_unavailable"]
                 write_json(self.public / (name + ".json"), failure)
                 raise Refused("guest_acceptance_failed")
             projected = self.accept_phase(name, receipt)
@@ -858,6 +961,13 @@ class Controller:
         require(receipt.get("entry_disabled") is False and receipt.get("entry_loaded") is True
                 and receipt.get("nonempty_options") is True, "phase_enabled_entry_required")
         expected = self.inventories["candidate"]
+        prepared = receipt.get("prepared_dependencies", {})
+        require(self.dependency_fixture is not None and prepared.get("inventoried_non_bytecode_bytes_checked") is True
+                and prepared.get("origins_config_deps") is True and prepared.get("normal_bootstrap_library") is True
+                and prepared.get("skip_pip") is False
+                and prepared.get("inventory_scope") == "dependency_regular_files_excluding_generated_bytecode"
+                and prepared.get("inventory_sha256") == self.dependency_fixture["inventory_sha256"],
+                "prepared_dependency_phase_proof_refused")
         require(receipt.get("package_files_count") == 112
                 and receipt.get("package_payload_sha256") == sha(canonical(expected)), "phase_package_projection_refused")
         require(receipt.get("loaded_source_sha256") == expected["__init__.py"]["sha256"], "phase_loaded_source_refused")
@@ -947,10 +1057,15 @@ class Controller:
                 "served_bundle_sha256": receipt["served_bundle_sha256"], "static_served_bundle_matches": True,
                 "owned_resource_id_sha256": owned_resource, "entry_disabled": False, "entry_loaded": True,
                 "nonempty_options": True, "process": {key: process[key] for key in ("pid", "start_ticks")},
-                "recorder": public_recorder, "guard": guard}
+                "recorder": public_recorder, "guard": guard,
+                "prepared_dependencies": {"inventoried_non_bytecode_bytes_checked": True, "origins_config_deps": True,
+                    "normal_bootstrap_library": True, "skip_pip": False,
+                    "inventory_sha256": prepared["inventory_sha256"],
+                    "inventory_scope": "dependency_regular_files_excluding_generated_bytecode"}}
         if name == "prebackup":
             public["persisted_storage_checked"] = True
         if name == "restored":
+            public["startup_diagnostics"] = public_startup_diagnostics(receipt.get("startup_diagnostics", {}))
             public["operational_restore_passed"] = True
             public["automatic_guard_antirollback_passed"] = protected
             public["startup_guard_unchanged_after_load"] = True
@@ -1069,7 +1184,7 @@ root=Path("/data/homeassistant")
 inputs=json.loads((root/"homecircle-enabled-restore-qa-control/inputs.json").read_bytes())
 path=Path("/data/backup/homecircle-enabled-restore-qa.tar")
 require(path.is_file() and not path.is_symlink() and 0<path.stat().st_size<=128*1024**2)
-package,guard,entry,db,guard_count={},{},None,False,None
+package,guard,entry,db,guard_count,deps={},{},None,False,None,{}
 with tarfile.open(path,"r:") as outer:
     members=outer.getmembers()
     require(len(members)<=16 and all(not PurePosixPath(m.name).is_absolute() and ".." not in PurePosixPath(m.name).parts for m in members))
@@ -1090,6 +1205,9 @@ with tarfile.open(path,"r:") as outer:
             prefix="data/custom_components/homecircle/"
             if name.startswith(prefix) and "__pycache__" not in name and not name.endswith(".pyc"):
                 package[name[len(prefix):]]={"bytes":len(data),"sha256":sha(data)}
+            prefix="data/deps/"
+            if name.startswith(prefix) and "__pycache__" not in PurePosixPath(name).parts:
+                deps[name[len(prefix):]]={"bytes":len(data),"sha256":sha(data)}
             prefix="data/.storage/homecircle_findmy/recovery_guard/"
             if name.startswith(prefix): guard[name[len(prefix):]]={"bytes":len(data),"sha256":sha(data)}
             if name=="data/.storage/homecircle_findmy/recovery_guard/ledger.json":
@@ -1106,14 +1224,17 @@ with tarfile.open(path,"r:") as outer:
                 require(data[:16]==b"SQLite format 3\x00" and len(data)>4096)
                 db=True
 require(package==inputs["candidate_inventory"] and entry is True and db and guard and guard_count==2)
-print(json.dumps({"archive_bytes":path.stat().st_size,"archive_sha256":sha(path.read_bytes()),"database_included":db,"candidate_match":True,"enabled_entry":True,"guard_unresolved":guard_count,"guard_sha256":sha(canonical(guard))},sort_keys=True))
+require(deps==inputs["dependency_inventory"] and sha(canonical(deps))==inputs["dependency_fixture"]["inventory_sha256"])
+print(json.dumps({"archive_bytes":path.stat().st_size,"archive_sha256":sha(path.read_bytes()),"database_included":db,"candidate_match":True,"enabled_entry":True,"guard_unresolved":guard_count,"guard_sha256":sha(canonical(guard)),"prepared_dependency_files":len(deps),"prepared_dependency_sha256":sha(canonical(deps))},sort_keys=True))
 '''
         self.guest_write(GUEST_ROOT + "/inspect-backup.py", script.encode())
         value = json.loads(self.guest("/usr/bin/docker exec -i hassio_supervisor python3 - < "
                                       + GUEST_ROOT + "/inspect-backup.py", 120))
         require(value.get("database_included") is True and value.get("candidate_match") is True
                 and value.get("enabled_entry") is True and type(value.get("guard_unresolved")) is int
-                and value["guard_unresolved"] == 2 and value.get("guard_sha256") == self.backup_guard_sha256,
+                and value["guard_unresolved"] == 2 and value.get("guard_sha256") == self.backup_guard_sha256
+                and value.get("prepared_dependency_files") == self.dependency_fixture["inventory_files"]
+                and value.get("prepared_dependency_sha256") == self.dependency_fixture["inventory_sha256"],
                 "backup_archive_proof_refused")
         require(type(value.get("archive_bytes")) is int and 0 < value["archive_bytes"] <= 128 * 1024**2
                 and isinstance(value.get("archive_sha256"), str)
@@ -1313,6 +1434,8 @@ print(json.dumps({"connected":connected}))
         self.wait_managed()
         require(self.supervisor_version_observed == "2026.10.2", "pinned_supervisor_version_required")
         self.cli_capabilities()
+        self.guest("umask 077; mkdir -m 700 " + GUEST_ROOT, 30)
+        self.prepare_dependencies()
         self.prepare(candidate)
         self.phase("initialize", start=True)
         self.phase("prebackup")
@@ -1400,11 +1523,15 @@ print(json.dumps({"connected":connected}))
                    "backup_requests": self.backup_requests,
                    "host_elapsed_seconds": round(time.monotonic() - self.started, 3),
                    "native_linux_amd64_kvm_required": True, "actual_kvm_confirmed": self.kvm_confirmed,
-                   "diagnostic_completed": completed, "ordinary_enabled_restore_safety_accepted": passed,
+                   "diagnostic_completed": completed, "ordinary_enabled_restore_safety_accepted": False,
+                   "prepared_enabled_restore_safety_accepted": passed,
                    "operational_restore_passed": self.operational_restore_passed,
                    "automatic_guard_antirollback_passed": self.automatic_guard_antirollback_passed,
                    "manual_newest_guard_repair_passed": self.manual_guard_repair_passed,
                    "network_boundary": self.network_boundary, "phases": len(self.phases),
+                   "prepared_dependency_fixture": self.dependency_fixture,
+                   "prepared_dependency_enabled_partial_restore": True,
+                   "ordinary_default_dependency_reinstallation_tested": False,
                    "provider_accounts_configured": False, "owner_credentials_used": False,
                    "provider_request_attempt_counts_measured": False,
                    "recovery_proof_attempt_counts_measured": False,

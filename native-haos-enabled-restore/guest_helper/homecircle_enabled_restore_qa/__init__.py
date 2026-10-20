@@ -10,6 +10,8 @@ import asyncio
 from copy import deepcopy
 from functools import partial
 import hashlib
+import importlib.metadata as metadata
+import importlib.util
 import json
 import logging
 import os
@@ -109,6 +111,13 @@ def inputs_at(directory):
               and 0 < window["end"] - window["start"] < 120
               and type(window["rows"]) is int and 5 <= window["rows"] <= 128
               and re.fullmatch(r"[0-9a-f]{64}", window["sha256"]), "qa_external_window")
+    fixture, inventory = value.get("dependency_fixture"), value.get("dependency_inventory")
+    check(isinstance(fixture, dict) and fixture.get("outcome") == "passed" and fixture.get("closure_count") == 24
+          and fixture.get("site") == str(DEPS_SITE) and fixture.get("normal_bootstrap_library") is True
+          and fixture.get("virtual_env") is False and isinstance(fixture.get("closure"), dict)
+          and len(fixture["closure"]) == 24, "qa_dependency_input_scope")
+    check(isinstance(inventory, dict) and 0 < len(inventory) == fixture.get("inventory_files") <= 8192
+          and digest(inventory) == fixture.get("inventory_sha256"), "qa_dependency_input_inventory")
     return value
 
 
@@ -144,6 +153,107 @@ def guard_files(directory):
             values[path.relative_to(root).as_posix()] = {"bytes": len(raw), "sha256": digest(raw)}
     check(bool(values), "qa_guard_empty")
     return digest(values)
+
+
+DEPS_SITE = Path("/config/deps/lib/python3.14/site-packages")
+REQUIREMENTS = ("life360==7.2.0", "protobuf>=6.32.0,<8.0.0", "anisette==1.2.4",
+                "unicorn==2.1.4", "srp==1.0.22", "beautifulsoup4==4.13.3")
+MODULES = {"life360": "life360", "protobuf": "google.protobuf", "anisette": "anisette",
+           "unicorn": "unicorn", "srp": "srp", "beautifulsoup4": "bs4"}
+ENTRY_STATES = {"loaded", "not_loaded", "setup_in_progress", "setup_error", "setup_retry",
+                "migration_error", "failed_unload", "unload_in_progress"}
+
+
+def dependency_packages():
+    """Metadata and import-spec probes only; never import a native/provider package."""
+    from packaging.requirements import Requirement
+
+    result = {}
+    for raw in REQUIREMENTS:
+        requirement = Requirement(raw)
+        name = requirement.name.lower().replace("_", "-")
+        item = {"available": False, "satisfies_requirement": False, "origin_config_deps": False,
+                "metadata_error": False, "version": None, "loaded_module_present": False,
+                "origin_probe": "unavailable"}
+        try:
+            package = metadata.distribution(requirement.name)
+            version = package.version
+            check(isinstance(version, str) and re.fullmatch(r"[A-Za-z0-9_.+-]{1,64}", version),
+                  "qa_dependency_version_metadata")
+            item.update(available=True, version=version,
+                        satisfies_requirement=requirement.specifier.contains(version, prereleases=True))
+            loaded = sys.modules.get(MODULES[name])
+            if loaded is not None:
+                item["loaded_module_present"] = True
+                item["origin_probe"] = "loaded_module"
+                origin = getattr(loaded, "__file__", None)
+            else:
+                item["origin_probe"] = "import_spec"
+                spec = importlib.util.find_spec(MODULES[name])
+                origin = spec.origin if spec is not None else None
+            item["origin_config_deps"] = Path(package.locate_file("")).resolve() == DEPS_SITE \
+                and origin is not None and Path(origin).resolve().is_relative_to(DEPS_SITE)
+        except metadata.PackageNotFoundError:
+            pass
+        except Exception:
+            item["metadata_error"] = True
+        result[name] = item
+    return result
+
+
+def dependency_fixture_at(directory, inputs):
+    root = directory / "deps"
+    check(root.is_dir() and not root.is_symlink(), "qa_prepared_dependency_root")
+    actual, total = {}, 0
+    for path in sorted(root.rglob("*")):
+        check(not path.is_symlink(), "qa_prepared_dependency_symlink")
+        info = path.stat()
+        check(stat.S_ISDIR(info.st_mode) or stat.S_ISREG(info.st_mode), "qa_prepared_dependency_file_type")
+        if path.is_dir():
+            continue
+        check(info.st_nlink == 1, "qa_prepared_dependency_hardlink")
+        if "__pycache__" in path.parts:
+            check(path.suffix == ".pyc", "qa_prepared_dependency_unrecognized_cache_file")
+            continue
+        check(path.stat().st_size <= 64 * 1024**2, "qa_prepared_dependency_member_size")
+        raw = path.read_bytes()
+        total += len(raw)
+        check(total <= 96 * 1024**2 and len(actual) < 8192, "qa_prepared_dependency_size")
+        actual[path.relative_to(root).as_posix()] = {"bytes": len(raw), "sha256": digest(raw)}
+    fixture = inputs["dependency_fixture"]
+    check(actual == inputs["dependency_inventory"] and digest(actual) == fixture["inventory_sha256"]
+          and len(actual) == fixture["inventory_files"] and total == fixture["inventory_bytes"],
+          "qa_prepared_dependency_bytes")
+    packages = dependency_packages()
+    check(all(item["available"] and item["satisfies_requirement"] and item["origin_config_deps"]
+              and not item["metadata_error"] for item in packages.values()), "qa_prepared_dependency_origins")
+    for name, version in fixture["closure"].items():
+        package = metadata.distribution(name)
+        check(package.version == version and Path(package.locate_file("")).resolve() == DEPS_SITE,
+              "qa_prepared_dependency_closure")
+    other_sites = [index for index, value in enumerate(sys.path)
+                   if value.endswith("site-packages") and value != str(DEPS_SITE)]
+    check(str(DEPS_SITE) in sys.path and other_sites
+          and all(sys.path.index(str(DEPS_SITE)) < index for index in other_sites),
+          "qa_normal_bootstrap_library_missing")
+    return {"inventoried_non_bytecode_bytes_checked": True, "origins_config_deps": True, "normal_bootstrap_library": True,
+            "inventory_sha256": fixture["inventory_sha256"],
+            "inventory_scope": "dependency_regular_files_excluding_generated_bytecode"}
+
+
+async def startup_diagnostics(hass, entry, people):
+    raw_state = entry.state.value
+    result = {"entry_state": raw_state if raw_state in ENTRY_STATES else "unrecognized",
+              "entry_disabled": entry.disabled_by is not None, "skip_pip": bool(hass.config.skip_pip),
+              "tracker_states_present": sum(hass.states.get(tracker) is not None for tracker in TRACKERS),
+              "person_states_present": sum(hass.states.get(person) is not None for person in people),
+              "person_sources_match": sum(hass.states.get(person) is not None
+                  and hass.states.get(person).attributes.get("source") == tracker
+                  and hass.states.get(person).state == "home"
+                  for person, tracker in zip(people, TRACKERS, strict=True)),
+              "config_deps_on_path": str(DEPS_SITE) in sys.path}
+    result["packages"] = await hass.async_add_executor_job(dependency_packages)
+    return result
 
 
 async def wait_for(predicate, seconds=120):
@@ -531,6 +641,10 @@ class Rehearsal:
             async with asyncio.timeout(600):
                 check(CORE_VERSION == "2026.10.2" and os.uname().machine == "x86_64", "qa_platform")
                 receipt.update(await hass.async_add_executor_job(package_at, directory, inputs))
+                stage = "prepared_dependency_fixture"
+                check(hass.config.skip_pip is False, "qa_skip_pip_not_allowed")
+                receipt["prepared_dependencies"] = await hass.async_add_executor_job(dependency_fixture_at, directory, inputs)
+                receipt["prepared_dependencies"]["skip_pip"] = False
                 stage = "recorder"
                 await recorder_ready(hass)
                 registry = er.async_get(hass)
@@ -607,7 +721,11 @@ class Rehearsal:
                           and digest(baseline["history"]["rows"]) == inputs["expected_prebackup_sha256"]
                           and baseline["backup_guard_sha256"] == inputs["backup_guard_sha256"], "qa_restored_baseline_proof")
                     tracker_state(hass, "home", "restored")
+                    stage = "restored_wait_entry_loaded"
+                    receipt["startup_diagnostics"] = {"before_entry_wait": await startup_diagnostics(hass, entry, people)}
                     await wait_for(lambda: entry.state == ConfigEntryState.LOADED)
+                    stage = "restored_wait_person_sources"
+                    receipt["startup_diagnostics"]["before_sources_wait"] = await startup_diagnostics(hass, entry, people)
                     await person_sources(hass, people)
                 stage = "active_continuity"
                 receipt.update(await active_details(hass, entry, people, inputs))
@@ -654,6 +772,16 @@ class Rehearsal:
                     receipt["recorder"]["postbackup_marker_absent"] = False
                 receipt["outcome"] = "passed"
         except Exception as error:
+            if name in {"restored", "repair", "restart"}:
+                try:
+                    async with asyncio.timeout(15):
+                        entries = hass.config_entries.async_entries("homecircle")
+                        if len(entries) == 1:
+                            original = await hass.async_add_executor_job(read_json, self.control / "baseline.json")
+                            receipt.setdefault("startup_diagnostics", {})["failure"] = await startup_diagnostics(
+                                hass, entries[0], original["active"]["people"])
+                except Exception:
+                    receipt["failure_diagnostics_unavailable"] = True
             receipt.update({"outcome": "failed", "stage": stage, "failure_type": type(error).__name__})
             if isinstance(error, Refused):
                 receipt["failure_code"] = str(error)
