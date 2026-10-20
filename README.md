@@ -1,5 +1,7 @@
 # HomeCircle
 
+Development toward **HomeCircle 1.0.0** is tracked in the [1.0 release plan](docs/RELEASE-1.0-PLAN.md). This source branch includes corrections after beta 20 and is not an installable release. The published beta 20 package and its historical validation remain unchanged.
+
 Family location and presence for Home Assistant, independent of the tracking provider.
 
 **Experimental development software — not a stable release.**
@@ -19,7 +21,7 @@ See [beta 20 validation](docs/BETA20-VALIDATION.md) for the versioned package bo
 
 - [Step-by-step setup: iPhone, Life360, pets and supporting sensors](docs/SETUP.md)
 
-- [Product and V0.1 boundary](docs/PRODUCT.md)
+- [Product and 1.0 scope](docs/PRODUCT.md)
 - [Stable scope audit and remaining gates](docs/STABLE-SCOPE-AUDIT.md)
 - [Architecture](docs/ARCHITECTURE.md) and [ADR-001](docs/adr/ADR-001-provider-independence.md)
 - [Troubleshooting built in tracker providers](docs/TRACKER-PROVIDER-ISSUES.md)

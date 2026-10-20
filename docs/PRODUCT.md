@@ -1,12 +1,14 @@
 # Product
 
+The current release target is **1.0.0**. The [1.0 release plan](RELEASE-1.0-PLAN.md) tracks the proposed support/provider scope, pending decisions and acceptance evidence. Earlier beta/milestone references below retain their dated scope.
+
 HomeCircle is a provider-independent family location/presence platform for Home Assistant. Its audience is a household using an always-visible family dashboard, including portrait wall displays and optional DAKboard/TouchHub presentation.
 
 The core turns configured HA location entities into a coherent household view. An optional built in Life360 connection can also create HA trackers using account credentials supplied in HomeCircle. No provider account is needed for the core. HomeCircle does not collect phone locations itself, guarantee continuous tracking, or replace the source services. Missing information must stay visibly unknown rather than be invented.
 
 Member cards use the selected tracker's own location report time when it supplies one (for example, Life360 `last_seen`). Otherwise they show when HA last updated that selected tracker, labeled as an HA update rather than a verified GPS fix. The member details screen exposes both times and explains the distinction. An old update time alone does not change a stationary member to Unavailable. For HA Mobile App trackers only, members may opt in to a silent location request after 15 minutes without a tracker report; requests are capped at 50 per rolling 24 hours and separated by at least one minute. Sending a request does not guarantee a phone response.
 
-## V0.1
+## First stable release — 1.0
 
 1. Install an integration package through HACS and add HomeCircle using HA's config flow.
 2. Select or create an HA Person for each new person or pet, then assign and configure that member's tracker. Show associated/active `device_tracker` sources where HA exposes them; allow explicit tracker selection when association cannot be determined safely. Do not guess relationships from entity names. Preserve existing tracker-only members and their conversion path.
@@ -16,11 +18,11 @@ Member cards use the selected tracker's own location report time when it supplie
 6. Provide member cards, a basic map, usable overlapping markers, category summaries, and member/category/overview focus in a readable portrait layout.
 7. Explain an HA Person source conflict when a linked tracker reports Home while the selected mobile tracker reports Away. Show the active source and a path to the HA Person settings without changing the Person or silently overriding HA's presence result. Multiple agreeing trackers remain valid.
 
-A member at their assigned dorm/second home counts as Home. The default At Home focus includes only members at the primary family house. An explicit future or V0.1 option may include all residences, but must not change the default. Apply the same classification to member labels and counts. Unavailable is separate from Away. Driving requires available evidence; it is not inferred from being Away.
+A member at their assigned dorm/second home counts as Home. The default At Home focus includes only members at the primary family house. An explicit future option may include all residences, but must not change the default. Apply the same classification to member labels and counts. Unavailable is separate from Away. Driving requires available evidence; it is not inferred from being Away.
 
 Pets, optional direct Life360 trackers, source labels, battery, report times, and evidence-based driving are implemented in beta 16. A new pet needs an HA Person and an existing pet tracker; the Person record does not create a GPS source. Battery and driving evidence remain optional, never prerequisites for basic presence. Existing tracker-only members remain readable and can be moved to a Person without losing their settings.
 
-## Beyond V0.1
+## Later releases
 
 Additional built in tracker providers, address enrichment, drive time/ETA, weather/radar, recorded trip trails, more map-provider choices, and distance-apart summaries follow in separate milestones. Trip trails show available historical tracker reports with visible gaps rather than claiming an exact driven route. Beta 16 already includes pet onboarding and a kiosk view; their validated scope is recorded in the beta 16 reports.
 

@@ -42,9 +42,18 @@ REVIEWED_BINARY_FILES = {
         'bf85530d7362dbfbe796c1f1b944483ccdc8c0693d0c39411b1156b1860d28a5',
 }
 
+REVIEWED_LICENSE_FILES = {
+    # Complete pinned public notices, including the GNU license's FSF address.
+    # Any byte or path change still requires a new explicit privacy review.
+    'custom_components/homecircle/_findmy_runtime/LICENSE.md':
+        'd0d08d053daacc07d9357fbdae0fefb972eec9ae6a14cada17695d6f5c1f28e4',
+}
+
 def violations(name, data):
     if name in REVIEWED_BINARY_FILES:
         return [] if hashlib.sha256(data).hexdigest() == REVIEWED_BINARY_FILES[name] else ['reviewed asset changed; review required']
+    if name in REVIEWED_LICENSE_FILES:
+        return [] if hashlib.sha256(data).hexdigest() == REVIEWED_LICENSE_FILES[name] else ['reviewed notice changed; review required']
     issues = []
     if any(part in {'.private', 'private', '.storage', 'node_modules'} for part in Path(name).parts):
         issues.append('private/runtime path')

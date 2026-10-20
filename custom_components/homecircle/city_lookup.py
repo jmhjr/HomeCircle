@@ -241,19 +241,41 @@ class CityLookup:
             self.store.async_save({"cache": self.cache, "requests": self.requests}),
             "HomeCircle city cache save",
         )
-        await asyncio.shield(self.save_task)
+        # A non-raising outcome also prevents noisy shield callbacks after cancellation.
+        outcome = asyncio.gather(self.save_task, return_exceptions=True)
+        result = (await asyncio.shield(outcome))[0]
+        if isinstance(result, BaseException):
+            raise result
 
     async def close(self):
         self.closed = True
+        caller_cancelled = False
         if self.task and not self.task.done():
             self.task.cancel()
-            try:
-                await self.task
-            except asyncio.CancelledError:
-                pass
+            outcome = asyncio.gather(self.task, return_exceptions=True)
+            while True:
+                try:
+                    result = (await asyncio.shield(outcome))[0]
+                    break
+                except asyncio.CancelledError:
+                    caller_cancelled = True
+            if isinstance(result, BaseException) and not isinstance(
+                result, asyncio.CancelledError
+            ):
+                raise result
 
         if self.save_task:
-            try:
-                await self.save_task
-            except Exception:
-                pass
+            # Finish the owned write before propagating cancellation of close().
+            outcome = asyncio.gather(self.save_task, return_exceptions=True)
+            while True:
+                try:
+                    result = (await asyncio.shield(outcome))[0]
+                    break
+                except asyncio.CancelledError:
+                    caller_cancelled = True
+            if isinstance(result, BaseException) and not isinstance(
+                result, (Exception, asyncio.CancelledError)
+            ):
+                raise result
+        if caller_cancelled:
+            raise asyncio.CancelledError

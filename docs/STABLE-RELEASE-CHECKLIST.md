@@ -1,11 +1,76 @@
 # First stable release checklist
 
 Updated October 20, 2026. This is a release preparation checklist, not approval to
-publish. The published release remains experimental beta 19. No stable version or
+publish. The published release is experimental
+[v0.1.0-beta.20](https://github.com/jmhjr/HomeCircle/releases/tag/v0.1.0-beta.20),
+source commit `d02a9bdb9027cb51c99165a09ba50d5b175f5fb9`. No stable version or
 final provider scope has been chosen. Preserve the existing Ruby fix, installed
 settings and history, and the frozen V2 reference.
 
-## Implemented local candidate
+## Completed published beta 20 validation
+
+The exact public 112-file ZIP is SHA-256
+`fc0b365d9688459504f874af5c38393e24145d657f15f1def8ada9184f363285`.
+Its three version-label changes from the unreleased frozen 112-file parent are
+separate from the earlier published 109-file beta 19 baseline.
+
+- [x] Publish beta 20 as an experimental prerelease and independently verify all
+  public source files, inventory and fresh ZIP downloads. [Package run 39460044306](https://github.com/jmhjr/HomeCircle/actions/runs/39460044306)
+  passed 1,443 backend tests with one named optional fixture skipped on native
+  amd64 Core 2026.9.4/Python 3.14.6 Alpine/musl, 110 frontend tests and the
+  327-file privacy check. See [publication validation](BETA20-PUBLICATION-VALIDATION.md).
+- [x] Establish genuine HACS beta 19 → beta 20 → beta 19 → beta 20 delivery on a
+  disposable native amd64/KVM HAOS 18.3/Core and Supervisor 2026.10.2/HACS 2.0.5
+  instance. [Run 39461573392](https://github.com/jmhjr/HomeCircle/actions/runs/39461573392)
+  passed all eight phases and 45 controller contracts, with zero direct candidate
+  installs. Exact published files, loaded versions after real restarts, explicit
+  synthetic selections/options/identities, exact served frontend and manual
+  newest-guard preservation passed. This closes synthetic release-ZIP transport;
+  owner OAuth and current production acceptance remain separate.
+- [x] Qualify the exact published beta 20 ZIP on native amd64 Ubuntu 24.04 with
+  active glibc 2.39, source-built Python 3.14.6 and Core 2026.10.2.
+  [Run 39474571811](https://github.com/jmhjr/HomeCircle/actions/runs/39474571811)
+  passed all 48 harness contracts, actual native worker/provider lifecycle, two
+  real Core startup processes and 1,443 backend tests with one named optional
+  fixture skipped. See [Ubuntu/glibc validation](BETA20-GLIBC-VALIDATION.md) for
+  retained failed attempts, narrow QA derivations and exact acceptance limits.
+  This qualifies one Ubuntu/Core target, without repeating the full recovery
+  matrix or adding other glibc distributions/architectures/Core versions.
+
+See the [beta 20 readiness and provenance audit](BETA20-READINESS-PROVENANCE-AUDIT.md)
+for the current disposition and remaining gates. Production, V2, the working
+source checkout and published tag/assets were preserved; Python for these beta
+20 runs executed only inside Linux.
+
+## Third-party inventory and unresolved obligations
+
+- [x] Record the scoped technical inventory of exact beta 20 bundled source,
+  frontend runtime assets/notices and the 24 observed manifest-dependency
+  distributions. This does not establish that every notice, permission,
+  source-availability or service-use obligation is satisfied. It is not a full
+  Home Assistant, operating-system, build-tool or nested-license audit.
+- [x] Carry the complete inherited GrandSlam MIT notice in the separate
+  [correction candidate](https://github.com/jmhjr/HomeCircle/commit/9466eef45ecac16f05f25d4455d705383f7c91ff)
+  and verify its archive placement in [Linux run 39479412715](https://github.com/jmhjr/HomeCircle/actions/runs/39479412715). The published beta 20 ZIP contains
+  GrandSlam-derived source but omits that separate notice; existing FindMy.py and
+  OpenTagViewer notices do not resolve it. Keep beta 20's tag/assets immutable. This completes the notice-only candidate check; publishing a later release and resolving the unfilled source fields remain open.
+- [ ] Resolve the separately fetched Unicorn 2.1.4 wheel's missing native-core
+  license/notice materials and applicable GPLv2 source/distribution obligations;
+  bindings metadata alone is insufficient. Verify the eventual installed
+  artifact and retained notice/source paths together before stable acceptance.
+- [ ] Resolve the pyelftools 0.33 Construct notice disposition. The separate
+  candidate now retains the complete upstream MIT text and its archive placement
+  passed. Seek a corrected upstream distribution and verify the eventual
+  dependency artifact/notice paths. Neither Unicorn nor Construct is
+  bundled in HomeCircle's ZIP; adding a HomeCircle notice alone does not establish
+  that the fetched distributions or all obligations are corrected.
+
+The [beta 20 readiness and provenance audit](BETA20-READINESS-PROVENANCE-AUDIT.md)
+records the evidence, separate correction candidate and remaining origin-chain,
+permission, service-use and branding gates. Technical inventory completion and
+runtime acceptance remain distinct from those obligations.
+
+## Implemented changes and earlier candidate validation
 
 - [x] Resolve the two endpoint-policy fixture digest failures through official
   wheel/provenance verification; keep fixture bodies unchanged.
@@ -22,7 +87,9 @@ settings and history, and the frozen V2 reference.
 - [x] Isolate provider construction/startup failures, preserve working siblings,
   report an actionable Repair issue, and drain startup cleanup on cancellation.
 - [x] Restore the complete inherited OpenTagViewer MIT notice and test the archive
-  path. Other provenance, license and service-use findings remain open.
+  path. This completed earlier correction does not close the additional
+  GrandSlam omission, fetched-wheel findings or other provenance, license and
+  service-use obligations above.
 - [x] Add a durable recovery submission guard outside selected-item storage,
   account serialization, fixed stage/outcome errors, explicit local acknowledgment,
   and verified-material retries that do not resubmit the recovery proof.
@@ -37,14 +104,14 @@ settings and history, and the frozen V2 reference.
 - [x] Complete an independent source and synthetic cryptographic review of the
   local candidate; fix confirmed peer/key binding, protected-record authentication,
   recovery resource/cancellation and saved account/session binding issues. See
-  [independent review validation](INDEPENDENT-CRYPTO-VALIDATION.md) for evidence and limits.
+  [independent review validation](https://github.com/jmhjr/HomeCircle/blob/d02a9bdb9027cb51c99165a09ba50d5b175f5fb9/docs/INDEPENDENT-CRYPTO-VALIDATION.md) for evidence and limits.
 
-See [polling checkpoint](STABLE-MILESTONE1-VALIDATION.md) and the
-[combined isolation validation](STABLE-ISOLATION-VALIDATION.md), followed by the
-[recovery and identity validation](RECOVERY-IDENTITY-VALIDATION.md). These checks are
+See [polling checkpoint](https://github.com/jmhjr/HomeCircle/blob/d02a9bdb9027cb51c99165a09ba50d5b175f5fb9/docs/STABLE-MILESTONE1-VALIDATION.md) and the
+[combined isolation validation](https://github.com/jmhjr/HomeCircle/blob/d02a9bdb9027cb51c99165a09ba50d5b175f5fb9/docs/STABLE-ISOLATION-VALIDATION.md), followed by the
+[recovery and identity validation](https://github.com/jmhjr/HomeCircle/blob/d02a9bdb9027cb51c99165a09ba50d5b175f5fb9/docs/RECOVERY-IDENTITY-VALIDATION.md). These checks are
 synthetic/local evidence, not live movement or broad platform acceptance. The
-[focused hardening validation](FOCUSED-HARDENING-VALIDATION.md) records the next
-local fixes and their limits. The subsequent [independent cryptographic review](INDEPENDENT-CRYPTO-VALIDATION.md) records further fixes and the final local candidate.
+[focused hardening validation](https://github.com/jmhjr/HomeCircle/blob/d02a9bdb9027cb51c99165a09ba50d5b175f5fb9/docs/FOCUSED-HARDENING-VALIDATION.md) records the next
+local fixes and their limits. The subsequent [independent cryptographic review](https://github.com/jmhjr/HomeCircle/blob/d02a9bdb9027cb51c99165a09ba50d5b175f5fb9/docs/INDEPENDENT-CRYPTO-VALIDATION.md) records further fixes and the final local candidate.
 
 - [x] Rehearse the exact published beta 19 and reconstructed recorded-patch
   upgrades/restarts/backup rollbacks on both local Core targets; verify the
@@ -91,7 +158,9 @@ local fixes and their limits. The subsequent [independent cryptographic review](
   continuity and latest-guard preservation through matching stopped state
   restoration. The actual candidate API stayed blocked at three after reinstall;
   the older rollback verified guard bytes only. Owned VM/private cleanup passed.
-  Candidate HACS delivery/release transport and OAuth remain open. This HACS run
+  Candidate HACS transport was still open at this earlier checkpoint; the
+  published beta 20 HACS run above subsequently passed that synthetic scope.
+  Owner OAuth remains open. This earlier HACS run
   excluded Supervisor backups/Recorder; the prepared partial scope is recorded
   separately below. See the [native HAOS record](LINUX-HAOS-VALIDATION.md#october-20-native-haos-and-hacs-rehearsal).
 
@@ -123,7 +192,7 @@ and remaining limits.
 2. **Recovery and identity acceptance.** Local source and synthetic review covers
    the durable guard, proof boundary, verified-material lifetime, commitment ledger
    and configured account/session binding. The local exact-artifact and recorded-patch rehearsals now pass; complete real
-   production installed-state, HACS and live recovery acceptance below without deliberate
+   production installed-state/HACS and live recovery acceptance below without deliberate
    wrong owner passcodes.
    This does not establish Apple's server-side attempt policy or prove continuity
    for a previously omitted item whose original keys were never retained in a ledger.
@@ -170,11 +239,17 @@ and remaining limits.
   native/lifecycle, both upgrade and full-recovery scopes on Core 2026.9.4.
   The later native AMD64 HAOS rehearsal also passes synthetic managed-service
   activation, persistence and rollback. A prepared disabled-entry Supervisor
-  partial backup/Recorder restore also passes; candidate HACS delivery and
-  ordinary enabled-entry/full-system restore remain open. Glibc Core and additional runtime scopes remain unqualified. The earlier Core
-  2026.10.2 native CI run
-  did not rerun the backend suite, separate worker/lifecycle checks or anonymous
-  Apple runtime; Ubuntu's host libc does not establish glibc Core acceptance.
+  partial backup/Recorder restore also passes. The later published beta 20 HACS
+  run above closes synthetic release transport. Its exact published bytes also
+  passed active amd64 Ubuntu 24.04/glibc 2.39/Core 2026.10.2 native, lifecycle,
+  startup/restart and backend acceptance; this is a separate actual glibc runtime,
+  beyond the earlier Ubuntu-host/Alpine-container result. Additional glibc
+  distributions/architectures/Core versions and the final advertised platform
+  matrix remain open. Ordinary enabled-entry/full-system/add-on/encrypted/cloud
+  restore, automatic anti-rollback and current production acceptance remain open.
+  The earlier Core 2026.10.2 native CI run did not rerun the backend suite,
+  separate worker/lifecycle checks or anonymous Apple runtime; its scope is
+  unchanged by the later separately qualified targets.
   All manifest requirements remain mandatory before integration startup; provider
   isolation cannot contain a prior dependency-install failure. Do not invent a
   lazy-install API. Current compatible pins/wheel metadata are not runtime proof.
@@ -192,9 +267,12 @@ and remaining limits.
   container rehearsals also pass on Core 2026.10.2, but do not close this real
   installed-state/HACS/Recorder/physical-display gate. Package-only rollback's
   ledger loss and latest independent recovery-guard retention still apply. The
-  native HAOS rehearsal adds published-release HACS install/rollback and stopped
-  candidate activation with synthetic identities; it does not close candidate
-  HACS release transport, current production storage/Recorder or physical acceptance.
+  earlier native HAOS rehearsal adds published-release HACS install/rollback and
+  stopped candidate activation with synthetic identities. The later genuine
+  published beta 20 HACS upgrade/rollback/re-upgrade closes synthetic release
+  transport with saved selections/settings/identities and exact served bytes; it
+  does not inspect current production storage/Recorder, exercise owner recovery
+  or establish physical-display acceptance.
 - [ ] Close the remaining [licensing/service terms checklist](STABLE-SCOPE-AUDIT.md#licensing-and-service-terms-release-checklist)
   for the exact selected provider scope. Restoring one inherited notice does not
   settle the separate provenance, dependency, software/service or branding gates.

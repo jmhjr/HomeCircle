@@ -37,5 +37,12 @@ class PrivacyGuardTests(unittest.TestCase):
         self.assertTrue(guard.violations(name, data + b'changed'))
         self.assertTrue(guard.violations('another.png', data))
 
+    def test_reviewed_public_license_requires_exact_bytes_and_path(self):
+        name = 'custom_components/homecircle/_findmy_runtime/LICENSE.md'
+        data = (Path(__file__).resolve().parents[1] / name).read_bytes()
+        self.assertEqual(guard.violations(name, data), [])
+        self.assertTrue(guard.violations(name, data + b'changed'))
+        self.assertIn('street address', guard.violations('another.md', data))
+
 if __name__ == '__main__':
     unittest.main()

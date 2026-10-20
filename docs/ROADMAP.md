@@ -1,5 +1,7 @@
 # Roadmap
 
+The first stable release target is now **v1.0.0**. Use the [1.0 execution plan](RELEASE-1.0-PLAN.md) for current scope, responsibilities and acceptance status. The earlier implementation milestones and dated beta observations below remain historical evidence; the later-feature list is separate from the current release gate.
+
 ## 0 — Bootstrap (complete)
 
 Project structure, reference inventory, private local snapshot, privacy rules, ADR-001, and Git workflow. Runtime directories are explicit placeholders. No deployment or release tag.
@@ -28,7 +30,7 @@ Acceptance: new installation reaches a usable dashboard without manual YAML; key
 
 Implementation and precise validation scope are in [frontend setup](FRONTEND.md) and [milestone 3 validation](MILESTONE-3-VALIDATION.md).
 
-## 4 — V0.1 stable-release gate
+## 4 — 1.0 stable-release gate
 
 - Real public repository identity and required manifest/HACS metadata are complete.
 - HACS custom-repository install, upgrade, removal and HA restart tested in a disposable instance.
@@ -39,7 +41,7 @@ Implementation and precise validation scope are in [frontend setup](FRONTEND.md)
 - Confirm privacy/network disclosure and optional feature failure behavior, including direct Life360's real-account failure and recovery if that feature ships in stable V0.1.
 - Detect when a linked tracker is making an HA Person appear Home while the chosen mobile tracker reports Away. Show the active Person source and an actionable, admin-only explanation during setup and settings; link to HA's Person configuration. Do not silently override the Person state or change its tracker associations. Accept multiple trackers when they agree, and verify this warning against the Friday-style conflict before closing the iPhone field test.
 - Observe a complete real departure and return on selected sources, genuine location-report freshness, and background iPhone behavior while away from the local network. Decide and validate the supported HA Core version range.
-- Tag `v0.1.0` and create corresponding GitHub release only after these gates pass.
+- Tag `v1.0.0` and create corresponding GitHub release only after these gates pass.
 
 As of beta 16, the intended core setup, normalization, dashboard, and optional Life360 adapter are implemented and the published package has passed HACS and physical-display checks in their documented scopes. Real production Life360-backed and iPhone departure/return timelines are now verified through HA Recorder history and the HomeCircle dashboard. The iPhone's genuine GPS report time, its long daytime update gap, the Person-source conflict warning's real-case acceptance, unattended provider failure/recovery, and a supported Core version decision remain open. See [stable scope audit](STABLE-SCOPE-AUDIT.md) and [current release readiness](CURRENT-RELEASE-READINESS.md). No stable tag is approved.
 

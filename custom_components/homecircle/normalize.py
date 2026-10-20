@@ -322,7 +322,12 @@ def membership(
                     zone = states.get(zone_id)
                     zone_point = coordinates(zone)
                     radius = number(zone.attributes.get("radius")) if zone else None
-                    if zone_point is None or radius is None or radius <= 0:
+                    if (
+                        zone_point is None
+                        or radius is None
+                        or radius <= 0
+                        or zone.attributes.get("passive")
+                    ):
                         continue
                     meters = distance(point[0], point[1], zone_point[0], zone_point[1])
                     if meters is not None and meters + point[2] <= radius:

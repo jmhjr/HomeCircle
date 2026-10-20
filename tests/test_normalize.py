@@ -146,6 +146,50 @@ def test_recent_gps_well_inside_new_zone_counts_as_home_while_ha_is_behind():
     ) == ([], [])
 
 
+def test_legacy_pending_gps_skips_passive_residence_but_keeps_explicit_person_state(
+    snapshot,
+):
+    config, states = snapshot
+    states[PERSON] = state(
+        PERSON,
+        "not_home",
+        source=GPS,
+        in_zones=[],
+        **{ATTR_LATITUDE: 0.0, ATTR_LONGITUDE: 0.0},
+    )
+    states[GPS] = state(
+        GPS,
+        "not_home",
+        source_type="gps",
+        in_zones=[],
+        gps_accuracy=15,
+        last_seen=NOW,
+        **{ATTR_LATITUDE: 0.0, ATTR_LONGITUDE: 0.0},
+    )
+    zone_attrs = {
+        "radius": 100,
+        ATTR_LATITUDE: 0.0,
+        ATTR_LONGITUDE: 0.0,
+    }
+    states[RESIDENCE] = state(RESIDENCE, "0", passive=True, **zone_attrs)
+    result = member((config, states))
+    assert result.presence == "away"
+    assert "gps_inside_zone_ha_pending" not in result.issues
+
+    states[RESIDENCE] = state(RESIDENCE, "0", passive=False, **zone_attrs)
+    result = member((config, states))
+    assert result.presence == "home"
+    assert "gps_inside_zone_ha_pending" in result.issues
+
+    states[RESIDENCE] = state(RESIDENCE, "0", passive=True, **zone_attrs)
+    states[PERSON] = state(
+        PERSON, "Example residence", source=GPS, in_zones=[RESIDENCE]
+    )
+    result = member((config, states))
+    assert result.presence == "home"
+    assert "gps_inside_zone_ha_pending" not in result.issues
+
+
 def test_tracker_only_member_at_new_residence_counts_home_and_remains_focusable(
     snapshot,
 ):

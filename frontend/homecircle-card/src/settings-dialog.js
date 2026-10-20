@@ -94,6 +94,7 @@ export async function openSettingsDialog(
   const body = dialog.querySelector(".body");
   let step;
   let busy = false;
+  let cleanupPicture = () => {};
   let selectedMember = memberId;
   const cancelledFlows = new Set();
   const cancelFlow = (flow) => {
@@ -119,6 +120,7 @@ export async function openSettingsDialog(
   dialog.querySelector(".close").addEventListener("click", close);
   dialog.addEventListener("close", () => {
     clearTimeout(progressTimer);
+    cleanupPicture();
     cancelFlow(step);
     dialog.remove();
     card._settingsButton?.focus();
@@ -203,6 +205,8 @@ export async function openSettingsDialog(
   const render = (next) => {
     if (!receiveFlow(next)) return;
     clearTimeout(progressTimer);
+    cleanupPicture();
+    cleanupPicture = () => {};
     body.replaceChildren();
     if (next.type === "progress" || next.type === "progress_done") {
       message(text(`progress.${next.progress_action}`, "Connecting to Apple…"));
@@ -418,13 +422,28 @@ export async function openSettingsDialog(
         input.type = "file";
         input.accept = "image/jpeg,image/png,image/gif";
         input.setAttribute("aria-label", "Upload picture");
-        input.style.cssText = "display:block;margin:12px 0;width:100%";
+        input.hidden = true;
         label.append(input);
+        const choose = action("Choose picture", () => input.click());
+        choose.style.cssText = "display:block;margin:12px 0";
+        const filename = document.createElement("p");
+        filename.className = "picture-filename";
+        filename.style.overflowWrap = "anywhere";
+        filename.hidden = true;
+        filename.setAttribute("aria-live", "polite");
         const crop = createPictureCrop((active) => {
           preview.style.display =
             active || preview.hidden || crop.active ? "none" : "block";
+          if (!active) {
+            filename.textContent = "";
+            filename.hidden = true;
+          }
         });
-        dialog.addEventListener("close", () => crop.clear(), { once: true });
+        const clearPicture = () => {
+          crop.clear();
+          input.value = "";
+        };
+        cleanupPicture = clearPicture;
         const refresh = () => {
           const id = form.data.picture_id || "";
           preview.hidden = !/^[0-9a-f]{32}$/.test(id);
@@ -435,7 +454,7 @@ export async function openSettingsDialog(
           remove.disabled = !id || pictureUploading;
         };
         const remove = action("Remove picture", () => {
-          crop.clear();
+          clearPicture();
           form.data = { ...form.data, picture_id: "" };
           status.textContent =
             "Save to restore the tracker’s original picture or initials.";
@@ -454,20 +473,24 @@ export async function openSettingsDialog(
             return;
           }
           pictureUploading = true;
-          input.disabled = true;
+          choose.disabled = input.disabled = true;
           remove.disabled = true;
           status.textContent = "Preparing picture…";
           try {
             await crop.load(file);
+            if (crop.active) {
+              filename.textContent = `Selected picture: ${file.name}`;
+              filename.hidden = false;
+            }
             status.textContent =
               "Adjust the crop and zoom, then save your picture.";
           } catch {
-            crop.clear();
+            clearPicture();
             status.textContent =
               "Could not open this picture. Try another JPG, PNG, or GIF file.";
           } finally {
             pictureUploading = false;
-            input.disabled = false;
+            choose.disabled = input.disabled = false;
             input.value = "";
             refresh();
           }
@@ -476,7 +499,7 @@ export async function openSettingsDialog(
           if (pictureUploading) return false;
           if (!crop.active) return true;
           pictureUploading = true;
-          input.disabled = true;
+          choose.disabled = input.disabled = true;
           remove.disabled = true;
           status.textContent = "Uploading cropped picture…";
           try {
@@ -492,7 +515,7 @@ export async function openSettingsDialog(
               throw new Error("Invalid picture response");
             if (!dialog.isConnected || busy || step !== next) return false;
             form.data = { ...form.data, picture_id: uploaded.id };
-            crop.clear();
+            clearPicture();
             return true;
           } catch {
             status.textContent =
@@ -500,12 +523,20 @@ export async function openSettingsDialog(
             return false;
           } finally {
             pictureUploading = false;
-            input.disabled = false;
+            choose.disabled = input.disabled = false;
             refresh();
           }
         };
         refresh();
-        panel.append(preview, label, crop.panel, remove, status);
+        panel.append(
+          preview,
+          label,
+          choose,
+          filename,
+          crop.panel,
+          remove,
+          status,
+        );
         body.append(panel);
       }
       if (placeSelection) {

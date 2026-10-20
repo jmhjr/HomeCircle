@@ -1,6 +1,12 @@
 # Changelog
 
-## Unreleased
+## Unreleased — 1.0 preparation
+
+- Keep the selected picture filename visible through cropping and unsuccessful uploads, with safe clearing on save, removal and navigation.
+- Exclude passive residences from the legacy geometric fallback while preserving explicit HA Person membership.
+- Drain owned city-cache work during unload and preserve actual caller cancellation; prevent raw shielded-write diagnostics after cancellation while retaining the existing disk-error cleanup policy.
+- Carry the separate inherited and supplemental notice corrections and narrowly recognize their exact public-license bytes in the privacy checker.
+- Track the [1.0 release plan](docs/RELEASE-1.0-PLAN.md), focused corrections and remaining acceptance. No stable version or replacement beta 20 package is published.
 
 ## 0.1.0-beta.20 — October 20, 2026
 

@@ -2835,7 +2835,7 @@ test("Skip this place submits only skip and bypasses incomplete review fields", 
   }
 });
 
-test("tracker picture upload previews a local HA image and saves or removes only the reference", async () => {
+test("tracker picture upload preserves selected filenames and saves or removes only the reference", async () => {
   const { openSettingsDialog } = await import("../src/settings-dialog.js");
   const prototype = dom.window.HTMLDialogElement.prototype;
   const show = prototype.showModal,
@@ -2874,11 +2874,18 @@ test("tracker picture upload previews a local HA image and saves or removes only
     },
   };
   const pick = (input, file) => {
+    if (input.value === file.name) return false;
+    Object.defineProperty(input, "value", {
+      value: file.name,
+      writable: true,
+      configurable: true,
+    });
     Object.defineProperty(input, "files", {
       value: [file],
       configurable: true,
     });
     input.dispatchEvent(new window.Event("change"));
+    return true;
   };
   const oldReader = globalThis.FileReader,
     oldImage = globalThis.Image;
@@ -2886,6 +2893,7 @@ test("tracker picture upload previews a local HA image and saves or removes only
   const oldContext = canvasPrototype.getContext,
     oldBlob = canvasPrototype.toBlob;
   const draws = [];
+  let decodeFails = false;
   globalThis.FileReader = class {
     readAsDataURL() {
       this.result = "data:image/png;base64,c3ludGhldGlj";
@@ -2896,7 +2904,8 @@ test("tracker picture upload previews a local HA image and saves or removes only
     naturalWidth = 800;
     naturalHeight = 400;
     set src(value) {
-      this.onload();
+      if (decodeFails) this.onerror();
+      else this.onload();
     }
   };
   canvasPrototype.getContext = () => ({
@@ -2920,13 +2929,53 @@ test("tracker picture upload previews a local HA image and saves or removes only
     await tick();
     assert.equal(uploads.length, 0);
     assert.ok(dialog.querySelector("img").src.includes(originalId));
-    pick(input, new File(["synthetic"], "example.png", { type: "image/png" }));
+    const file = new File(["synthetic"], "example.png", { type: "image/png" });
+    pick(input, file);
     await tick();
     assert.equal(uploads.length, 0, "choosing a file stays local");
+    const filename = () => dialog.querySelector(".picture-filename");
+    assert.equal(filename()?.textContent, "Selected picture: example.png");
+    assert.equal(filename().hidden, false);
+    assert.equal(
+      input.value,
+      "",
+      "the picker permits selecting the same file again",
+    );
+    assert.equal(button("Choose picture").disabled, false);
     const zoom = dialog.querySelector('input[aria-label="Zoom"]');
     zoom.value = "2";
     zoom.dispatchEvent(new window.Event("input"));
     assert.deepEqual(draws.at(-1).slice(1, 5), [200, 0, 400, 400]);
+    assert.equal(filename().textContent, "Selected picture: example.png");
+    assert.equal(
+      pick(input, file),
+      true,
+      "the same file can be selected again",
+    );
+    await tick();
+    assert.equal(zoom.value, "1", "reselecting reloads the same picture");
+    assert.equal(filename().textContent, "Selected picture: example.png");
+    let chooserOpens = 0;
+    input.addEventListener("click", () => chooserOpens++);
+    button("Choose picture").click();
+    assert.equal(
+      chooserOpens,
+      1,
+      "the visible chooser opens the native file input",
+    );
+    Object.defineProperty(input, "files", { value: [], configurable: true });
+    input.dispatchEvent(new window.Event("change"));
+    await tick();
+    assert.equal(filename().textContent, "Selected picture: example.png");
+    decodeFails = true;
+    pick(input, new File(["bad"], "undecodable.png", { type: "image/png" }));
+    await tick();
+    assert.match(dialog.textContent, /Could not open this picture/);
+    assert.equal(filename().textContent, "");
+    assert.equal(filename().hidden, true);
+    decodeFails = false;
+    pick(input, file);
+    await tick();
     button("Reset crop").click();
     assert.equal(zoom.value, "1");
     button("Save picture").click();
@@ -2939,9 +2988,17 @@ test("tracker picture upload previews a local HA image and saves or removes only
     );
     assert.equal(uploads[0].request.body.get("file").type, "image/jpeg");
     assert.deepEqual(submissions.at(-1).data, { picture_id: uploadedId });
+    assert.equal(filename().hidden, true);
+    assert.equal(filename().textContent, "");
+    input = dialog.querySelector('input[type="file"]');
+    pick(input, file);
+    await tick();
+    assert.equal(filename().textContent, "Selected picture: example.png");
     button("Remove picture").click();
     assert.equal(dialog.querySelector("img").hidden, true);
     assert.equal(dialog.querySelector("img").style.display, "none");
+    assert.equal(filename().hidden, true);
+    assert.equal(filename().textContent, "");
     button("Save picture").click();
     await tick();
     assert.deepEqual(submissions.at(-1).data, { picture_id: "" });
@@ -2952,6 +3009,8 @@ test("tracker picture upload previews a local HA image and saves or removes only
     button("Save picture").click();
     await tick();
     assert.match(dialog.textContent, /Could not upload this picture/);
+    assert.equal(filename().textContent, "Selected picture: example.png");
+    assert.equal(filename().hidden, false);
     assert.equal(dialog.querySelector('input[aria-label="Zoom"]').value, "1");
     assert.ok(dialog.querySelector("img").src.includes(originalId));
     let finishUpload;
@@ -2961,8 +3020,14 @@ test("tracker picture upload previews a local HA image and saves or removes only
       });
     button("Save picture").click();
     await tick();
+    const abandonedFilename = filename();
+    assert.equal(button("Choose picture").disabled, true);
     button("Back").click();
     await tick();
+    assert.equal(abandonedFilename.textContent, "");
+    assert.equal(abandonedFilename.hidden, true);
+    assert.equal(filename().textContent, "");
+    assert.equal(filename().hidden, true);
     const beforeFinish = submissions.length;
     finishUpload({ ok: true, json: async () => ({ id: uploadedId }) });
     await tick();
@@ -2971,7 +3036,17 @@ test("tracker picture upload previews a local HA image and saves or removes only
       beforeFinish,
       "an upload completing after Back must not submit to a different flow step",
     );
+    input = dialog.querySelector('input[type="file"]');
+    pick(input, file);
+    await tick();
+    const cancelledFilename = filename();
+    assert.equal(
+      cancelledFilename.textContent,
+      "Selected picture: example.png",
+    );
     dialog.close();
+    assert.equal(cancelledFilename.textContent, "");
+    assert.equal(cancelledFilename.hidden, true);
   } finally {
     globalThis.FileReader = oldReader;
     globalThis.Image = oldImage;
