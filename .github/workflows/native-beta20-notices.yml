@@ -1,0 +1,44 @@
+name: Reviewed notice-only candidate archive check
+
+on:
+  push:
+    branches: [codex/native-amd64-validation]
+    paths:
+      - native-beta20-notices/**
+      - .github/workflows/native-beta20-notices.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: homecircle-native-beta20-notices-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  notice-archive:
+    if: github.ref == 'refs/heads/codex/native-amd64-validation'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - name: Read pinned candidate and validation history
+        timeout-minutes: 3
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Verify unchanged code and build notice-only preview on Linux
+        timeout-minutes: 3
+        shell: bash
+        run: timeout --signal=TERM --kill-after=10s 150s python3 native-beta20-notices/check.py
+      - name: Retain summary and preview inventory only
+        timeout-minutes: 3
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: beta20-notice-correction-summary
+          path: notice-check-results/*.json
+          if-no-files-found: error
+          retention-days: 7
+          include-hidden-files: false
