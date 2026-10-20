@@ -38,25 +38,25 @@ jobs:
           import subprocess
           root = Path("native-release1-consumer-container")
           expected = {
-              "PREPARED.json": "908c4a28798b62130585f615bfccb5af9eae76e9d48c2d548cf83a4a90a4e1e5",
-              "README.md": "b4cb1736d9528fc9ebdc34de5c68ca006bf8912d927c252a62cce2ca236a0017",
+              "PREPARED.json": "6354bbf2fbb028eb80fd3ebc028886f22ca5f1a3bc2dd84859444b480c976ecf",
+              "README.md": "05f9ebef632f766d5eb902f5aec63ea33aaad647d4f56935df307367ea07b319",
               "cache_child.py": "73b5eee7f142dbe63374fce280ccadafb65064145b4a6105861070c3be1fa9b8",
               "common.py": "9be103213dc3bbbfdb1e821514f7955faf90e7d4985088a19debc09a51dcef97",
               "driver.py": "95553632c3fb062436d5d3f5e940cde3277a2a9dbb9a1b762a522cc682281978",
-              "guest.py": "03bb896834dbf6caa395c66b8575224fb1445426cc47ef340b3e8fa83ec97747",
+              "guest.py": "d31249126a542cef5005c23b8d3e84f1d4eca73d17f3cbeab735bafcd2178aec",
               "package_support.py": "e97e3f71fc9f7ceb9391f86e0178c59c3b88a2fafe5f397e25a9fb69fe568e59",
               "payload/homecircle.zip": "c4530d94be3b2996f8d6c8948db88a51868566047d68558eefde7967f270a861",
               "payload/inventory.json": "9bdfba997d5437d354673a98c8b78d3875d459499281bca3e20bc629369dcb6b",
               "payload/source-config.json": "bce0379d11d76c53954380c3893a2cf581d539519168492f4235ffee9ba3be0d",
               "payload/source-inventory.json": "e1e999d3324a896dc84323afe24c1c1c60e694fc61a37e885d4bbdbef964d351",
               "payload/source.tgz": "a44c7d404a53eb93386715a376d826dc9be447d0cf59639cd19bf2d7b21ed72e",
-              "pins-current-amd64.json": "3557954379655dc526d3da9c6c4edaa7933470a24bb992db23c9b2d856fb9153",
-              "pins-current-arm64.json": "b413043e9fb077529d9c064f802f8af5982315d797f7dfb4ec4c776487af889c",
-              "pins-minimum-amd64.json": "7d193f11bea52862a6e3bfde4ade507e8c773aba3a2f4028855c4ebeed3d54aa",
-              "pins-minimum-arm64.json": "695cb6a2f6952fef0c7abd873cba0beebba3156ebf9edac748003faff99706e0",
+              "pins-current-amd64.json": "b3f13eedb83b838efd9471959f3de7ca1f60d22f58a1a5073e0a66cec28a52f7",
+              "pins-current-arm64.json": "0852be674b5de1a68455dbf4ac03dd9a478277c34a6fd48e4eb54079c190ae90",
+              "pins-minimum-amd64.json": "829b60c05a36910f2c24fa2f9276e9ab64704119d3c8e56354d98c34969e0632",
+              "pins-minimum-arm64.json": "e1f376cbe4e5cf492b93bdbf89b28bdcbac8913cd2066ce2b13078306fbc10ee",
               "process_probe.py": "fda1c83041a61d720e9c7c9d9fde2a652eaeb43a5a77efcaf17a97c62e0905b3",
               "run_host.sh": "8cafffa854415234c3401c4ac9d2e8221f1c9b5a5531890b511d6272e87de73f",
-              "test_controls.py": "92f726c32a15251bbd0da54f608a809f6dd144d09653df4995be334df2e2e350"
+              "test_controls.py": "eb88c6a46bcf6d7af21f6ca13a9f64942d5bc7161ad635db061d3c7f2aaab947"
           }
           tracked = subprocess.check_output(["git", "ls-files", "-z", "--", str(root)]).decode().split("\0")
           assert {name for name in tracked if name} == {str(root / name) for name in expected}, "fixture_tracked_members_refused"
@@ -69,7 +69,7 @@ jobs:
               assert hashlib.sha256((root / name).read_bytes()).hexdigest() == digest, "fixture_bytes_refused"
           print("Verified 19 frozen fixture files; one current-amd64 pilot target.")
           PY
-      - name: Check thirty-one standalone and Linux process contracts
+      - name: Check thirty-three standalone and Linux process contracts
         timeout-minutes: 3
         shell: bash
         run: |
@@ -77,7 +77,7 @@ jobs:
           PYTHONDONTWRITEBYTECODE=1 python3 -B - <<'PY'
           import unittest
           suite = unittest.defaultTestLoader.discover('native-release1-consumer-container', pattern='test_controls.py')
-          if suite.countTestCases() != 31:
+          if suite.countTestCases() != 33:
               raise SystemExit('reviewed_contract_count_refused')
           result = unittest.TextTestRunner(verbosity=2).run(suite)
           if result.skipped:
@@ -91,13 +91,13 @@ jobs:
           timeout --signal=TERM --kill-after=150s 2300s bash native-release1-consumer-container/run_host.sh \
             --payload native-release1-consumer-container/payload \
             --pins native-release1-consumer-container/pins-current-amd64.json \
-            --pins-sha 3557954379655dc526d3da9c6c4edaa7933470a24bb992db23c9b2d856fb9153 \
+            --pins-sha b3f13eedb83b838efd9471959f3de7ca1f60d22f58a1a5073e0a66cec28a52f7 \
             --source-repository "$GITHUB_WORKSPACE" \
             --output native-release1-consumer-container-results
           receipts=native-release1-consumer-container-results/public-summary
           jq -e '.schema==1 and .outcome=="passed" and .target=="current-amd64" and
             .stage=="complete" and .exit_code==0 and
-            .pins_sha256=="3557954379655dc526d3da9c6c4edaa7933470a24bb992db23c9b2d856fb9153" and
+            .pins_sha256=="b3f13eedb83b838efd9471959f3de7ca1f60d22f58a1a5073e0a66cec28a52f7" and
             .cleanup_failed==false and .owned_containers_stopped==true and
             .owned_containers_removed==true and .owned_volume_removed==true and
             .private_workspace_removed==true and .both_containers_offline_during_acceptance==true and
@@ -112,6 +112,13 @@ jobs:
               .package_sha256=="c4530d94be3b2996f8d6c8948db88a51868566047d68558eefde7967f270a861" and
               .exact_loaded_and_installed_files==113 and .nonempty_options==true and
               .explicit_people_and_trackers==2 and .normal_config_cache_mounted==true and
+              .resolved_distributions_origin_checked==45 and
+              (.resolved_distributions_origin_counts as $counts |
+                ($counts|keys)==["cache","system"] and
+                ($counts.cache|type)=="number" and ($counts.system|type)=="number" and
+                $counts.cache>=0 and $counts.cache<=45 and $counts.system>=0 and $counts.system<=45 and
+                ($counts.cache|floor)==$counts.cache and ($counts.system|floor)==$counts.system and
+                ($counts.cache+$counts.system)==45) and
               .served_frontend_sha256=="80b2727d18a0b8edb052c47d2c718850adf19bf5d35c2af6c3eb86c07f1f6cac" and
               .unload_setup_checked==($phase=="restart") and .resource_id_persistence_claimed==false and
               .prepared_config_cache==true and .fresh_online_resolution_claimed==false and

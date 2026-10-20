@@ -490,7 +490,7 @@ class DistributionContracts(unittest.TestCase):
             ):
                 guest.distribution_failure(index, "1.0", None, cache, [])
 
-    def test_actual_cached_origin_predicate_refuses_system_other_stale_missing(self):
+    def test_actual_resolved_origins_allow_exact_pinned_cache_system_and_mixed(self):
         cache = Path("/config/deps/lib/python3.14/site-packages")
         system = Path("/usr/local/lib/python3.14/site-packages")
         versions = (
@@ -499,7 +499,15 @@ class DistributionContracts(unittest.TestCase):
         names = sorted(versions)
         index = 11
         bad_name = names[index]
-        for case in ("all_cache", "system", "other", "stale", "missing"):
+        for case in (
+            "all_cache",
+            "all_system",
+            "mixed",
+            "other",
+            "stale",
+            "stale_system",
+            "missing",
+        ):
             called = []
             diagnostic = {}
 
@@ -509,13 +517,16 @@ class DistributionContracts(unittest.TestCase):
                     raise LookupError("PRIVATE-CANARY")
                 path = (
                     system
-                    if name == bad_name and case == "system"
+                    if case == "all_system"
+                    or (case in {"mixed", "stale_system"} and name == bad_name)
                     else Path("/owner/PRIVATE-CANARY")
                     if name == bad_name and case == "other"
                     else cache
                 )
                 version = (
-                    "999.1" if name == bad_name and case == "stale" else versions[name]
+                    "999.1"
+                    if name == bad_name and case in {"stale", "stale_system"}
+                    else versions[name]
                 )
                 return SimpleNamespace(version=version, locate_file=lambda _name: path)
 
@@ -534,12 +545,18 @@ class DistributionContracts(unittest.TestCase):
                     )
                 ),
             }
-            actual = self.guest_function("cached_origins", namespace)
+            actual = self.guest_function("resolved_origins", namespace)
             with self.subTest(case=case):
-                if case == "all_cache":
-                    actual()
+                if case in {"all_cache", "all_system", "mixed"}:
+                    counts = actual()
                     self.assertEqual(called, names)
                     self.assertEqual(diagnostic, {})
+                    self.assertEqual(set(counts), {"cache", "system"})
+                    self.assertEqual(sum(counts.values()), 45)
+                    self.assertEqual(
+                        counts["system"],
+                        45 if case == "all_system" else 1 if case == "mixed" else 0,
+                    )
                 else:
                     error = LookupError if case == "missing" else c.Refused
                     with self.assertRaises(error):
@@ -547,15 +564,20 @@ class DistributionContracts(unittest.TestCase):
                     self.assertEqual(called, names[: index + 1])
                     self.assertEqual(diagnostic["sorted_package_index"], index)
                     self.assertEqual(
-                        diagnostic["origin"], "cache" if case == "stale" else case
+                        diagnostic["origin"],
+                        "cache"
+                        if case == "stale"
+                        else "system"
+                        if case == "stale_system"
+                        else case,
                     )
                     self.assertEqual(
                         diagnostic["expected_version_matches"],
-                        case in {"system", "other"},
+                        case == "other",
                     )
                     self.assertNotIn("PRIVATE-CANARY", json.dumps(diagnostic))
 
-    def test_actual_cache_presence_gate_and_predicate_are_unchanged(self):
+    def test_actual_cache_presence_gate_and_corrected_predicate_are_exact(self):
         tree = ast.parse((HERE / "guest.py").read_bytes())
         checks = [
             node
@@ -567,7 +589,7 @@ class DistributionContracts(unittest.TestCase):
         ]
         self.assertEqual(len(checks), 1)
         expected = ast.parse(
-            'distribution.version == expected and Path(distribution.locate_file("")).resolve() == cache',
+            'distribution.version == expected and (origin := Path(distribution.locate_file("")).resolve()) in {cache, system}',
             mode="eval",
         ).body
         self.assertEqual(ast.dump(checks[0].args[0]), ast.dump(expected))
@@ -579,10 +601,114 @@ class DistributionContracts(unittest.TestCase):
             "c": c,
             "distribution_check": {},
         }
-        actual = self.guest_function("cached_origins", namespace)
+        actual = self.guest_function("resolved_origins", namespace)
         with self.assertRaisesRegex(c.Refused, "^normal_config_cache_not_mounted$"):
             actual()
         self.assertEqual(namespace["distribution_check"], {})
+
+    def test_resolved_metadata_roots_follow_symlinks_but_refuse_foreign_targets(self):
+        control = self.root.resolve() / "config/.homecircle-consumer-qa"
+        cache = control.parent / "deps/lib/python3.14/site-packages"
+        cache.mkdir(parents=True)
+        system = Path("/usr/local/lib/python3.14/site-packages")
+        foreign = self.root / "PRIVATE-CANARY"
+        foreign.mkdir()
+        aliases = {
+            "cache": self.root / "cache-alias",
+            "system": self.root / "system-alias",
+            "foreign": cache / "foreign-alias",
+        }
+        for name, target in (
+            ("cache", cache),
+            ("system", system),
+            ("foreign", foreign),
+        ):
+            aliases[name].symlink_to(target, target_is_directory=True)
+        versions = (
+            self.original["dependency_versions"] | self.original["startup_versions"]
+        )
+        first = sorted(versions)[0]
+        for kind, alias in aliases.items():
+            diagnostic = {}
+
+            def distribution(name):
+                return SimpleNamespace(
+                    version=versions[name],
+                    locate_file=lambda _name: alias if name == first else cache,
+                )
+
+            namespace = {
+                "Path": Path,
+                "runtime": {"cache_site": str(cache)},
+                "control": control,
+                "versions": versions,
+                "sys": SimpleNamespace(path=[str(cache), str(system)]),
+                "c": c,
+                "distribution_check": diagnostic,
+                "distribution_failure": guest.distribution_failure,
+                "importlib": SimpleNamespace(
+                    metadata=SimpleNamespace(
+                        distribution=distribution, PackageNotFoundError=LookupError
+                    )
+                ),
+            }
+            actual = self.guest_function("resolved_origins", namespace)
+            with self.subTest(kind=kind):
+                if kind == "foreign":
+                    with self.assertRaises(c.Refused):
+                        actual()
+                    self.assertEqual(diagnostic["origin"], "other")
+                    self.assertEqual(diagnostic["sorted_package_index"], 0)
+                    self.assertNotIn("PRIVATE-CANARY", json.dumps(diagnostic))
+                else:
+                    counts = actual()
+                    self.assertEqual(
+                        counts,
+                        {
+                            "cache": 44 if kind == "system" else 45,
+                            "system": 1 if kind == "system" else 0,
+                        },
+                    )
+                    self.assertEqual(diagnostic, {})
+
+    def test_success_receipt_reports_resolved_counts_without_requiring_a_mix(self):
+        tree = ast.parse((HERE / "guest.py").read_bytes())
+        receipt = next(
+            node
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Dict)
+            and any(
+                isinstance(key, ast.Constant)
+                and key.value == "resolved_distributions_origin_checked"
+                for key in node.keys
+            )
+        )
+        for counts in (
+            {"cache": 45, "system": 0},
+            {"cache": 0, "system": 45},
+            {"cache": 7, "system": 38},
+        ):
+            namespace = {
+                "c": c,
+                "values": self.original,
+                "phase": "first",
+                "runtime": {"token": "synthetic"},
+                "versions": self.original["dependency_versions"]
+                | self.original["startup_versions"],
+                "origin_counts": counts,
+                "inventory": {"frontend/homecircle-card.js": {"sha256": "0" * 64}},
+                "snapshot": {"synthetic": True},
+            }
+            actual = eval(
+                compile(ast.Expression(body=receipt), "actual-guest-receipt", "eval"),
+                namespace,
+            )
+            self.assertNotIn("cached_distributions_origin_checked", actual)
+            self.assertEqual(actual["resolved_distributions_origin_checked"], 45)
+            self.assertEqual(actual["resolved_distributions_origin_counts"], counts)
+            self.assertEqual(
+                sum(actual["resolved_distributions_origin_counts"].values()), 45
+            )
 
     def test_guest_failure_retains_only_bounded_distribution_diagnostic(self):
         for name in (

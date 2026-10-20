@@ -167,13 +167,15 @@ async def async_setup(hass, config):
         )
         versions = values["dependency_versions"] | values["startup_versions"]
 
-        def cached_origins():
+        def resolved_origins():
             cache = Path(runtime["cache_site"]).resolve()
             c.check(
                 cache.is_relative_to(control.parent / "deps")
                 and str(cache) in sys.path,
                 "normal_config_cache_not_mounted",
             )
+            system = Path("/usr/local/lib/python3.14/site-packages")
+            counts = {"cache": 0, "system": 0}
             for index, (name, expected) in enumerate(sorted(versions.items())):
                 try:
                     distribution = importlib.metadata.distribution(name)
@@ -185,7 +187,8 @@ async def async_setup(hass, config):
                 try:
                     c.check(
                         distribution.version == expected
-                        and Path(distribution.locate_file("")).resolve() == cache,
+                        and (origin := Path(distribution.locate_file("")).resolve())
+                        in {cache, system},
                         "guest_cached_distribution_origin_refused",
                     )
                 except c.Refused:
@@ -195,8 +198,10 @@ async def async_setup(hass, config):
                         )
                     )
                     raise
+                counts["cache" if origin == cache else "system"] += 1
+            return counts
 
-        await hass.async_add_executor_job(cached_origins)
+        origin_counts = await hass.async_add_executor_job(resolved_origins)
         for tracker, source_type in zip(TRACKERS, ("gps", "router"), strict=True):
             attrs = {"source_type": source_type, "in_zones": ["zone.home"]}
             if source_type == "gps":
@@ -407,7 +412,8 @@ async def async_setup(hass, config):
                 "phase": phase,
                 "token_sha256": c.sha(runtime["token"].encode()),
                 "normal_config_cache_mounted": True,
-                "cached_distributions_origin_checked": len(versions),
+                "resolved_distributions_origin_checked": len(versions),
+                "resolved_distributions_origin_counts": origin_counts,
                 "nonempty_options": True,
                 "explicit_people_and_trackers": 2,
                 "exact_loaded_and_installed_files": 113,
