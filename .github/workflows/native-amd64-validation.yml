@@ -1,0 +1,45 @@
+name: Frozen native AMD64 validation
+
+on:
+  push:
+    branches: [codex/native-amd64-validation]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: homecircle-native-amd64-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  frozen-candidate:
+    if: github.ref == 'refs/heads/codex/native-amd64-validation'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 150
+    steps:
+      - name: Check out the isolated validation revision
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Run frozen offline upgrade and recovery validation
+        shell: bash
+        run: |
+          bash native-validation/run_native.sh \
+            --payload native-validation/payload \
+            --output native-results
+          test -s native-results/public-summary/host.json
+          test -s native-results/public-summary/setup-summary.json
+          test -s native-results/public-summary/candidate-summary.json
+          jq -e '.outcome=="passed" and .container_stopped==true and .container_removed==true and .cleanup_failed==false' \
+            native-results/public-summary/host.json
+      - name: Retain only sanitized summaries
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: native-amd64-sanitized-summary
+          path: native-results/public-summary/*.json
+          if-no-files-found: warn
+          retention-days: 7
+          include-hidden-files: false
