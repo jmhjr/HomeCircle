@@ -1,0 +1,58 @@
+name: Reviewed beta 20 native Linux packaging
+
+on:
+  push:
+    branches: [codex/native-amd64-validation]
+    paths:
+      - native-beta20-package/**
+      - .github/workflows/native-beta20-package.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: homecircle-native-beta20-package-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  beta20-package:
+    if: github.ref == 'refs/heads/codex/native-amd64-validation'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    steps:
+      - name: Check out the isolated validation revision
+        timeout-minutes: 3
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Build and verify the versioned prerelease on native Linux
+        timeout-minutes: 62
+        shell: bash
+        run: |
+          timeout --signal=TERM --kill-after=150s 3500s bash native-beta20-package/run_host.sh \
+            --payload native-beta20-package/payload --output native-beta20-package-results
+          jq -e '.outcome=="passed" and .container_stopped==true and .container_removed==true and
+            .cleanup_failed==false and .private_workspace_removed==true and .release_assets_checked==true' \
+            native-beta20-package-results/public-summary/host.json
+      - name: Retain only narrow validation summaries
+        timeout-minutes: 3
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: native-beta20-package-sanitized-summary
+          path: native-beta20-package-results/public-summary/*.json
+          if-no-files-found: warn
+          retention-days: 7
+          include-hidden-files: false
+      - name: Retain the successfully reviewed installable release assets
+        timeout-minutes: 3
+        if: success()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: native-beta20-reviewed-release-assets
+          path: native-beta20-package-results/release-assets/*
+          if-no-files-found: error
+          retention-days: 7
+          include-hidden-files: false
