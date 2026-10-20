@@ -1,0 +1,1798 @@
+{
+  "schema": 1,
+  "reviewed_utc_date": "2026-10-20",
+  "scope": "beta20 exact published ZIP plus the 24 manifest-dependency distributions observed in one Ubuntu/Core qualification; not every HA/test/OS dependency",
+  "tag": "v0.1.0-beta.20",
+  "source_commit": "d02a9bdb9027cb51c99165a09ba50d5b175f5fb9",
+  "release_zip_sha256": "fc0b365d9688459504f874af5c38393e24145d657f15f1def8ada9184f363285",
+  "observed_ci_run": "https://github.com/jmhjr/HomeCircle/actions/runs/39474571811",
+  "setup_summary_sha256": "e1c4bceee2c52e14f374f2173ca575fe608cc0c6b225881f914a01e2afb5976b",
+  "direct_manifest_requirements": [
+    "life360==7.2.0",
+    "protobuf>=6.32.0,<8.0.0",
+    "anisette==1.2.4",
+    "unicorn==2.1.4",
+    "srp==1.0.22",
+    "beautifulsoup4==4.13.3"
+  ],
+  "runtime_dependencies": [
+    {
+      "name": "aiohappyeyeballs",
+      "version": "2.7.1",
+      "manifest_direct": false,
+      "distribution_relation": "fetched dependency, absent from HomeCircle release ZIP",
+      "pypi_metadata_url": "https://pypi.org/pypi/aiohappyeyeballs/2.7.1/json",
+      "metadata_sha256": "90a6fe95d5083b27fa3cb21b46a78cdf84befd72a03001ea3182747e6794b983",
+      "upstream_origin": "https://github.com/aio-libs/aiohappyeyeballs",
+      "metadata_license_expression": null,
+      "metadata_license_text": "PSF-2.0",
+      "metadata_license_classifiers": [
+        "License :: OSI Approved :: Python Software Foundation License"
+      ],
+      "license_assessment_from_artifacts": "PSF-2.0",
+      "wheel": {
+        "artifact": "aiohappyeyeballs-2.7.1-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/71/43/1947f06babed6b3f1d7f38b0c767f52df66bfb2bc10b468c4a7de9eceff2/aiohappyeyeballs-2.7.1-py3-none-any.whl",
+        "sha256": "9243213661e29250eb41368e5daa826fc017156c3b8a11440826b2e3ed376472",
+        "bytes": 15038,
+        "not_identified_as_exact_installed_artifact": true,
+        "notice_metadata_files": [
+          {
+            "path": "aiohappyeyeballs-2.7.1.dist-info/METADATA",
+            "sha256": "e68d1bf48aec9dcc2767343dedec25e12860085cba180e10bc3d3bdd031602ba",
+            "bytes": 5939
+          },
+          {
+            "path": "aiohappyeyeballs-2.7.1.dist-info/licenses/LICENSE",
+            "sha256": "3b2f81fe21d181c499c59a256c8e1968455d6689d269aa85373bfb6af41da3bf",
+            "bytes": 13936
+          }
+        ]
+      },
+      "requires_dist_unresolved_with_markers": [
+
+      ],
+      "verification": "wheel SHA-256 and extracted license files verified",
+      "notes": null
+    },
+    {
+      "name": "aiohttp",
+      "version": "3.14.5",
+      "manifest_direct": false,
+      "distribution_relation": "fetched dependency, absent from HomeCircle release ZIP",
+      "pypi_metadata_url": "https://pypi.org/pypi/aiohttp/3.14.5/json",
+      "metadata_sha256": "7deb2f0d6dc95c63a2b576236bbe3051f3c0b1d402bd5f59e7619c05684f499a",
+      "upstream_origin": "https://github.com/aio-libs/aiohttp",
+      "metadata_license_expression": "Apache-2.0 AND MIT",
+      "metadata_license_text": null,
+      "metadata_license_classifiers": [
+
+      ],
+      "license_assessment_from_artifacts": "Apache-2.0 AND MIT (vendored llhttp)",
+      "wheel": {
+        "artifact": "aiohttp-3.14.5-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+        "url": "https://files.pythonhosted.org/packages/a6/66/55a8904b3a129fafdf94f9cc0a2e4ca09a3c914650be52355db7ad0bbdb6/aiohttp-3.14.5-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+        "sha256": "94684b879ac1d71e4238850c99b62dc1b28d9086b156a2555f082010b85a865c",
+        "bytes": 1888041,
+        "not_identified_as_exact_installed_artifact": true,
+        "notice_metadata_files": [
+          {
+            "path": "aiohttp-3.14.5.dist-info/METADATA",
+            "sha256": "50b29a2268649f7ce5b22c0a41b60896d246fee58e2a74b468f66848e469834c",
+            "bytes": 8277
+          },
+          {
+            "path": "aiohttp-3.14.5.dist-info/licenses/LICENSE.txt",
+            "sha256": "2e4be5fc6c4c72a466fcb665d726e049a6891981fe536c4f04b6366749461d23",
+            "bytes": 11313
+          },
+          {
+            "path": "aiohttp-3.14.5.dist-info/licenses/vendor/llhttp/LICENSE",
+            "sha256": "628168d68bb5a8a17e0bbefb3bd74e326e1edc20583d76f52f457c82c921867d",
+            "bytes": 1069
+          }
+        ]
+      },
+      "requires_dist_unresolved_with_markers": [
+        "aiohappyeyeballs>=2.5.0",
+        "aiosignal>=1.4.0",
+        "async-timeout<6.0,>=4.0; python_version < \"3.11\"",
+        "attrs>=17.3.0",
+        "frozenlist>=1.1.1",
+        "multidict<8.0,>=4.5",
+        "propcache>=0.2.0",
+        "typing_extensions>=4.4; python_version < \"3.13\"",
+        "yarl<2.0,>=1.25.1",
+        "aiodns>=3.3.0; (sys_platform != \"android\" and sys_platform != \"ios\") and extra == \"speedups\"",
+        "Brotli>=1.2; (platform_python_implementation == \"CPython\" and sys_platform != \"android\" and sys_platform != \"ios\") and extra == \"speedups\"",
+        "brotlicffi>=1.2; platform_python_implementation != \"CPython\" and extra == \"speedups\"",
+        "backports.zstd; (platform_python_implementation == \"CPython\" and python_version < \"3.14\" and sys_platform != \"android\" and sys_platform != \"ios\") and extra == \"speedups\""
+      ],
+      "verification": "wheel SHA-256 and extracted license files verified",
+      "notes": "Wheel retains Apache license plus MIT llhttp license, matching the compound metadata expression."
+    },
+    {
+      "name": "aiosignal",
+      "version": "1.4.0",
+      "manifest_direct": false,
+      "distribution_relation": "fetched dependency, absent from HomeCircle release ZIP",
+      "pypi_metadata_url": "https://pypi.org/pypi/aiosignal/1.4.0/json",
+      "metadata_sha256": "443bdf542505c93e62117e868b9984b0c5784d50ab5b40ad0ae36d600b2d75ae",
+      "upstream_origin": "https://github.com/aio-libs/aiosignal",
+      "metadata_license_expression": null,
+      "metadata_license_text": "Apache 2.0",
+      "metadata_license_classifiers": [
+        "License :: OSI Approved :: Apache Software License"
+      ],
+      "license_assessment_from_artifacts": "Apache-2.0",
+      "wheel": {
+        "artifact": "aiosignal-1.4.0-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/fb/76/641ae371508676492379f16e2fa48f4e2c11741bd63c48be4b12a6b09cba/aiosignal-1.4.0-py3-none-any.whl",
+        "sha256": "053243f8b92b990551949e63930a839ff0cf0b0ebbe0597b0f3fb19e1a0fe82e",
+        "bytes": 7490,
+        "not_identified_as_exact_installed_artifact": true,
+        "notice_metadata_files": [
+          {
+            "path": "aiosignal-1.4.0.dist-info/licenses/LICENSE",
+            "sha256": "6fd5243e92dd7f98ec69c7ac377728e74905709ff527a5bf98d6d0263c04f5b6",
+            "bytes": 11332
+          },
+          {
+            "path": "aiosignal-1.4.0.dist-info/METADATA",
+            "sha256": "09247ef1da8bc696728d47130e702e4307f6f7d101d6c485bff9f3a71ce7008d",
+            "bytes": 3662
+          }
+        ]
+      },
+      "requires_dist_unresolved_with_markers": [
+        "frozenlist>=1.1.0",
+        "typing-extensions>=4.2; python_version < \"3.13\""
+      ],
+      "verification": "wheel SHA-256 and extracted license files verified",
+      "notes": null
+    },
+    {
+      "name": "anisette",
+      "version": "1.2.4",
+      "manifest_direct": true,
+      "distribution_relation": "fetched dependency, absent from HomeCircle release ZIP",
+      "pypi_metadata_url": "https://pypi.org/pypi/anisette/1.2.4/json",
+      "metadata_sha256": "6f57230a08ff60eb6aba4cefd1375838d51c162dc5e2faee9e7afb17f2ad9a32",
+      "upstream_origin": "https://github.com/malmeloo/Anisette.py",
+      "metadata_license_expression": null,
+      "metadata_license_text": null,
+      "metadata_license_classifiers": [
+
+      ],
+      "license_assessment_from_artifacts": "MIT",
+      "wheel": {
+        "artifact": "anisette-1.2.4-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/c4/38/2f8b4c7d97d3eca76c1794348ea142bba393da11950ed836e741692d133e/anisette-1.2.4-py3-none-any.whl",
+        "sha256": "f61e620aa736f0cac0ca102dd44a02cc2caea1a072eab0f1ef7f2d8b534e03dc",
+        "bytes": 32143,
+        "not_identified_as_exact_installed_artifact": true,
+        "notice_metadata_files": [
+          {
+            "path": "anisette-1.2.4.dist-info/licenses/LICENSE",
+            "sha256": "a4771f35570d31588066246dc911b15a7ab711101cf4e2603717c858c164702a",
+            "bytes": 1081
+          },
+          {
+            "path": "anisette-1.2.4.dist-info/METADATA",
+            "sha256": "8391f3a66f892d6ac18ac7436bd532e4ab68be8795f7e11a2c4bf4dc2fed0a1a",
+            "bytes": 2244
+          }
+        ]
+      },
+      "requires_dist_unresolved_with_markers": [
+        "certifi>=2025.1.31",
+        "fs>=2.4.16",
+        "pyelftools>=0.31",
+        "typing-extensions>=4.12.2",
+        "unicorn>=2.1.1",
+        "urllib3>=2.3.0",
+        "typer>=0.15.1; extra == \"cli\"",
+        "rich>=13.9.4; extra == \"cli\""
+      ],
+      "verification": "wheel SHA-256 and extracted license files verified",
+      "notes": "PyPI license fields are blank; MIT is verified from the wheel LICENSE. Apple libraries mentioned by the package are separate proprietary material, not licensed by this MIT notice."
+    },
+    {
+      "name": "appdirs",
+      "version": "1.4.4",
+      "manifest_direct": false,
+      "distribution_relation": "fetched dependency, absent from HomeCircle release ZIP",
+      "pypi_metadata_url": "https://pypi.org/pypi/appdirs/1.4.4/json",
+      "metadata_sha256": "04a6aa996829cd8daeb8fa992c5ee482afbea4a8d74dd4917add59c73b10cac3",
+      "upstream_origin": "http://github.com/ActiveState/appdirs",
+      "metadata_license_expression": null,
+      "metadata_license_text": "MIT",
+      "metadata_license_classifiers": [
+        "License :: OSI Approved :: MIT License"
+      ],
+      "license_assessment_from_artifacts": "MIT",
+      "wheel": {
+        "artifact": "appdirs-1.4.4-py2.py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/3b/00/2344469e2084fb287c2e0b57b72910309874c3245463acd6cf5e3db69324/appdirs-1.4.4-py2.py3-none-any.whl",
+        "sha256": "a841dacd6b99318a741b166adb07e19ee71a274450e68237b4650ca1055ab128",
+        "bytes": 9566,
+        "not_identified_as_exact_installed_artifact": true,
+        "notice_metadata_files": [
+          {
+            "path": "appdirs-1.4.4.dist-info/LICENSE.txt",
+            "sha256": "36ddb4d0a745a93ab203203d7190814b1b89727d254caff48c7a7afbbd47000b",
+            "bytes": 1097
+          },
+          {
+            "path": "appdirs-1.4.4.dist-info/METADATA",
+            "sha256": "9394d57d730d2861d37e9db09ba109293b86c0636ea104794ea4201fc8b01bc3",
+            "bytes": 8981
+          }
+        ]
+      },
+      "requires_dist_unresolved_with_markers": [
+
+      ],
+      "verification": "wheel SHA-256 and extracted license files verified",
+      "notes": null
+    },
+    {
+      "name": "attrs",
+      "version": "26.1.0",
+      "manifest_direct": false,
+      "distribution_relation": "fetched dependency, absent from HomeCircle release ZIP",
+      "pypi_metadata_url": "https://pypi.org/pypi/attrs/26.1.0/json",
+      "metadata_sha256": "a882bf941fb4a0bb748d0194df544121cc130f5fb15a710ab6b804c17d2899b7",
+      "upstream_origin": "https://github.com/python-attrs/attrs",
+      "metadata_license_expression": "MIT",
+      "metadata_license_text": null,
+      "metadata_license_classifiers": [
+
+      ],
+      "license_assessment_from_artifacts": "MIT",
+      "wheel": {
+        "artifact": "attrs-26.1.0-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/64/b4/17d4b0b2a2dc85a6df63d1157e028ed19f90d4cd97c36717afef2bc2f395/attrs-26.1.0-py3-none-any.whl",
+        "sha256": "c647aa4a12dfbad9333ca4e71fe62ddc36f4e63b2d260a37a8b83d2f043ac309",
+        "bytes": 67548,
+        "not_identified_as_exact_installed_artifact": true,
+        "notice_metadata_files": [
+          {
+            "path": "attrs-26.1.0.dist-info/METADATA",
+            "sha256": "4cd40e690f23bf37cbcad34efd6758e062df1df07c86833f7e3ce95bf1fa38cc",
+            "bytes": 8754
+          },
+          {
+            "path": "attrs-26.1.0.dist-info/licenses/LICENSE",
+            "sha256": "882115c95dfc2af1eeb6714f8ec6d5cbcabf667caff8729f42420da63f714e9f",
+            "bytes": 1109
+          }
+        ]
+      },
+      "requires_dist_unresolved_with_markers": [
+
+      ],
+      "verification": "wheel SHA-256 and extracted license files verified",
+      "notes": null
+    },
+    {
+      "name": "beautifulsoup4",
+      "version": "4.13.3",
+      "manifest_direct": true,
+      "distribution_relation": "fetched dependency, absent from HomeCircle release ZIP",
+      "pypi_metadata_url": "https://pypi.org/pypi/beautifulsoup4/4.13.3/json",
+      "metadata_sha256": "e383241b79b03f3a1ec421b1e60697eb0039f47136c5cdfd8cb672ed63ead7d1",
+      "upstream_origin": "https://www.crummy.com/software/BeautifulSoup/bs4/",
+      "metadata_license_expression": null,
+      "metadata_license_text": "MIT License",
+      "metadata_license_classifiers": [
+        "License :: OSI Approved :: MIT License"
+      ],
+      "license_assessment_from_artifacts": "MIT",
+      "wheel": {
+        "artifact": "beautifulsoup4-4.13.3-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/f9/49/6abb616eb3cbab6a7cca303dc02fdf3836de2e0b834bf966a7f5271a34d8/beautifulsoup4-4.13.3-py3-none-any.whl",
+        "sha256": "99045d7d3f08f91f0d656bc9b7efbae189426cd913d830294a15eefa0ea4df16",
+        "bytes": 186015,
+        "not_identified_as_exact_installed_artifact": true,
+        "notice_metadata_files": [
+          {
+            "path": "beautifulsoup4-4.13.3.dist-info/METADATA",
+            "sha256": "a3af768bcd7daa6b927124ba531a011408b6c4f4a5f1b93657a4ee437cc1a1fb",
+            "bytes": 3809
+          },
+          {
+            "path": "beautifulsoup4-4.13.3.dist-info/licenses/AUTHORS",
+            "sha256": "ebe6b9bb0d7b2fec4c020efe4778953c6287fcec3069ca63464b8e54f8c07b2c",
+            "bytes": 2198
+          },
+          {
+            "path": "beautifulsoup4-4.13.3.dist-info/licenses/LICENSE",
+            "sha256": "55b4d8d4b1e5bc86d10efac91b74c87bcb77526b0f5b9edaf8b9cd2adc7397b2",
+            "bytes": 1441
+          }
+        ]
+      },
+      "requires_dist_unresolved_with_markers": [
+        "soupsieve>1.2",
+        "typing-extensions>=4.0.0",
+        "cchardet; extra == \"cchardet\"",
+        "chardet; extra == \"chardet\"",
+        "charset-normalizer; extra == \"charset-normalizer\"",
+        "html5lib; extra == \"html5lib\"",
+        "lxml; extra == \"lxml\""
+      ],
+      "verification": "wheel SHA-256 and extracted license files verified",
+      "notes": null
+    },
+    {
+      "name": "certifi",
+      "version": "2026.10.19",
+      "manifest_direct": false,
+      "distribution_relation": "fetched dependency, absent from HomeCircle release ZIP",
+      "pypi_metadata_url": "https://pypi.org/pypi/certifi/2026.10.19/json",
+      "metadata_sha256": "5b6ba21c20c09f5e4ca52bf8251de25fafbdb56909c60e3ba44d4f2b6ef5d319",
+      "upstream_origin": "https://github.com/certifi/python-certifi",
+      "metadata_license_expression": null,
+      "metadata_license_text": "MPL-2.0",
+      "metadata_license_classifiers": [
+        "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)"
+      ],
+      "license_assessment_from_artifacts": "MPL-2.0",
+      "wheel": {
+        "artifact": "certifi-2026.10.19-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/c4/51/29046e48f693c54e5b7412216d447a1d8362c9653148d98c02cdf65fa733/certifi-2026.10.19-py3-none-any.whl",
+        "sha256": "42d35340cc5b9ba78e818ddbff0c5b1c2b779de448a340fd1b989f5fa8670e1b",
+        "bytes": 136464,
+        "not_identified_as_exact_installed_artifact": true,
+        "notice_metadata_files": [
+          {
+            "path": "certifi-2026.10.19.dist-info/licenses/LICENSE",
+            "sha256": "e93716da6b9c0d5a4a1df60fe695b370f0695603d21f6f83f053e42cfc10caf7",
+            "bytes": 989
+          },
+          {
+            "path": "certifi-2026.10.19.dist-info/METADATA",
+            "sha256": "a5c0be3a42daeef0edfaf58e6ea5b7550f3e4e8eb35420f72e902df9bcf00f5c",
+            "bytes": 2526
+          }
+        ]
+      },
+      "requires_dist_unresolved_with_markers": [
+
+      ],
+      "verification": "wheel SHA-256 and extracted license files verified",
+      "notes": "MPL notice concerns the Mozilla-derived CA bundle; do not classify this entire runtime as MIT."
+    },
+    {
+      "name": "frozenlist",
+      "version": "1.8.0",
+      "manifest_direct": false,
+      "distribution_relation": "fetched dependency, absent from HomeCircle release ZIP",
+      "pypi_metadata_url": "https://pypi.org/pypi/frozenlist/1.8.0/json",
+      "metadata_sha256": "b12a7f8b816bfb2a70f2eb97140890efb08a234ab3b75841b0e89e197effa5ad",
+      "upstream_origin": "https://github.com/aio-libs/frozenlist",
+      "metadata_license_expression": null,
+      "metadata_license_text": "Apache-2.0",
+      "metadata_license_classifiers": [
+
+      ],
+      "license_assessment_from_artifacts": "Apache-2.0",
+      "wheel": {
+        "artifact": "frozenlist-1.8.0-cp314-cp314-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl",
+        "url": "https://files.pythonhosted.org/packages/a7/b2/fabede9fafd976b991e9f1b9c8c873ed86f202889b864756f240ce6dd855/frozenlist-1.8.0-cp314-cp314-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl",
+        "sha256": "cba69cb73723c3f329622e34bdbf5ce1f80c21c290ff04256cff1cd3c2036ed2",
+        "bytes": 231298,
+        "not_identified_as_exact_installed_artifact": true,
+        "notice_metadata_files": [
+          {
+            "path": "frozenlist-1.8.0.dist-info/METADATA",
+            "sha256": "946c22dc9f7e2c76f2d698f00a4306dbe49a820e2b3f1a0e22fe5286cbec35f1",
+            "bytes": 20333
+          },
+          {
+            "path": "frozenlist-1.8.0.dist-info/licenses/LICENSE",
+            "sha256": "6fd5243e92dd7f98ec69c7ac377728e74905709ff527a5bf98d6d0263c04f5b6",
+            "bytes": 11332
+          }
+        ]
+      },
+      "requires_dist_unresolved_with_markers": [
+
+      ],
+      "verification": "wheel SHA-256 and extracted license files verified",
+      "notes": null
+    },
+    {
+      "name": "fs",
+      "version": "2.4.16",
+      "manifest_direct": false,
+      "distribution_relation": "fetched dependency, absent from HomeCircle release ZIP",
+      "pypi_metadata_url": "https://pypi.org/pypi/fs/2.4.16/json",
+      "metadata_sha256": "2e0e2147e9485612efec1f52facd1f75d26376a20ae30af165d9878a65cd2686",
+      "upstream_origin": "https://github.com/PyFilesystem/pyfilesystem2",
+      "metadata_license_expression": null,
+      "metadata_license_text": "MIT",
+      "metadata_license_classifiers": [
+        "License :: OSI Approved :: MIT License"
+      ],
+      "license_assessment_from_artifacts": "MIT",
+      "wheel": {
+        "artifact": "fs-2.4.16-py2.py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/b9/5c/a3d95dc1ec6cdeb032d789b552ecc76effa3557ea9186e1566df6aac18df/fs-2.4.16-py2.py3-none-any.whl",
+        "sha256": "660064febbccda264ae0b6bace80a8d1be9e089e0a5eb2427b7d517f9a91545c",
+        "bytes": 135261,
+        "not_identified_as_exact_installed_artifact": true,
+        "notice_metadata_files": [
+          {
+            "path": "fs-2.4.16.dist-info/LICENSE",
+            "sha256": "bcc1fbae1da071a15d17fd7609519af1160a3d72c65622047b61e19ba63e780d",
+            "bytes": 1129
+          },
+          {
+            "path": "fs-2.4.16.dist-info/METADATA",
+            "sha256": "862ffadbd30019f6ec5951c05e0ef1801543a7915ed9effb9d0494804dd9bba8",
+            "bytes": 6319
+          }
+        ]
+      },
+      "requires_dist_unresolved_with_markers": [
+        "appdirs (~=1.4.3)",
+        "setuptools",
+        "six (~=1.10)",
+        "backports.os (~=0.1) ; python_version < \"3.0\"",
+        "enum34 (~=1.1.6) ; python_version < \"3.4\"",
+        "typing (~=3.6) ; python_version < \"3.6\"",
+        "scandir (~=1.5) ; (python_version < \"3.5\") and extra == 'scandir'"
+      ],
+      "verification": "wheel SHA-256 and extracted license files verified",
+      "notes": null
+    },
+    {
+      "name": "idna",
+      "version": "3.20",
+      "manifest_direct": false,
+      "distribution_relation": "fetched dependency, absent from HomeCircle release ZIP",
+      "pypi_metadata_url": "https://pypi.org/pypi/idna/3.20/json",
+      "metadata_sha256": "e7cbd26e23ce60f6cb3a151d2adf3b1b087bb8f10ac2d9d6db70fdccbf3bb041",
+      "upstream_origin": "https://github.com/kjd/idna",
+      "metadata_license_expression": "BSD-3-Clause",
+      "metadata_license_text": null,
+      "metadata_license_classifiers": [
+
+      ],
+      "license_assessment_from_artifacts": "BSD-3-Clause",
+      "wheel": {
+        "artifact": "idna-3.20-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/58/a2/bb081bab032533a855d44de1d56f8e8426114ff1ba5d1f07a438a0a654f8/idna-3.20-py3-none-any.whl",
+        "sha256": "ab7ae7122974553370f0bdb919e1a960b2cd1bc1ef0276416d896db81c14582c",
+        "bytes": 69583,
+        "not_identified_as_exact_installed_artifact": true,
+        "notice_metadata_files": [
+          {
+            "path": "idna-3.20.dist-info/licenses/LICENSE.md",
+            "sha256": "1a9a4f0e3d479a27240ddd59a9137a66ab4a0f9dfdc8ca6188cc0bfd85187f04",
+            "bytes": 1541
+          },
+          {
+            "path": "idna-3.20.dist-info/METADATA",
+            "sha256": "dbd8c14c1e4ca1e0c9824a6dbc7cbbf78884f38eb52d91148cd3025f671e4b85",
+            "bytes": 7207
+          }
+        ]
+      },
+      "requires_dist_unresolved_with_markers": [
+        "ruff>=0.16.0; extra == \"all\"",
+        "mypy>=1.11.2; extra == \"all\"",
+        "ty>=0.0.37; extra == \"all\"",
+        "pytest>=8.3.2; extra == \"all\"",
+        "hypothesis>=6.141.1; extra == \"all\"",
+        "coverage>=7.10.0; extra == \"all\""
+      ],
+      "verification": "wheel SHA-256 and extracted license files verified",
+      "notes": null
+    },
+    {
+      "name": "life360",
+      "version": "7.2.0",
+      "manifest_direct": true,
+      "distribution_relation": "fetched dependency, absent from HomeCircle release ZIP",
+      "pypi_metadata_url": "https://pypi.org/pypi/life360/7.2.0/json",
+      "metadata_sha256": "c872ba83bc4a962cbd4b2b7d7c69e88e08365d69754fb259ee18fa0b8d1889a7",
+      "upstream_origin": "https://github.com/pnbruckner/life360",
+      "metadata_license_expression": null,
+      "metadata_license_text": null,
+      "metadata_license_classifiers": [
+        "License :: OSI Approved :: MIT License"
+      ],
+      "license_assessment_from_artifacts": "MIT",
+      "wheel": {
+        "artifact": "life360-7.2.0-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/36/c9/fdf58d9b78825a4f39f9941e6a680e37d6d1029e81f7c058f8f56f16b38a/life360-7.2.0-py3-none-any.whl",
+        "sha256": "b2032170a34771534e77c4f8d348a343ae102b9246cc00d1a9f4b0d4f03bb217",
+        "bytes": 7931,
+        "not_identified_as_exact_installed_artifact": true,
+        "notice_metadata_files": [
+          {
+            "path": "life360-7.2.0.dist-info/licenses/LICENSE",
+            "sha256": "b06ac0d102a28204e52addaa7709f8c502fedeed06214151b3679ab757246070",
+            "bytes": 1068
+          },
+          {
+            "path": "life360-7.2.0.dist-info/METADATA",
+            "sha256": "071ef46ebe2ddccf9c50d5fe32db2b385f4cdc01f01a02da33078e6dd44e6b60",
+            "bytes": 1207
+          }
+        ]
+      },
+      "requires_dist_unresolved_with_markers": [
+        "aiohttp"
+      ],
+      "verification": "wheel SHA-256 and extracted license files verified",
+      "notes": null
+    },
+    {
+      "name": "multidict",
+      "version": "7.1.0",
+      "manifest_direct": false,
+      "distribution_relation": "fetched dependency, absent from HomeCircle release ZIP",
+      "pypi_metadata_url": "https://pypi.org/pypi/multidict/7.1.0/json",
+      "metadata_sha256": "88c3e0e2b3739fdd6797eed7b4b47cf7d49f494dd5aac9fd775f23fdafaf6f09",
+      "upstream_origin": "https://github.com/aio-libs/multidict",
+      "metadata_license_expression": "Apache-2.0",
+      "metadata_license_text": null,
+      "metadata_license_classifiers": [
+
+      ],
+      "license_assessment_from_artifacts": "Apache-2.0",
+      "wheel": {
+        "artifact": "multidict-7.1.0-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+        "url": "https://files.pythonhosted.org/packages/87/58/de62e27b09dd15756265765945f68f1c0d1e23eaba09e2e109fbb4112425/multidict-7.1.0-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+        "sha256": "33389fe084e5426d9fd85d7d9ca91a29cd0d88a83c7c96e411aca49a3f9967bc",
+        "bytes": 474883,
+        "not_identified_as_exact_installed_artifact": true,
+        "notice_metadata_files": [
+          {
+            "path": "multidict-7.1.0.dist-info/METADATA",
+            "sha256": "fe2db435bc86c7e62a42cc1f5b0c0650ba4fd1b05a420413f14085f8a3730e62",
+            "bytes": 6195
+          },
+          {
+            "path": "multidict-7.1.0.dist-info/licenses/LICENSE",
+            "sha256": "2e4be5fc6c4c72a466fcb665d726e049a6891981fe536c4f04b6366749461d23",
+            "bytes": 11313
+          }
+        ]
+      },
+      "requires_dist_unresolved_with_markers": [
+        "typing-extensions>=4.1.0; python_version < \"3.11\""
+      ],
+      "verification": "wheel SHA-256 and extracted license files verified",
+      "notes": null
+    },
+    {
+      "name": "propcache",
+      "version": "0.5.4",
+      "manifest_direct": false,
+      "distribution_relation": "fetched dependency, absent from HomeCircle release ZIP",
+      "pypi_metadata_url": "https://pypi.org/pypi/propcache/0.5.4/json",
+      "metadata_sha256": "253a90067f5c44ffec37f3f1081934c91fb60edda0dc1e9bdf805edc8cecf693",
+      "upstream_origin": "https://github.com/aio-libs/propcache",
+      "metadata_license_expression": null,
+      "metadata_license_text": "Apache-2.0",
+      "metadata_license_classifiers": [
+
+      ],
+      "license_assessment_from_artifacts": "Apache-2.0",
+      "wheel": {
+        "artifact": "propcache-0.5.4-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+        "url": "https://files.pythonhosted.org/packages/96/d3/e97cd6f5de2176bd90ed4076c7a9b5e09d0f0b9687d00a576507988bb62c/propcache-0.5.4-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+        "sha256": "cc07876cfb079b6f6f36d21ce75784ad6c2c6b563eeac0ed26c2fa2669b85df9",
+        "bytes": 232757,
+        "not_identified_as_exact_installed_artifact": true,
+        "notice_metadata_files": [
+          {
+            "path": "propcache-0.5.4.dist-info/METADATA",
+            "sha256": "6ed3bac0ad43050ceaf8bd09878ba3d673c94c4da0d4498f903f86c36cc6fb57",
+            "bytes": 25227
+          },
+          {
+            "path": "propcache-0.5.4.dist-info/licenses/LICENSE",
+            "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+            "bytes": 11358
+          },
+          {
+            "path": "propcache-0.5.4.dist-info/licenses/NOTICE",
+            "sha256": "56d6ac6c8105c0a51304c21db060e361af9a8ea0af9a75c239c28b5d13693838",
+            "bytes": 609
+          }
+        ]
+      },
+      "requires_dist_unresolved_with_markers": [
+
+      ],
+      "verification": "wheel SHA-256 and extracted license files verified",
+      "notes": null
+    },
+    {
+      "name": "protobuf",
+      "version": "7.36.0",
+      "manifest_direct": true,
+      "distribution_relation": "fetched dependency, absent from HomeCircle release ZIP",
+      "pypi_metadata_url": "https://pypi.org/pypi/protobuf/7.36.0/json",
+      "metadata_sha256": "e802012c6a35ed6368837033aa21f0a8914b288a4a77bba2e7d957f53d263a66",
+      "upstream_origin": "https://github.com/protocolbuffers/protobuf",
+      "metadata_license_expression": null,
+      "metadata_license_text": "3-Clause BSD License",
+      "metadata_license_classifiers": [
+
+      ],
+      "license_assessment_from_artifacts": "BSD-3-Clause",
+      "wheel": {
+        "artifact": "protobuf-7.36.0-cp310-abi3-manylinux2014_x86_64.whl",
+        "url": "https://files.pythonhosted.org/packages/c7/f8/bd5804695ba400e423c33fd4d9f58c28d86633d5ba1945c36ff3967d98cb/protobuf-7.36.0-cp310-abi3-manylinux2014_x86_64.whl",
+        "sha256": "70f5ec8eb0da81a44360c0dc0beac99a0d78071d21956a7076bae8bd2051841b",
+        "bytes": 340439,
+        "not_identified_as_exact_installed_artifact": true,
+        "notice_metadata_files": [
+          {
+            "path": "protobuf-7.36.0.dist-info/METADATA",
+            "sha256": "a318aecdc5dbf73e6fa1377b1c3b7b8e3e439e17ebeb4cb37357c2eb6a2ef182",
+            "bytes": 595
+          },
+          {
+            "path": "protobuf-7.36.0.dist-info/LICENSE",
+            "sha256": "6e5e117324afd944dcf67f36cf329843bc1a92229a8cd9bb573d7a83130fea7d",
+            "bytes": 1732
+          }
+        ]
+      },
+      "requires_dist_unresolved_with_markers": [
+
+      ],
+      "verification": "wheel SHA-256 and extracted license files verified",
+      "notes": null
+    },
+    {
+      "name": "pyelftools",
+      "version": "0.33",
+      "manifest_direct": false,
+      "distribution_relation": "fetched dependency, absent from HomeCircle release ZIP",
+      "pypi_metadata_url": "https://pypi.org/pypi/pyelftools/0.33/json",
+      "metadata_sha256": "7a41fff6e4d00a1729c127e902987d05c57fe50dd29412bedc9b7fd18be258bb",
+      "upstream_origin": "https://github.com/eliben/pyelftools.git",
+      "metadata_license_expression": null,
+      "metadata_license_text": "Public domain",
+      "metadata_license_classifiers": [
+        "License :: Public Domain"
+      ],
+      "license_assessment_from_artifacts": "Unlicense/public-domain core; MIT vendored Construct",
+      "wheel": {
+        "artifact": "pyelftools-0.33-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/46/2a/f9697576603dae937727827505a6126a066affb227034e77e6f9068910da/pyelftools-0.33-py3-none-any.whl",
+        "sha256": "f215ad5f47d3f1373a21496a6c9e0707c622840d0622f23ff7ce08678b020036",
+        "bytes": 201178,
+        "not_identified_as_exact_installed_artifact": true,
+        "notice_metadata_files": [
+          {
+            "path": "pyelftools-0.33.dist-info/licenses/LICENSE",
+            "sha256": "ae18bf4cb82f92af7547259177bc28bc48e4fc732518bcedfe690226288d3445",
+            "bytes": 1534
+          },
+          {
+            "path": "pyelftools-0.33.dist-info/METADATA",
+            "sha256": "dbbb739509c795b8b7e700057880a88365218bb1c7216b198a22c97c8aedce62",
+            "bytes": 1003
+          }
+        ]
+      },
+      "requires_dist_unresolved_with_markers": [
+
+      ],
+      "verification": "wheel SHA-256 and extracted license files verified",
+      "notes": "Wheel core license identifies vendored Construct but its referenced Construct MIT license is absent. Official v0.33 Construct license retained separately in evidence. Resolution remains open."
+    },
+    {
+      "name": "setuptools",
+      "version": "84.0.0",
+      "manifest_direct": false,
+      "distribution_relation": "fetched dependency, absent from HomeCircle release ZIP",
+      "pypi_metadata_url": "https://pypi.org/pypi/setuptools/84.0.0/json",
+      "metadata_sha256": "5356f851df679fe3c2a81430e5df5140b826bc58c335eaa562a7a8c95b7d8245",
+      "upstream_origin": "https://github.com/pypa/setuptools",
+      "metadata_license_expression": "MIT",
+      "metadata_license_text": null,
+      "metadata_license_classifiers": [
+
+      ],
+      "license_assessment_from_artifacts": "MIT core; vendored code also Apache-2.0, BSD-2-Clause, BSD-3-Clause, MPL-2.0",
+      "wheel": {
+        "artifact": "setuptools-84.0.0-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/95/9c/c510029fc6ef33a6275cd2c5d3cecd6613dfd6aa401d57c54f1c18852ccf/setuptools-84.0.0-py3-none-any.whl",
+        "sha256": "51a52592b3b99e102b609654876bd65f19f999935166d1352678931132b0c670",
+        "bytes": 818216,
+        "not_identified_as_exact_installed_artifact": true,
+        "notice_metadata_files": [
+          {
+            "path": "setuptools/_vendor/importlib_metadata-8.7.1.dist-info/licenses/LICENSE",
+            "sha256": "458502e12d97bbf64438606a20044aa85eb05fb0a8a807bb35dbec253fd1fc04",
+            "bytes": 10278
+          },
+          {
+            "path": "setuptools/_vendor/jaraco_context-6.1.0.dist-info/licenses/LICENSE",
+            "sha256": "9755a18519666e5f0f4cae3daad3d7012bcae48a600b31237d75e9fe134e6683",
+            "bytes": 1076
+          },
+          {
+            "path": "setuptools/_vendor/jaraco_functools-4.4.0.dist-info/licenses/LICENSE",
+            "sha256": "5a57cb4db85e2a2dd88c290628908add57e3451449e0a9a71fdfb38776fd759d",
+            "bytes": 1076
+          },
+          {
+            "path": "setuptools/_vendor/more_itertools-10.8.0.dist-info/licenses/LICENSE",
+            "sha256": "09f1c8c9e941af3e584d59641ea9b87d83c0cb0fd007eb5ef391a7e2643c1a46",
+            "bytes": 1053
+          },
+          {
+            "path": "setuptools/_vendor/packaging/metadata.py",
+            "sha256": "096559a4dfc77e860c4920ee08fee280ebc682a03d00e9a95bc7f7a938ac7e77",
+            "bytes": 39360
+          },
+          {
+            "path": "setuptools/_vendor/packaging-26.0.dist-info/licenses/LICENSE",
+            "sha256": "cad1ef5bd340d73e074ba614d26f7deaca5c7940c3d8c34852e65c4909686c48",
+            "bytes": 197
+          },
+          {
+            "path": "setuptools/_vendor/packaging-26.0.dist-info/licenses/LICENSE.APACHE",
+            "sha256": "0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594",
+            "bytes": 10174
+          },
+          {
+            "path": "setuptools/_vendor/packaging-26.0.dist-info/licenses/LICENSE.BSD",
+            "sha256": "b70e7e9b742f1cc6f948b34c16aa39ffece94196364bc88ff0d2180f0028fac5",
+            "bytes": 1344
+          },
+          {
+            "path": "setuptools/_vendor/platformdirs-4.4.0.dist-info/licenses/LICENSE",
+            "sha256": "29e0fd62e929850e86eb28c3fdccf0cefdf4fa94879011cffb3d0d4bed6d4db6",
+            "bytes": 1089
+          },
+          {
+            "path": "setuptools/_vendor/tomli-2.4.0.dist-info/licenses/LICENSE",
+            "sha256": "b80816b0d530b8accb4c2211783790984a6e3b61922c2b5ee92f3372ab2742fe",
+            "bytes": 1072
+          },
+          {
+            "path": "setuptools/_vendor/wheel/metadata.py",
+            "sha256": "1a49ce3bb2498993257047bf7e20fb9ea9c34d32ddd2c5fff88822a4ce0bdfee",
+            "bytes": 757
+          },
+          {
+            "path": "setuptools/_vendor/wheel-0.46.3.dist-info/licenses/LICENSE.txt",
+            "sha256": "30c23618679108f3e8ea1d2a658c7ca417bdfc891c98ef1a89fa4ff0c9828654",
+            "bytes": 1107
+          },
+          {
+            "path": "setuptools/_vendor/zipp-3.23.0.dist-info/licenses/LICENSE",
+            "sha256": "5a57cb4db85e2a2dd88c290628908add57e3451449e0a9a71fdfb38776fd759d",
+            "bytes": 1076
+          },
+          {
+            "path": "setuptools/config/NOTICE",
+            "sha256": "2dddf08818297a3b89d43d95ff659d8da85741108c9136dfa3a4d856c0623bd8",
+            "bytes": 493
+          },
+          {
+            "path": "setuptools/config/_validate_pyproject/NOTICE",
+            "sha256": "09c9bcea95ca086f8bc5bed174e40bc835b297d40fb5f86bbbb570fe0a5581a7",
+            "bytes": 18737
+          },
+          {
+            "path": "setuptools-84.0.0.dist-info/licenses/LICENSE",
+            "sha256": "86da0f01aeae46348a3c3d465195dc1ceccde79f79e87769a64b8da04b2a4741",
+            "bytes": 1023
+          },
+          {
+            "path": "setuptools-84.0.0.dist-info/METADATA",
+            "sha256": "3ef2975718dd31cabdd5829455e9b868ca14dbf79ed8fed2de0af4e87347006e",
+            "bytes": 6581
+          },
+          {
+            "path": "setuptools/_vendor/autocommand-2.2.2.dist-info/LICENSE",
+            "sha256": "ade78d04982d69972d444a8e14a94f87a2334dd3855cc80348ea8e240aa0df2d",
+            "bytes": 7634
+          },
+          {
+            "path": "setuptools/_vendor/autocommand-2.2.2.dist-info/METADATA",
+            "sha256": "3800d9b91dceea2065a6ed6279383362e97ac38b8e56b9343f404ee531860099",
+            "bytes": 15006
+          },
+          {
+            "path": "setuptools/_vendor/backports.tarfile-1.2.0.dist-info/LICENSE",
+            "sha256": "86da0f01aeae46348a3c3d465195dc1ceccde79f79e87769a64b8da04b2a4741",
+            "bytes": 1023
+          },
+          {
+            "path": "setuptools/_vendor/backports.tarfile-1.2.0.dist-info/METADATA",
+            "sha256": "8215c54ead77d9dc5a108a25c6bdc72b5999aa6f62c9499a440359412afa5a51",
+            "bytes": 2020
+          },
+          {
+            "path": "setuptools/_vendor/importlib_metadata-8.7.1.dist-info/METADATA",
+            "sha256": "a3e38b9ee4326289d4864704f30e299ee769e2309ce9f4a75f0de1a50ad0a356",
+            "bytes": 4670
+          },
+          {
+            "path": "setuptools/_vendor/jaraco.text-4.0.0.dist-info/LICENSE",
+            "sha256": "86da0f01aeae46348a3c3d465195dc1ceccde79f79e87769a64b8da04b2a4741",
+            "bytes": 1023
+          },
+          {
+            "path": "setuptools/_vendor/jaraco.text-4.0.0.dist-info/METADATA",
+            "sha256": "5c2fd09012c954f139b10624978d5335a654c34014cd06f6f466ca683dbc9c56",
+            "bytes": 3731
+          },
+          {
+            "path": "setuptools/_vendor/jaraco_context-6.1.0.dist-info/METADATA",
+            "sha256": "0435ebfc52055c5a9974ed20c171b6454383eaf9dbb1508814ba7ad97c59d712",
+            "bytes": 4270
+          },
+          {
+            "path": "setuptools/_vendor/jaraco_functools-4.4.0.dist-info/METADATA",
+            "sha256": "2e79da8dc3469924abe3ac8b22a3feb5692a79bf9f47bbc86b6535d618641849",
+            "bytes": 2960
+          },
+          {
+            "path": "setuptools/_vendor/more_itertools-10.8.0.dist-info/METADATA",
+            "sha256": "6ab3515145abe58b067f087c867631cf4cf5d653fed81b9642ee12086c3904b8",
+            "bytes": 39413
+          },
+          {
+            "path": "setuptools/_vendor/packaging-26.0.dist-info/METADATA",
+            "sha256": "3362bb7d6a26da2962ba8daaa4785cd0bacac21aba908a1195cc8f59580a265a",
+            "bytes": 3309
+          },
+          {
+            "path": "setuptools/_vendor/platformdirs-4.4.0.dist-info/METADATA",
+            "sha256": "bbc5216d5f4c77bfbc57227264d52e66bccde71ccf79e75e1a6046d029d30223",
+            "bytes": 12831
+          },
+          {
+            "path": "setuptools/_vendor/tomli-2.4.0.dist-info/METADATA",
+            "sha256": "f5ac0a1f8fba908b4646cd655309e91aad969b6787616ac571ca462a3832ffce",
+            "bytes": 10567
+          },
+          {
+            "path": "setuptools/_vendor/wheel-0.46.3.dist-info/METADATA",
+            "sha256": "22910aa97ca89cbcc20a019e27fe31360b7929a4bd66ca0d310f99a44f6ccd35",
+            "bytes": 2410
+          },
+          {
+            "path": "setuptools/_vendor/zipp-3.23.0.dist-info/METADATA",
+            "sha256": "bdd67d4d16cf0bf3b893e7d18cd3d2d774adb82f37ed985bc7770c607226b35b",
+            "bytes": 3563
+          }
+        ]
+      },
+      "requires_dist_unresolved_with_markers": [
+        "pytest!=8.1.*,>=6; extra == \"test\"",
+        "virtualenv>=13.0.0; extra == \"test\"",
+        "wheel>=0.44.0; extra == \"test\"",
+        "pip>=19.1; extra == \"test\"",
+        "packaging>=24.2; extra == \"test\"",
+        "jaraco.envs>=2.2; extra == \"test\"",
+        "pytest-xdist>=3; extra == \"test\"",
+        "jaraco.path>=3.7.2; extra == \"test\"",
+        "build[virtualenv]>=1.0.3; extra == \"test\"",
+        "filelock>=3.4.0; extra == \"test\"",
+        "ini2toml[lite]>=0.14; extra == \"test\"",
+        "tomli-w>=1.0.0; extra == \"test\"",
+        "pytest-timeout; extra == \"test\"",
+        "pytest-perf; sys_platform != \"cygwin\" and extra == \"test\"",
+        "jaraco.develop>=7.21; (python_version >= \"3.9\" and sys_platform != \"cygwin\") and extra == \"test\"",
+        "pytest-home>=0.5; extra == \"test\"",
+        "pytest-subprocess; extra == \"test\"",
+        "pyproject-hooks!=1.1; extra == \"test\"",
+        "jaraco.test>=5.5; extra == \"test\"",
+        "sphinx>=3.5; extra == \"doc\"",
+        "jaraco.packaging>=9.3; extra == \"doc\"",
+        "rst.linker>=1.9; extra == \"doc\"",
+        "furo; extra == \"doc\"",
+        "sphinx-lint; extra == \"doc\"",
+        "jaraco.tidelift>=1.4; extra == \"doc\"",
+        "pygments-github-lexers==0.0.5; extra == \"doc\"",
+        "sphinx-favicon; extra == \"doc\"",
+        "sphinx-inline-tabs; extra == \"doc\"",
+        "sphinx-reredirects; extra == \"doc\"",
+        "sphinxcontrib-towncrier; extra == \"doc\"",
+        "sphinx-notfound-page<2,>=1; extra == \"doc\"",
+        "pyproject-hooks!=1.1; extra == \"doc\"",
+        "towncrier<24.7; extra == \"doc\"",
+        "packaging>=24.2; extra == \"core\"",
+        "more_itertools>=8.8; extra == \"core\"",
+        "jaraco.text>=3.7; extra == \"core\"",
+        "importlib_metadata>=6; python_version < \"3.10\" and extra == \"core\"",
+        "tomli>=2.0.1; python_version < \"3.11\" and extra == \"core\"",
+        "wheel>=0.43.0; extra == \"core\"",
+        "jaraco.functools>=4; extra == \"core\"",
+        "more_itertools; extra == \"core\"",
+        "pytest-checkdocs>=2.14; extra == \"check\"",
+        "pytest-ruff>=0.2.1; sys_platform != \"cygwin\" and extra == \"check\"",
+        "ruff>=0.13.0; sys_platform != \"cygwin\" and extra == \"check\"",
+        "pytest-cov; extra == \"cover\"",
+        "pytest-enabler>=3.4; extra == \"enabler\"",
+        "pytest-mypy>=1.0.1; platform_python_implementation != \"PyPy\" and extra == \"type\"",
+        "mypy==1.18.*; extra == \"type\"",
+        "importlib_metadata>=7.0.2; python_version < \"3.10\" and extra == \"type\"",
+        "jaraco.develop>=7.21; sys_platform != \"cygwin\" and extra == \"type\""
+      ],
+      "verification": "wheel SHA-256 and extracted license files verified",
+      "notes": "Present through fs runtime dependency, not only a local build tool. Wheel retains nested vendor license files and config notices, including validate-pyproject MPL and fastjsonschema BSD. This inventory is not a complete separate SBOM of those nested sources."
+    },
+    {
+      "name": "six",
+      "version": "1.17.0",
+      "manifest_direct": false,
+      "distribution_relation": "fetched dependency, absent from HomeCircle release ZIP",
+      "pypi_metadata_url": "https://pypi.org/pypi/six/1.17.0/json",
+      "metadata_sha256": "d8de39dd52b73048d81a8fd78022ee2bc72f8b568bcf0d88e5d5069c302b1208",
+      "upstream_origin": "https://github.com/benjaminp/six",
+      "metadata_license_expression": null,
+      "metadata_license_text": "MIT",
+      "metadata_license_classifiers": [
+        "License :: OSI Approved :: MIT License"
+      ],
+      "license_assessment_from_artifacts": "MIT",
+      "wheel": {
+        "artifact": "six-1.17.0-py2.py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/b7/ce/149a00dd41f10bc29e5921b496af8b574d8413afcd5e30dfa0ed46c2cc5e/six-1.17.0-py2.py3-none-any.whl",
+        "sha256": "4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274",
+        "bytes": 11050,
+        "not_identified_as_exact_installed_artifact": true,
+        "notice_metadata_files": [
+          {
+            "path": "six-1.17.0.dist-info/LICENSE",
+            "sha256": "4375ba20e2b9c6c4e7cad2940a628fd90e95cc3d50ee92aae755715d8ba1fbd0",
+            "bytes": 1066
+          },
+          {
+            "path": "six-1.17.0.dist-info/METADATA",
+            "sha256": "562042078c2752549f6d8a7c86dbc5dd708088a7be6d80672ec7b07100b72468",
+            "bytes": 1658
+          }
+        ]
+      },
+      "requires_dist_unresolved_with_markers": [
+
+      ],
+      "verification": "wheel SHA-256 and extracted license files verified",
+      "notes": null
+    },
+    {
+      "name": "soupsieve",
+      "version": "3.0.3",
+      "manifest_direct": false,
+      "distribution_relation": "fetched dependency, absent from HomeCircle release ZIP",
+      "pypi_metadata_url": "https://pypi.org/pypi/soupsieve/3.0.3/json",
+      "metadata_sha256": "618f359953d455a34ce0cb59df0206010a74c652ccfe4a9264d49a1a857ac47f",
+      "upstream_origin": "https://github.com/facelessuser/soupsieve",
+      "metadata_license_expression": "MIT",
+      "metadata_license_text": null,
+      "metadata_license_classifiers": [
+        "License :: OSI Approved :: MIT License"
+      ],
+      "license_assessment_from_artifacts": "MIT",
+      "wheel": {
+        "artifact": "soupsieve-3.0.3-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/49/ca/f639c80449997b88aba7bc9705d25dd76cc0844f45f187862fd8f8bb18fa/soupsieve-3.0.3-py3-none-any.whl",
+        "sha256": "fa30e3ba4809cb81ce1f3209f2fbe3e779fc445f0439bc147a0d7c4601743f21",
+        "bytes": 41705,
+        "not_identified_as_exact_installed_artifact": true,
+        "notice_metadata_files": [
+          {
+            "path": "soupsieve-3.0.3.dist-info/METADATA",
+            "sha256": "f76db712b0fadfee975fb519a46cc7f7b92979dc0ca297004fffc97b0a1f5f7c",
+            "bytes": 4389
+          },
+          {
+            "path": "soupsieve-3.0.3.dist-info/licenses/LICENSE.md",
+            "sha256": "76a0acdb98c3a63681e20b6f096699ef8cad5fb35d56eef8387e0fa71d797a9a",
+            "bytes": 1096
+          }
+        ]
+      },
+      "requires_dist_unresolved_with_markers": [
+
+      ],
+      "verification": "wheel SHA-256 and extracted license files verified",
+      "notes": null
+    },
+    {
+      "name": "srp",
+      "version": "1.0.22",
+      "manifest_direct": true,
+      "distribution_relation": "fetched dependency, absent from HomeCircle release ZIP",
+      "pypi_metadata_url": "https://pypi.org/pypi/srp/1.0.22/json",
+      "metadata_sha256": "d23761a140bcfa9a8f41c05260eb453ffc743df12d017ba17106b7fc959a83e1",
+      "upstream_origin": "https://github.com/cocagne/pysrp",
+      "metadata_license_expression": null,
+      "metadata_license_text": "MIT",
+      "metadata_license_classifiers": [
+        "License :: OSI Approved :: BSD License"
+      ],
+      "license_assessment_from_artifacts": "MIT",
+      "wheel": {
+        "artifact": "srp-1.0.22-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/89/75/5352c3ebd26e7d119042ae8de07354435a19c77fa2b44058fa97a1416783/srp-1.0.22-py3-none-any.whl",
+        "sha256": "35aa8af053285a35683eb37182dcb2e46dbd85c7075d28e139f200d6bf16ea43",
+        "bytes": 25347,
+        "not_identified_as_exact_installed_artifact": true,
+        "notice_metadata_files": [
+          {
+            "path": "srp-1.0.22.dist-info/LICENSE",
+            "sha256": "3717bd0aaf73e3ec56ee6b03a338cea487d5f8bc6e73108bc83a476ee4f84495",
+            "bytes": 1078
+          },
+          {
+            "path": "srp-1.0.22.dist-info/METADATA",
+            "sha256": "ff1ac0a6d6f241348843ab83af8233d3b1e42a9a70a20e65012619a23b240b0d",
+            "bytes": 1890
+          }
+        ]
+      },
+      "requires_dist_unresolved_with_markers": [
+        "six"
+      ],
+      "verification": "wheel SHA-256 and extracted license files verified",
+      "notes": "PyPI BSD classifier conflicts with MIT license text. Actual wheel LICENSE is MIT, copyright Tom Cocagne."
+    },
+    {
+      "name": "typing-extensions",
+      "version": "4.16.0",
+      "manifest_direct": false,
+      "distribution_relation": "fetched dependency, absent from HomeCircle release ZIP",
+      "pypi_metadata_url": "https://pypi.org/pypi/typing-extensions/4.16.0/json",
+      "metadata_sha256": "2140da00d62dde967f52d0be0ae28444f1d6a3fe603f52c83c23988c32122d5a",
+      "upstream_origin": "https://github.com/python/typing_extensions",
+      "metadata_license_expression": "PSF-2.0",
+      "metadata_license_text": null,
+      "metadata_license_classifiers": [
+
+      ],
+      "license_assessment_from_artifacts": "PSF-2.0",
+      "wheel": {
+        "artifact": "typing_extensions-4.16.0-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/49/d3/b8441a820a491ddfc024b0b0cf0393375b75ea13866d9c66727e54c2fc80/typing_extensions-4.16.0-py3-none-any.whl",
+        "sha256": "481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8",
+        "bytes": 45571,
+        "not_identified_as_exact_installed_artifact": true,
+        "notice_metadata_files": [
+          {
+            "path": "typing_extensions-4.16.0.dist-info/licenses/LICENSE",
+            "sha256": "3b2f81fe21d181c499c59a256c8e1968455d6689d269aa85373bfb6af41da3bf",
+            "bytes": 13936
+          },
+          {
+            "path": "typing_extensions-4.16.0.dist-info/METADATA",
+            "sha256": "b05084ca1d50879865178d9fff9fabeab61bdfb1f361bfbde95421ffc8f9be46",
+            "bytes": 3310
+          }
+        ]
+      },
+      "requires_dist_unresolved_with_markers": [
+
+      ],
+      "verification": "wheel SHA-256 and extracted license files verified",
+      "notes": null
+    },
+    {
+      "name": "unicorn",
+      "version": "2.1.4",
+      "manifest_direct": true,
+      "distribution_relation": "fetched dependency, absent from HomeCircle release ZIP",
+      "pypi_metadata_url": "https://pypi.org/pypi/unicorn/2.1.4/json",
+      "metadata_sha256": "02753d1bf6ccbc6f3386347bb118a21e061f88a7ff8b8fe3f97e4a9d873a0ac1",
+      "upstream_origin": "https://github.com/unicorn-engine/unicorn",
+      "metadata_license_expression": null,
+      "metadata_license_text": "BSD License",
+      "metadata_license_classifiers": [
+        "License :: OSI Approved :: BSD License"
+      ],
+      "license_assessment_from_artifacts": "BSD-declared Python bindings; GPLv2 native core; distribution assessment open",
+      "wheel": {
+        "artifact": "unicorn-2.1.4-cp37-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+        "url": "https://files.pythonhosted.org/packages/e7/df/ded5e3684c2d7600b30cc8a7530277b8cb36644a1a9d34cade7ebb45604c/unicorn-2.1.4-cp37-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+        "sha256": "9d6e6dea140560de4ebd8446661f7ef84a357d428c14a3ef09dacd306ec8c239",
+        "bytes": 16436886,
+        "not_identified_as_exact_installed_artifact": true,
+        "notice_metadata_files": [
+          {
+            "path": "unicorn-2.1.4.dist-info/METADATA",
+            "sha256": "ce96de4160dc06c1bbcf35074cb542c9f296219f740aa0f34606f8837650c2e8",
+            "bytes": 4246
+          }
+        ]
+      },
+      "requires_dist_unresolved_with_markers": [
+        "importlib-resources; python_version < \"3.9\"",
+        "capstone==5.0.1; python_version <= \"3.7\" and extra == \"test\"",
+        "capstone==6.0.0a2; python_version > \"3.7\" and extra == \"test\""
+      ],
+      "verification": "wheel bytes and active native-library fingerprint verified; missing wheel notice files",
+      "notes": "Wheel has no LICENSE/COPYING/NOTICE member; contains native shared/static libraries. Extracted shared-library hash matches the exact native library in the actual glibc CI receipt. GPL source/notice/combined-work assessment remains open; HomeCircle ZIP redistributes neither wheel nor library."
+    },
+    {
+      "name": "urllib3",
+      "version": "2.8.0",
+      "manifest_direct": false,
+      "distribution_relation": "fetched dependency, absent from HomeCircle release ZIP",
+      "pypi_metadata_url": "https://pypi.org/pypi/urllib3/2.8.0/json",
+      "metadata_sha256": "5315e7401db3cacccd0c2ce5daf81f752a9cc3614b18c37f2b79930b7159ce2f",
+      "upstream_origin": "https://github.com/urllib3/urllib3",
+      "metadata_license_expression": "MIT",
+      "metadata_license_text": null,
+      "metadata_license_classifiers": [
+
+      ],
+      "license_assessment_from_artifacts": "MIT",
+      "wheel": {
+        "artifact": "urllib3-2.8.0-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/92/9d/c4e665119135114480843e7ab388fa94d8480650450e6f8e26b70d323a4c/urllib3-2.8.0-py3-none-any.whl",
+        "sha256": "0cf3cae568d36aa9576b28dfb35f11328f1cb974ca7647d9475ebb86c75ac6e3",
+        "bytes": 135717,
+        "not_identified_as_exact_installed_artifact": true,
+        "notice_metadata_files": [
+          {
+            "path": "urllib3-2.8.0.dist-info/METADATA",
+            "sha256": "10898c620e8007c030e07fa5622b68358a43010025dfbd78a1cb797699de2bb4",
+            "bytes": 7389
+          },
+          {
+            "path": "urllib3-2.8.0.dist-info/licenses/LICENSE.txt",
+            "sha256": "130e3a64d5fdd5d096a752694634a7d9df284469de86e5732100268041e3d686",
+            "bytes": 1093
+          }
+        ]
+      },
+      "requires_dist_unresolved_with_markers": [
+        "brotli>=1.2.0; platform_python_implementation == \"CPython\" and extra == \"brotli\"",
+        "brotlicffi>=1.2.0.0; platform_python_implementation != \"CPython\" and extra == \"brotli\"",
+        "h2<5,>=4; extra == \"h2\"",
+        "pysocks!=1.5.7,<2.0,>=1.5.6; extra == \"socks\"",
+        "backports-zstd>=1.0.0; python_version < \"3.14\" and extra == \"zstd\""
+      ],
+      "verification": "wheel SHA-256 and extracted license files verified",
+      "notes": null
+    },
+    {
+      "name": "yarl",
+      "version": "1.25.1",
+      "manifest_direct": false,
+      "distribution_relation": "fetched dependency, absent from HomeCircle release ZIP",
+      "pypi_metadata_url": "https://pypi.org/pypi/yarl/1.25.1/json",
+      "metadata_sha256": "a07cf3b564a15e3be66faacf0c81a23497ebfbf1ec849a3a77b494ba4b60cf0f",
+      "upstream_origin": "https://github.com/aio-libs/yarl",
+      "metadata_license_expression": null,
+      "metadata_license_text": "Apache-2.0",
+      "metadata_license_classifiers": [
+
+      ],
+      "license_assessment_from_artifacts": "Apache-2.0",
+      "wheel": {
+        "artifact": "yarl-1.25.1-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+        "url": "https://files.pythonhosted.org/packages/a2/be/415b00c0fe5a0615b062a456b26623d7ec91c2bee20faea1a14045aa0469/yarl-1.25.1-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+        "sha256": "30eec96e8a91bd588ce897c9543f6d5d8d34b28fbcba28a4dedf20ebeae9fe57",
+        "bytes": 117199,
+        "not_identified_as_exact_installed_artifact": true,
+        "notice_metadata_files": [
+          {
+            "path": "yarl-1.25.1.dist-info/METADATA",
+            "sha256": "fd6baa258a11c4d7e7008272a69180d4d34aa04a6a5afda36ac5e55aa0aa4f41",
+            "bytes": 111629
+          },
+          {
+            "path": "yarl-1.25.1.dist-info/licenses/LICENSE",
+            "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+            "bytes": 11358
+          },
+          {
+            "path": "yarl-1.25.1.dist-info/licenses/NOTICE",
+            "sha256": "56d6ac6c8105c0a51304c21db060e361af9a8ea0af9a75c239c28b5d13693838",
+            "bytes": 609
+          }
+        ]
+      },
+      "requires_dist_unresolved_with_markers": [
+        "idna>=2.0",
+        "multidict>=4.0",
+        "propcache>=0.2.1"
+      ],
+      "verification": "wheel SHA-256 and extracted license files verified",
+      "notes": null
+    }
+  ],
+  "installed_artifact_limitation": "CI receipt identifies versions, not full wheel hashes. Inspected exact-version compatible wheels are independently fetched primary artifacts, not claimed to be each exact installed wheel; Unicorn native .so is additionally byte-matched to CI.",
+  "findmy_online_validation_reference": {
+    "name": "findmy",
+    "version": "0.10.2",
+    "not_manifest_requirement": true,
+    "not_part_of_24_distribution_closure": true,
+    "production_source": "_vendor_findmy at recorded FindMy.py source revision, not an installed findmy wheel"
+  },
+  "frontend": {
+    "bundled_runtime": [
+      "leaflet@1.9.4"
+    ],
+    "direct_build_test_tools": [
+      "esbuild@0.25.10",
+      "jsdom@26.1.0",
+      "prettier@3.6.2"
+    ],
+    "locked_non_root_packages": 68,
+    "locked_dev_packages": 67,
+    "lock_file_sha256": "0c2646f966331f71c80161da154beb676fb1c751391cb317becc64df72940b40",
+    "lock_entries": [
+      {
+        "path": "node_modules/@asamuzakjp/css-color",
+        "version": "3.2.0",
+        "dev": true,
+        "metadata_license": "MIT",
+        "resolved": "https://registry.npmjs.org/@asamuzakjp/css-color/-/css-color-3.2.0.tgz",
+        "integrity": "sha512-K1A6z8tS3XsmCMM86xoWdn7Fkdn9m6RSVtocUrJYIwZnFVkng/PvkEoWtOWmP+Scc6saYWHWZYbndEEXxl24jw=="
+      },
+      {
+        "path": "node_modules/@csstools/color-helpers",
+        "version": "5.1.0",
+        "dev": true,
+        "metadata_license": "MIT-0",
+        "resolved": "https://registry.npmjs.org/@csstools/color-helpers/-/color-helpers-5.1.0.tgz",
+        "integrity": "sha512-S11EXWJyy0Mz5SYvRmY8nJYTFFd1LCNV+7cXyAgQtOOuzb4EsgfqDufL+9esx72/eLhsRdGZwaldu/h+E4t4BA=="
+      },
+      {
+        "path": "node_modules/@csstools/css-calc",
+        "version": "2.1.4",
+        "dev": true,
+        "metadata_license": "MIT",
+        "resolved": "https://registry.npmjs.org/@csstools/css-calc/-/css-calc-2.1.4.tgz",
+        "integrity": "sha512-3N8oaj+0juUw/1H3YwmDDJXCgTB1gKU6Hc/bB502u9zR0q2vd786XJH9QfrKIEgFlZmhZiq6epXl4rHqhzsIgQ=="
+      },
+      {
+        "path": "node_modules/@csstools/css-color-parser",
+        "version": "3.1.0",
+        "dev": true,
+        "metadata_license": "MIT",
+        "resolved": "https://registry.npmjs.org/@csstools/css-color-parser/-/css-color-parser-3.1.0.tgz",
+        "integrity": "sha512-nbtKwh3a6xNVIp/VRuXV64yTKnb1IjTAEEh3irzS+HkKjAOYLTGNb9pmVNntZ8iVBHcWDA2Dof0QtPgFI1BaTA=="
+      },
+      {
+        "path": "node_modules/@csstools/css-parser-algorithms",
+        "version": "3.0.5",
+        "dev": true,
+        "metadata_license": "MIT",
+        "resolved": "https://registry.npmjs.org/@csstools/css-parser-algorithms/-/css-parser-algorithms-3.0.5.tgz",
+        "integrity": "sha512-DaDeUkXZKjdGhgYaHNJTV9pV7Y9B3b644jCLs9Upc3VeNGg6LWARAT6O+Q+/COo+2gg/bM5rhpMAtf70WqfBdQ=="
+      },
+      {
+        "path": "node_modules/@csstools/css-tokenizer",
+        "version": "3.0.4",
+        "dev": true,
+        "metadata_license": "MIT",
+        "resolved": "https://registry.npmjs.org/@csstools/css-tokenizer/-/css-tokenizer-3.0.4.tgz",
+        "integrity": "sha512-Vd/9EVDiu6PPJt9yAh6roZP6El1xHrdvIVGjyBsHR0RYwNHgL7FJPyIIW4fANJNG6FtyZfvlRPpFI4ZM/lubvw=="
+      },
+      {
+        "path": "node_modules/@esbuild/aix-ppc64",
+        "version": "0.25.10",
+        "dev": true,
+        "metadata_license": "MIT",
+        "resolved": "https://registry.npmjs.org/@esbuild/aix-ppc64/-/aix-ppc64-0.25.10.tgz",
+        "integrity": "sha512-0NFWnA+7l41irNuaSVlLfgNT12caWJVLzp5eAVhZ0z1qpxbockccEt3s+149rE64VUI3Ml2zt8Nv5JVc4QXTsw=="
+      },
+      {
+        "path": "node_modules/@esbuild/android-arm",
+        "version": "0.25.10",
+        "dev": true,
+        "metadata_license": "MIT",
+        "resolved": "https://registry.npmjs.org/@esbuild/android-arm/-/android-arm-0.25.10.tgz",
+        "integrity": "sha512-dQAxF1dW1C3zpeCDc5KqIYuZ1tgAdRXNoZP7vkBIRtKZPYe2xVr/d3SkirklCHudW1B45tGiUlz2pUWDfbDD4w=="
+      },
+      {
+        "path": "node_modules/@esbuild/android-arm64",
+        "version": "0.25.10",
+        "dev": true,
+        "metadata_license": "MIT",
+        "resolved": "https://registry.npmjs.org/@esbuild/android-arm64/-/android-arm64-0.25.10.tgz",
+        "integrity": "sha512-LSQa7eDahypv/VO6WKohZGPSJDq5OVOo3UoFR1E4t4Gj1W7zEQMUhI+lo81H+DtB+kP+tDgBp+M4oNCwp6kffg=="
+      },
+      {
+        "path": "node_modules/@esbuild/android-x64",
+        "version": "0.25.10",
+        "dev": true,
+        "metadata_license": "MIT",
+        "resolved": "https://registry.npmjs.org/@esbuild/android-x64/-/android-x64-0.25.10.tgz",
+        "integrity": "sha512-MiC9CWdPrfhibcXwr39p9ha1x0lZJ9KaVfvzA0Wxwz9ETX4v5CHfF09bx935nHlhi+MxhA63dKRRQLiVgSUtEg=="
+      },
+      {
+        "path": "node_modules/@esbuild/darwin-arm64",
+        "version": "0.25.10",
+        "dev": true,
+        "metadata_license": "MIT",
+        "resolved": "https://registry.npmjs.org/@esbuild/darwin-arm64/-/darwin-arm64-0.25.10.tgz",
+        "integrity": "sha512-JC74bdXcQEpW9KkV326WpZZjLguSZ3DfS8wrrvPMHgQOIEIG/sPXEN/V8IssoJhbefLRcRqw6RQH2NnpdprtMA=="
+      },
+      {
+        "path": "node_modules/@esbuild/darwin-x64",
+        "version": "0.25.10",
+        "dev": true,
+        "metadata_license": "MIT",
+        "resolved": "https://registry.npmjs.org/@esbuild/darwin-x64/-/darwin-x64-0.25.10.tgz",
+        "integrity": "sha512-tguWg1olF6DGqzws97pKZ8G2L7Ig1vjDmGTwcTuYHbuU6TTjJe5FXbgs5C1BBzHbJ2bo1m3WkQDbWO2PvamRcg=="
+      },
+      {
+        "path": "node_modules/@esbuild/freebsd-arm64",
+        "version": "0.25.10",
+        "dev": true,
+        "metadata_license": "MIT",
+        "resolved": "https://registry.npmjs.org/@esbuild/freebsd-arm64/-/freebsd-arm64-0.25.10.tgz",
+        "integrity": "sha512-3ZioSQSg1HT2N05YxeJWYR+Libe3bREVSdWhEEgExWaDtyFbbXWb49QgPvFH8u03vUPX10JhJPcz7s9t9+boWg=="
+      },
+      {
+        "path": "node_modules/@esbuild/freebsd-x64",
+        "version": "0.25.10",
+        "dev": true,
+        "metadata_license": "MIT",
+        "resolved": "https://registry.npmjs.org/@esbuild/freebsd-x64/-/freebsd-x64-0.25.10.tgz",
+        "integrity": "sha512-LLgJfHJk014Aa4anGDbh8bmI5Lk+QidDmGzuC2D+vP7mv/GeSN+H39zOf7pN5N8p059FcOfs2bVlrRr4SK9WxA=="
+      },
+      {
+        "path": "node_modules/@esbuild/linux-arm",
+        "version": "0.25.10",
+        "dev": true,
+        "metadata_license": "MIT",
+        "resolved": "https://registry.npmjs.org/@esbuild/linux-arm/-/linux-arm-0.25.10.tgz",
+        "integrity": "sha512-oR31GtBTFYCqEBALI9r6WxoU/ZofZl962pouZRTEYECvNF/dtXKku8YXcJkhgK/beU+zedXfIzHijSRapJY3vg=="
+      },
+      {
+        "path": "node_modules/@esbuild/linux-arm64",
+        "version": "0.25.10",
+        "dev": true,
+        "metadata_license": "MIT",
+        "resolved": "https://registry.npmjs.org/@esbuild/linux-arm64/-/linux-arm64-0.25.10.tgz",
+        "integrity": "sha512-5luJWN6YKBsawd5f9i4+c+geYiVEw20FVW5x0v1kEMWNq8UctFjDiMATBxLvmmHA4bf7F6hTRaJgtghFr9iziQ=="
+      },
+      {
+        "path": "node_modules/@esbuild/linux-ia32",
+        "version": "0.25.10",
+        "dev": true,
+        "metadata_license": "MIT",
+        "resolved": "https://registry.npmjs.org/@esbuild/linux-ia32/-/linux-ia32-0.25.10.tgz",
+        "integrity": "sha512-NrSCx2Kim3EnnWgS4Txn0QGt0Xipoumb6z6sUtl5bOEZIVKhzfyp/Lyw4C1DIYvzeW/5mWYPBFJU3a/8Yr75DQ=="
+      },
+      {
+        "path": "node_modules/@esbuild/linux-loong64",
+        "version": "0.25.10",
+        "dev": true,
+        "metadata_license": "MIT",
+        "resolved": "https://registry.npmjs.org/@esbuild/linux-loong64/-/linux-loong64-0.25.10.tgz",
+        "integrity": "sha512-xoSphrd4AZda8+rUDDfD9J6FUMjrkTz8itpTITM4/xgerAZZcFW7Dv+sun7333IfKxGG8gAq+3NbfEMJfiY+Eg=="
+      },
+      {
+        "path": "node_modules/@esbuild/linux-mips64el",
+        "version": "0.25.10",
+        "dev": true,
+        "metadata_license": "MIT",
+        "resolved": "https://registry.npmjs.org/@esbuild/linux-mips64el/-/linux-mips64el-0.25.10.tgz",
+        "integrity": "sha512-ab6eiuCwoMmYDyTnyptoKkVS3k8fy/1Uvq7Dj5czXI6DF2GqD2ToInBI0SHOp5/X1BdZ26RKc5+qjQNGRBelRA=="
+      },
+      {
+        "path": "node_modules/@esbuild/linux-ppc64",
+        "version": "0.25.10",
+        "dev": true,
+        "metadata_license": "MIT",
+        "resolved": "https://registry.npmjs.org/@esbuild/linux-ppc64/-/linux-ppc64-0.25.10.tgz",
+        "integrity": "sha512-NLinzzOgZQsGpsTkEbdJTCanwA5/wozN9dSgEl12haXJBzMTpssebuXR42bthOF3z7zXFWH1AmvWunUCkBE4EA=="
+      },
+      {
+        "path": "node_modules/@esbuild/linux-riscv64",
+        "version": "0.25.10",
+        "dev": true,
+        "metadata_license": "MIT",
+        "resolved": "https://registry.npmjs.org/@esbuild/linux-riscv64/-/linux-riscv64-0.25.10.tgz",
+        "integrity": "sha512-FE557XdZDrtX8NMIeA8LBJX3dC2M8VGXwfrQWU7LB5SLOajfJIxmSdyL/gU1m64Zs9CBKvm4UAuBp5aJ8OgnrA=="
+      },
+      {
+        "path": "node_modules/@esbuild/linux-s390x",
+        "version": "0.25.10",
+        "dev": true,
+        "metadata_license": "MIT",
+        "resolved": "https://registry.npmjs.org/@esbuild/linux-s390x/-/linux-s390x-0.25.10.tgz",
+        "integrity": "sha512-3BBSbgzuB9ajLoVZk0mGu+EHlBwkusRmeNYdqmznmMc9zGASFjSsxgkNsqmXugpPk00gJ0JNKh/97nxmjctdew=="
+      },
+      {
+        "path": "node_modules/@esbuild/linux-x64",
+        "version": "0.25.10",
+        "dev": true,
+        "metadata_license": "MIT",
+        "resolved": "https://registry.npmjs.org/@esbuild/linux-x64/-/linux-x64-0.25.10.tgz",
+        "integrity": "sha512-QSX81KhFoZGwenVyPoberggdW1nrQZSvfVDAIUXr3WqLRZGZqWk/P4T8p2SP+de2Sr5HPcvjhcJzEiulKgnxtA=="
+      },
+      {
+        "path": "node_modules/@esbuild/netbsd-arm64",
+        "version": "0.25.10",
+        "dev": true,
+        "metadata_license": "MIT",
+        "resolved": "https://registry.npmjs.org/@esbuild/netbsd-arm64/-/netbsd-arm64-0.25.10.tgz",
+        "integrity": "sha512-AKQM3gfYfSW8XRk8DdMCzaLUFB15dTrZfnX8WXQoOUpUBQ+NaAFCP1kPS/ykbbGYz7rxn0WS48/81l9hFl3u4A=="
+      },
+      {
+        "path": "node_modules/@esbuild/netbsd-x64",
+        "version": "0.25.10",
+        "dev": true,
+        "metadata_license": "MIT",
+        "resolved": "https://registry.npmjs.org/@esbuild/netbsd-x64/-/netbsd-x64-0.25.10.tgz",
+        "integrity": "sha512-7RTytDPGU6fek/hWuN9qQpeGPBZFfB4zZgcz2VK2Z5VpdUxEI8JKYsg3JfO0n/Z1E/6l05n0unDCNc4HnhQGig=="
+      },
+      {
+        "path": "node_modules/@esbuild/openbsd-arm64",
+        "version": "0.25.10",
+        "dev": true,
+        "metadata_license": "MIT",
+        "resolved": "https://registry.npmjs.org/@esbuild/openbsd-arm64/-/openbsd-arm64-0.25.10.tgz",
+        "integrity": "sha512-5Se0VM9Wtq797YFn+dLimf2Zx6McttsH2olUBsDml+lm0GOCRVebRWUvDtkY4BWYv/3NgzS8b/UM3jQNh5hYyw=="
+      },
+      {
+        "path": "node_modules/@esbuild/openbsd-x64",
+        "version": "0.25.10",
+        "dev": true,
+        "metadata_license": "MIT",
+        "resolved": "https://registry.npmjs.org/@esbuild/openbsd-x64/-/openbsd-x64-0.25.10.tgz",
+        "integrity": "sha512-XkA4frq1TLj4bEMB+2HnI0+4RnjbuGZfet2gs/LNs5Hc7D89ZQBHQ0gL2ND6Lzu1+QVkjp3x1gIcPKzRNP8bXw=="
+      },
+      {
+        "path": "node_modules/@esbuild/openharmony-arm64",
+        "version": "0.25.10",
+        "dev": true,
+        "metadata_license": "MIT",
+        "resolved": "https://registry.npmjs.org/@esbuild/openharmony-arm64/-/openharmony-arm64-0.25.10.tgz",
+        "integrity": "sha512-AVTSBhTX8Y/Fz6OmIVBip9tJzZEUcY8WLh7I59+upa5/GPhh2/aM6bvOMQySspnCCHvFi79kMtdJS1w0DXAeag=="
+      },
+      {
+        "path": "node_modules/@esbuild/sunos-x64",
+        "version": "0.25.10",
+        "dev": true,
+        "metadata_license": "MIT",
+        "resolved": "https://registry.npmjs.org/@esbuild/sunos-x64/-/sunos-x64-0.25.10.tgz",
+        "integrity": "sha512-fswk3XT0Uf2pGJmOpDB7yknqhVkJQkAQOcW/ccVOtfx05LkbWOaRAtn5SaqXypeKQra1QaEa841PgrSL9ubSPQ=="
+      },
+      {
+        "path": "node_modules/@esbuild/win32-arm64",
+        "version": "0.25.10",
+        "dev": true,
+        "metadata_license": "MIT",
+        "resolved": "https://registry.npmjs.org/@esbuild/win32-arm64/-/win32-arm64-0.25.10.tgz",
+        "integrity": "sha512-ah+9b59KDTSfpaCg6VdJoOQvKjI33nTaQr4UluQwW7aEwZQsbMCfTmfEO4VyewOxx4RaDT/xCy9ra2GPWmO7Kw=="
+      },
+      {
+        "path": "node_modules/@esbuild/win32-ia32",
+        "version": "0.25.10",
+        "dev": true,
+        "metadata_license": "MIT",
+        "resolved": "https://registry.npmjs.org/@esbuild/win32-ia32/-/win32-ia32-0.25.10.tgz",
+        "integrity": "sha512-QHPDbKkrGO8/cz9LKVnJU22HOi4pxZnZhhA2HYHez5Pz4JeffhDjf85E57Oyco163GnzNCVkZK0b/n4Y0UHcSw=="
+      },
+      {
+        "path": "node_modules/@esbuild/win32-x64",
+        "version": "0.25.10",
+        "dev": true,
+        "metadata_license": "MIT",
+        "resolved": "https://registry.npmjs.org/@esbuild/win32-x64/-/win32-x64-0.25.10.tgz",
+        "integrity": "sha512-9KpxSVFCu0iK1owoez6aC/s/EdUQLDN3adTxGCqxMVhrPDj6bt5dbrHDXUuq+Bs2vATFBBrQS5vdQ/Ed2P+nbw=="
+      },
+      {
+        "path": "node_modules/agent-base",
+        "version": "7.1.4",
+        "dev": true,
+        "metadata_license": "MIT",
+        "resolved": "https://registry.npmjs.org/agent-base/-/agent-base-7.1.4.tgz",
+        "integrity": "sha512-MnA+YT8fwfJPgBx3m60MNqakm30XOkyIoH1y6huTQvC0PwZG7ki8NacLBcrPbNoo8vEZy7Jpuk7+jMO+CUovTQ=="
+      },
+      {
+        "path": "node_modules/cssstyle",
+        "version": "4.6.0",
+        "dev": true,
+        "metadata_license": "MIT",
+        "resolved": "https://registry.npmjs.org/cssstyle/-/cssstyle-4.6.0.tgz",
+        "integrity": "sha512-2z+rWdzbbSZv6/rhtvzvqeZQHrBaqgogqt85sqFNbabZOuFbCVFb8kPeEtZjiKkbrm395irpNKiYeFeLiQnFPg=="
+      },
+      {
+        "path": "node_modules/data-urls",
+        "version": "5.0.0",
+        "dev": true,
+        "metadata_license": "MIT",
+        "resolved": "https://registry.npmjs.org/data-urls/-/data-urls-5.0.0.tgz",
+        "integrity": "sha512-ZYP5VBHshaDAiVZxjbRVcFJpc+4xGgT0bK3vzy1HLN8jTO975HEbuYzZJcHoQEY5K1a0z8YayJkyVETa08eNTg=="
+      },
+      {
+        "path": "node_modules/debug",
+        "version": "4.4.3",
+        "dev": true,
+        "metadata_license": "MIT",
+        "resolved": "https://registry.npmjs.org/debug/-/debug-4.4.3.tgz",
+        "integrity": "sha512-RGwwWnwQvkVfavKVt22FGLw+xYSdzARwm0ru6DhTVA3umU5hZc28V3kO4stgYryrTlLpuvgI9GiijltAjNbcqA=="
+      },
+      {
+        "path": "node_modules/decimal.js",
+        "version": "10.6.0",
+        "dev": true,
+        "metadata_license": "MIT",
+        "resolved": "https://registry.npmjs.org/decimal.js/-/decimal.js-10.6.0.tgz",
+        "integrity": "sha512-YpgQiITW3JXGntzdUmyUR1V812Hn8T1YVXhCu+wO3OpS4eU9l4YdD3qjyiKdV6mvV29zapkMeD390UVEf2lkUg=="
+      },
+      {
+        "path": "node_modules/entities",
+        "version": "6.0.1",
+        "dev": true,
+        "metadata_license": "BSD-2-Clause",
+        "resolved": "https://registry.npmjs.org/entities/-/entities-6.0.1.tgz",
+        "integrity": "sha512-aN97NXWF6AWBTahfVOIrB/NShkzi5H7F9r1s9mD3cDj4Ko5f2qhhVoYMibXF7GlLveb/D2ioWay8lxI97Ven3g=="
+      },
+      {
+        "path": "node_modules/esbuild",
+        "version": "0.25.10",
+        "dev": true,
+        "metadata_license": "MIT",
+        "resolved": "https://registry.npmjs.org/esbuild/-/esbuild-0.25.10.tgz",
+        "integrity": "sha512-9RiGKvCwaqxO2owP61uQ4BgNborAQskMR6QusfWzQqv7AZOg5oGehdY2pRJMTKuwxd1IDBP4rSbI5lHzU7SMsQ=="
+      },
+      {
+        "path": "node_modules/html-encoding-sniffer",
+        "version": "4.0.0",
+        "dev": true,
+        "metadata_license": "MIT",
+        "resolved": "https://registry.npmjs.org/html-encoding-sniffer/-/html-encoding-sniffer-4.0.0.tgz",
+        "integrity": "sha512-Y22oTqIU4uuPgEemfz7NDJz6OeKf12Lsu+QC+s3BVpda64lTiMYCyGwg5ki4vFxkMwQdeZDl2adZoqUgdFuTgQ=="
+      },
+      {
+        "path": "node_modules/http-proxy-agent",
+        "version": "7.0.2",
+        "dev": true,
+        "metadata_license": "MIT",
+        "resolved": "https://registry.npmjs.org/http-proxy-agent/-/http-proxy-agent-7.0.2.tgz",
+        "integrity": "sha512-T1gkAiYYDWYx3V5Bmyu7HcfcvL7mUrTWiM6yOfa3PIphViJ/gFPbvidQ+veqSOHci/PxBcDabeUNCzpOODJZig=="
+      },
+      {
+        "path": "node_modules/https-proxy-agent",
+        "version": "7.0.6",
+        "dev": true,
+        "metadata_license": "MIT",
+        "resolved": "https://registry.npmjs.org/https-proxy-agent/-/https-proxy-agent-7.0.6.tgz",
+        "integrity": "sha512-vK9P5/iUfdl95AI+JVyUuIcVtd4ofvtrOr3HNtM2yxC9bnMbEdp3x01OhQNnjb8IJYi38VlTE3mBXwcfvywuSw=="
+      },
+      {
+        "path": "node_modules/iconv-lite",
+        "version": "0.6.3",
+        "dev": true,
+        "metadata_license": "MIT",
+        "resolved": "https://registry.npmjs.org/iconv-lite/-/iconv-lite-0.6.3.tgz",
+        "integrity": "sha512-4fCk79wshMdzMp2rH06qWrJE4iolqLhCUH+OiuIgU++RB0+94NlDL81atO7GX55uUKueo0txHNtvEyI6D7WdMw=="
+      },
+      {
+        "path": "node_modules/is-potential-custom-element-name",
+        "version": "1.0.1",
+        "dev": true,
+        "metadata_license": "MIT",
+        "resolved": "https://registry.npmjs.org/is-potential-custom-element-name/-/is-potential-custom-element-name-1.0.1.tgz",
+        "integrity": "sha512-bCYeRA2rVibKZd+s2625gGnGF/t7DSqDs4dP7CrLA1m7jKWz6pps0LpYLJN8Q64HtmPKJ1hrN3nzPNKFEKOUiQ=="
+      },
+      {
+        "path": "node_modules/jsdom",
+        "version": "26.1.0",
+        "dev": true,
+        "metadata_license": "MIT",
+        "resolved": "https://registry.npmjs.org/jsdom/-/jsdom-26.1.0.tgz",
+        "integrity": "sha512-Cvc9WUhxSMEo4McES3P7oK3QaXldCfNWp7pl2NNeiIFlCoLr3kfq9kb1fxftiwk1FLV7CvpvDfonxtzUDeSOPg=="
+      },
+      {
+        "path": "node_modules/leaflet",
+        "version": "1.9.4",
+        "dev": false,
+        "metadata_license": "BSD-2-Clause",
+        "resolved": "https://registry.npmjs.org/leaflet/-/leaflet-1.9.4.tgz",
+        "integrity": "sha512-nxS1ynzJOmOlHp+iL3FyWqK89GtNL8U8rvlMOsQdTTssxZwCXh8N2NB3GDQOL+YR3XnWyZAxwQixURb+FA74PA=="
+      },
+      {
+        "path": "node_modules/lru-cache",
+        "version": "10.4.3",
+        "dev": true,
+        "metadata_license": "ISC",
+        "resolved": "https://registry.npmjs.org/lru-cache/-/lru-cache-10.4.3.tgz",
+        "integrity": "sha512-JNAzZcXrCt42VGLuYz0zfAzDfAvJWW6AfYlDBQyDV5DClI2m5sAmK+OIO7s59XfsRsWHp02jAJrRadPRGTt6SQ=="
+      },
+      {
+        "path": "node_modules/ms",
+        "version": "2.1.3",
+        "dev": true,
+        "metadata_license": "MIT",
+        "resolved": "https://registry.npmjs.org/ms/-/ms-2.1.3.tgz",
+        "integrity": "sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA=="
+      },
+      {
+        "path": "node_modules/nwsapi",
+        "version": "2.2.28",
+        "dev": true,
+        "metadata_license": "MIT",
+        "resolved": "https://registry.npmjs.org/nwsapi/-/nwsapi-2.2.28.tgz",
+        "integrity": "sha512-IlVB7OS7qrOsVYlpnFIkETjMwT9jwvmocJmmM+GZU/PAB3uGi9Ezd7vcWhWBUnSc0ya4ppmQITOyP1ez9gg8cg=="
+      },
+      {
+        "path": "node_modules/parse5",
+        "version": "7.3.0",
+        "dev": true,
+        "metadata_license": "MIT",
+        "resolved": "https://registry.npmjs.org/parse5/-/parse5-7.3.0.tgz",
+        "integrity": "sha512-IInvU7fabl34qmi9gY8XOVxhYyMyuH2xUNpb2q8/Y+7552KlejkRvqvD19nMoUW/uQGGbqNpA6Tufu5FL5BZgw=="
+      },
+      {
+        "path": "node_modules/prettier",
+        "version": "3.6.2",
+        "dev": true,
+        "metadata_license": "MIT",
+        "resolved": "https://registry.npmjs.org/prettier/-/prettier-3.6.2.tgz",
+        "integrity": "sha512-I7AIg5boAr5R0FFtJ6rCfD+LFsWHp81dolrFD8S79U9tb8Az2nGrJncnMSnys+bpQJfRUzqs9hnA81OAA3hCuQ=="
+      },
+      {
+        "path": "node_modules/punycode",
+        "version": "2.3.1",
+        "dev": true,
+        "metadata_license": "MIT",
+        "resolved": "https://registry.npmjs.org/punycode/-/punycode-2.3.1.tgz",
+        "integrity": "sha512-vYt7UD1U9Wg6138shLtLOvdAu+8DsC/ilFtEVHcH+wydcSpNE20AfSOduf6MkRFahL5FY7X1oU7nKVZFtfq8Fg=="
+      },
+      {
+        "path": "node_modules/rrweb-cssom",
+        "version": "0.8.0",
+        "dev": true,
+        "metadata_license": "MIT",
+        "resolved": "https://registry.npmjs.org/rrweb-cssom/-/rrweb-cssom-0.8.0.tgz",
+        "integrity": "sha512-guoltQEx+9aMf2gDZ0s62EcV8lsXR+0w8915TC3ITdn2YueuNjdAYh/levpU9nFaoChh9RUS5ZdQMrKfVEN9tw=="
+      },
+      {
+        "path": "node_modules/safer-buffer",
+        "version": "2.1.2",
+        "dev": true,
+        "metadata_license": "MIT",
+        "resolved": "https://registry.npmjs.org/safer-buffer/-/safer-buffer-2.1.2.tgz",
+        "integrity": "sha512-YZo3K82SD7Riyi0E1EQPojLz7kpepnSQI9IyPbHHg1XXXevb5dJI7tpyN2ADxGcQbHG7vcyRHk0cbwqcQriUtg=="
+      },
+      {
+        "path": "node_modules/saxes",
+        "version": "6.0.0",
+        "dev": true,
+        "metadata_license": "ISC",
+        "resolved": "https://registry.npmjs.org/saxes/-/saxes-6.0.0.tgz",
+        "integrity": "sha512-xAg7SOnEhrm5zI3puOOKyy1OMcMlIJZYNJY7xLBwSze0UjhPLnWfj2GF2EpT0jmzaJKIWKHLsaSSajf35bcYnA=="
+      },
+      {
+        "path": "node_modules/symbol-tree",
+        "version": "3.2.4",
+        "dev": true,
+        "metadata_license": "MIT",
+        "resolved": "https://registry.npmjs.org/symbol-tree/-/symbol-tree-3.2.4.tgz",
+        "integrity": "sha512-9QNk5KwDF+Bvz+PyObkmSYjI5ksVUYtjW7AU22r2NKcfLJcXp96hkDWU3+XndOsUb+AQ9QhfzfCT2O+CNWT5Tw=="
+      },
+      {
+        "path": "node_modules/tldts",
+        "version": "6.1.86",
+        "dev": true,
+        "metadata_license": "MIT",
+        "resolved": "https://registry.npmjs.org/tldts/-/tldts-6.1.86.tgz",
+        "integrity": "sha512-WMi/OQ2axVTf/ykqCQgXiIct+mSQDFdH2fkwhPwgEwvJ1kSzZRiinb0zF2Xb8u4+OqPChmyI6MEu4EezNJz+FQ=="
+      },
+      {
+        "path": "node_modules/tldts-core",
+        "version": "6.1.86",
+        "dev": true,
+        "metadata_license": "MIT",
+        "resolved": "https://registry.npmjs.org/tldts-core/-/tldts-core-6.1.86.tgz",
+        "integrity": "sha512-Je6p7pkk+KMzMv2XXKmAE3McmolOQFdxkKw0R8EYNr7sELW46JqnNeTX8ybPiQgvg1ymCoF8LXs5fzFaZvJPTA=="
+      },
+      {
+        "path": "node_modules/tough-cookie",
+        "version": "5.1.2",
+        "dev": true,
+        "metadata_license": "BSD-3-Clause",
+        "resolved": "https://registry.npmjs.org/tough-cookie/-/tough-cookie-5.1.2.tgz",
+        "integrity": "sha512-FVDYdxtnj0G6Qm/DhNPSb8Ju59ULcup3tuJxkFb5K8Bv2pUXILbf0xZWU8PX8Ov19OXljbUyveOFwRMwkXzO+A=="
+      },
+      {
+        "path": "node_modules/tr46",
+        "version": "5.1.1",
+        "dev": true,
+        "metadata_license": "MIT",
+        "resolved": "https://registry.npmjs.org/tr46/-/tr46-5.1.1.tgz",
+        "integrity": "sha512-hdF5ZgjTqgAntKkklYw0R03MG2x/bSzTtkxmIRw/sTNV8YXsCJ1tfLAX23lhxhHJlEf3CRCOCGGWw3vI3GaSPw=="
+      },
+      {
+        "path": "node_modules/w3c-xmlserializer",
+        "version": "5.0.0",
+        "dev": true,
+        "metadata_license": "MIT",
+        "resolved": "https://registry.npmjs.org/w3c-xmlserializer/-/w3c-xmlserializer-5.0.0.tgz",
+        "integrity": "sha512-o8qghlI8NZHU1lLPrpi2+Uq7abh4GGPpYANlalzWxyWteJOCsr/P+oPBA49TOLu5FTZO4d3F9MnWJfiMo4BkmA=="
+      },
+      {
+        "path": "node_modules/webidl-conversions",
+        "version": "7.0.0",
+        "dev": true,
+        "metadata_license": "BSD-2-Clause",
+        "resolved": "https://registry.npmjs.org/webidl-conversions/-/webidl-conversions-7.0.0.tgz",
+        "integrity": "sha512-VwddBukDzu71offAQR975unBIGqfKZpM+8ZX6ySk8nYhVoo5CYaZyzt3YBvYtRtO+aoGlqxPg/B87NGVZ/fu6g=="
+      },
+      {
+        "path": "node_modules/whatwg-encoding",
+        "version": "3.1.1",
+        "dev": true,
+        "metadata_license": "MIT",
+        "resolved": "https://registry.npmjs.org/whatwg-encoding/-/whatwg-encoding-3.1.1.tgz",
+        "integrity": "sha512-6qN4hJdMwfYBtE3YBTTHhoeuUrDBPZmbQaxWAqSALV/MeEnR5z1xd8UKud2RAkFoPkmB+hli1TZSnyi84xz1vQ=="
+      },
+      {
+        "path": "node_modules/whatwg-mimetype",
+        "version": "4.0.0",
+        "dev": true,
+        "metadata_license": "MIT",
+        "resolved": "https://registry.npmjs.org/whatwg-mimetype/-/whatwg-mimetype-4.0.0.tgz",
+        "integrity": "sha512-QaKxh0eNIi2mE9p2vEdzfagOKHCcj1pJ56EEHGQOVxp8r9/iszLUUV7v89x9O1p/T+NlTM5W7jW6+cz4Fq1YVg=="
+      },
+      {
+        "path": "node_modules/whatwg-url",
+        "version": "14.2.0",
+        "dev": true,
+        "metadata_license": "MIT",
+        "resolved": "https://registry.npmjs.org/whatwg-url/-/whatwg-url-14.2.0.tgz",
+        "integrity": "sha512-De72GdQZzNTUBBChsXueQUnPKDkg/5A5zp7pFDuQAj5UFoENpiACU0wlCvzpAGnTkj++ihpKwKyYewn/XNUbKw=="
+      },
+      {
+        "path": "node_modules/ws",
+        "version": "8.22.0",
+        "dev": true,
+        "metadata_license": "MIT",
+        "resolved": "https://registry.npmjs.org/ws/-/ws-8.22.0.tgz",
+        "integrity": "sha512-Ydggc987+RO0AnWtZ/7Wq9FtNvcrL1b/RO0ud9mWjUPgDrsAAwQSF51sm2hm1XofbU/4jkpGEsLFsZZxU+1DOg=="
+      },
+      {
+        "path": "node_modules/xml-name-validator",
+        "version": "5.0.0",
+        "dev": true,
+        "metadata_license": "Apache-2.0",
+        "resolved": "https://registry.npmjs.org/xml-name-validator/-/xml-name-validator-5.0.0.tgz",
+        "integrity": "sha512-EvGK8EJ3DhaHfbRlETOWAS5pO9MZITeauHKJyb8wyajUfQUenkIg2MvLDTZ4T/TgIcm3HU0TFBgWWboAZ30UHg=="
+      },
+      {
+        "path": "node_modules/xmlchars",
+        "version": "2.2.0",
+        "dev": true,
+        "metadata_license": "MIT",
+        "resolved": "https://registry.npmjs.org/xmlchars/-/xmlchars-2.2.0.tgz",
+        "integrity": "sha512-JZnDKK8B0RCDw84FNdDAIpZK+JuJw+s7Lz8nksI7SIuU3UXJJslUthsi+uWBUYOwPFwW7W7PRLRfUKpxjtjFCw=="
+      }
+    ],
+    "byte_checks": {
+      "published_zip_sha256": "fc0b365d9688459504f874af5c38393e24145d657f15f1def8ada9184f363285",
+      "leaflet_lock_integrity_verified": true,
+      "leaflet_packaged_license_equals_npm_tar_license": true,
+      "leaflet_license_sha256": "53e8dc25862014e4324741ca18fbe3611e11d42ef69f59f86ea8c5389647d4cb",
+      "unicorn_wheel_native_lib_sha256": "ddb196ec82b52e502c18e4a34478bf7b9f61c83c2ebaa95c74d8ded45a95da9c",
+      "unicorn_wheel_native_lib_bytes": 24507432,
+      "matches_native_lib_in_actual_ci_receipt": true
+    }
+  },
+  "confirmed_fetched_wheel_findings": [
+    "unicorn 2.1.4: core/bindings license split and absent standalone notice files",
+    "pyelftools 0.33: vendored Construct MIT license absent from inspected wheel"
+  ],
+  "review_outcome": "Inventory and evidence completed; licensing/service-use and distribution approval remain open. No claim of legal clearance.",
+  "published_release_modified": false,
+  "python_executed_on_mac": false
+}

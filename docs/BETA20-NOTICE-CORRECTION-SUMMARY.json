@@ -1,0 +1,62 @@
+{
+  "acceptance_scope": "notice-only unversioned preview; not release or install acceptance",
+  "all_executable_config_frontend_and_fixture_bytes_unchanged": true,
+  "baseline_revision": "d02a9bdb9027cb51c99165a09ba50d5b175f5fb9",
+  "candidate_revision": "9466eef45ecac16f05f25d4455d705383f7c91ff",
+  "config_sha256": "5054d26097e12cc312dbca4c093a40c17e86834f7ee1129d2d20fd01eb1dae83",
+  "core_started": false,
+  "fixture_provenance": {
+    "original_notice_prefix_asserted": true,
+    "parsed_only": true,
+    "wheel_notice_sha256_asserted": true
+  },
+  "full_notice_sha256": {
+    "construct_mit": "f8d0c347a0dcc6ebe1671640dfae8d2411b6ded892e06a6764f8208b218b2af4",
+    "emulator": "d13de33ca644eb1350ca7ab815075d2499621f24dad01ee9be532360934483d6",
+    "findmy": "51396fd82204e1d844bbff2019054d8c3712e53c3ed8485c9f19dd73990eb46e",
+    "grandslam": "002c2696d92b5c8cf956c11072baa58eaf9f6ade995c031ea635c6a1ee342ad1",
+    "opentagviewer": "e5d3404f06c194c08bfd18bfe4d42ece466f28098177b38c14aeb2bfe6b39597",
+    "unicorn_gpl": "6f04ae8364d0079a192b14635f4b1da294ce18724c034c39a6a41d1b09df6100"
+  },
+  "helpers_unchanged": {
+    "build_release": "0c1ac7f979817bd5fc2cd4a4101571931488d6972bc6f181a26ac21edcf8c7d0",
+    "validate_ha_restart": "3714a31ea0f87b8c77086a4a28a3a4e93a396d3359dacd87ec6d2a0e7eeb3519",
+    "validate_release": "20c0466b4fa70a83c5f282bfcd07b0d2e6f5a3a1a09bf90072649441b2ad7f37"
+  },
+  "host": {
+    "implementation": "CPython",
+    "machine": "x86_64",
+    "python": "3.12.3",
+    "sys_platform": "linux",
+    "system": "Linux"
+  },
+  "only_five_text_files_changed": true,
+  "outcome": "passed",
+  "package_changed_paths": [
+    "_findmy_runtime/LICENSE.md",
+    "_findmy_runtime/PROVENANCE.md",
+    "_vendor_findmy/LICENSE.md",
+    "_vendor_findmy/README.md"
+  ],
+  "preview_bytes": 613863,
+  "preview_deterministic_within_run": true,
+  "preview_members": 113,
+  "preview_sha256": "d2106e53249cff8786d74449660d43314f66bf6eb95acbac0fe77c35247937f5",
+  "preview_uploaded_or_installed": false,
+  "production_configuration_used": false,
+  "provider_or_apple_calls": false,
+  "published_members": 112,
+  "published_zip_sha256": "fc0b365d9688459504f874af5c38393e24145d657f15f1def8ada9184f363285",
+  "schema": 1,
+  "source_changed_paths": [
+    "custom_components/homecircle/_findmy_runtime/LICENSE.md",
+    "custom_components/homecircle/_findmy_runtime/PROVENANCE.md",
+    "custom_components/homecircle/_vendor_findmy/LICENSE.md",
+    "custom_components/homecircle/_vendor_findmy/README.md",
+    "tests/fixtures/findmy_0102_gsa_reference.provenance.md"
+  ],
+  "source_files_after": 328,
+  "source_files_before": 327,
+  "temporary_preview_removed": true,
+  "unchanged_package_members": 109
+}
