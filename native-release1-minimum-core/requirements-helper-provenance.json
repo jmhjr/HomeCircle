@@ -1,0 +1,42 @@
+{
+  "adaptations": [
+    {
+      "after": "mfa == [\"pyotp==2.9.0\", \"PyQRCode==1.2.1\"]",
+      "before": "mfa == [\"pyotp==2.10.0\", \"PyQRCode==1.2.1\"]",
+      "exact_substitutions": 1,
+      "function": "default_auth_declarations",
+      "official_core_tag": "2026.9.4",
+      "official_totp_source_sha256": "f815ea2fc069bb85782d3670004624776a0d632f5a44d9f210610d6b1c6d6d7f"
+    }
+  ],
+  "adapted_function_names": [
+    "default_auth_declarations"
+  ],
+  "function_source_sha256": {
+    "core_component_requirements": "556363ff0e95a59b01de6116b10788fbbc8b35ac6e77f541282364daa0ebec8b",
+    "declared_requirements": "1d2d0a1032730091f4e0d5a8c235e4c0667025a7106d1e6c8b9a8d6a36d653d8",
+    "default_auth_declarations": "993d19c842f29c62284d58c52824f57b66e2758f683104029d94aec6c3465b2e",
+    "requirement_graph": "b92fae7b1c675a5903b10feed0412e32d9fcbc3a6bef321dbd1474c128082d42",
+    "source_literal": "23f3d7a9a4094b34d340b66555fbbcb39058d1c59d90862e44444f319291a204",
+    "verify_declared_versions": "66941b115baf02c67f747eb13937fff152cd1cb017396754f9234eb3d7345fff"
+  },
+  "output_function_sha256": {
+    "core_component_requirements": "556363ff0e95a59b01de6116b10788fbbc8b35ac6e77f541282364daa0ebec8b",
+    "declared_requirements": "1d2d0a1032730091f4e0d5a8c235e4c0667025a7106d1e6c8b9a8d6a36d653d8",
+    "default_auth_declarations": "56bc72143e5a26ca0256dd5f26bf6d02d6d8c905746614e023d69ccaf7bde423",
+    "requirement_graph": "b92fae7b1c675a5903b10feed0412e32d9fcbc3a6bef321dbd1474c128082d42",
+    "source_literal": "23f3d7a9a4094b34d340b66555fbbcb39058d1c59d90862e44444f319291a204",
+    "verify_declared_versions": "66941b115baf02c67f747eb13937fff152cd1cb017396754f9234eb3d7345fff"
+  },
+  "output_sha256": "153693d1a06b06e33a8601fa2580a677908ece4336aa71a03c6c1eabf81c1728",
+  "source_path": "native-beta20-glibc/driver.py",
+  "source_revision": "7482f5e7cce6d4819d166e72ceb32c5405f4e961",
+  "source_sha256": "2ac8485bed4d3acf18bb015a7e26fc11ada6e4454f8f577ea492feca6ab8cb4d",
+  "unchanged_function_names": [
+    "core_component_requirements",
+    "declared_requirements",
+    "requirement_graph",
+    "source_literal",
+    "verify_declared_versions"
+  ]
+}

@@ -1,0 +1,69 @@
+name: HomeCircle minimum Core native architecture checks
+
+on:
+  push:
+    branches: [codex/native-amd64-validation]
+    paths:
+      - native-release1-minimum-core/**
+      - .github/workflows/native-release1-minimum-core.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: homecircle-release1-minimum-core-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  minimum-core-lifecycle:
+    if: github.ref == 'refs/heads/codex/native-amd64-validation'
+    name: Minimum Core lifecycle / ${{ matrix.architecture }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 55
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - architecture: amd64
+            runner: ubuntu-24.04
+            pins_sha256: e9c1555ec199f3ef5cd478d0cbd440a32acefbad3cdc8a052850a93370b63f6d
+          - architecture: arm64
+            runner: ubuntu-24.04-arm
+            pins_sha256: 92edfac7a930115f3d64e0a3b0433ee7d51798bbfd119a0b530cbe3b750b28d9
+    steps:
+      - name: Check out reviewed controls and canonical product history
+        timeout-minutes: 3
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Check standalone contracts
+        timeout-minutes: 3
+        run: |
+          bash -n native-release1-minimum-core/run_host.sh
+          python3 -B -m unittest discover -s native-release1-minimum-core -p test_driver.py -v
+      - name: Run focused tests and actual Core lifecycle on the native CPU
+        timeout-minutes: 43
+        shell: bash
+        run: |
+          timeout --signal=TERM --kill-after=150s 2300s bash native-release1-minimum-core/run_host.sh \
+            --payload native-release1-minimum-core/payload \
+            --pins native-release1-minimum-core/pins-${{ matrix.architecture }}.json \
+            --pins-sha ${{ matrix.pins_sha256 }} \
+            --source-repository "$GITHUB_WORKSPACE" \
+            --output native-release1-minimum-core-results
+          jq -e '.outcome=="passed" and .container_stopped==true and .container_removed==true and
+            .cleanup_failed==false and .private_workspace_removed==true and
+            .acceptance_network_disconnected==true and .source_git_verified==true' \
+            native-release1-minimum-core-results/public-summary/host.json
+      - name: Retain only narrow lifecycle receipts
+        timeout-minutes: 3
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: release1-minimum-core-${{ matrix.architecture }}-receipts
+          path: native-release1-minimum-core-results/public-summary/*.json
+          if-no-files-found: warn
+          retention-days: 7
+          include-hidden-files: false

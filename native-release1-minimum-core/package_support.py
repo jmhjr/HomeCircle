@@ -1,0 +1,573 @@
+"""Native Linux exact-source development-preview package and offline regression checks."""
+
+import sys
+
+import argparse
+import gzip
+import hashlib
+import importlib.metadata
+import importlib.util
+import io
+import json
+import os
+from pathlib import Path, PurePosixPath
+import platform
+import re
+import signal
+import subprocess
+import tarfile
+import time
+import traceback
+import xml.etree.ElementTree as ET
+
+
+SOURCE_SHA = INVENTORY_SHA = CHECKER_SHA = None
+SOURCE_COMMIT = None
+SOURCE_PREFIX = ""
+COUNT = None
+PINS = None
+BUILDER_SHA = "0c1ac7f979817bd5fc2cd4a4101571931488d6972bc6f181a26ac21edcf8c7d0"
+VALIDATOR_SHA = "20c0466b4fa70a83c5f282bfcd07b0d2e6f5a3a1a09bf90072649441b2ad7f37"
+CONSTRAINTS_SHA = "962c9ccaf398e0b92b10ac9f765ac0f17e22238adc4e768deebc051ee8b60651"
+CORE = "2026.9.4"
+VERSION = "0.1.0-beta.20"
+LIMIT = 64 * 1024**2
+FRONTEND = ("homecircle-card.js", "LEAFLET-LICENSE.txt")
+REQUIREMENTS = ["life360==7.2.0", "protobuf>=6.32.0,<8.0.0", "anisette==1.2.4",
+                "unicorn==2.1.4", "srp==1.0.22", "beautifulsoup4==4.13.3"]
+
+
+class Refused(RuntimeError):
+    """A fixed label, never a command, response, private path or exception text."""
+
+
+class Terminated(BaseException):
+    pass
+
+
+def check(condition, label):
+    if not condition:
+        raise Refused(label)
+
+
+def sha(raw):
+    return hashlib.sha256(raw).hexdigest()
+
+
+def fingerprint(raw):
+    return {"bytes": len(raw), "sha256": sha(raw)}
+
+
+def atomic_json(path, value):
+    path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+    temporary = path.with_name(path.name + ".tmp")
+    with temporary.open("w") as stream:
+        json.dump(value, stream, indent=2, sort_keys=True)
+        stream.write("\n")
+        stream.flush()
+        os.fsync(stream.fileno())
+    temporary.replace(path)
+
+
+def read_pinned(path, expected, maximum=LIMIT):
+    check(re.fullmatch(r"[0-9a-f]{64}", expected) is not None, "final_pins_required")
+    check(path.is_file() and not path.is_symlink() and path.stat().st_size <= maximum, "input_path_refused")
+    raw = path.read_bytes()
+    check(sha(raw) == expected, "input_hash_refused")
+    return raw
+
+
+def load_pins(path, expected_sha):
+    """Reviewed immutable configuration; placeholder or ambiguous pins fail closed."""
+    def unique(pairs):
+        value = {}
+        for key, item in pairs:
+            check(key not in value, "duplicate_config_key_refused")
+            value[key] = item
+        return value
+
+    value = json.loads(read_pinned(path, expected_sha, 64 * 1024), object_pairs_hook=unique)
+    fields = {"schema", "candidate_source_commit", "candidate_source_prefix", "source_sha256",
+              "source_inventory_sha256", "source_files", "driver_sha256", "checker_sha256", "version",
+              "expected_release_files", "minimum_backend_passed", "required_backend_tests", "frontend_tests"}
+    check(isinstance(value, dict) and set(value) == fields and type(value["schema"]) is int and value["schema"] == 1, "config_schema_refused")
+    for key in ("source_sha256", "source_inventory_sha256", "driver_sha256", "checker_sha256"):
+        check(isinstance(value[key], str) and re.fullmatch(r"[0-9a-f]{64}", value[key]), "config_pin_refused")
+    check(sha(Path(__file__).read_bytes()) == value["driver_sha256"], "driver_pin_refused")
+    check(isinstance(value["candidate_source_commit"], str)
+          and re.fullmatch(r"[0-9a-f]{40}", value["candidate_source_commit"]), "source_commit_refused")
+    prefix = value["candidate_source_prefix"]
+    check(isinstance(prefix, str) and (prefix == "" or re.fullmatch(r"[A-Za-z0-9_./-]+/", prefix))
+          and not prefix.startswith("/") and not {".", ".."}.intersection(prefix.split("/")), "source_prefix_refused")
+    check(type(value["source_files"]) is int and 327 <= value["source_files"] <= 1024,
+          "source_count_config_refused")
+    check(value["version"] == VERSION and value["expected_release_files"] == 113
+          and type(value["expected_release_files"]) is int
+          and value["frontend_tests"] == 110 and type(value["frontend_tests"]) is int,
+          "candidate_scope_refused")
+    check(type(value["minimum_backend_passed"]) is int
+          and 1443 <= value["minimum_backend_passed"] <= 2400, "backend_minimum_refused")
+    required, seen = value["required_backend_tests"], set()
+    check(isinstance(required, list) and 2 <= len(required) <= 32, "required_tests_config_refused")
+    for item in required:
+        check(isinstance(item, dict) and set(item) == {"class", "function"}
+              and isinstance(item["class"], str) and re.fullmatch(r"tests\.[A-Za-z0-9_.]{1,160}", item["class"])
+              and isinstance(item["function"], str) and re.fullmatch(r"test_[A-Za-z0-9_]{1,115}", item["function"]),
+              "required_test_name_refused")
+        identity = (item["class"], item["function"])
+        check(identity not in seen, "required_test_duplicate_refused")
+        seen.add(identity)
+    return value
+
+
+def configure(value):
+    global SOURCE_SHA, INVENTORY_SHA, CHECKER_SHA, SOURCE_COMMIT, SOURCE_PREFIX, COUNT, PINS
+    PINS = value
+    SOURCE_SHA = value["source_sha256"]
+    INVENTORY_SHA = value["source_inventory_sha256"]
+    CHECKER_SHA = value["checker_sha256"]
+    SOURCE_COMMIT = value["candidate_source_commit"]
+    SOURCE_PREFIX = value["candidate_source_prefix"]
+    COUNT = value["source_files"]
+
+
+def inputs(directory):
+    """Validate raw USTAR records, hashes and all bytes before source extraction."""
+    raw = read_pinned(directory / "source.tgz", SOURCE_SHA)
+    inventory = json.loads(read_pinned(directory / "source-inventory.json", INVENTORY_SHA, 2 * 1024**2))
+    check(isinstance(inventory, dict) and len(inventory) == COUNT, "source_inventory_count_refused")
+    for name, item in inventory.items():
+        path = PurePosixPath(name)
+        check(isinstance(name, str) and name == path.as_posix() and path.parts and not path.is_absolute()
+              and all(part not in {".", "..", ".git"} for part in path.parts)
+              and not any(char in name for char in "\\\0\r\n"), "source_name_refused")
+        check(isinstance(item, dict) and set(item) == {"bytes", "sha256"}
+              and type(item["bytes"]) is int and 0 <= item["bytes"] <= LIMIT
+              and isinstance(item["sha256"], str) and re.fullmatch(r"[0-9a-f]{64}", item["sha256"]),
+              "source_inventory_entry_refused")
+    maximum = LIMIT + COUNT * 1024 + 10240
+    with gzip.GzipFile(fileobj=io.BytesIO(raw)) as stream:
+        tar = stream.read(maximum + 1)
+    check(len(tar) <= maximum and len(tar) % 512 == 0, "source_tar_size_refused")
+    offset, count = 0, 0
+    while offset + 512 <= len(tar):
+        header = tar[offset:offset + 512]
+        if header == bytes(512):
+            check(len(tar) - offset >= 1024 and not any(tar[offset:]), "source_tar_trailer_refused")
+            break
+        check(header[156:157] in {b"0", b"\0"} and header[257:263] == b"ustar\0",
+              "source_tar_metadata_refused")
+        encoded = header[124:136].strip(b"\0 ")
+        check(bool(encoded) and all(byte in b"01234567" for byte in encoded), "source_tar_number_refused")
+        size = int(encoded, 8)
+        check(size <= LIMIT, "source_tar_member_size_refused")
+        offset += 512 + ((size + 511) // 512) * 512
+        check(offset <= len(tar), "source_tar_truncation_refused")
+        count += 1
+    else:
+        raise Refused("source_tar_terminator_required")
+    check(count == COUNT, "source_tar_count_refused")
+    files = {}
+    with tarfile.open(fileobj=io.BytesIO(raw), mode="r:gz") as archive:
+        members = archive.getmembers()
+        check(not archive.pax_headers and len(members) == COUNT
+              and sum(member.size for member in members) <= LIMIT, "source_members_refused")
+        for member in members:
+            check(member.isfile() and not member.issym() and not member.islnk() and not member.pax_headers
+                  and member.name in inventory and member.name not in files, "source_member_refused")
+            with archive.extractfile(member) as stream:
+                content = stream.read()
+            check(fingerprint(content) == inventory[member.name], "source_member_bytes_refused")
+            files[member.name] = content
+    check(set(files) == set(inventory), "source_names_refused")
+    for name, expected in (("scripts/build_release.py", BUILDER_SHA),
+                           ("scripts/validate_release.py", VALIDATOR_SHA),
+                           ("scripts/check_public_files.py", CHECKER_SHA)):
+        check(sha(files.get(name, b"")) == expected, "reviewed_release_tools_required")
+    manifest = json.loads(files["custom_components/homecircle/manifest.json"])
+    check(manifest.get("version") == VERSION and manifest.get("requirements") == REQUIREMENTS,
+          "manifest_version_or_requirements_refused")
+    for name in ("frontend/homecircle-card/package.json", "frontend/homecircle-card/package-lock.json"):
+        value = json.loads(files[name])
+        check(value.get("version") == VERSION, "frontend_metadata_version_refused")
+        if name.endswith("package-lock.json"):
+            check(value.get("lockfileVersion") == 3 and value.get("packages", {}).get("", {}).get("version") == VERSION,
+                  "frontend_lock_version_refused")
+    hacs = json.loads(files["hacs.json"])
+    check(hacs.get("zip_release") is True and hacs.get("filename") == "homecircle.zip"
+          and hacs.get("homeassistant") == CORE and hacs.get("hide_default_branch") is True,
+          "hacs_release_metadata_refused")
+    return files
+
+
+def verify_git_source(files, directory):
+    """Read exact public-file blobs from the canonical commit; never touch its index."""
+    check(directory is not None and directory.is_dir() and not directory.is_symlink(), "source_git_directory_required")
+    environment = {"PATH": os.environ.get("PATH", "/usr/bin:/bin"), "LC_ALL": "C.UTF-8",
+                   "GIT_CONFIG_NOSYSTEM": "1", "GIT_CONFIG_GLOBAL": "/dev/null"}
+    def git(*arguments):
+        result = subprocess.run(["git", "-C", str(directory), *arguments], stdin=subprocess.DEVNULL,
+                                stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, env=environment,
+                                check=False, timeout=15)
+        check(result.returncode == 0, "source_git_object_refused")
+        return result.stdout
+    check(git("rev-parse", "--verify", SOURCE_COMMIT + "^{commit}").decode().strip() == SOURCE_COMMIT,
+          "source_git_commit_refused")
+    for name, content in files.items():
+        check(git("cat-file", "blob", SOURCE_COMMIT + ":" + SOURCE_PREFIX + name) == content,
+              "source_git_blob_mismatch")
+    return {"candidate_source_commit": SOURCE_COMMIT, "canonical_commit_blobs_verified": len(files),
+            "candidate_source_prefix": SOURCE_PREFIX, "public_inventory_scope_only": True}
+
+
+def extract(files, tree):
+    check(not tree.exists() and not tree.is_symlink(), "fresh_source_required")
+    tree.mkdir(mode=0o700, parents=True)
+    for name, raw in files.items():
+        target = tree / name
+        target.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+        target.write_bytes(raw)
+
+
+def source_unchanged(files, tree):
+    for name, raw in files.items():
+        target = tree / name
+        check(target.is_file() and not target.is_symlink() and target.read_bytes() == raw, "public_source_changed")
+
+
+def frontend_inventory(tree):
+    found = {}
+    for name in FRONTEND:
+        path = tree / "custom_components/homecircle/frontend" / name
+        check(path.is_file() and not path.is_symlink() and path.stat().st_size <= 16 * 1024**2,
+              "frontend_bundle_path_refused")
+        found[name] = fingerprint(path.read_bytes())
+    return found
+
+
+def frontend_matches(tree, expected):
+    check(frontend_inventory(tree) == expected, "frontend_bundle_bytes_changed")
+
+
+def run_owned(command, *, cwd, log, limit):
+    env = {"PATH": os.environ.get("PATH", "/usr/bin:/bin"), "LC_ALL": "C.UTF-8",
+           "PYTHONDONTWRITEBYTECODE": "1", "GIT_CONFIG_NOSYSTEM": "1", "GIT_CONFIG_GLOBAL": "/dev/null"}
+    with log.open("wb") as stream:
+        child = subprocess.Popen(command, cwd=cwd, env=env, stdin=subprocess.DEVNULL,
+                                 stdout=stream, stderr=subprocess.STDOUT, start_new_session=True)
+        try:
+            code = child.wait(timeout=limit)
+        except BaseException:
+            try:
+                os.killpg(child.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+            child.wait(timeout=10)
+            raise
+        try:
+            os.killpg(child.pid, 0)
+        except ProcessLookupError:
+            pass
+        else:
+            os.killpg(child.pid, signal.SIGKILL)
+            raise Refused("owned_child_descendants_not_reaped")
+    check(log.stat().st_size <= 32 * 1024**2, "child_log_size_refused")
+    return code
+
+
+def privacy(files, tree, results):
+    log = results / "privacy-private.log"
+    check(run_owned(["git", "init", "--template=", "--initial-branch=public-check"], cwd=tree, log=log, limit=30) == 0,
+          "private_git_init_refused")
+    names = results / "public-names.zlist"
+    names.write_bytes(b"\0".join(name.encode() for name in sorted(files)) + b"\0")
+    check(run_owned(["git", "--literal-pathspecs", "add", "--force", "--pathspec-from-file=" + str(names),
+                     "--pathspec-file-nul"], cwd=tree, log=log, limit=30) == 0, "private_git_add_refused")
+    code = run_owned([sys.executable, "-I", "-B", str(tree / "scripts/check_public_files.py"), "--all"],
+                     cwd=tree, log=log, limit=120)
+    expected = f"Privacy guard checked {COUNT} files; no flagged patterns. Manual review still required.\n"
+    check(code == 0 and log.read_text() == expected, "public_privacy_guard_refused")
+    source_unchanged(files, tree)
+    return {"checker_sha256": CHECKER_SHA, "files_checked": COUNT, "checker_exit": 0, "flagged_patterns": 0}
+
+
+def frontend(args, files):
+    source_unchanged(files, args.tree)
+    check(args.first_frontend is not None and args.first_frontend.is_dir(), "first_frontend_required")
+    actual = frontend_inventory(args.tree)
+    for name in FRONTEND:
+        first = args.first_frontend / name
+        check(first.is_file() and not first.is_symlink()
+              and fingerprint(first.read_bytes()) == actual[name], "frontend_reproducibility_refused")
+    license_path = args.tree / "frontend/homecircle-card/node_modules/leaflet/LICENSE"
+    check(license_path.is_file() and sha(license_path.read_bytes()) == actual["LEAFLET-LICENSE.txt"]["sha256"],
+          "leaflet_notice_copy_refused")
+    check(args.npm_log.is_file() and args.npm_log.stat().st_size <= 32 * 1024**2, "npm_log_refused")
+    text = args.npm_log.read_text()
+    for key, count in (("tests", 110), ("pass", 110), ("fail", 0), ("cancelled", 0), ("skipped", 0), ("todo", 0)):
+        check(re.findall(r"^# " + key + r" ([0-9]+)\s*$", text, re.MULTILINE) == [str(count)],
+              "frontend_test_counts_refused")
+    privacy_result = json.loads((args.results / "privacy-summary.json").read_bytes())
+    check(privacy_result.get("outcome") == "passed" and privacy_result.get("files_checked") == COUNT
+          and privacy_result.get("checker_sha256") == CHECKER_SHA, "prior_source_privacy_required")
+    safe = {"schema": 1, "outcome": "passed", "completed": True, "frontend_tests_passed": 110,
+            "frontend_tests_failed": 0, "frontend_reproducible": True, "frontend_bundle": actual,
+            "leaflet_notice_matches_dependency": True, "source_sha256": SOURCE_SHA,
+            "source_inventory_sha256": INVENTORY_SHA, "source_files": COUNT,
+            "candidate_source_commit": SOURCE_COMMIT, "privacy": privacy_result,
+            "owner_accounts_used": False, "same_version_unreleased_development_preview": True}
+    atomic_json(args.results / "frontend-summary.json", safe)
+
+
+def constraints():
+    check(platform.machine() == "x86_64" and platform.python_version() == "3.14.6", "container_platform_refused")
+    check(importlib.metadata.version("homeassistant") == CORE, "core_version_refused")
+    spec = importlib.util.find_spec("homeassistant")
+    check(spec is not None and spec.origin is not None
+          and Path(spec.origin).resolve() == Path("/usr/src/homeassistant/homeassistant/__init__.py"), "core_origin_refused")
+    path = Path(spec.origin).with_name("package_constraints.txt")
+    check(sha(path.read_bytes()) == CONSTRAINTS_SHA, "core_constraints_refused")
+    return path
+
+
+def closure(path):
+    from packaging.requirements import Requirement
+    from packaging.specifiers import SpecifierSet
+
+    queue, found = list(REQUIREMENTS), {}
+    while queue:
+        requirement = Requirement(queue.pop())
+        if requirement.marker and not requirement.marker.evaluate({"extra": ""}):
+            continue
+        package = importlib.metadata.distribution(requirement.name)
+        check(requirement.specifier.contains(package.version, prereleases=True), "dependency_version_refused")
+        python = package.metadata.get("Requires-Python")
+        check(not python or SpecifierSet(python).contains(platform.python_version()), "dependency_python_refused")
+        name = package.metadata["Name"].lower().replace("_", "-")
+        if name not in found:
+            found[name] = package.version
+            queue.extend(package.requires or ())
+    for line in path.read_text().splitlines():
+        line = line.split("#", 1)[0].strip()
+        if line:
+            requirement = Requirement(line)
+            name = requirement.name.lower().replace("_", "-")
+            check(name not in found or requirement.specifier.contains(found[name], prereleases=True),
+                  "dependency_core_constraint_refused")
+    check(len(found) == 24, "dependency_closure_count_refused")
+    return dict(sorted(found.items()))
+
+
+def release_tools(tree):
+    sys.path.insert(0, str(tree / "scripts"))
+    import build_release
+    import validate_release
+
+    check(sha(Path(build_release.__file__).read_bytes()) == BUILDER_SHA
+          and sha(Path(validate_release.__file__).read_bytes()) == VALIDATOR_SHA, "release_tools_origin_refused")
+    return build_release, validate_release
+
+
+def build(args, files, bundle):
+    builder, validator = release_tools(args.tree)
+    frontend_matches(args.tree, bundle)
+    payload = builder.collect_payload(args.tree / "custom_components/homecircle", args.tree / "LICENSE")
+    expected = {"LICENSE": files["LICENSE"]}
+    prefix = "custom_components/homecircle/"
+    for path, raw in files.items():
+        if path.startswith(prefix) and builder.allowed_member(path[len(prefix):]):
+            expected[path[len(prefix):]] = raw
+    for name in FRONTEND:
+        expected["frontend/" + name] = (args.tree / "custom_components/homecircle/frontend" / name).read_bytes()
+    check(payload == expected and len(payload) == PINS["expected_release_files"], "release_payload_source_refused")
+    check(json.loads(payload["manifest.json"])["requirements"] == REQUIREMENTS, "manifest_requirements_refused")
+    output = args.results / "release"
+    path, inventory = builder.write_archive(payload, output)
+    check(validator.inspect_archive(path, output / "inventory.json") == expected, "release_inspection_refused")
+    second, _ = builder.write_archive(payload, args.results / "reproducibility")
+    check(path.read_bytes() == second.read_bytes(), "release_reproducibility_refused")
+    check(inventory["version"] == VERSION, "release_version_refused")
+    return {"release_version": VERSION, "release_sha256": inventory["archive_sha256"],
+            "release_inventory_sha256": sha((output / "inventory.json").read_bytes()),
+            "release_bytes": path.stat().st_size, "release_files": len(payload), "reproducible_archive": True,
+            "package_matches_exact_source_and_built_frontend": True,
+            "unchanged_builder_sha256": BUILDER_SHA, "unchanged_validator_sha256": VALIDATOR_SHA,
+            "same_version_unreleased_development_preview": True, "release_published": False,
+            "version_substitutions_performed": False, "candidate_source_commit": SOURCE_COMMIT}
+
+
+def staged_frontend(args):
+    summary = json.loads((args.payload / "frontend-summary.json").read_bytes())
+    check(summary.get("outcome") == "passed" and summary.get("completed") is True
+          and summary.get("source_sha256") == SOURCE_SHA and summary.get("source_inventory_sha256") == INVENTORY_SHA
+          and summary.get("candidate_source_commit") == SOURCE_COMMIT and summary.get("source_files") == COUNT
+          and summary.get("frontend_tests_passed") == 110 and summary.get("frontend_tests_failed") == 0
+          and summary.get("frontend_reproducible") is True, "staged_frontend_summary_refused")
+    bundle = summary.get("frontend_bundle")
+    check(isinstance(bundle, dict) and set(bundle) == set(FRONTEND), "staged_frontend_inventory_refused")
+    for name in FRONTEND:
+        metadata = bundle[name]
+        check(isinstance(metadata, dict) and set(metadata) == {"bytes", "sha256"}
+              and type(metadata["bytes"]) is int and 0 <= metadata["bytes"] <= 16 * 1024**2
+              and isinstance(metadata["sha256"], str) and re.fullmatch(r"[0-9a-f]{64}", metadata["sha256"]),
+              "staged_frontend_fingerprint_refused")
+        check(fingerprint((args.payload / name).read_bytes()) == metadata, "staged_frontend_bytes_refused")
+    return bundle
+
+
+def setup(args, files):
+    path = constraints()
+    extract(files, args.tree)
+    target = args.tree / "custom_components/homecircle/frontend"
+    target.mkdir(mode=0o700, parents=True, exist_ok=True)
+    bundle = staged_frontend(args)
+    for name in FRONTEND:
+        (target / name).write_bytes((args.payload / name).read_bytes())
+    frontend_matches(args.tree, bundle)
+    result = build(args, files, bundle)
+    command = ["uv", "pip", "install", "--system", "--no-config", "--index-url", "https://pypi.org/simple",
+               "--index-strategy", "unsafe-first-match", "--constraint", str(path), *REQUIREMENTS,
+               "pytest-homeassistant-custom-component==0.13.367", "findmy==0.10.2"]
+    check(run_owned(command, cwd=args.tree, log=args.results / "dependency-private.log", limit=660) == 0,
+          "dependency_install_refused")
+    installed = closure(constraints())
+    check(importlib.metadata.version("pytest-homeassistant-custom-component") == "0.13.367"
+          and importlib.metadata.version("findmy") == "0.10.2", "test_dependency_version_refused")
+    source_unchanged(files, args.tree)
+    result.update({"schema": 1, "outcome": "passed", "completed": True, "core": CORE,
+                   "python": platform.python_version(), "machine": platform.machine(),
+                   "constraints_sha256": CONSTRAINTS_SHA, "installed_dependency_closure": installed,
+                   "source_sha256": SOURCE_SHA, "source_inventory_sha256": INVENTORY_SHA,
+                   "source_files": COUNT, "candidate_source_commit": SOURCE_COMMIT,
+                   "owner_accounts_used": False})
+    atomic_json(args.results / "setup-summary.json", result)
+
+
+def backend_result(path):
+    check(path.is_file() and path.stat().st_size <= 16 * 1024**2, "backend_xml_refused")
+    root = ET.fromstring(path.read_bytes())
+    cases = root.findall(".//testcase")
+    identities = [(case.attrib.get("classname"), case.attrib.get("name")) for case in cases]
+    check(len(identities) == len(set(identities)), "duplicate_backend_case_refused")
+    failed = [case for case in cases if case.find("error") is not None or case.find("failure") is not None]
+    skipped = [case for case in cases if case.find("skipped") is not None]
+    check(not any(case in skipped for case in failed), "ambiguous_backend_outcome_refused")
+    labels = []
+    for case in failed[:3]:
+        classname = case.attrib.get("classname", "")
+        function = case.attrib.get("name", "").split("[", 1)[0]
+        if classname.startswith("tests.") and re.fullmatch(r"[A-Za-z0-9_.]{1,180}", classname) \
+                and re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]{0,119}", function):
+            labels.append({"class": classname, "function": function})
+    passing = {(case.attrib.get("classname", ""), case.attrib.get("name", "").split("[", 1)[0])
+               for case in cases if case not in failed and case not in skipped}
+    required = [{**item, "passed": (item["class"], item["function"]) in passing}
+                for item in PINS["required_backend_tests"]]
+    return {"passed": len(cases) - len(failed) - len(skipped), "failed": len(failed), "skipped": len(skipped),
+            "required_regressions": required, "failure_labels": labels}, skipped
+
+
+def acceptance(args, files):
+    source_unchanged(files, args.tree)
+    bundle = staged_frontend(args)
+    frontend_matches(args.tree, bundle)
+    result = build(args, files, bundle)
+    installed = closure(constraints())
+    xml = args.results / "backend-private.xml"
+    code = run_owned([sys.executable, "-B", "-m", "pytest", "--junitxml", str(xml)],
+                     cwd=args.tree, log=args.results / "backend-private.log", limit=900)
+    backend, skipped = backend_result(xml)
+    result.update({"schema": 1, "outcome": "failed", "completed": False, "backend": backend})
+    atomic_json(args.results / "package-summary.json", result)
+    check(code == 0 and backend["passed"] >= PINS["minimum_backend_passed"]
+          and backend["failed"] == 0 and backend["skipped"] == 1, "backend_counts_refused")
+    check(all(item["passed"] is True for item in backend["required_regressions"]), "required_backend_regression_missing")
+    check(skipped[0].attrib.get("name") == "test_retained_public_apple_dmg_fixed_ranges"
+          and skipped[0].attrib.get("classname") == "tests.test_findmy_runtime_bootstrap", "backend_skip_refused")
+    source_unchanged(files, args.tree)
+    frontend_matches(args.tree, bundle)
+    check(build(args, files, bundle)["release_sha256"] == result["release_sha256"], "release_changed_after_tests")
+    result.update({"outcome": "passed", "completed": True, "core": CORE, "python": platform.python_version(),
+                   "machine": platform.machine(), "constraints_sha256": CONSTRAINTS_SHA,
+                   "installed_dependency_closure": installed, "source_sha256": SOURCE_SHA,
+                   "source_inventory_sha256": INVENTORY_SHA, "source_files": COUNT,
+                   "candidate_source_commit": SOURCE_COMMIT, "minimum_backend_passed": PINS["minimum_backend_passed"],
+                   "backend_network_disconnected_required": True, "owner_accounts_used": False,
+                   "production_configuration_used": False, "hacs_delivery_tested": False,
+                   "upgrade_recovery_repeated": False, "full_managed_core_lifecycle": False})
+    atomic_json(args.results / "package-summary.json", result)
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("mode", choices=("prepare", "privacy", "frontend", "setup", "acceptance"))
+    parser.add_argument("--payload", type=Path, required=True)
+    parser.add_argument("--tree", type=Path, required=True)
+    parser.add_argument("--results", type=Path, required=True)
+    parser.add_argument("--npm-log", type=Path)
+    parser.add_argument("--first-frontend", type=Path)
+    parser.add_argument("--pins-sha", required=True)
+    parser.add_argument("--git-directory", type=Path)
+    args = parser.parse_args()
+    args.results.mkdir(mode=0o700, parents=True, exist_ok=True)
+    started = time.monotonic()
+    stage = "inputs"
+    def terminate(_signum, _frame):
+        raise Terminated()
+    for signum in (signal.SIGTERM, signal.SIGHUP, signal.SIGINT):
+        signal.signal(signum, terminate)
+    try:
+        check(sys.platform == "linux" and platform.machine() == "x86_64", "native_linux_amd64_required")
+        configure(load_pins(args.payload / "config.json", args.pins_sha))
+        files = inputs(args.payload)
+        stage = args.mode
+        if args.mode == "prepare":
+            source = verify_git_source(files, args.git_directory)
+            extract(files, args.tree)
+            atomic_json(args.results / "source-summary.json", {"schema": 1, "outcome": "passed", **source,
+                        "source_sha256": SOURCE_SHA, "source_inventory_sha256": INVENTORY_SHA,
+                        "source_files": COUNT})
+        elif args.mode == "privacy":
+            source_unchanged(files, args.tree)
+            atomic_json(args.results / "privacy-summary.json", {"schema": 1, "outcome": "passed",
+                        "source_sha256": SOURCE_SHA, "source_inventory_sha256": INVENTORY_SHA,
+                        "candidate_source_commit": SOURCE_COMMIT, **privacy(files, args.tree, args.results)})
+        elif args.mode == "frontend":
+            frontend(args, files)
+        elif args.mode == "setup":
+            setup(args, files)
+        else:
+            acceptance(args, files)
+    except BaseException as error:
+        failure = {"schema": 1, "outcome": "failed", "completed": False, "mode": args.mode,
+                   "failure_stage": stage, "failure_type": type(error).__name__,
+                   "elapsed_seconds": round(time.monotonic() - started, 3)}
+        if isinstance(error, Refused):
+            failure["failure_code"] = str(error)
+        if isinstance(error, OSError) and type(error.errno) is int and 0 <= error.errno <= 4095:
+            failure["os_errno"] = error.errno
+            if isinstance(error.filename, str):
+                basename = Path(error.filename).name
+                if basename in {"source.tgz", "source-inventory.json", "config.json", "frontend-summary.json",
+                                "homecircle-card.js", "LEAFLET-LICENSE.txt", "driver.py"}:
+                    failure["input_basename"] = basename
+        frames = []
+        for frame, line in traceback.walk_tb(error.__traceback__):
+            code = frame.f_code
+            if code.co_filename == __file__ and re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]{0,79}", code.co_name):
+                frames.append({"function": code.co_name, "line": line})
+        failure["driver_frames"] = frames[-6:]
+        atomic_json(args.results / "failure-summary.json", failure)
+        print(json.dumps(failure), flush=True)
+        return 1
+    print(json.dumps({"outcome": "passed", "mode": args.mode, "source_files": COUNT}), flush=True)
+    return 0
+
+
+if __name__ == "__main__":
+    try:
+        code = main()
+    except BaseException as failure:
+        print(json.dumps({"outcome": "failed", "failure_type": type(failure).__name__}), file=sys.stderr)
+        code = 1
+    raise SystemExit(code)
