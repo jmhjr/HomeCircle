@@ -1,4 +1,4 @@
-name: HomeCircle original Container entrypoint pilot
+name: HomeCircle remaining original Container cells
 
 on:
   push:
@@ -16,10 +16,32 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  current-amd64-pilot:
+  remaining-consumer-cells:
     if: github.ref == 'refs/heads/codex/native-amd64-validation'
-    name: Original Container entrypoint / current amd64 pilot
-    runs-on: ubuntu-24.04
+    name: Original Container entrypoint / ${{ matrix.target }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: minimum-amd64
+            architecture: amd64
+            machine: x86_64
+            runner: ubuntu-24.04
+            core: 2026.9.4
+            pins_sha256: 18529404631e511fae09832e2199b42ab2a85e2a9eb5e837d0bdafc725875dab
+          - target: minimum-arm64
+            architecture: arm64
+            machine: aarch64
+            runner: ubuntu-24.04-arm
+            core: 2026.9.4
+            pins_sha256: fef3eaf61b259564f38a0e4aae04ed4209215e17d5e6893914cb136fe2b71dc6
+          - target: current-arm64
+            architecture: arm64
+            machine: aarch64
+            runner: ubuntu-24.04-arm
+            core: 2026.10.2
+            pins_sha256: b202d2457f6e7acd362828303a7aae0b7a71a00edba45c47254931945aa0f45e
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 55
     steps:
       - name: Check out reviewed controls and canonical product history
@@ -67,8 +89,20 @@ jobs:
           assert actual == set(expected) and len(actual) == 19, "fixture_members_refused"
           for name, digest in expected.items():
               assert hashlib.sha256((root / name).read_bytes()).hexdigest() == digest, "fixture_bytes_refused"
-          print("Verified 19 frozen fixture files; one current-amd64 pilot target.")
+          print("Verified 19 frozen fixture files; reviewed remaining native target matrix.")
           PY
+      - name: Verify exact native target and reviewed endpoint pins
+        timeout-minutes: 3
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(uname -s)" = Linux
+          test "$(uname -m)" = '${{ matrix.machine }}'
+          pins='native-release1-consumer-container/pins-${{ matrix.target }}.json'
+          test "$(sha256sum "$pins" | awk '{print $1}')" = '${{ matrix.pins_sha256 }}'
+          jq -e --arg target '${{ matrix.target }}' --arg arch '${{ matrix.architecture }}' \
+            --arg machine '${{ matrix.machine }}' --arg core '${{ matrix.core }}' \
+            '.target==$target and .architecture==$arch and .machine==$machine and .core==$core and .python=="3.14.6"' "$pins" >/dev/null
       - name: Check forty-seven standalone and Linux process contracts
         timeout-minutes: 3
         shell: bash
@@ -84,20 +118,20 @@ jobs:
               raise SystemExit('linux_process_probe_skip_refused')
           raise SystemExit(0 if result.wasSuccessful() else 1)
           PY
-      - name: Witness original startup, stop and restart on native amd64
+      - name: Witness original startup, stop and restart on matching native CPU
         timeout-minutes: 43
         shell: bash
         run: |
           timeout --signal=TERM --kill-after=150s 2300s bash native-release1-consumer-container/run_host.sh \
             --payload native-release1-consumer-container/payload \
-            --pins native-release1-consumer-container/pins-current-amd64.json \
-            --pins-sha 4d8742caf94e3bfcf4ebaa2113a0c5d88037e636413412f1bf5c926943ba02b9 \
+            --pins native-release1-consumer-container/pins-${{ matrix.target }}.json \
+            --pins-sha ${{ matrix.pins_sha256 }} \
             --source-repository "$GITHUB_WORKSPACE" \
             --output native-release1-consumer-container-results
           receipts=native-release1-consumer-container-results/public-summary
-          jq -e '.schema==1 and .outcome=="passed" and .target=="current-amd64" and
+          jq -e '.schema==1 and .outcome=="passed" and .target=="${{ matrix.target }}" and
             .stage=="complete" and .exit_code==0 and
-            .pins_sha256=="4d8742caf94e3bfcf4ebaa2113a0c5d88037e636413412f1bf5c926943ba02b9" and
+            .pins_sha256=="${{ matrix.pins_sha256 }}" and
             .cleanup_failed==false and .owned_containers_stopped==true and
             .owned_containers_removed==true and .owned_volume_removed==true and
             .private_workspace_removed==true and .both_containers_offline_during_acceptance==true and
@@ -107,7 +141,7 @@ jobs:
             .fresh_online_resolution_claimed==false' "$receipts/host.json" >/dev/null
           for phase in first restart; do
             jq -e --arg phase "$phase" '.schema==1 and .outcome=="passed" and .phase==$phase and
-              .target=="current-amd64" and .architecture=="amd64" and .core=="2026.10.2" and .python=="3.14.6" and
+              .target=="${{ matrix.target }}" and .architecture=="${{ matrix.architecture }}" and .core=="${{ matrix.core }}" and .python=="3.14.6" and
               .source_commit=="9bf03eb45d2cf43274074534e9dfe2de841f4011" and
               .package_sha256=="c4530d94be3b2996f8d6c8948db88a51868566047d68558eefde7967f270a861" and
               .exact_loaded_and_installed_files==113 and .nonempty_options==true and
@@ -125,7 +159,7 @@ jobs:
               .owner_accounts_used==false and .native_apple_worker_executed==false and
               .managed_haos_service_claimed==false and .release_published==false' "$receipts/$phase-receipt.json" >/dev/null
             jq -e --arg phase "$phase" '.schema==1 and .outcome=="passed" and .phase==$phase and
-              .target=="current-amd64" and .architecture=="amd64" and .core=="2026.10.2" and
+              .target=="${{ matrix.target }}" and .architecture=="${{ matrix.architecture }}" and .core=="${{ matrix.core }}" and
               (.native_s6_pid1=="s6-svscan" or .native_s6_pid1=="s6-linux-init") and
               .core_under_native_s6_supervisor==true and .core_exact_original_cli_arguments==true and
               .core_mimalloc_environment==true and .no_import_path_override==true and
@@ -151,7 +185,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: release1-consumer-container-current-amd64-pilot
+          name: release1-consumer-container-${{ matrix.target }}
           path: |
             native-release1-consumer-container-results/public-summary/cache-child-summary.json
             native-release1-consumer-container-results/public-summary/source-summary.json
