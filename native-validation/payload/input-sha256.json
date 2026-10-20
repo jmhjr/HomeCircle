@@ -1,0 +1,42 @@
+{
+  "homecircle-candidate.zip": {
+    "bytes": 604938,
+    "sha256": "f0477a91e78181fe1f8d80ada176a1739e10a7502abe7ee6ee2240571280d1f5"
+  },
+  "published-homecircle.zip": {
+    "bytes": 575816,
+    "sha256": "5f20d536e1b5378bef7f0b972bbfbc7ced911063aea16a0a8f56d2ffa1210cd2"
+  },
+  "recorded-patch.zip": {
+    "bytes": 576025,
+    "sha256": "0362a71b0d12e12bbe38c20192f130f505011500e9a1d31a3531547c5055d80a"
+  },
+  "homecircle-inventory.json": {
+    "bytes": 16674,
+    "sha256": "81a0b14cbdc28cc421a9690d6efac295a9e05300626ae30743f24b69197403a3"
+  },
+  "scripts/build_release.py": {
+    "bytes": 8730,
+    "sha256": "0c1ac7f979817bd5fc2cd4a4101571931488d6972bc6f181a26ac21edcf8c7d0"
+  },
+  "scripts/validate_release.py": {
+    "bytes": 6276,
+    "sha256": "20c0466b4fa70a83c5f282bfcd07b0d2e6f5a3a1a09bf90072649441b2ad7f37"
+  },
+  "scripts/validate_ha_restart.py": {
+    "bytes": 11390,
+    "sha256": "3714a31ea0f87b8c77086a4a28a3a4e93a396d3359dacd87ec6d2a0e7eeb3519"
+  },
+  "scripts/validate_candidate_upgrade.py": {
+    "bytes": 27626,
+    "sha256": "c1c0b903d47e3fee90a4c377e493ee555e6df3bf5f75b2d3cbce394fb30e2bdf"
+  },
+  "scripts/validate_recovery_restart.py": {
+    "bytes": 32223,
+    "sha256": "acb71afbf58424939ab736e350bbef9b37f582af15c4eb508186ea3f54509e1f"
+  },
+  "amd64-upgrade-recovery/run_validation.py": {
+    "bytes": 17721,
+    "sha256": "c910ef815d34eb4379bf3f0e1fd6dad31d95986a287b9e32263f9b87b60de373"
+  }
+}
