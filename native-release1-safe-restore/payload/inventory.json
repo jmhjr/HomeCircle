@@ -1,13 +1,13 @@
 {
-  "archive_sha256": "c4530d94be3b2996f8d6c8948db88a51868566047d68558eefde7967f270a861",
+  "archive_sha256": "6fb180fc1f5c7de70382f95f8fe9e718f94841598dfc96d1afe233c8f21495db",
   "files": {
     "LICENSE": {
       "bytes": 1070,
       "sha256": "d1b0ebd8a99c8c743208b2be4451f911395fd3b27e1f56e7de9dde23ff4552c3"
     },
     "__init__.py": {
-      "bytes": 13562,
-      "sha256": "d877f4132c8aeaf18af3e507129098a40e7262c3440d259c5646102ba8eaf946"
+      "bytes": 13755,
+      "sha256": "1044e86e5ed15dccc73094cf14037c4df51095a0f2cd44e16515b42130c76aa0"
     },
     "_findmy_runtime/LICENSE.md": {
       "bytes": 20800,
@@ -50,8 +50,8 @@
       "sha256": "561f0460590225df2d76b317bd7bc19b76f259ef98e2bf8aa029e6f156501398"
     },
     "_findmy_runtime/onboarding.py": {
-      "bytes": 4381,
-      "sha256": "0bcb64a3bef9f775da40a38725d8903fa20e585a185c2f729ca48bd8a58a512a"
+      "bytes": 4845,
+      "sha256": "441d3cdfa91271f6131261f08f6722a88c0405d9092898b467092d53b8d86dc7"
     },
     "_findmy_runtime/provider.py": {
       "bytes": 27955,
@@ -102,8 +102,8 @@
       "sha256": "c4085182917fb6979d19760ad717b5b3aea95b6f21c185fdf12c90edbb5efc1e"
     },
     "_vendor_findmy/cloudkit/pcs.py": {
-      "bytes": 74398,
-      "sha256": "13a991006b2a23efa55a8f2635922836c6994e255a5260a81a4344e3fb646aca"
+      "bytes": 75854,
+      "sha256": "a3106e721c1f6d8ed1c5a5cdcd509a57da7f78fdf0909b4d5b5fea1957d57a36"
     },
     "_vendor_findmy/cloudkit/proto/__init__.py": {
       "bytes": 66,
@@ -338,8 +338,8 @@
       "sha256": "739829527b54869489044ac86431d75172bb8915ff870f2d4afb66978f3df1fd"
     },
     "findmy_flow.py": {
-      "bytes": 69042,
-      "sha256": "40c2de90f14ab42b9a34d11510c1d9c418ea0575002fb9f9153436bced04ec39"
+      "bytes": 70175,
+      "sha256": "c22d1c7a7f7dcc55e651e3778c357a6cee1dece2f24a50d67a7d65e4a6f3eba5"
     },
     "findmy_identity.py": {
       "bytes": 7518,
@@ -378,8 +378,8 @@
       "sha256": "8e5ad4aa024b7c8a790393cb99dfc29f3388c07e51d25136fb9d9f3ca246aa43"
     },
     "findmy_setup.py": {
-      "bytes": 46342,
-      "sha256": "f1618311ed09cd3e48b19c47c99d8528c1919ff23038449aff8755d48449433e"
+      "bytes": 49998,
+      "sha256": "0821cba837a2327a3f7217bc12a324dab743870bc7f6f134b6d4dac1173f5062"
     },
     "findmy_storage.py": {
       "bytes": 1509,
@@ -398,8 +398,8 @@
       "sha256": "53e8dc25862014e4324741ca18fbe3611e11d42ef69f59f86ea8c5389647d4cb"
     },
     "frontend/homecircle-card.js": {
-      "bytes": 275336,
-      "sha256": "80b2727d18a0b8edb052c47d2c718850adf19bf5d35c2af6c3eb86c07f1f6cac"
+      "bytes": 276650,
+      "sha256": "77f429fb1908acc21cde2c89614f05f12c60a09bb37fa6ca78a1830ec07c6f91"
     },
     "life360_direct.py": {
       "bytes": 22644,
@@ -438,16 +438,16 @@
       "sha256": "e69ad35f68062501c13f931b5fb279fd29a74913fc63ba81f051a4202ab4a32b"
     },
     "strings.json": {
-      "bytes": 88003,
-      "sha256": "3cb08295f1e13b7c15414851f078cf9e1ebe90eb58d2c36fc5219ca620424cfd"
+      "bytes": 92628,
+      "sha256": "dced9aeb013e0fde617cf111535e02e3a50dea84ed985c42d73977b527e944bc"
     },
     "tracker_providers.py": {
       "bytes": 8841,
       "sha256": "c0d18a68009d7ffedc2f095ee1c8bba8a59202e38ca4bdecb9c8804d6d1d5e99"
     },
     "translations/en.json": {
-      "bytes": 88003,
-      "sha256": "3cb08295f1e13b7c15414851f078cf9e1ebe90eb58d2c36fc5219ca620424cfd"
+      "bytes": 92628,
+      "sha256": "dced9aeb013e0fde617cf111535e02e3a50dea84ed985c42d73977b527e944bc"
     },
     "zone_setup.py": {
       "bytes": 1824,

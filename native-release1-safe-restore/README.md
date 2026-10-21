@@ -1,11 +1,11 @@
-# Exact C453 preview: explicit disabled-entry partial-restore witness
+# Exact F4DA preview: explicit disabled-entry partial-restore witness
 
 Prepared for review only. No VM, CI or product change was made by preparing this
 folder. This is one fresh native amd64/KVM HAOS 18.3 guest, actual Supervisor/Core
 2026.10.2 and CPython 3.14.6. The immutable input is canonical product source
-`9bf03eb45d2cf43274074534e9dfe2de841f4011` (337 public source files), packaged as
-614,209 bytes / 113 members, SHA-256
-`c4530d94be3b2996f8d6c8948db88a51868566047d68558eefde7967f270a861`.
+`f4da650e6e460382c6ee1f70827bddac43bf2780` (337 public source files), packaged as
+617,757 bytes / 113 members, SHA-256
+`6fb180fc1f5c7de70382f95f8fe9e718f94841598dfc96d1afe233c8f21495db`.
 It remains an unreleased same-version `0.1.0-beta.20` preview.
 
 This prepares a tested **explicit procedure**, not automatic anti-rollback.
@@ -242,3 +242,72 @@ the original failure. The existing fresh export token, 60-second command,
 zero-exit gate, success stdout, restore procedure and cleanup remain required.
 Seventeen exact-module fault contracts and five complete export-path contracts supplement the prior 99 contracts, for 121 total.
 Actual Supervisor failure cause and full restore acceptance remain unproven.
+
+
+## Prepared Core-image guard-transfer context correction
+
+The earlier prepared context correction was bound to the historical
+C453/113-file/source9bf package and all eight phases from run39535722203 at
+0981c30a. That run passed121contracts and initialize, initial_restart, quarantine
+and mutate; its Supervisor-context export failed at the exact product
+flock(LOCK_EX) with EACCES. This separate packet binds the same reviewed context
+correction and phase logic to the current f4da candidate; it is not a rerun or
+reclassification of the historical C453 failure. The actual denying policy
+was not retained, so AppArmor attribution remains an inference. No product or
+file-permission change is justified by that failure.
+
+The separately retained ARM64 synthetic lock witness passed two native Python
+processes and guard2→3→synthetic2→unchanged import3, with no real HA configuration
+mounted, same running Core process and owned cleanup. It establishes the scoped
+Core-image lock/transfer context; it is not full restore or an amd64 witness.
+
+Only export/import now use fresh owned offline containers from the already-local
+OCI-verified amd64 Core2026.10.2 image index45f009d6, configuratione1acee12. The
+exact index is required; --pull=never forbids resolution/pull. Each context has
+a60second total envelope,20second cleanup reserve and18call cap. Its Docker
+commands are wrapped in bounded timeout; the attached transfer gets at most25
+seconds within that envelope. Managed Core must remain the same stopped
+container/image/start timestamp/restart count before and after each context.
+No Core action is added; existing stopped-before-export and repair-before-enable
+ordering, backup/restore requests and external NIC boundaries are unchanged.
+
+Each fresh nonce/action name and label is checked against actual containerId,
+image/security and exactly one writable bind: the fresh owned QA configuration
+at/mnt/data/supervisor/homeassistant→/data/homeassistant. These are the
+account-free synthetic workflow files, never an owner/production configuration.
+No additional mount, socket, passed environment, port, network or capability is
+allowed. Rootfs is read-only, networknone, capdropALL, no-new-privileges, user0:0.
+Unchanged guard_transfer.py is supplied as stdin with python3-B; the exact c8
+guard source, private bundle format, validation, fsync/status/lock checks and
+old/new fingerprint requirements are retained. No reset/chmod/chown or
+Supervisor confinement exception is introduced.
+
+A lost create response is resolved only using exact name/nonce/actualId. Unknown
+or changed ownership/security refuses removal. Cleanup requires actual owned
+container removal and an empty exact-name listing. A lost removal acknowledgement
+can be reconciled by one read-only exact-name absence check, without repeating
+removal; a present or unknown object and false cleanup fail the context. Raw output stays private to the existing transfer/host-guard
+protocol. Public records contain fixed action/outcome/image and strict context
+checks, never raw bundle/errors/IDs/names. The existing operational gate remains
+unchanged; an additional strict guard_context public gate requires both actual
+export/import context successes. All previous121test identities are retained,
+with only the old diagnostic transport fixture adapted from the literal
+Supervisor command to the new export boundary. Fourteen new offline contracts
+cover actual context commands/state, failed acknowledgements, cleanup and gates.
+
+Preparation alone is not a passing full restore. The ordinary enabled-entry
+automatic anti-rollback result remains negative, manual newest-guard retention is
+required, and request/proof counts remain explicitly unmeasured.
+
+
+## Current-candidate binding
+
+This new packet uses native package run39656754628 and the exact current
+113-member ZIP and inventory. The product source is f4da650e6e460382c6ee1f70827bddac43bf2780;
+its337-file source archive/inventory and the served frontend bundle are pinned.
+Only candidate/source/served-asset/provenance literals and their workflow digests
+change from the reviewed Core-image context packet. The guard source is unchanged
+at c8abe90b71c216e14d63b8d7382f377128aa0cce83ce53e553039fee3005ea6a.
+All135 zero-skip contracts, the eight-phase acceptance policy and offline
+export/import context boundaries remain required. Preparation is not a runtime
+restore result; current-candidate procedure acceptance remains pending.

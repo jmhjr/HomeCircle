@@ -30,10 +30,12 @@ import time
 import urllib.request
 import zipfile
 
+from guard_context import Context
+
 
 HAOS_URL = "https://github.com/home-assistant/operating-system/releases/download/18.3/haos_ova-18.3.qcow2.xz"
 HAOS_XZ_SHA = "fae6a728768cc10aff60d4820bfcd40d64cd77fab82c8bd92af13b3d9d414090"
-CANDIDATE_SHA = "c4530d94be3b2996f8d6c8948db88a51868566047d68558eefde7967f270a861"
+CANDIDATE_SHA = "6fb180fc1f5c7de70382f95f8fe9e718f94841598dfc96d1afe233c8f21495db"
 BRANCH = "codex/native-amd64-validation"
 CORE = "2026.10.2"
 HA = "/usr/bin/docker exec hassio_cli ha"
@@ -632,7 +634,7 @@ def project_dependencies(value, complete):
             'skip_pip': value.get('skip_pip') if type(value.get('skip_pip')) is bool else None,
             'provider_or_native_imports_requested_by_probe': False}
 
-SOURCE_COMMIT = "9bf03eb45d2cf43274074534e9dfe2de841f4011"
+SOURCE_COMMIT = "f4da650e6e460382c6ee1f70827bddac43bf2780"
 
 CONSTRAINTS_SHA = "7baa9a8f39ddeb9c5bb60a1036f6d5e33f4b84267f151f53cc2b95ef031a21b5"
 
@@ -716,6 +718,7 @@ class Controller:
         self.cli_version_observed = None
         self.core_actions = []
         self.backup_requests = []
+        self.guard_transfer_contexts = []
 
     def core_container_state(self, timeout):
         # Docker's documented name filter is a substring match; the parser
@@ -1547,6 +1550,22 @@ print(json.dumps({"archive_bytes":path.stat().st_size,"archive_sha256":sha(path.
                 and re.fullmatch(r"[0-9a-f]{64}", value["archive_sha256"]), "backup_archive_receipt_refused")
         self.backup["archive"] = value
 
+    def run_guard_transfer(self, action, arguments=()):
+        require(self.config_path == '/mnt/data/supervisor/homeassistant'
+                and self.minimum_core_image['official_index_digest'] == 'sha256:45f009d6ff1061971102e81f0802cf2762bdd5c5007231c938bd36030cbd0a12'
+                and self.minimum_core_image['verified_oci_config_digest'] == 'sha256:e1acee126eee45b3007494ad7f806d12535dc7d733624b681ed29a505f8c2b98'
+                and self.minimum_core_image['stored_objects_hashed'] == 3
+                and self.minimum_core_image['image_rootfs_matches_verified_config'] is True
+                and [record['action'] for record in self.guard_transfer_contexts]
+                    == ([] if action == 'export' else ['export']), 'verified_guard_context_order_required')
+        context = Context(self.guest, self.nonce, action, arguments, maximum_seconds=self.remaining(60))
+        try:
+            return context.run()
+        except Exception:
+            raise Refused('guard_transfer_context_refused') from None
+        finally:
+            self.guard_transfer_contexts.append(context.record)
+
     def preserve_latest_guard(self):
         self.stage = 'host_private_newest_guard'
         self.stop_core()
@@ -1563,7 +1582,7 @@ print(json.dumps({"archive_bytes":path.stat().st_size,"archive_sha256":sha(path.
                 'external_history_window_refused')
         self.external_proof = proof
         self.guest_write(GUEST_ROOT + '/guard-transfer.py', (ROOT/'guard_transfer.py').read_bytes())
-        result = self.guest('/usr/bin/docker exec -i hassio_supervisor python3 - export < ' + GUEST_ROOT + '/guard-transfer.py',60,capture=True)
+        result = self.run_guard_transfer('export')
         self.guard_export = guard_export_observation(result, self.phase_token)
         require(result['exitcode'] == 0 and not result['truncated'], 'guest_command_failed')
         raw = result['stdout']
@@ -1655,9 +1674,11 @@ print(json.dumps({"archive_bytes":path.stat().st_size,"archive_sha256":sha(path.
         self.guest('test ! -e '+transfer_path+'; test ! -L '+transfer_path,15)
         self.guest_write(transfer_path,raw)
         self.guest('chmod 600 '+transfer_path,15)
-        result = json.loads(self.guest('/usr/bin/docker exec -i hassio_supervisor python3 - import '
-            + '/data/homeassistant/homecircle-safe-restore-qa-control/.newest-guard-private.json '+sha(raw)+' '+self.backup_guard_sha256
-            +' '+self.latest_guard_sha256+' < '+GUEST_ROOT+'/guard-transfer.py',60))
+        transfer_result = self.run_guard_transfer('import',
+            ('/data/homeassistant/homecircle-safe-restore-qa-control/.newest-guard-private.json',
+             sha(raw), self.backup_guard_sha256, self.latest_guard_sha256))
+        require(transfer_result['exitcode'] == 0 and not transfer_result['truncated'], 'guest_command_failed')
+        result = json.loads(transfer_result['stdout'])
         require(result == {'schema':1,'outcome':'passed','newest_guard_sha256':self.latest_guard_sha256,
                            'blocked_api_status_checked':True,'private_guest_transfer_removed':True}, 'host_guard_transfer_refused')
         require(self.guard_fingerprint(self.config_path+'/.storage/homecircle_findmy/recovery_guard') == self.latest_guard_sha256,
@@ -1696,6 +1717,7 @@ print(json.dumps({"archive_bytes":path.stat().st_size,"archive_sha256":sha(path.
             'helper_files_sha256':{p.relative_to(ROOT/'guest_helper').as_posix():sha(p.read_bytes())
                 for p in (ROOT/'guest_helper').rglob('*') if p.is_file() and '__pycache__' not in p.parts},
             'guard_transfer_sha256':sha((ROOT/'guard_transfer.py').read_bytes()),
+            'guard_context_sha256':sha((ROOT/'guard_context.py').read_bytes()),
             'reset_sha256':sha((ROOT/'reset_fresh_config.py').read_bytes())}
         self.start_vm(self.download_haos())
         self.wait_initial_managed()
@@ -1789,6 +1811,7 @@ print(json.dumps({"archive_bytes":path.stat().st_size,"archive_sha256":sha(path.
             'failure_code':labels['failure_code'],'provenance':self.provenance,'actual_kvm_confirmed':self.kvm_confirmed,
             'actual_core':self.core_version_after,'actual_supervisor':self.supervisor_version_observed,
             'core_actions':self.core_actions,'cli_capabilities':self.cli_capabilities,'fresh_owned_config':self.reset_receipt,
+            'guard_transfer_contexts':getattr(self,'guard_transfer_contexts',[]),
             'current_core_image':self.minimum_core_image,'dependencies_before_candidate':self.target_environment,
             'backup_requests':self.backup_requests,'backup':{k:v for k,v in (self.backup or {}).items() if k!='slug'},
             'restore':self.restore,'host_newest_guard_retained':self.host_guard_retained,

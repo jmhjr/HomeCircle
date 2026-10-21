@@ -81,7 +81,7 @@ def synthetic_success():
         add('restart')
         # Match exact real frontend pin rather than this small controller fixture's digest.
         for name in ('initialize','initial_restart','reenabled','restart'):
-            phases[name]['served_bundle_sha256']='80b2727d18a0b8edb052c47d2c718850adf19bf5d35c2af6c3eb86c07f1f6cac'
+            phases[name]['served_bundle_sha256']='77f429fb1908acc21cde2c89614f05f12c60a09bb37fa6ca78a1830ec07c6f91'
         public={'schema':1,'outcome':'passed','phases':8,'failure_or_final_stage':'safe_disabled_restore_complete',
             'failure_code':None,'failure_type':None,'actual_core':'2026.10.2','actual_supervisor':'2026.10.2',
             'current_core_image':{'identity_model':'containerd_index_with_verified_stored_oci_chain','official_index_digest':'sha256:45f009d6ff1061971102e81f0802cf2762bdd5c5007231c938bd36030cbd0a12','verified_oci_config_digest':'sha256:e1acee126eee45b3007494ad7f806d12535dc7d733624b681ed29a505f8c2b98','stored_objects_hashed':3,'image_rootfs_matches_verified_config':True},
@@ -89,7 +89,7 @@ def synthetic_success():
             'network_transitions':['closed_before_restore','reopen_after_repaired_disabled','closed_before_final_restart'],
             'network_boundary':{'link_closed':True,'closed_probe_connected':False,'closed_probe_observations':5},
             'provenance':{'candidate_zip_sha256':gate.CANDIDATE,'candidate_files':113,
-                'candidate_source_commit':'9bf03eb45d2cf43274074534e9dfe2de841f4011','release_published':False},
+                'candidate_source_commit':'f4da650e6e460382c6ee1f70827bddac43bf2780','release_published':False},
             'backup_requests':[{'action':name,'result':'ok','exit_code':0,'exact_job_id_returned':True,
                 'output_truncated':False,'signal':None} for name in ('create','restore')],
             'backup':{'archive':{'disabled_entry':True,'database_included':True,'candidate_match':True,'guard_sha256':'c'*64}},
@@ -934,7 +934,8 @@ class GuardExportDiagnosticContracts(unittest.TestCase):
                     'stage':'private_files','failure_type':'ValueError'})
                 result={'exitcode':0 if success else None if signal_value else 17,'signal':signal_value,'truncated':truncated,
                         'stdout':raw if success else b'','stderr':b'' if success or truncated else diagnostic}
-                host.guest=Mock(return_value=result)
+                host.run_guard_transfer=Mock(return_value=result)
+                host.guest=Mock()
                 if success:
                     host.preserve_latest_guard();self.assertTrue(host.host_guard_retained)
                     self.assertEqual(host.host_guard.read_bytes(),raw)
@@ -942,7 +943,8 @@ class GuardExportDiagnosticContracts(unittest.TestCase):
                 else:
                     with self.assertRaisesRegex(controller.Refused,'^guest_command_failed$') as caught:host.preserve_latest_guard()
                     failure=caught.exception;self.assertFalse(host.host_guard_retained)
-                host.guest.assert_called_once_with('/usr/bin/docker exec -i hassio_supervisor python3 - export < '+controller.GUEST_ROOT+'/guard-transfer.py',60,capture=True)
+                host.run_guard_transfer.assert_called_once_with('export')
+                host.guest.assert_not_called()
                 host.guest_write.assert_called_once_with(controller.GUEST_ROOT+'/guard-transfer.py',(controller.ROOT/'guard_transfer.py').read_bytes())
                 host.cleanup_vm=Mock();host.cleanup={'qemu_stopped':True,'private_workspace_removed':True,'cleanup_failed':False}
                 with redirect_stdout(io.StringIO()):host.finish(failure)

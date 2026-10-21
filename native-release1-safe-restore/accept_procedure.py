@@ -6,7 +6,7 @@ import sys
 
 PHASES = ('initialize','initial_restart','quarantine','mutate','automatic_disabled',
           'repaired_disabled','reenabled','restart')
-CANDIDATE = 'c4530d94be3b2996f8d6c8948db88a51868566047d68558eefde7967f270a861'
+CANDIDATE = '6fb180fc1f5c7de70382f95f8fe9e718f94841598dfc96d1afe233c8f21495db'
 
 
 def require(ok, reason):
@@ -46,7 +46,7 @@ def accept(host, phases):
             and host['network_boundary'].get('closed_probe_observations',0) >= 5, 'network_procedure_not_proven')
     provenance = host.get('provenance',{})
     require(provenance.get('candidate_zip_sha256') == CANDIDATE and provenance.get('candidate_files') == 113
-            and provenance.get('candidate_source_commit') == '9bf03eb45d2cf43274074534e9dfe2de841f4011'
+            and provenance.get('candidate_source_commit') == 'f4da650e6e460382c6ee1f70827bddac43bf2780'
             and provenance.get('release_published') is False, 'exact_preview_input')
     requests = host.get('backup_requests',[])
     require(len(requests) == 2 and [x.get('action') for x in requests] == ['create','restore']
@@ -104,7 +104,7 @@ def accept(host, phases):
                     and re.fullmatch(r'[0-9a-f]{64}',phase['resource_url_type_sha256'])
                     and phase['resource_url_type_sha256'] == initial.get('resource_url_type_sha256'), 'owned_resource_url_type_changed')
             require(phase.get('static_served_bundle_matches') is True
-                    and phase.get('served_bundle_sha256') == '80b2727d18a0b8edb052c47d2c718850adf19bf5d35c2af6c3eb86c07f1f6cac'
+                    and phase.get('served_bundle_sha256') == '77f429fb1908acc21cde2c89614f05f12c60a09bb37fa6ca78a1830ec07c6f91'
                     and phase.get('normal_dependencies',{}).get('closure_graph_checked') is True
                     and phase['normal_dependencies'].get('config_deps_empty') is True
                     and phase['normal_dependencies'].get('skip_pip') is False, 'normal_served_runtime_required')

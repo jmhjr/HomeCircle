@@ -44,7 +44,7 @@ from homeassistant.util import dt as dt_util
 DOMAIN = "homecircle_safe_restore_qa"
 CONTROL = "homecircle-safe-restore-qa-control"
 RESULTS = "homecircle-safe-restore-qa-results"
-CANDIDATE = "c4530d94be3b2996f8d6c8948db88a51868566047d68558eefde7967f270a861"
+CANDIDATE = "6fb180fc1f5c7de70382f95f8fe9e718f94841598dfc96d1afe233c8f21495db"
 PHASES = ("initialize", "initial_restart", "quarantine", "mutate", "automatic_disabled", "repaired_disabled", "reenabled", "restart")
 TRACKERS = ("device_tracker.homecircle_safe_restore_qa_a", "device_tracker.homecircle_safe_restore_qa_b")
 TRACKER_UIDS = ("homecircle-safe-restore-qa-synthetic-a", "homecircle-safe-restore-qa-synthetic-b")
