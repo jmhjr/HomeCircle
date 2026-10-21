@@ -360,7 +360,7 @@ class Contracts(unittest.TestCase):
             self.assertIs(host.host_guard_retained,True)
 
     def test_actual_managed_title_update_waits_for_real_store_without_changing_configuration(self):
-        namespace=managed_functions({"read_json","assert_unimported","persist_verified_entry"})
+        namespace=managed_functions({"read_json","read_managed_json","assert_unimported","persist_verified_entry"})
         disabled,state=object(),object()
         namespace.update(asyncio=asyncio,sys=SimpleNamespace(modules={}),VERIFIED_TITLE="Synthetic saved storage verified",
             ConfigEntryDisabler=SimpleNamespace(USER=disabled),ConfigEntryState=SimpleNamespace(NOT_LOADED=state))
@@ -369,12 +369,12 @@ class Contracts(unittest.TestCase):
             entry=SimpleNamespace(entry_id="1"*32,disabled_by=disabled,state=state,title="Synthetic saved storage",data={"nested":{"token":"private-fixture"}},options={"nested":{"token":"private-fixture"}},runtime_data=None)
             before=copy.deepcopy({"data":entry.data,"options":entry.options})
             row={"entry_id":entry.entry_id,"domain":"homecircle","disabled_by":"user","title":entry.title,**copy.deepcopy(before)}
-            store.write_bytes(c.canonical({"data":{"entries":[row]}}));store.chmod(0o600)
+            store.write_bytes(c.canonical({"data":{"entries":[row]}}));store.chmod(0o644)
             calls=[];reads=[]
             def update(actual,**changes):
                 self.assertIs(actual,entry);calls.append(changes);entry.title=changes["title"];return True
-            async def executor(function,path):
-                value=function(path);reads.append(value)
+            async def executor(function,*arguments):
+                value=function(*arguments);reads.append(value)
                 if len(reads)==1:
                     row["title"]=entry.title;store.write_bytes(c.canonical({"data":{"entries":[row]}}))
                 return value
@@ -390,7 +390,7 @@ class Contracts(unittest.TestCase):
 
     def test_actual_managed_title_update_refuses_no_change_configuration_mutation_and_import(self):
         for fault in ("unchanged","configuration","imported","enabled"):
-            namespace=managed_functions({"read_json","assert_unimported","persist_verified_entry"})
+            namespace=managed_functions({"read_json","read_managed_json","assert_unimported","persist_verified_entry"})
             disabled,state=object(),object()
             namespace.update(asyncio=asyncio,sys=SimpleNamespace(modules={}),VERIFIED_TITLE="Synthetic saved storage verified",
                 ConfigEntryDisabler=SimpleNamespace(USER=disabled),ConfigEntryState=SimpleNamespace(NOT_LOADED=state))
@@ -447,5 +447,74 @@ class Contracts(unittest.TestCase):
             direct=[n.value for n in run.body if isinstance(n,ast.Expr) and isinstance(n.value,ast.Call)]
             names=[node.func.attr for node in direct if isinstance(node.func,ast.Attribute)]
             self.assertEqual(names[names.index("require_restore_barrier_absent"):names.index("restored_boot_barrier")+1],["require_restore_barrier_absent","backup_operation","restored_boot_barrier"])
+
+    def test_failure_stage_catalog_exactly_matches_source_producer(self):
+        source=ast.parse((ROOT/"storage_transfer.py").read_bytes())
+        assignment=next(n for n in source.body if isinstance(n,ast.Assign) and any(isinstance(t,ast.Name) and t.id=="STAGES" for t in n.targets))
+        self.assertEqual(c.STORAGE_FAILURE_STAGES,frozenset(ast.literal_eval(assignment.value.args[0])))
+        for action in c.STORAGE_ACTIONS:
+            for stage in c.STORAGE_FAILURE_STAGES:
+                result={"exitcode":1,"signal":None,"stdout":c.canonical({"schema":1,"outcome":"failed","stage":stage}),"stderr":b"","truncated":False}
+                self.assertEqual(c.project_storage_failure(result,action),{"schema":1,"action":action,"stage":stage})
+
+    def test_failure_stage_parser_suppresses_private_canaries_and_malformed_shapes(self):
+        good={"schema":1,"outcome":"failed","stage":"private_state"}
+        canary="PRIVATE_FAILURE_CANARY_"+"x"*40
+        payloads=[{**good,"secret":canary},{**good,"schema":True},{**good,"schema":"1"},{**good,"outcome":"passed"},
+            {**good,"stage":canary},{**good,"stage":["seed"]},{"schema":1,"outcome":"failed"},[good],None]
+        encoded=[c.canonical(value) for value in payloads]+[b'{"schema":1,"outcome":"failed","stage":"seed","stage":"guard"}',
+            b'\xff',b'not json',b' '*513,c.canonical(good)+b' '*513]
+        for raw in encoded:
+            returned=c.project_storage_failure({"exitcode":1,"signal":None,"stdout":raw,"stderr":b"","truncated":False},"seed")
+            self.assertIs(returned,None)
+            self.assertNotIn(canary,json.dumps(returned))
+
+    def test_failure_stage_parser_requires_clean_exact_failure_boundary(self):
+        good={"exitcode":1,"signal":None,"stdout":c.canonical({"schema":1,"outcome":"failed","stage":"seed"}),"stderr":b"","truncated":False}
+        for key,value in [("exitcode",True),("exitcode",0),("exitcode",2),("exitcode",None),("signal",False),("signal",11),
+            ("stderr",b"PRIVATE_CANARY"),("stderr",""),("truncated",True),("truncated",0),("stdout","{}")] :
+            with self.subTest(key=key,value=value):self.assertIs(c.project_storage_failure(dict(good,**{key:value}),"seed"),None)
+        self.assertIs(c.project_storage_failure(dict(good,extra="PRIVATE_CANARY"),"seed"),None)
+        self.assertIs(c.project_storage_failure(good,"unknown"),None)
+        self.assertEqual(c.project_storage_failure(dict(good,signal=0),"seed"),{"schema":1,"action":"seed","stage":"seed"})
+
+    def test_actual_failed_context_projects_fixed_stage_then_refuses_without_reading_private_results(self):
+        host=c.Controller.__new__(c.Controller);host.storage_contexts=[];host.storage_results={};host.generation="before_restore"
+        host.nonce="1"*32;host.phase_token="2"*32;host.args=SimpleNamespace(branch_commit="3"*40);host.config_path="/owned"
+        host.assert_network_closed=lambda:None;host.remaining=lambda _:60
+        source=(ROOT/"storage_transfer.py").read_bytes();writes=[]
+        host.guest_write=lambda path,raw:writes.append((path,raw))
+        def read(path):
+            self.assertEqual(path,c.GUEST_ROOT+"/storage-transfer.py","failed transfer must not read private result/proof")
+            return source
+        host.guest_read=read;host.guest=lambda *_:b""
+        cleaned=[]
+        class FailedContext:
+            def __init__(self,*args,**kwargs):self.record={"schema":1,"action":"seed","outcome":"failed_or_incomplete"}
+            def run(self):
+                cleaned.append(True);self.record.update(owned_container_removed=True,managed_core_same_stopped_process=True)
+                return {"exitcode":1,"signal":None,"stdout":c.canonical({"schema":1,"outcome":"failed","stage":"private_state"}),"stderr":b"","truncated":False}
+        with patch.object(c,"StorageContext",FailedContext),self.assertRaisesRegex(c.Refused,"storage_transfer_refused"):
+            host.run_storage_context("seed")
+        self.assertEqual(cleaned,[True]);self.assertEqual(host.storage_results,{})
+        self.assertEqual(host.storage_contexts[0]["storage_transfer_failure"],{"schema":1,"action":"seed","stage":"private_state"})
+        self.assertIs(host.storage_contexts[0]["owned_container_removed"],True)
+
+    def test_actual_managed_reader_is_narrow_and_private_reader_stays_private(self):
+        namespace=managed_functions({"read_json","read_managed_json"})
+        with tempfile.TemporaryDirectory(prefix="hc-managed-modes-") as raw:
+            root=Path(raw);store=root/".storage";store.mkdir(mode=0o700)
+            for name in ("core.config_entries","core.entity_registry"):
+                path=store/name;path.write_bytes(b'{"data":{}}')
+                for mode in (0o600,0o644):
+                    path.chmod(mode);self.assertEqual(namespace["read_managed_json"](root,name),{"data":{}})
+                with self.assertRaises(namespace["Refused"]):namespace["read_json"](path)
+                for mode in (0o400,0o640,0o664,0o666):
+                    path.chmod(mode)
+                    with self.assertRaises(namespace["Refused"]):namespace["read_managed_json"](root,name)
+                path.unlink();path.symlink_to(root/"absent")
+                with self.assertRaises(OSError):namespace["read_managed_json"](root,name)
+                path.unlink()
+            with self.assertRaises(namespace["Refused"]):namespace["read_managed_json"](root,"session.key")
 
 if __name__=="__main__":unittest.main()

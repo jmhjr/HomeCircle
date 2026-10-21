@@ -30,7 +30,7 @@ jobs:
           from pathlib import Path
           import hashlib,subprocess,stat
           root=Path('native-release1-saved-storage-restore')
-          expected={'README.md': '9c379b1dde2af97b523ef6951ba1572ed7ce13e5cd657ba1a3ba1fe1f4c921cc', 'accept_saved_storage.py': '9220757e4be5abd23ebb836372d14a4b24c42c90be26c53af1652e6c945c026d', 'baseline-controls.json': '40e7cfbeb72a16e44b16e294a8ad97d8798c786bf8633b900750997d9dd52942', 'controller.py': '9ebc6c1355a3a5d707d97e407eeb40d83e2ef61ddb77b9c64d3856e0262946c4', 'guard_context.py': '7d69de4b10ae725795c42a4089f61cb972a3d48c5f6032680eea26c935ef5922', 'guard_transfer.py': '590030e0c7eff81457e56c4cfc7b0d75ad0c079be3ede6e6da083d8fb4e95d84', 'guest_helper/homecircle_safe_restore_qa/__init__.py': '51f16b97b5a4d13327fb5040fe291ee948c79899b48c9aaaf307382116ed17e1', 'guest_helper/homecircle_safe_restore_qa/dependency_probe.py': '7ac8e79aa5aea1868801e9273d9d1300db525b51bd7fe70a0a03a836a506a8d6', 'guest_helper/homecircle_safe_restore_qa/manifest.json': '77be125912fe2d2a37fb4ea90746b85df8e72052b0cc567cf6505d401796e6e6', 'payload/homecircle.zip': '004c9bc4a968ad395e18033837cb42f5bd1d8719a8d90fc778fd20be4ff08f97', 'payload/inventory.json': 'd7e70cb639d77836fa2ac15b26f95e2f31ea599dbfff580cfae60a5a827cfe5b', 'payload/provenance.json': '64e5794f8a98c75a50fb67df829dfd484033fe1b07e7029e54c863e0d870c9e7', 'reset_fresh_config.py': 'df600d5695de2d09feabcded9e59d81dcc8149be2082b19b7931e0f11f12aa3c', 'run_host.sh': '19e047f20d970b1728b790fba65354335b6a957a74362f457379d40e2f55ac1f', 'storage_context.py': '4b828bbc5d00c37698ec892f8d24fbea736982d0b65c445efd1f9abc91f6da60', 'storage_protocol.json': '1fadf3843481d685aa0a691411b0c90283105388e786aac53e04355db6d56efc', 'storage_transfer.py': '6c56ce91f60f7893854c74aa4a258a1e6ad425bcbae15d5582e84e9104772d8f', 'test_guard_context.py': 'a7525d54f499de631ec183a30aa07c98b8bc454678d14f9dd4c30ae57d90a32d', 'test_saved_storage.py': '99e45a9ed444f93d3f45fc806cddb59fa5e5d0e996e3f322f3cb126bbc9b4022', 'test_storage_context.py': 'adb7a7a4594a385a581f03b873779300558776de6da1b73ba10d9b09a5062182', 'test_storage_transfer.py': '4a89b786c262755efbc442698a625839b297b03195776c36c6774dab2f099a5d'}
+          expected={'README.md': '29686e213a0ce0bea32966fccda17d35c6a367429558d813b9c3f3f3cb5c9776', 'accept_saved_storage.py': '9220757e4be5abd23ebb836372d14a4b24c42c90be26c53af1652e6c945c026d', 'baseline-controls.json': '40e7cfbeb72a16e44b16e294a8ad97d8798c786bf8633b900750997d9dd52942', 'controller.py': 'e954f9996248ad24dcdd91b6c7f0834af4c6fa620eeccf21d62a69b4ef471acc', 'guard_context.py': '7d69de4b10ae725795c42a4089f61cb972a3d48c5f6032680eea26c935ef5922', 'guard_transfer.py': '590030e0c7eff81457e56c4cfc7b0d75ad0c079be3ede6e6da083d8fb4e95d84', 'guest_helper/homecircle_safe_restore_qa/__init__.py': 'f81fcd8b89dcc81d3009a8204e19715ed7341cd5f56f3b7f686441d5a3131964', 'guest_helper/homecircle_safe_restore_qa/dependency_probe.py': '7ac8e79aa5aea1868801e9273d9d1300db525b51bd7fe70a0a03a836a506a8d6', 'guest_helper/homecircle_safe_restore_qa/manifest.json': '77be125912fe2d2a37fb4ea90746b85df8e72052b0cc567cf6505d401796e6e6', 'payload/homecircle.zip': '004c9bc4a968ad395e18033837cb42f5bd1d8719a8d90fc778fd20be4ff08f97', 'payload/inventory.json': 'd7e70cb639d77836fa2ac15b26f95e2f31ea599dbfff580cfae60a5a827cfe5b', 'payload/provenance.json': '64e5794f8a98c75a50fb67df829dfd484033fe1b07e7029e54c863e0d870c9e7', 'reset_fresh_config.py': 'df600d5695de2d09feabcded9e59d81dcc8149be2082b19b7931e0f11f12aa3c', 'run_host.sh': '19e047f20d970b1728b790fba65354335b6a957a74362f457379d40e2f55ac1f', 'storage_context.py': '4b828bbc5d00c37698ec892f8d24fbea736982d0b65c445efd1f9abc91f6da60', 'storage_protocol.json': '1fadf3843481d685aa0a691411b0c90283105388e786aac53e04355db6d56efc', 'storage_transfer.py': '082cae5b16e8f88f778d77f778a75b7c3ddd434cb5a9442c9535670bfe92c64e', 'test_guard_context.py': 'a7525d54f499de631ec183a30aa07c98b8bc454678d14f9dd4c30ae57d90a32d', 'test_saved_storage.py': '1ae506cce962bf397d54e17d1e9fb3f4470e0ad0f0dbb86bed0c6ad1d6efffe0', 'test_storage_context.py': 'adb7a7a4594a385a581f03b873779300558776de6da1b73ba10d9b09a5062182', 'test_storage_transfer.py': '15b18c5a3cba2dee38cad190e6f2e3235614193024e8d35831588d0996c9da2a'}
           tracked=subprocess.check_output(['git','ls-files','-z','--',str(root)]).decode().split('\0')
           assert {n for n in tracked if n}=={str(root/n) for n in expected},'tracked_members_refused'
           assert root.is_dir() and not root.is_symlink()
@@ -54,7 +54,7 @@ jobs:
           test -w /dev/kvm
           test -r /usr/share/OVMF/OVMF_CODE_4M.fd
           test -r /usr/share/OVMF/OVMF_VARS_4M.fd
-      - name: Require all 87 zero-skip saved-storage contracts
+      - name: Require all 97 zero-skip saved-storage contracts
         timeout-minutes: 3
         shell: bash
         run: |
@@ -63,7 +63,7 @@ jobs:
           PYTHONDONTWRITEBYTECODE=1 python3 -B - <<'PY'
           import unittest
           suite=unittest.defaultTestLoader.discover('native-release1-saved-storage-restore',pattern='test_*.py')
-          assert suite.countTestCases()==87,'contract_count_refused'
+          assert suite.countTestCases()==97,'contract_count_refused'
           result=unittest.TextTestRunner(verbosity=2).run(suite)
           assert result.wasSuccessful() and not result.skipped,'contract_failure_or_skip'
           PY

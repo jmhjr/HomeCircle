@@ -9,6 +9,8 @@ import ast
 from copy import deepcopy
 import hashlib
 import json
+import logging
+import stat
 import os
 from pathlib import Path
 import subprocess
@@ -78,6 +80,9 @@ def exact_selection_functions():
         'CONF_AUTO_REQUEST_LOCATION': 'auto_request_location', 'entities_in_person': lambda *_: []}
     exec(compile(module, 'exact_selection_stdlib_AST_contract', 'exec'), namespace)
     return namespace
+
+# Exact HA Core2026.10.2 util/file.py (Apache-2.0), full source SHA a712b90357c897ee72e454eb89a6e1f10e94e09eecf03f908838203f933b41dd.
+HA_FILE_WRITER = 'def write_utf8_file(\n    filename: str, utf8_data: bytes | str, private: bool = False, mode: str = "w"\n) -> None:\n    """Write a file and rename it into place.\n\n    Writes all or nothing.\n    """\n    tmp_filename = ""\n    encoding = "utf-8" if "b" not in mode else None\n    try:\n        # Modern versions of Python tempfile create this file with mode 0o600\n        with tempfile.NamedTemporaryFile(\n            mode=mode, encoding=encoding, dir=os.path.dirname(filename), delete=False\n        ) as fdesc:\n            fdesc.write(utf8_data)\n            tmp_filename = fdesc.name\n            if not private:\n                os.fchmod(fdesc.fileno(), 0o644)\n        os.replace(tmp_filename, filename)\n    except OSError as error:\n        _LOGGER.exception("Saving file failed: %s", filename)\n        raise WriteError(error) from error\n    finally:\n        if os.path.exists(tmp_filename):\n            try:\n                os.remove(tmp_filename)\n            except OSError as err:\n                # If we are cleaning up then something else went wrong, so\n                # we should suppress likely follow-on errors in the cleanup\n                _LOGGER.error(\n                    "File replacement cleanup failed for %s while saving %s: %s",\n                    tmp_filename,\n                    filename,\n                    err,\n                )'
 
 class StorageTransferContracts(unittest.TestCase):
     @classmethod
@@ -411,6 +416,73 @@ class StorageTransferContracts(unittest.TestCase):
         self.assertFalse(any(name.startswith(('homeassistant', 'custom_components', 'findmy', 'life360')) for name in names))
         self.assertEqual(set(storage.SOURCE_FILES), {'findmy_vault.py', 'findmy_identity.py', 'findmy_recovery_guard.py'})
         self.assertNotIn('__init__.py', json.dumps(storage.SOURCE_FILES))
+
+    def test_actual_HA_writer_ordinary0644_passes_narrow_reader_and_private_control(self):
+        namespace={"os":os,"tempfile":tempfile,"_LOGGER":logging.getLogger("storage-writer-contract"),"WriteError":RuntimeError}
+        exec(compile(HA_FILE_WRITER,"<exact-HA2026.10.2-file-writer>","exec"),namespace)
+        config=self.root/".storage/core.config_entries";config.parent.mkdir(mode=0o700)
+        value={"version":1,"minor_version":5,"key":"core.config_entries","data":{"entries":[]}}
+        with patch.object(storage,"CONFIG",self.root):
+            namespace["write_utf8_file"](str(config),json.dumps(value))
+            self.assertEqual(stat.S_IMODE(config.stat().st_mode),0o644)
+            with self.assertRaises(storage.Refused):storage.read_json(config)
+            self.assertEqual(storage.config_store(),value)
+            namespace["write_utf8_file"](str(config),json.dumps(value),private=True)
+            self.assertEqual(stat.S_IMODE(config.stat().st_mode),0o600)
+            self.assertEqual(storage.read_json(config),value);self.assertEqual(storage.config_store(),value)
+
+    def test_managed_reader_accepts_only0600_or0644_for_exact_two_HA_stores(self):
+        with patch.object(storage,"CONFIG",self.root):
+            for name in ("core.config_entries","core.entity_registry"):
+                path=self.root/".storage"/name;self.write(path,{"data":{}})
+                for mode in (0o600,0o644):
+                    path.chmod(mode);before=(path.read_bytes(),path.stat().st_ino,path.stat().st_mtime_ns)
+                    self.assertEqual(storage.read_managed_json(path),{"data":{}})
+                    self.assertEqual(before,(path.read_bytes(),path.stat().st_ino,path.stat().st_mtime_ns))
+                for mode in (0o000,0o400,0o640,0o660,0o664,0o666,0o700,0o755):
+                    path.chmod(mode)
+                    with self.subTest(name=name,mode=mode),self.assertRaises((storage.Refused,OSError)):storage.read_managed_json(path)
+
+    def test_managed_reader_refuses_links_wrong_owner_types_bounds_and_other_paths(self):
+        with patch.object(storage,"CONFIG",self.root):
+            path=self.root/".storage/core.config_entries";self.write(path,{"data":{}})
+            other=self.root/".storage/other";self.write(other,{})
+            with self.assertRaises(storage.Refused):storage.read_managed_json(other)
+            link=self.root/"alias";link.hardlink_to(path)
+            with self.assertRaises(storage.Refused):storage.read_managed_json(path)
+            link.unlink();info=path.stat()
+            wrong=types.SimpleNamespace(st_mode=info.st_mode,st_nlink=1,st_uid=os.geteuid()+1,st_size=info.st_size)
+            with patch.object(storage.os,"fstat",return_value=wrong),self.assertRaises(storage.Refused):storage.read_managed_json(path)
+            path.unlink();path.symlink_to(other)
+            with self.assertRaises(OSError):storage.read_managed_json(path)
+            path.unlink();path.mkdir(mode=0o700)
+            with self.assertRaises(storage.Refused):storage.read_managed_json(path)
+            path.rmdir()
+            for data in (b"",b"x"*(2*1024**2+1)):
+                self.write(path,data)
+                with self.assertRaises(storage.Refused):storage.read_managed_json(path)
+
+    def test_atomic_config_write_accepts_existing0644_but_new_file_is0600(self):
+        with patch.object(storage,"CONFIG",self.root):
+            path=self.root/".storage/core.config_entries";self.write(path,{"old":True});path.chmod(0o644)
+            old=path.stat().st_ino
+            storage.write_private(path,{"new":True})
+            self.assertEqual(storage.read_managed_json(path),{"new":True})
+            self.assertEqual(stat.S_IMODE(path.stat().st_mode),0o600);self.assertNotEqual(path.stat().st_ino,old)
+            self.assertEqual(list(path.parent.glob('.storage-qa-*')),[])
+            for name in ("core.entity_registry","private-proof.json"):
+                other=path.parent/name;self.write(other,{"preserved":True});other.chmod(0o644);before=other.read_bytes()
+                with self.assertRaises(storage.Refused):storage.write_private(other,{"replace":True})
+                self.assertEqual(other.read_bytes(),before);self.assertEqual(stat.S_IMODE(other.stat().st_mode),0o644)
+
+    def test_private_pair_guard_and_proof_modes_are_not_relaxed(self):
+        with patch.object(storage,"CONFIG",self.root):
+            for name in ("session.key","session.vault","storage-proof-private.json","ledger.json"):
+                path=self.root/name;self.write(path,{"private":"fixture"});path.chmod(0o644);before=path.read_bytes()
+                with self.subTest(name=name),self.assertRaises(storage.Refused):storage.regular(path)
+                with self.assertRaises(storage.Refused):storage.read_managed_json(path)
+                self.assertEqual(path.read_bytes(),before)
+                path.chmod(0o600);self.assertEqual(storage.regular(path),before)
 
 if __name__ == '__main__':
     unittest.main()

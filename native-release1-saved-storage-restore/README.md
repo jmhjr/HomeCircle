@@ -62,3 +62,28 @@ restore, full-system or encrypted cloud backup, stable release approval, or
 HACS acceptance. A valid older vault pair remains a valid encrypted snapshot;
 the separate guard repair is explicit and must not be described as automatic
 anti-rollback protection.
+
+## HA-managed store mode compatibility revision
+
+The first saved-storage trial, run 39685990663 at controls `630fb69`, failed
+before the seed completed, with zero accepted phases and no backup or restore.
+The owned context and disposable guest were cleaned up. Its safe inner failure
+stage was discarded by the old controller, so the precise runtime cause remains
+unproven; the negative record stays negative.
+
+Primary Core 2026.10.2 storage code and an execution of its exact stdlib file
+writer establish a separate fixture incompatibility: ordinary HA-managed stores
+use mode 0644, while the fixture required 0600. This revision admits only 0600
+or 0644 for the two exact owned HA stores, `core.config_entries` and
+`core.entity_registry`, with unchanged no-follow, regular-file, ownership,
+single-link and size checks. Existing config-entry replacement admits 0644 but
+writes a new 0600 file atomically. Private keys, ciphertext, guard state and
+proof files remain subject to their unchanged 0600 checks.
+
+A failed storage context can now retain only its fixed action and allowlisted
+stage from the helper's exact bounded three-field failure response. This adds no
+raw stderr, exception text, account data or paths and does not change success
+acceptance. All 97 offline contracts must pass. Product source, the 113-member
+candidate ZIP, both context security boundaries, five phases, 18 cloned negative
+cases, closed NIC and cleanup requirements are unchanged. This revision is
+prepared for a fresh trial; it does not reclassify the failed run as successful.

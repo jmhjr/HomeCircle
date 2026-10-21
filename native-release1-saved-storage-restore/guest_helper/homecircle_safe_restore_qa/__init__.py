@@ -45,6 +45,24 @@ def read_json(path):
           and info.st_size <= 2 * 1024**2, "qa_private_input_path")
     return json.loads(path.read_bytes())
 
+def read_managed_json(directory, name):
+    check(name in {"core.config_entries", "core.entity_registry"}, "qa_managed_store_name")
+    descriptor = os.open(directory / ".storage" / name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    try:
+        info = os.fstat(descriptor)
+        check(stat.S_ISREG(info.st_mode) and info.st_uid == os.getuid() and info.st_nlink == 1
+              and stat.S_IMODE(info.st_mode) in {0o600, 0o644} and 1 <= info.st_size <= 2 * 1024**2,
+              "qa_managed_store_path")
+        stream = os.fdopen(descriptor, "rb")
+        descriptor = None
+        with stream:
+            raw = stream.read(2 * 1024**2 + 1)
+    finally:
+        if descriptor is not None:
+            os.close(descriptor)
+    check(1 <= len(raw) <= 2 * 1024**2, "qa_managed_store_size")
+    return json.loads(raw)
+
 def write_json(path, value):
     path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
     temporary = path.with_suffix(".tmp")
@@ -115,7 +133,7 @@ async def persist_verified_entry(hass, directory, entry, update=False):
     async with asyncio.timeout(120):
         while True:
             check({"data": dict(entry.data), "options": dict(entry.options)} == before, "qa_title_update_changed_configuration")
-            saved = await hass.async_add_executor_job(read_json, directory / ".storage/core.config_entries")
+            saved = await hass.async_add_executor_job(read_managed_json, directory, "core.config_entries")
             matches = [row for row in saved["data"]["entries"] if row.get("domain") == "homecircle"]
             check(len(matches) == 1 and matches[0].get("entry_id") == entry.entry_id
                   and matches[0].get("disabled_by") == "user", "qa_title_store_identity")
@@ -171,7 +189,7 @@ async def ensure_selected_registry(hass, entry, selection, create=False):
     async with asyncio.timeout(120):
         while True:
             try:
-                saved = await hass.async_add_executor_job(read_json, Path(hass.config.config_dir) / ".storage/core.entity_registry")
+                saved = await hass.async_add_executor_job(read_managed_json, Path(hass.config.config_dir), "core.entity_registry")
             except FileNotFoundError:
                 await asyncio.sleep(0.25)
                 continue
@@ -185,7 +203,7 @@ async def ensure_selected_registry(hass, entry, selection, create=False):
     return digest(expected)
 
 def raw_storage(directory, entry):
-    saved = read_json(directory / ".storage/core.config_entries")
+    saved = read_managed_json(directory, "core.config_entries")
     matches = [item for item in saved["data"]["entries"] if item.get("domain") == "homecircle"]
     check(len(matches) == 1 and matches[0]["entry_id"] == entry.entry_id and matches[0]["disabled_by"] == "user"
           and matches[0].get("title") == entry.title == VERIFIED_TITLE

@@ -368,6 +368,38 @@ def private_proof(value):
     return {"schema": 1, "baseline": private_fingerprints(value["baseline"]),
             "mutation": None if value["mutation"] is None else private_fingerprints(value["mutation"])}
 
+STORAGE_FAILURE_STAGES = frozenset({"platform", "arguments", "job", "sources", "seed_preconditions", "seed",
+    "mutation_preconditions", "mutation", "guard", "private_state", "restored_baseline", "consistency",
+    "negative_cases", "no_op", "preservation", "result", "unrecognized"})
+
+def project_storage_failure(result, action):
+    # Retain only the source-bound fixed stage after a clean helper failure.
+    if (type(action) is not str or action not in STORAGE_ACTIONS or type(result) is not dict
+            or set(result) != {"exitcode", "signal", "stdout", "stderr", "truncated"}
+            or type(result["exitcode"]) is not int or result["exitcode"] != 1
+            or not (result["signal"] is None or type(result["signal"]) is int and result["signal"] == 0)
+            or type(result["stderr"]) is not bytes or result["stderr"] != b""
+            or result["truncated"] is not False or type(result["stdout"]) is not bytes
+            or not 0 < len(result["stdout"]) <= 512):
+        return None
+    def unique_failure(pairs):
+        value = {}
+        for key, item in pairs:
+            if key in value:
+                raise ValueError
+            value[key] = item
+        return value
+    try:
+        value = json.loads(result["stdout"], object_pairs_hook=unique_failure)
+    except (UnicodeError, ValueError, TypeError, RecursionError):
+        return None
+    if (type(value) is dict and set(value) == {"schema", "outcome", "stage"}
+            and type(value["schema"]) is int and value["schema"] == 1
+            and type(value["outcome"]) is str and value["outcome"] == "failed"
+            and type(value["stage"]) is str and value["stage"] in STORAGE_FAILURE_STAGES):
+        return {"schema": 1, "action": action, "stage": value["stage"]}
+    return None
+
 def project_storage_result(value, action):
     require(action in STORAGE_ACTIONS and type(value) is dict and set(value) == {"schema", "action", "outcome",
         "entry_disabled", "managed_candidate_imported", "synthetic_only", "source_files_verified", "storage_checks", "private_proof_written"},
@@ -1808,6 +1840,9 @@ print(json.dumps({"connected":connected}))
             (self.phase_token, self.generation, self.args.branch_commit), maximum_seconds=self.remaining(60))
         try:
             result = context.run()
+            failure = project_storage_failure(result, action)
+            if failure is not None:
+                context.record["storage_transfer_failure"] = failure
             require(result["exitcode"] == 0 and result["stderr"] == b"" and not result["truncated"], "storage_transfer_refused")
             public = project_storage_result(json.loads(result["stdout"]), action)
             private = json.loads(self.guest_read(control + "/storage-result-private.json"))

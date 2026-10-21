@@ -95,6 +95,27 @@ def regular(path, *, private=True, maximum=2 * 1024**2, minimum=1):
 def read_json(path):
     return json.loads(regular(path), object_pairs_hook=unique)
 
+def managed_regular(path):
+    # Only these two HA-owned stores use Home Assistant's public-file mode.
+    require(path in {CONFIG / '.storage/core.config_entries', CONFIG / '.storage/core.entity_registry'})
+    descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    try:
+        info = os.fstat(descriptor)
+        require(stat.S_ISREG(info.st_mode) and info.st_nlink == 1 and info.st_uid == os.geteuid()
+                and 1 <= info.st_size <= 2 * 1024**2 and stat.S_IMODE(info.st_mode) in {0o600, 0o644})
+        stream = os.fdopen(descriptor, 'rb')
+        descriptor = None
+        with stream:
+            raw = stream.read(2 * 1024**2 + 1)
+    finally:
+        if descriptor is not None:
+            os.close(descriptor)
+    require(1 <= len(raw) <= 2 * 1024**2)
+    return raw
+
+def read_managed_json(path):
+    return json.loads(managed_regular(path), object_pairs_hook=unique)
+
 def directory(path, *, create=False, private=True):
     if create and not path.exists() and not path.is_symlink():
         path.mkdir(mode=0o700)
@@ -106,7 +127,10 @@ def write_private(path, value, *, fresh=False):
     directory(path.parent, private=path.parent != CONFIG / '.storage')
     if path.exists() or path.is_symlink():
         require(not fresh)
-        regular(path)
+        if path == CONFIG / '.storage/core.config_entries':
+            managed_regular(path)
+        else:
+            regular(path)
     raw = canonical(value)
     descriptor, name = tempfile.mkstemp(prefix='.storage-qa-', dir=path.parent)
     try:
@@ -170,7 +194,7 @@ def proof_shape(value):
 
 def config_store():
     path = CONFIG / '.storage/core.config_entries'
-    value = read_json(path)
+    value = read_managed_json(path)
     require(type(value) is dict and value.get('version') == 1 and type(value.get('version')) is int
             and value.get('minor_version') == 5 and type(value.get('minor_version')) is int
             and value.get('key') == 'core.config_entries' and type(value.get('data')) is dict
@@ -614,7 +638,7 @@ def run(action, token, generation, branch):
         payload = vault.load()
         current = fingerprints(record, selection, payload, root)
         require(current == expected['baseline'] and all(current[name] != expected['mutation'][name] for name in FINGERPRINTS))
-        registry = read_json(CONFIG / '.storage/core.entity_registry')
+        registry = read_managed_json(CONFIG / '.storage/core.entity_registry')
         stage('consistency')
         consistency(record, selection, payload, identity, registry)
         joins = read_json(CONTROL / 'storage-joins-private.json')
