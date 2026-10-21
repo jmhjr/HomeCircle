@@ -69,11 +69,22 @@ class Vault:
                 stream.flush()
                 os.fsync(stream.fileno())
         self._check(self.key_path)
-        return Fernet(self.key_path.read_bytes())
+        key = self.key_path.read_bytes()
+        try:
+            return Fernet(key)
+        except ValueError:
+            raise VaultError(
+                "Session encryption key is invalid; it was not replaced"
+            ) from None
 
     def load(self) -> dict:
-        cipher = self._cipher()
-        self._check(self.data_path)
+        try:
+            cipher = self._cipher()
+            self._check(self.data_path)
+        except OSError:
+            raise VaultError(
+                "Session store is unreadable; it was not replaced"
+            ) from None
         try:
             data = json.loads(cipher.decrypt(self.data_path.read_bytes()))
             if (

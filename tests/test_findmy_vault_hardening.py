@@ -1,5 +1,7 @@
 """Unchanged polling preserves encrypted bytes without bypassing validation."""
 
+import base64
+from contextlib import nullcontext
 from copy import deepcopy
 import os
 from unittest.mock import patch
@@ -126,3 +128,69 @@ def test_unchanged_candidate_never_bypasses_storage_validation(tmp_path, fault):
     with pytest.raises(VaultError):
         vault.save_account(session, items, identity_state=ledger)
     assert vault.data_path.read_bytes() == before
+
+
+@pytest.mark.parametrize(
+    "key", [b"not-base64!", base64.urlsafe_b64encode(b"short")],
+    ids=["invalid_base64", "short_decoded"],
+)
+@pytest.mark.parametrize("operation", ["load", "save", "save_account"])
+def test_malformed_key_refuses_load_and_save_without_replacement(tmp_path, key, operation):
+    vault = Vault(tmp_path / "account")
+    session, items, ledger = selected_state()
+    vault.save_account(session, items, identity_state=ledger)
+    vault.key_path.write_bytes(key)
+    before = {
+        child.name: (child.read_bytes(), child.stat().st_mode)
+        for child in vault.root.iterdir()
+    }
+    call = {
+        "load": vault.load,
+        "save": lambda: vault.save(session, items["selected"]["accessory"]),
+        "save_account": lambda: vault.save_account(session, items, identity_state=ledger),
+    }[operation]
+    with pytest.raises(VaultError) as error:
+        call()
+    assert str(error.value) == "Session encryption key is invalid; it was not replaced"
+    assert error.value.__suppress_context__ is True
+    assert {
+        child.name: (child.read_bytes(), child.stat().st_mode)
+        for child in vault.root.iterdir()
+    } == before
+
+
+@pytest.mark.parametrize("fault", ["missing_directory", "missing_vault", "key_read_error"])
+def test_missing_or_unreadable_store_load_is_redacted_without_creating_files(tmp_path, fault):
+    vault = Vault(tmp_path / "account")
+    session, items, ledger = selected_state()
+    vault.save_account(session, items, identity_state=ledger)
+    if fault == "missing_directory":
+        vault.key_path.unlink()
+        vault.data_path.unlink()
+        vault.root.rmdir()
+    elif fault == "missing_vault":
+        vault.data_path.unlink()
+    before = {
+        child.name: (child.read_bytes(), child.stat().st_mode)
+        for child in vault.root.iterdir()
+    } if vault.root.exists() else None
+    read_bytes = type(vault.key_path).read_bytes
+
+    def read(path):
+        if path == vault.key_path:
+            raise PermissionError("private-read-error-canary")
+        return read_bytes(path)
+
+    boundary = (
+        patch.object(type(vault.key_path), "read_bytes", read)
+        if fault == "key_read_error" else nullcontext()
+    )
+    with boundary, pytest.raises(VaultError) as error:
+        vault.load()
+    assert str(error.value) == "Session store is unreadable; it was not replaced"
+    assert error.value.__suppress_context__ is True
+    after = {
+        child.name: (child.read_bytes(), child.stat().st_mode)
+        for child in vault.root.iterdir()
+    } if vault.root.exists() else None
+    assert after == before

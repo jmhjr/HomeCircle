@@ -1,6 +1,8 @@
 """Synthetic continuity survives omission without preserving tracking capability."""
 
 import asyncio
+import base64
+from contextlib import nullcontext
 from copy import deepcopy
 from datetime import UTC, datetime
 import json
@@ -987,6 +989,114 @@ async def test_explicit_disconnect_can_remove_an_unreadable_owned_vault(hass):
     assert flow.config_entry.options["findmy_accounts"] == {}
     provider.resume_account.assert_not_called()
     paused.close.assert_awaited_once()
+    await flow.finish_findmy_setup()
+
+
+def _account_tree_snapshot(base):
+    result = {}
+    for path in (base, *base.rglob("*")):
+        kind = "link" if path.is_symlink() else "file" if path.is_file() else "directory"
+        contents = (
+            str(path.readlink()) if kind == "link"
+            else path.read_bytes() if kind == "file" else None
+        )
+        result[str(path.relative_to(base))] = (path.lstat().st_mode, kind, contents)
+    return result
+
+
+@pytest.mark.parametrize("fault", [
+    "invalid_base64_key", "short_decoded_key", "missing_directory", "missing_vault", "key_read_error",
+])
+async def test_explicit_disconnect_removes_only_confirmed_malformed_or_missing_owned_store(hass, fault):
+    items = {"legacy": item(accessory()), "other": item(accessory("other", master=4))}
+    metadata = metadata_for({"legacy": {"name": "First"}, "other": {"name": "Other"}})
+    root = account_root(hass, metadata, True)
+    vault = Vault(root)
+    vault.save_account(session(), items)
+    base = root.parent.parent
+    guard = base / "recovery_guard"
+    guard.mkdir(mode=0o700)
+    guard_file = guard / "ledger.json"
+    guard_file.write_bytes(b"synthetic separate guard retained")
+    guard_file.chmod(0o600)
+    if fault == "invalid_base64_key":
+        vault.key_path.write_bytes(b"not-base64!")
+    elif fault == "short_decoded_key":
+        vault.key_path.write_bytes(base64.urlsafe_b64encode(b"short"))
+    elif fault == "missing_directory":
+        vault.key_path.unlink()
+        vault.data_path.unlink()
+        root.rmdir()
+    elif fault == "missing_vault":
+        vault.data_path.unlink()
+    flow, provider, paused = fresh_flow(hass, metadata, items)
+    flow.async_abort = Mock(return_value={"type": "abort", "reason": "findmy_storage_failed"})
+    before = _account_tree_snapshot(base)
+    configuration = deepcopy((flow.config_entry.data, flow.config_entry.options, flow.draft))
+    read_bytes = type(vault.key_path).read_bytes
+
+    def read(path):
+        if path == vault.key_path:
+            raise PermissionError("private-read-error-canary")
+        return read_bytes(path)
+
+    boundary = (
+        patch.object(type(vault.key_path), "read_bytes", read)
+        if fault == "key_read_error" else nullcontext()
+    )
+    with boundary:
+        assert (await flow.async_step_findmy_disconnect())["step_id"] == "findmy_disconnect"
+    assert _account_tree_snapshot(base) == before
+    assert (flow.config_entry.data, flow.config_entry.options, flow.draft) == configuration
+    with boundary:
+        assert (await flow.async_step_findmy_disconnect({"confirm": True})).get("saved") is True
+    flow.async_abort.assert_not_called()
+    assert not root.exists()
+    assert flow.config_entry.data["findmy_accounts"] == {}
+    assert flow.config_entry.options["findmy_accounts"] == {}
+    assert guard_file.read_bytes() == b"synthetic separate guard retained"
+    provider.pause_account.assert_awaited_once_with(ACCOUNT)
+    provider.resume_account.assert_not_called()
+    paused.close.assert_awaited_once()
+    await flow.finish_findmy_setup()
+
+
+@pytest.mark.parametrize("fault", [
+    "directory_link", "key_link", "vault_link", "key_permissions", "directory_permissions", "legacy",
+])
+async def test_explicit_disconnect_preserves_unsafe_or_legacy_store_and_metadata(hass, fault):
+    items = {"legacy": item(accessory()), "other": item(accessory("other", master=4))}
+    metadata = metadata_for({"legacy": {"name": "First"}, "other": {"name": "Other"}})
+    if fault == "legacy":
+        metadata["storage_id"] = "legacy"
+    root = account_root(hass, metadata, True)
+    vault = Vault(root)
+    vault.save_account(session(), items)
+    base = root if fault == "legacy" else root.parent.parent
+    if fault == "directory_link":
+        target = base / "synthetic-directory-target"
+        root.rename(target)
+        root.symlink_to(target, target_is_directory=True)
+    elif fault in ("key_link", "vault_link"):
+        path = vault.key_path if fault == "key_link" else vault.data_path
+        target = base / "synthetic-file-target"
+        path.rename(target)
+        path.symlink_to(target)
+    elif fault == "key_permissions":
+        vault.key_path.chmod(0o644)
+    elif fault == "directory_permissions":
+        root.chmod(0o755)
+    flow, provider, paused = fresh_flow(hass, metadata, items)
+    flow.async_abort = Mock(return_value={"type": "abort", "reason": "findmy_storage_failed"})
+    before = _account_tree_snapshot(base)
+    configuration = deepcopy((flow.config_entry.data, flow.config_entry.options, flow.draft))
+    assert (await flow.async_step_findmy_disconnect({"confirm": True}))["reason"] == "findmy_storage_failed"
+    flow.async_abort.assert_called_once_with(reason="findmy_storage_failed")
+    assert _account_tree_snapshot(base) == before
+    assert (flow.config_entry.data, flow.config_entry.options, flow.draft) == configuration
+    provider.pause_account.assert_awaited_once_with(ACCOUNT)
+    provider.resume_account.assert_called_once_with(ACCOUNT, paused)
+    paused.close.assert_not_awaited()
     await flow.finish_findmy_setup()
 
 
