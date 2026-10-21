@@ -1,8 +1,8 @@
 # Exact F4DA preview: explicit disabled-entry partial-restore witness
 
 Prepared for review only. No VM, CI or product change was made by preparing this
-folder. This is one fresh native amd64/KVM HAOS 18.3 guest, actual Supervisor/Core
-2026.10.2 and CPython 3.14.6. The immutable input is canonical product source
+folder. This fixture targets one fresh native amd64/KVM HAOS 18.3 guest, strict
+Supervisor 2026.10.3, strict Core 2026.10.2, and CPython 3.14.6. The immutable input is canonical product source
 `f4da650e6e460382c6ee1f70827bddac43bf2780` (337 public source files), packaged as
 617,757 bytes / 113 members, SHA-256
 `6fb180fc1f5c7de70382f95f8fe9e718f94841598dfc96d1afe233c8f21495db`.
@@ -311,3 +311,28 @@ at c8abe90b71c216e14d63b8d7382f377128aa0cce83ce53e553039fee3005ea6a.
 All135 zero-skip contracts, the eight-phase acceptance policy and offline
 export/import context boundaries remain required. Preparation is not a runtime
 restore result; current-candidate procedure acceptance remains pending.
+
+
+## Strict Supervisor compatibility revision
+
+The preceding current-candidate run [39668981647](https://github.com/jmhjr/HomeCircle/actions/runs/39668981647)
+stopped at the initial managed-environment version gate: Supervisor reported
+2026.10.3 while that fixture required 2026.10.2. It recorded zero accepted phases,
+zero guard-transfer contexts, no Core actions, and completed VM/private-workspace
+cleanup. Its public `actual_core` is null; that receipt establishes no accepted
+Core version or restore result. It remains a failed run.
+
+This derivative independently requires Supervisor 2026.10.3 and Core 2026.10.2;
+the exact Core OCI index/configuration, candidate f4da650 source/113-file ZIP,
+eight phase gates, owned offline contexts, timeouts, and cleanup stay unchanged.
+The fixed three-field `initial_managed_environment` projection reports only
+sanitized initial API Core, container Core, and Supervisor versions. It provides
+diagnostic context without accepting an otherwise rejected environment.
+
+The [Supervisor 2026.10.3 release](https://github.com/home-assistant/supervisor/releases/tag/2026.10.3)
+is a distinct dependency version. Compatibility requires a fresh successful native
+run; this prepared revision does not establish backup/restore acceptance.
+The original 135 offline contracts remain; three added contracts independently
+exercise both version gates and the fixed public diagnostic projection (138 total).
+No Mac upgrade, owner account, provider call, or ordinary enabled-entry restore
+safety claim is introduced.

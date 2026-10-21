@@ -29,7 +29,8 @@ def accept(host, phases):
                 'production_configuration_used','full_encrypted_cloud_backup_tested','stable_release_approval',
                 'candidate_hacs_download_tested','candidate_release_zip_transport_tested'):
         require(host.get(key) is False,'scope_or_cleanup_not_qualified')
-    require(host.get('actual_core') == host.get('actual_supervisor') == '2026.10.2', 'wrong_runtime')
+    require(host.get('actual_core') == '2026.10.2'
+            and host.get('actual_supervisor') == '2026.10.3', 'wrong_runtime')
     image=host.get('current_core_image',{})
     require(image.get('identity_model') == 'containerd_index_with_verified_stored_oci_chain'
             and image.get('official_index_digest') == 'sha256:45f009d6ff1061971102e81f0802cf2762bdd5c5007231c938bd36030cbd0a12'

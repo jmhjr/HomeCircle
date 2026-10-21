@@ -1722,7 +1722,7 @@ print(json.dumps({"archive_bytes":path.stat().st_size,"archive_sha256":sha(path.
         self.start_vm(self.download_haos())
         self.wait_initial_managed()
         require(self.core_version_before == self.container_core_version_before == CORE
-                and self.supervisor_version_observed == '2026.10.2','current_managed_environment_required')
+                and self.supervisor_version_observed == '2026.10.3','current_managed_environment_required')
         self.core_version_after=self.container_core_version_after=CORE
         self.verify_cli()
         self.backup_cli_capabilities()
@@ -1810,6 +1810,9 @@ print(json.dumps({"archive_bytes":path.stat().st_size,"archive_sha256":sha(path.
             'failure_or_final_stage':labels['stage'],'failure_type':labels['failure_type'] if failure else None,
             'failure_code':labels['failure_code'],'provenance':self.provenance,'actual_kvm_confirmed':self.kvm_confirmed,
             'actual_core':self.core_version_after,'actual_supervisor':self.supervisor_version_observed,
+            'initial_managed_environment':{'api_core':public_core_version(self.core_version_before),
+                'container_core':public_core_version(self.container_core_version_before),
+                'supervisor':public_core_version(self.supervisor_version_observed)},
             'core_actions':self.core_actions,'cli_capabilities':self.cli_capabilities,'fresh_owned_config':self.reset_receipt,
             'guard_transfer_contexts':getattr(self,'guard_transfer_contexts',[]),
             'current_core_image':self.minimum_core_image,'dependencies_before_candidate':self.target_environment,

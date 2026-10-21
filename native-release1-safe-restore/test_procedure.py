@@ -83,7 +83,7 @@ def synthetic_success():
         for name in ('initialize','initial_restart','reenabled','restart'):
             phases[name]['served_bundle_sha256']='77f429fb1908acc21cde2c89614f05f12c60a09bb37fa6ca78a1830ec07c6f91'
         public={'schema':1,'outcome':'passed','phases':8,'failure_or_final_stage':'safe_disabled_restore_complete',
-            'failure_code':None,'failure_type':None,'actual_core':'2026.10.2','actual_supervisor':'2026.10.2',
+            'failure_code':None,'failure_type':None,'actual_core':'2026.10.2','actual_supervisor':'2026.10.3',
             'current_core_image':{'identity_model':'containerd_index_with_verified_stored_oci_chain','official_index_digest':'sha256:45f009d6ff1061971102e81f0802cf2762bdd5c5007231c938bd36030cbd0a12','verified_oci_config_digest':'sha256:e1acee126eee45b3007494ad7f806d12535dc7d733624b681ed29a505f8c2b98','stored_objects_hashed':3,'image_rootfs_matches_verified_config':True},
             'core_actions':[{'action':a,'result':'ok','supervisor_running':True,'relevant_core_jobs_idle':True} for a in ['stop','start','stop','start','stop','start','stop','stop','start','stop','start','stop']],
             'network_transitions':['closed_before_restore','reopen_after_repaired_disabled','closed_before_final_restart'],
@@ -1330,3 +1330,62 @@ class StorageExportIntegrationContracts(unittest.TestCase):
         body=json.loads(stderr)
         duplicate=transfer.canonical(body).replace(b'"mode_matches":false',b'"mode_matches":false,"mode_matches":false')
         self.assertIsNone(transfer.parse_export_failure(duplicate,self.token))
+
+
+
+class ManagedVersionContracts(unittest.TestCase):
+    def test_initial_gate_requires_independent_exact_api_container_and_supervisor_versions(self):
+        tree=ast.parse((controller.ROOT/'controller.py').read_bytes())
+        owner=next(node for node in tree.body if isinstance(node,ast.ClassDef) and node.name=='Controller')
+        run=next(node for node in owner.body if isinstance(node,ast.FunctionDef) and node.name=='run')
+        statements=[node for node in run.body if isinstance(node,ast.Expr) and isinstance(node.value,ast.Call)
+            and isinstance(node.value.func,ast.Name) and node.value.func.id=='require'
+            and any(isinstance(arg,ast.Constant) and arg.value=='current_managed_environment_required'
+                    for arg in node.value.args)]
+        self.assertEqual(len(statements),1)
+        actual=compile(ast.Module(body=statements,type_ignores=[]),'actual_initial_version_gate','exec')
+        fields={'core_version_before':'2026.10.2','container_core_version_before':'2026.10.2',
+                'supervisor_version_observed':'2026.10.3'}
+        exec(actual,{'self':SimpleNamespace(**fields),'CORE':controller.CORE,'require':controller.require})
+        for field in fields:
+            wrong='2026.10.2' if field=='supervisor_version_observed' else '2026.10.3'
+            for invalid in (wrong,None,False,True,'PRIVATE-CANARY'):
+                with self.subTest(field=field,invalid=invalid),self.assertRaises(controller.Refused):
+                    exec(actual,{'self':SimpleNamespace(**dict(fields,**{field:invalid})),
+                                 'CORE':controller.CORE,'require':controller.require})
+            missing=SimpleNamespace(**fields);delattr(missing,field)
+            with self.subTest(field=field,missing=True),self.assertRaises((AttributeError,controller.Refused)):
+                exec(actual,{'self':missing,'CORE':controller.CORE,'require':controller.require})
+
+    def test_public_acceptor_requires_exact_core2_and_supervisor3_independently(self):
+        host,phases=synthetic_success()
+        self.assertEqual(gate.accept(host,phases)['outcome'],'passed')
+        for field,wrong in [('actual_core','2026.10.3'),('actual_supervisor','2026.10.2')]:
+            for invalid in (wrong,None,False,True,'PRIVATE-CANARY'):
+                changed=deepcopy(host);changed[field]=invalid
+                with self.subTest(field=field,invalid=invalid),self.assertRaises(ValueError):
+                    gate.accept(changed,phases)
+            changed=deepcopy(host);del changed[field]
+            with self.subTest(field=field,missing=True),self.assertRaises(ValueError):
+                gate.accept(changed,phases)
+
+    def test_initial_environment_finish_projection_has_only_fixed_public_version_fields(self):
+        tree=ast.parse((controller.ROOT/'controller.py').read_bytes())
+        owner=next(node for node in tree.body if isinstance(node,ast.ClassDef) and node.name=='Controller')
+        finish=next(node for node in owner.body if isinstance(node,ast.FunctionDef) and node.name=='finish')
+        expressions=[value for node in ast.walk(finish) if isinstance(node,ast.Dict)
+            for key,value in zip(node.keys,node.values)
+            if isinstance(key,ast.Constant) and key.value=='initial_managed_environment']
+        self.assertEqual(len(expressions),1)
+        actual=compile(ast.Expression(body=expressions[0]),'actual_finish_version_projection','eval')
+        fields={'core_version_before':'2026.10.2','container_core_version_before':'2026.10.2',
+                'supervisor_version_observed':'2026.10.3'}
+        expected={'api_core':'2026.10.2','container_core':'2026.10.2','supervisor':'2026.10.3'}
+        namespace={'self':SimpleNamespace(**fields),'public_core_version':controller.public_core_version}
+        self.assertEqual(eval(actual,namespace),expected)
+        for private in (None,False,123,{},['PRIVATE-CANARY'],'PRIVATE-CANARY',
+                        '2026.10.2 PRIVATE-CANARY','https://example.invalid/PRIVATE-CANARY'):
+            values={field:private for field in fields}
+            result=eval(actual,{'self':SimpleNamespace(**values),'public_core_version':controller.public_core_version})
+            self.assertEqual(result,dict.fromkeys(expected))
+            self.assertNotIn('PRIVATE-CANARY',json.dumps(result))
