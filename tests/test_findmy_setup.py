@@ -571,3 +571,74 @@ async def test_settings_pair_comparison_restores_rejected_tokens_and_never_recov
         assert flow.unlock_attempts == 0
     finally:
         await flow.close()
+
+
+@pytest.mark.parametrize("reason,expected", [
+    ("missing_password", "findmy_recovery_signin_required"),
+    ("factor_required", "findmy_recovery_signin_required"),
+    ("credentials", "findmy_recovery_signin_required"),
+    ("identity_mismatch", "findmy_account_mismatch"),
+    ("transient", "findmy_recovery_transient"),
+    ("protocol", "findmy_recovery_protocol"),
+])
+async def test_recovery_credential_failure_after_verification_keeps_actionable_error(reason, expected, caplog):
+    from custom_components.homecircle._findmy_runtime.onboarding import RecoveryPETError
+
+    flow, account, client = setup()
+    flow.factor = SimpleNamespace(submit=AsyncMock(return_value=STATES.LOGGED_IN))
+    factor = flow.factor
+    flow.prepare_recovery = AsyncMock(side_effect=RecoveryPETError(reason))
+    with pytest.raises(FindMySetupError, match="^" + expected + "$"):
+        await flow.verify_code("synthetic-private-code")
+    factor.submit.assert_awaited_once_with("synthetic-private-code")
+    flow.prepare_recovery.assert_awaited_once_with()
+    account.login.assert_not_awaited()
+    client.unlock.assert_not_awaited()
+    assert "synthetic-private-code" not in caplog.text
+    await flow.close()
+
+
+@pytest.mark.parametrize("reason", [
+    "missing_password", "factor_required", "credentials", "identity_mismatch", "transient", "protocol",
+])
+async def test_recovery_bootstrap_logs_only_fixed_credential_reason_and_status(reason, caplog):
+    from custom_components.homecircle._findmy_runtime.onboarding import RecoveryPETError
+
+    flow, account, client = setup()
+    error = RecoveryPETError(reason, http_status=503)
+    async def open_client(current):
+        current._recovery_diagnostics.update(phase="pet_refresh", private="synthetic-private-response")
+        raise error
+    flow.client_factory = AsyncMock(side_effect=open_client)
+    with pytest.raises(RecoveryPETError) as caught:
+        await flow.open_recovery()
+    assert caught.value is error
+    flow.client_factory.assert_awaited_once_with(account)
+    assert "'recovery_credential_reason': '" + reason + "'" in caplog.text
+    assert "'recovery_credential_http': 503" in caplog.text
+    assert "'error_class': 'RecoveryPETError'" in caplog.text
+    assert "synthetic-private" not in caplog.text
+    assert account._password is None
+    assert account._recovery_pet is None
+    account.login.assert_not_awaited()
+    client.unlock.assert_not_awaited()
+    await flow.close()
+
+
+async def test_recovery_bootstrap_rejects_unknown_credential_metadata(caplog):
+    from custom_components.homecircle._findmy_runtime.onboarding import RecoveryPETError
+
+    flow, account, client = setup()
+    error = RecoveryPETError("protocol")
+    error.reason = "synthetic-private-reason"
+    error.http_status = True
+    flow.client_factory = AsyncMock(side_effect=error)
+    with pytest.raises(RecoveryPETError) as caught:
+        await flow.open_recovery()
+    assert caught.value is error
+    assert "'recovery_credential_reason': None" in caplog.text
+    assert "'recovery_credential_http': None" in caplog.text
+    assert "synthetic-private" not in caplog.text
+    account.login.assert_not_awaited()
+    client.unlock.assert_not_awaited()
+    await flow.close()

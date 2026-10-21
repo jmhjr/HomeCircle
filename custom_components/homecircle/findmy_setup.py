@@ -479,7 +479,7 @@ class FindMySetup:
                 "delegate": "findmy_code_delegate_failed",
             }.get(phase, "findmy_code_failed")
             if stage == "recovery":
-                failure = "findmy_recovery_failed"
+                failure = recovery_error(error)
             raise FindMySetupError(failure) from None
 
     async def ensure_report_access(self):
@@ -704,9 +704,20 @@ class FindMySetup:
             for key in ("database_url_shape", "share_url_shape"):
                 value = raw.get(key)
                 safe[key] = value if value in ("string", "object", "missing", "other") else None
+            from ._findmy_runtime.onboarding import RecoveryPETError
+
+            if isinstance(error, RecoveryPETError):
+                reason = error.reason
+                safe["recovery_credential_reason"] = reason if type(reason) is str and reason in (
+                    "missing_password", "factor_required", "identity_mismatch",
+                    "transient", "protocol", "credentials",
+                ) else None
+                status = error.http_status
+                safe["recovery_credential_http"] = status if type(status) is int and 100 <= status <= 599 else None
             name = type(error).__name__
             safe["error_class"] = name if name in (
                 "AttributeError", "TypeError", "KeyError", "ValueError", "KeychainSessionError",
+                "RecoveryPETError",
                 "UnhandledProtocolError", "UnauthorizedError", "TimeoutError", "ClientError",
             ) else "other"
             site = error.__traceback__
