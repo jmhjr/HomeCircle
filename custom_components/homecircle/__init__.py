@@ -277,6 +277,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeCircleEntry) -> bool
     )
     entry.async_on_unload(lambda: ir.async_delete_issue(hass, DOMAIN, issue_id))
     refresh()
+    # The options response can precede the scheduled reload and registration.
+    # Tell existing cards when the new household can actually be read.
+    hass.bus.async_fire("homecircle_ready")
     return True
 
 

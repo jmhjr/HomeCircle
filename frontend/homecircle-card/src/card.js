@@ -46,6 +46,7 @@ class HomeCircleCard extends HTMLElement {
     this.attachShadow({ mode: "open" });
     this._mode = "overview";
     this._generation = 0;
+    this._snapshotRevision = 0;
     this._refreshToken = 0;
     this._integrationVersion = integrationManifest.version;
   }
@@ -127,6 +128,7 @@ class HomeCircleCard extends HTMLElement {
       else this._clear("Connecting to Home Assistant…");
     }
     if (hass.connected === false) {
+      this._stopReadySubscription();
       clearTimeout(this._timeout);
       this._generation++;
       this._busy = false;
@@ -135,6 +137,7 @@ class HomeCircleCard extends HTMLElement {
       );
       return;
     }
+    this._listenForReady();
     if (this.isConnected && (changed || reconnected)) this._load();
   }
   connectedCallback() {
@@ -149,11 +152,14 @@ class HomeCircleCard extends HTMLElement {
     window.addEventListener("resize", this._onWindowResize);
     this._fitScreen();
     this._render();
+    this._listenForReady();
     this._load();
     clearInterval(this._timer);
     this._timer = setInterval(() => this._load(), 15000);
   }
   disconnectedCallback() {
+    this._stopReadySubscription();
+    this._snapshotUpdatePending = false;
     this._finishMapResize(false);
     this._cancelSelectionRefresh();
     this._memberDialog?.close();
@@ -170,6 +176,70 @@ class HomeCircleCard extends HTMLElement {
     this._destroyMap();
     this.shadowRoot.replaceChildren();
     this._shell = null;
+  }
+  _stopReadySubscription() {
+    const watch = this._readySubscription;
+    this._readySubscription = null;
+    watch?.unsubscribe?.();
+  }
+  _refreshSnapshot() {
+    this._snapshotRevision++;
+    this._snapshotUpdatePending = true;
+    this._load();
+  }
+  _listenForReady() {
+    const connection = this._hass?.connection;
+    const userId = this._hass?.user?.id;
+    const admin = this._hass?.user?.is_admin === true;
+    if (
+      this._readySubscription?.connection === connection &&
+      this._readySubscription?.userId === userId &&
+      admin
+    )
+      return;
+    this._stopReadySubscription();
+    if (
+      !this.isConnected ||
+      !admin ||
+      this._hass?.connected === false ||
+      typeof connection?.subscribeEvents !== "function"
+    )
+      return;
+    const watch = { connection, userId };
+    this._readySubscription = watch;
+    try {
+      Promise.resolve(
+        connection.subscribeEvents(() => {
+          if (
+            this._readySubscription !== watch ||
+            !this.isConnected ||
+            this._hass?.connected === false ||
+            this._hass?.connection !== connection ||
+            this._hass?.user?.is_admin !== true ||
+            this._hass?.user?.id !== userId
+          )
+            return;
+          this._refreshSnapshot();
+        }, "homecircle_ready"),
+      )
+        .then((unsubscribe) => {
+          watch.unsubscribe = () => {
+            Promise.resolve()
+              .then(unsubscribe)
+              .catch(() => {});
+          };
+          if (this._readySubscription !== watch) watch.unsubscribe();
+          else {
+            // Cover a reload that completed while subscribing was in flight.
+            this._refreshSnapshot();
+          }
+        })
+        .catch(() => {
+          // The ordinary snapshot timer remains available if subscribing fails.
+        });
+    } catch {
+      // Older or unavailable connections still use the ordinary snapshot timer.
+    }
   }
   _fitScreen() {
     this._applyMapHeight();
@@ -395,6 +465,8 @@ class HomeCircleCard extends HTMLElement {
     )
       return;
     this._busy = true;
+    this._snapshotUpdatePending = false;
+    const revision = this._snapshotRevision;
     const generation = ++this._generation;
     this._timeout = setTimeout(() => {
       if (generation === this._generation) {
@@ -410,6 +482,7 @@ class HomeCircleCard extends HTMLElement {
       if (generation !== this._generation || !this.isConnected) return;
       if (data.schema_version !== 1)
         throw new Error("Unsupported household data version.");
+      if (revision !== this._snapshotRevision) return;
       const first = !this._data;
       const signature = JSON.stringify(data) + Math.floor(Date.now() / 60000);
       this._data = data;
@@ -420,11 +493,14 @@ class HomeCircleCard extends HTMLElement {
       if (first || recovering || signature !== this._signature) this._render();
       this._signature = signature;
     } catch (error) {
-      if (generation === this._generation) {
-        if (
-          error.code === "unauthorized" ||
-          error.message === "Unsupported household data version."
-        )
+      const clearData =
+        error.code === "unauthorized" ||
+        error.message === "Unsupported household data version.";
+      if (
+        generation === this._generation &&
+        (clearData || revision === this._snapshotRevision)
+      ) {
+        if (clearData)
           this._clear(
             error.code === "unauthorized"
               ? "This HA user cannot view all selected household sources."
@@ -441,6 +517,7 @@ class HomeCircleCard extends HTMLElement {
       if (generation === this._generation) {
         clearTimeout(this._timeout);
         this._busy = false;
+        if (this._snapshotUpdatePending) this._load();
       }
     }
   }
