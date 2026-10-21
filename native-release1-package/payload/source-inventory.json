@@ -396,8 +396,8 @@
     "sha256": "8e5ad4aa024b7c8a790393cb99dfc29f3388c07e51d25136fb9d9f3ca246aa43"
   },
   "custom_components/homecircle/findmy_setup.py": {
-    "bytes": 46342,
-    "sha256": "f1618311ed09cd3e48b19c47c99d8528c1919ff23038449aff8755d48449433e"
+    "bytes": 46961,
+    "sha256": "9e9670c1c733a2b28ecb2f1f872e09abe356ac1a22d9060e2effd6434c38baf1"
   },
   "custom_components/homecircle/findmy_storage.py": {
     "bytes": 1509,
@@ -604,8 +604,8 @@
     "sha256": "b3aac76553bb6d5c4520e208e319370fbda4eecc01409b42b7c115c9293d96ec"
   },
   "docs/CURRENT-RELEASE-READINESS.md": {
-    "bytes": 123457,
-    "sha256": "b14b2a7c11ffdbc07ed81daf43d621f14e8d25e2232f6c5025b96e0e6f91062b"
+    "bytes": 125672,
+    "sha256": "7fe9d77562d47a162937afde83b41036053ffed1f02ffdbe28c400dbb02cf916"
   },
   "docs/DASHBOARD-POLISH.md": {
     "bytes": 1268,
@@ -616,8 +616,8 @@
     "sha256": "ba5c7c1a59841dd48a301a44a1c4492c35579ae07bacd550e5795ae7e736055c"
   },
   "docs/DEVELOPMENT.md": {
-    "bytes": 11558,
-    "sha256": "f130e9290a4e5949d7b516392d7b13937a69b7d47260aff3c711a5cb18ff2ced"
+    "bytes": 11505,
+    "sha256": "f0854c64c9ee09b9f9f6e949e08759377a50c5c3353d8aa206de67fbafa75083"
   },
   "docs/DIRECT-LIFE360-CANDIDATE-VALIDATION.md": {
     "bytes": 13666,
@@ -644,8 +644,8 @@
     "sha256": "b1a6da3c63ecc1da58609af5ee7d6d8e32f4b80d3890ce40d56b758c3d0f7707"
   },
   "docs/FINDMY-SETUP.md": {
-    "bytes": 10846,
-    "sha256": "9ef9a6ed3265d9415680902b1bea5b3e5414d0b99fe6ff59a402e1d008d48c78"
+    "bytes": 12343,
+    "sha256": "bdb5719c2c9f439a2f3893bd07d2344a190ebab3724aa622525b88b0a1d4373f"
   },
   "docs/FOCUSED-HARDENING-VALIDATION.md": {
     "bytes": 9799,
@@ -708,8 +708,8 @@
     "sha256": "75d2061c71e64a03576f6cd93b62789f437684ecbb13dd5798a082577f1cfb53"
   },
   "docs/PICTURE-FILENAME-VALIDATION.md": {
-    "bytes": 3073,
-    "sha256": "f94b8088f4297d7b87f255cf16c4ef2c4020e2a4834081943d7045d41f181b11"
+    "bytes": 3439,
+    "sha256": "989c20c3c9e496417b2c97a0794f7cd186941dd15a06dd36c70e749d3726adae"
   },
   "docs/PLATFORM-UPGRADE-RECOVERY-VALIDATION.md": {
     "bytes": 25286,
@@ -740,16 +740,16 @@
     "sha256": "8ec1a8609e5db8af1af101c5538bb4d22850b30153af9cbc5f470b2763cb107d"
   },
   "docs/RELEASE-1.0-FOCUSED-REVIEW.md": {
-    "bytes": 11495,
-    "sha256": "37f580cba6305bb70637194871a32c5bb753f3abec92eb7a33be9f1e278bd4e1"
+    "bytes": 11933,
+    "sha256": "a0ad91d2629516a1cb89df3691188c16ae13c4294328259b87b5233905ae0a7b"
   },
   "docs/RELEASE-1.0-PLAN.md": {
-    "bytes": 17715,
-    "sha256": "64781b37d9597b7735aaff9cb97e0e457fcd66def122d694b6c3fbeff69ac081"
+    "bytes": 24098,
+    "sha256": "315d34fbbc2ce935766bd210ab40353319ab00b5687004f6374700783291d08e"
   },
   "docs/RELEASE-1.0-TRIAGE.md": {
-    "bytes": 12244,
-    "sha256": "42403513d6fa223db63b43d7ccae1599533dd6b25681533dc42863bf54bcaefb"
+    "bytes": 12682,
+    "sha256": "6acad574cce2127b59523c9db196c4ebbb8040b14394096e36b5a44b3e1cfc83"
   },
   "docs/RELEASE-VALIDATION.md": {
     "bytes": 13040,
@@ -780,12 +780,12 @@
     "sha256": "47408939576a43dac8fe8dbcc1e67af2bcc12491b1952a30be99f74a44bbb261"
   },
   "docs/STABLE-RELEASE-CHECKLIST.md": {
-    "bytes": 21480,
-    "sha256": "f2b6e8305d271faf00713ce35c519b6f4ddeaa337a802ec1154a48d0b93e6aa2"
+    "bytes": 24058,
+    "sha256": "b8f2cb047385a60c7484e7cf9914c58d0628dccd466fb7ed8f99b011b64c8f2f"
   },
   "docs/STABLE-SCOPE-AUDIT.md": {
-    "bytes": 16241,
-    "sha256": "53ff6cc8963ae6fb3c7b2b91c58e595568c92d12378a1b018c0feef349dfcc49"
+    "bytes": 16409,
+    "sha256": "833be090f2e51fda953794df44cb243d570ebc5243aa71a8f62348a89b4153cb"
   },
   "docs/TRACKER-PROVIDER-ISSUES.md": {
     "bytes": 7155,
@@ -1240,8 +1240,8 @@
     "sha256": "297ef7af4d1b8edbdef6bc67d94fb3f10deba05a25f459bee3215c13d5cc6527"
   },
   "tests/test_findmy_setup.py": {
-    "bytes": 23264,
-    "sha256": "c9a6b6e02ed24932d74f98466f71e4aca7de9b0c51cfc0754924eb24080c6db5"
+    "bytes": 26487,
+    "sha256": "383be6a3a09c679e82f517c63d828649d2936b91ffc68875fb7d65cebe260b85"
   },
   "tests/test_findmy_signin_diagnostics.py": {
     "bytes": 9261,
