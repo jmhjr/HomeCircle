@@ -32,7 +32,7 @@ import logging
 import secrets
 import struct
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from cryptography.exceptions import InvalidSignature, InvalidTag
 from cryptography.hazmat.primitives import hashes
@@ -100,6 +100,19 @@ ALL_LABELS = (
 
 class PCSError(UnhandledProtocolError):
     """Raised when a protection structure cannot be unwrapped or a field decrypted."""
+
+
+_OuterAuthReason = Literal[
+    "owner_review_context_required", "outer_digest_unsupported", "outer_signer_mismatch",
+    "outer_covered_data_unreadable", "outer_signature_rejected",
+]
+_OUTER_AUTH_FAILURE_CODES: dict[str, _OuterAuthReason] = {
+    "an owner-review signature requires a separate trusted signer context": "owner_review_context_required",
+    "the outer signature declares an unsupported digest": "outer_digest_unsupported",
+    "the outer signature names a signer other than the matched local key": "outer_signer_mismatch",
+    "the outer signature's covered data could not be interpreted": "outer_covered_data_unreadable",
+    "the outer signature did not verify under the matched local key": "outer_signature_rejected",
+}
 
 
 class MissingKeyError(PCSError):
@@ -974,7 +987,11 @@ def unwrap_protection(
     if outer_reason is not None:
         message = f"Protection structure's outer authentication was not confirmed: {outer_reason}."
         if require_signature:
-            raise PCSError(message)
+            failure = PCSError(message)
+            failure._homecircle_outer_auth_reason = (
+                _OUTER_AUTH_FAILURE_CODES.get(outer_reason) if type(outer_reason) is str else None
+            )
+            raise failure
         logger.warning(message)
 
     # The inner signature uses the raw recovered key, while HMAC, meta and fields

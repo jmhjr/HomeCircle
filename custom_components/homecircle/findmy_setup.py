@@ -13,6 +13,25 @@ from .findmy_profile import configure_account
 _LOGGER = logging.getLogger(__name__)
 
 
+def _outer_auth_failure_reason(error):
+    """Accept only the exact PCS exception's fixed metadata, without properties."""
+    try:
+        from ._vendor_findmy.cloudkit.pcs import PCSError
+    except Exception:
+        return None
+
+    if type(error) is not PCSError:
+        return None
+    data = error.__dict__
+    if type(data) is not dict:
+        return None
+    reason = data.get("_homecircle_outer_auth_reason")
+    return reason if type(reason) is str and reason in (
+        "owner_review_context_required", "outer_digest_unsupported", "outer_signer_mismatch",
+        "outer_covered_data_unreadable", "outer_signature_rejected",
+    ) else None
+
+
 def _discovery_failure_site(error):
     """Return only a fixed own-code site, never traceback paths or local values."""
     sites = {
@@ -899,6 +918,7 @@ class FindMySetup:
             name = type(error).__name__
             safe["error_class"] = name if name in ("EscrowError", "RecoveryError", "KeychainSessionError", "CloudKitError", "UnauthorizedError", "UnhandledProtocolError", "PCSError", "MissingKeyError", "BeaconExportError", "InvalidTag", "InvalidSignature", "ValueError", "KeyError", "TypeError", "DecodeError", "TimeoutError") else "other"
             safe.update(_discovery_failure_site(error))
+            safe["outer_auth_reason"] = _outer_auth_failure_reason(error)
             for key in ("escrow_http", "operation_http"):
                 value = raw.get(key)
                 safe[key] = value if type(value) is int and 100 <= value <= 599 else None

@@ -332,3 +332,31 @@ def test_outer_signer_must_be_a_recipient_as_well_as_locally_available():
     assert pcs.describe_outer_protection_signature(control.protection, unrelated_signer.public_key()) is None
     with pytest.raises(pcs.PCSError, match="other than the matched local key"):
         pcs.unwrap_protection(control.protection, [receiver, unrelated_signer], require_hmac=True, require_signature=True)
+
+
+@pytest.mark.parametrize("case,expected", [
+    ("owner_review", "owner_review_context_required"),
+    ("unsupported_digest", "outer_digest_unsupported"),
+    ("unknown", "outer_signer_mismatch"),
+    ("covered_data", "outer_covered_data_unreadable"),
+    ("invalid", "outer_signature_rejected"),
+])
+def test_strict_outer_auth_failure_exposes_fixed_reason_before_key_unwrap(case, expected, monkeypatch):
+    from unittest.mock import Mock
+
+    control = signed_fixture(
+        outer_signature=None if case == "owner_review" else "valid" if case == "covered_data" else case,
+        owner_review=case == "owner_review",
+    )
+    protection = control.protection
+    if case == "covered_data":
+        protection = replace(protection, signature_data=replace(protection.signature_data, data=b"\x00"))
+    original_reason = pcs.describe_outer_protection_signature(protection, control.receiver.public_key())
+    blocked = Mock(side_effect=AssertionError("key unwrap must not execute after outer refusal"))
+    monkeypatch.setattr(pcs, "unwrap_share_key", blocked)
+    with pytest.raises(pcs.PCSError) as caught:
+        pcs.unwrap_protection(protection, [control.receiver], require_hmac=True, require_signature=True)
+    assert type(caught.value) is pcs.PCSError
+    assert caught.value.__dict__["_homecircle_outer_auth_reason"] == expected
+    assert str(caught.value) == "Protection structure's outer authentication was not confirmed: " + original_reason + "."
+    blocked.assert_not_called()
