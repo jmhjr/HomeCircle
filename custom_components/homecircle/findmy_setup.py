@@ -716,6 +716,14 @@ class FindMySetup:
                 ) else None
                 status = error.http_status
                 safe["recovery_credential_http"] = status if type(status) is int and 100 <= status <= 599 else None
+                auth_phase = error.auth_phase
+                safe["recovery_credential_phase"] = (
+                    auth_phase if type(auth_phase) is str and auth_phase in ("init", "complete") else None
+                )
+                retry = error.retry_after_seconds
+                safe["recovery_credential_retry_after_seconds"] = (
+                    retry if type(retry) is int and 0 <= retry <= 86400 else None
+                )
             name = type(error).__name__
             safe["error_class"] = name if name in (
                 "AttributeError", "TypeError", "KeyError", "ValueError", "KeychainSessionError",

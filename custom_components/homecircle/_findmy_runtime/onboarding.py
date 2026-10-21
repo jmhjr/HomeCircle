@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import hmac
+import math
 import sys
 from types import MethodType
 
@@ -22,12 +23,18 @@ class RecoveryPETError(UnauthorizedError):
     dispatch_state = "not_dispatched"
     server_verified = False
 
-    def __init__(self, reason, *, http_status=None):
+    def __init__(self, reason, *, http_status=None, auth_phase=None, retry_after=None):
         self.reason = reason if reason in {
             "missing_password", "factor_required", "identity_mismatch", "transient",
             "protocol", "credentials",
         } else "protocol"
         self.http_status = http_status if type(http_status) is int and 100 <= http_status <= 599 else None
+        self.auth_phase = auth_phase if type(auth_phase) is str and auth_phase in ("init", "complete") else None
+        self.retry_after_seconds = (
+            math.ceil(retry_after)
+            if type(retry_after) in (int, float) and 0 <= retry_after <= 86400 and math.isfinite(retry_after)
+            else None
+        )
         self.service_code = None
         super().__init__("Recovery credential refresh " + self.reason)
 
@@ -81,7 +88,10 @@ async def fresh_recovery_pet(account):
     except (asyncio.CancelledError, RecoveryPETError):
         raise
     except AppleServiceUnavailableError as error:
-        raise RecoveryPETError("transient", http_status=error.status_code) from None
+        raise RecoveryPETError(
+            "transient", http_status=error.status_code,
+            auth_phase=error.phase, retry_after=error.retry_after,
+        ) from None
     except (OSError, TimeoutError, ClientError):
         raise RecoveryPETError("transient") from None
     except (InvalidCredentialsError, UnauthorizedError):

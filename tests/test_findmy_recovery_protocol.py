@@ -432,6 +432,97 @@ async def test_pet_cleanup_failure_cannot_replace_original_structured_error(monk
         await account.close()
 
 
+@pytest.mark.parametrize("phase", ["init", "complete"])
+@pytest.mark.parametrize("status", [429, 503])
+async def test_pet_service_failure_preserves_only_current_response_context(monkeypatch, tmp_path, phase, status):
+    account = await original_account(tmp_path)
+    clones = []
+    failure = AppleServiceUnavailableError(
+        status, "synthetic-private-request-canary", retry_after=12.25, phase=phase,
+    )
+
+    async def authenticate(clone):
+        clones.append(clone)
+        # A preceding response must not supply the new refusal's metadata.
+        clone._signin_diagnostics = {"phase": "init", "http": 200, "retry_after": 999,
+                                     "body": "synthetic-private-response-canary"}
+        raise failure
+
+    monkeypatch.setattr(onboarding.AsyncAppleAccount, "_gsa_authenticate", authenticate)
+    try:
+        with pytest.raises(onboarding.RecoveryPETError) as caught:
+            await onboarding.fresh_recovery_pet(account)
+        error = caught.value
+        assert error.reason == "transient" and error.http_status == status
+        assert error.auth_phase == phase and error.retry_after_seconds == 13
+        assert error.stage == "preproof" and error.dispatch_state == "not_dispatched"
+        assert error.server_verified is False
+        assert clones[0]._password is None and clones[0]._login_state_data == {} and clones[0]._closed
+        assert "synthetic-private" not in str(error)
+    finally:
+        await account.close()
+
+
+class PrivatePhase(str):
+    pass
+
+
+class PrivateRetry(float):
+    pass
+
+
+@pytest.mark.parametrize("phase,retry,expected_phase,expected_retry", [
+    ("init", 0, "init", 0), ("complete", 86400, "complete", 86400),
+    ("complete", 0.01, "complete", 1), ("complete", 12.25, "complete", 13),
+    (None, None, None, None), (True, True, None, None),
+    (PrivatePhase("init"), PrivateRetry(5), None, None),
+    ("synthetic-private-phase", "synthetic-private-header", None, None),
+    ("init", -1, "init", None), ("init", 86401, "init", None),
+    ("init", float("nan"), "init", None), ("init", float("inf"), "init", None),
+    ("init", 10**500, "init", None),
+])
+def test_pet_error_context_accepts_only_exact_bounded_metadata(phase, retry, expected_phase, expected_retry):
+    error = onboarding.RecoveryPETError("transient", auth_phase=phase, retry_after=retry)
+    assert error.auth_phase == expected_phase and error.retry_after_seconds == expected_retry
+    assert error.http_status is None and error.reason == "transient"
+    assert "synthetic-private" not in str(error)
+
+
+async def test_pet_transport_error_does_not_inherit_preceding_response_context(monkeypatch, tmp_path):
+    account = await original_account(tmp_path)
+
+    async def authenticate(clone):
+        clone._signin_diagnostics = {"phase": "init", "http": 200, "retry_after": 999}
+        raise OSError("synthetic-private-transport-canary")
+
+    monkeypatch.setattr(onboarding.AsyncAppleAccount, "_gsa_authenticate", authenticate)
+    try:
+        with pytest.raises(onboarding.RecoveryPETError) as caught:
+            await onboarding.fresh_recovery_pet(account)
+        error = caught.value
+        assert error.reason == "transient"
+        assert error.http_status is error.auth_phase is error.retry_after_seconds is None
+    finally:
+        await account.close()
+
+
+async def test_pet_cancellation_still_propagates_and_cleans_clone(monkeypatch, tmp_path):
+    account = await original_account(tmp_path)
+    clones = []
+
+    async def authenticate(clone):
+        clones.append(clone)
+        raise asyncio.CancelledError()
+
+    monkeypatch.setattr(onboarding.AsyncAppleAccount, "_gsa_authenticate", authenticate)
+    try:
+        with pytest.raises(asyncio.CancelledError):
+            await onboarding.fresh_recovery_pet(account)
+        assert clones[0]._password is None and clones[0]._login_state_data == {} and clones[0]._closed
+    finally:
+        await account.close()
+
+
 async def test_failed_srp_init_is_preproof_without_reservation():
     proxy, attempt, events = proxy_for(AsyncMock(side_effect=TimeoutError("private-init-canary")))
     with pytest.raises(recovery.RecoveryProtocolError) as raised:

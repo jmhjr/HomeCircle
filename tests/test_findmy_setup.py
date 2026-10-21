@@ -642,3 +642,43 @@ async def test_recovery_bootstrap_rejects_unknown_credential_metadata(caplog):
     account.login.assert_not_awaited()
     client.unlock.assert_not_awaited()
     await flow.close()
+
+
+@pytest.mark.parametrize("phase", ["init", "complete"])
+async def test_recovery_bootstrap_logs_current_pet_phase_and_bounded_retry_only(phase, caplog):
+    from custom_components.homecircle._findmy_runtime.onboarding import RecoveryPETError
+
+    flow, account, _ = setup()
+    error = RecoveryPETError("transient", http_status=429, auth_phase=phase, retry_after=12.25)
+    account._signin_diagnostics = {"phase": "init", "http": 200, "retry_after": 999,
+                                    "body": "synthetic-private-response-canary"}
+    flow.client_factory.side_effect = error
+    with pytest.raises(RecoveryPETError) as caught:
+        await flow.open_recovery()
+    assert caught.value is error
+    assert "'recovery_credential_phase': '" + phase + "'" in caplog.text
+    assert "'recovery_credential_http': 429" in caplog.text
+    assert "'recovery_credential_retry_after_seconds': 13" in caplog.text
+    assert "synthetic-private" not in caplog.text and "999" not in caplog.text
+    await flow.close()
+
+
+@pytest.mark.parametrize("phase,retry", [
+    (True, True), ("synthetic-private-phase", "synthetic-private-header"),
+    ("init", -1), ("complete", 86401), (None, float("nan")), (None, 1.0),
+])
+async def test_recovery_bootstrap_revalidates_mutated_pet_error_context(phase, retry, caplog):
+    from custom_components.homecircle._findmy_runtime.onboarding import RecoveryPETError
+
+    flow, _, _ = setup()
+    error = RecoveryPETError("transient", http_status=429)
+    error.auth_phase, error.retry_after_seconds = phase, retry
+    flow.client_factory.side_effect = error
+    with pytest.raises(RecoveryPETError) as caught:
+        await flow.open_recovery()
+    assert caught.value is error
+    expected = phase if type(phase) is str and phase in ("init", "complete") else None
+    assert "'recovery_credential_phase': " + repr(expected) in caplog.text
+    assert "'recovery_credential_retry_after_seconds': None" in caplog.text
+    assert "synthetic-private" not in caplog.text
+    await flow.close()
