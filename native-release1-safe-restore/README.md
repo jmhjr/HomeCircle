@@ -115,6 +115,16 @@ failure scope. Success receipts are unchanged. This diagnoses a failed wait;
 it does not establish a cause or alter a fixture, predicate, deadline or
 acceptance criterion.
 
+The seventh negative receipt observed only the first synthetic Person losing
+its configured selection while both trackers remained present and Home. The
+pinned Person update schema defaults an omitted `device_trackers` field to an
+empty list; its own picture-update code explicitly carries that list forward.
+The QA portrait call now first requires the current selection to equal its one
+expected tracker, then carries a copy of that current list in the picture update.
+This fixes the confirmed QA API mismatch without changing product behavior,
+tracker state, source/state waits or timing. It does not reclassify any prior
+negative run or prove the full restore procedure.
+
 ## Exact runtime and reuse
 
 The official machine reference is
@@ -144,7 +154,7 @@ requires the same module hashes in the guest before creating the synthetic image
 
 ## Contracts, privacy and limits
 
-Ninety-three standalone contracts currently pass without skips. They include
+Ninety-five standalone contracts currently pass without skips. They include
 strict input/archive/OCI/dependency/blank-config checks; actual phase nonce and
 disabled automatic-boot barriers; old/new guard timeline, pending/uncertain and
 early-enable/network refusal; private bundle links/modes/size-before-read;
@@ -163,6 +173,14 @@ exception identity, and both actual failure paths across allowed/refused scopes.
 They do not import HA, a native
 provider or run a VM. The future workflow must bind every committed input before
 imports and require exactly the reviewed contract count with zero skips.
+
+Two further contracts execute the actual QA portrait call and exact tagged
+Person `_update_data` body, with a clearly limited source-derived model of the
+schema's default empty tracker list. They reproduce the old picture-only call
+clearing the selection, verify the explicit current-list payload preserves it
+and the second Person, and refuse missing, foreign or multiple selections before
+any Person update. The complete probatio validator and HA lifecycle are not run
+by these standalone cases; actual managed acceptance remains required.
 
 Public output is exactly nine fixed JSON names on success: `host.json` and the
 eight phase names. Raw backup/database/configuration, guard bundle/account hashes,

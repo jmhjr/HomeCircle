@@ -282,7 +282,10 @@ async def create_portrait(hass,people,registry, progress=None):
     person_id = registry.async_get(people[0]).unique_id
     url = '/api/image/serve/'+record['id']+'/512x512'
     setup_mark(progress, "portrait_person_update")
-    await hass.data['person'][1].async_update_item(person_id,{'picture':url})
+    selected_trackers = entities_in_person(hass, people[0])
+    check(selected_trackers == [TRACKERS[0]], 'qa_portrait_person_selection')
+    await hass.data['person'][1].async_update_item(person_id,
+        {'picture':url, 'device_trackers':list(selected_trackers)})
     setup_mark(progress, "portrait_state")
     await wait_for(lambda: hass.states.get(people[0]) is not None
                    and hass.states.get(people[0]).attributes.get('entity_picture') == url)

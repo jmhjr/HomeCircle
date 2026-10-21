@@ -723,3 +723,101 @@ class PersonSourceDiagnosticContracts(unittest.IsolatedAsyncioTestCase):
                 public=json.loads((Path(directory)/(phase+'.json')).read_bytes())
                 self.assertEqual(public.get('person_sources'),valid if expected else None)
                 self.assertNotIn('CANARY',json.dumps(public))
+
+
+PERSON_UPDATE_SOURCE = 'async def _update_data(self, item: dict, update_data: dict) -> dict:\n    """Return a new updated data object."""\n    update_data = self.UPDATE_SCHEMA(update_data)\n\n    user_id: str | None = update_data.get(CONF_USER_ID)\n\n    if user_id is not None and user_id != item.get(CONF_USER_ID):\n        await self._validate_user_id(user_id)\n\n    return {**item, **update_data}\n'
+PERSON_UPDATE_SOURCE_SHA = '8832cf3109c0badb9827d4e8b9c5c928266f36f08b67650b5d6f9ba642cf33d5'
+PERSON_UPDATE_FIELDS_SOURCE = 'UPDATE_FIELDS: VolDictType = {\n    probatio.Optional(CONF_NAME): probatio.All(str, probatio.Length(min=1)),\n    probatio.Optional(CONF_USER_ID): probatio.Any(str, None),\n    probatio.Optional(CONF_DEVICE_TRACKERS, default=list): probatio.All(\n        probatio.EnsureList(), cv.entities_domain(DEVICE_TRACKER_DOMAIN)\n    ),\n    probatio.Optional(CONF_PICTURE): probatio.Any(str, None),\n}\n'
+PERSON_UPDATE_FIELDS_SOURCE_SHA = 'ddb410cbfa72f36cbc926061a95ccab8e617059a30be7cfed5bd20c57c04b39b'
+
+
+def portrait_selection_functions(baseline=False):
+    """Actual helper and tagged update body; schema defaults are a narrow model."""
+    helper=ast.parse((controller.ROOT/'guest_helper/homecircle_safe_restore_qa/__init__.py').read_bytes())
+    create=deepcopy(next(n for n in helper.body if isinstance(n,ast.AsyncFunctionDef) and n.name=='create_portrait'))
+    if baseline:
+        create.body=[n for n in create.body if not (
+            isinstance(n,ast.Assign) and any(isinstance(t,ast.Name) and t.id=='selected_trackers' for t in n.targets)
+            or isinstance(n,ast.Expr) and isinstance(n.value,ast.Call) and isinstance(n.value.func,ast.Name)
+            and n.value.func.id=='check' and isinstance(n.value.args[-1],ast.Constant)
+            and n.value.args[-1].value=='qa_portrait_person_selection')]
+        call=next(n for n in ast.walk(create) if isinstance(n,ast.Call) and isinstance(n.func,ast.Attribute) and n.func.attr=='async_update_item')
+        data=call.args[1];assert isinstance(data,ast.Dict)
+        pairs=[(key,value) for key,value in zip(data.keys,data.values,strict=True) if key.value!='device_trackers']
+        data.keys=[key for key,value in pairs];data.values=[value for key,value in pairs]
+    nodes=[n for n in helper.body if isinstance(n,ast.Assign) and any(isinstance(t,ast.Name) and t.id in {'TRACKERS','SETUP_STEPS','PNG'} for t in n.targets)
+           or isinstance(n,ast.FunctionDef) and n.name=='setup_mark']+[create]
+    namespace={'base64':base64,'check':controller.require,'Path':Path,'digest':lambda raw:hashlib.sha256(raw).hexdigest()}
+    exec(compile(ast.fix_missing_locations(ast.Module(body=nodes,type_ignores=[])),'actual_create_portrait','exec'),namespace)
+    assert hashlib.sha256(PERSON_UPDATE_SOURCE.encode()).hexdigest()==PERSON_UPDATE_SOURCE_SHA
+    assert hashlib.sha256(PERSON_UPDATE_FIELDS_SOURCE.encode()).hexdigest()==PERSON_UPDATE_FIELDS_SOURCE_SHA
+    schema=ast.parse(PERSON_UPDATE_FIELDS_SOURCE).body[0].value
+    tracker_markers=[key for key in schema.keys if isinstance(key,ast.Call) and key.args
+                     and isinstance(key.args[0],ast.Name) and key.args[0].id=='CONF_DEVICE_TRACKERS']
+    assert len(tracker_markers)==1
+    marker=tracker_markers[0]
+    assert isinstance(marker.func,ast.Attribute) and marker.func.attr=='Optional'
+    assert len(marker.keywords)==1 and marker.keywords[0].arg=='default'
+    assert isinstance(marker.keywords[0].value,ast.Name) and marker.keywords[0].value.id=='list'
+    # This deliberately models only the tagged default, not the full probatio validator.
+    def tagged_default_list_model(data):return {'device_trackers':[],**data}
+    core={'CONF_USER_ID':'user_id'}
+    exec(compile(PERSON_UPDATE_SOURCE,'tagged_PersonStorageCollection_update_data','exec'),core)
+    return namespace,core['_update_data'],tagged_default_list_model
+
+
+class PortraitSelectionContracts(unittest.IsolatedAsyncioTestCase):
+    async def exercise_portrait(self,baseline=False,selection=None):
+        functions,update_data,default_model=portrait_selection_functions(baseline)
+        people=['person.synthetic_a','person.synthetic_b'];trackers=functions['TRACKERS']
+        before={person:{'id':person,'name':'Synthetic','device_trackers':[tracker],'picture':None,'unrelated':'retained'}
+                for person,tracker in zip(people,trackers,strict=True)}
+        records=deepcopy(before);updates=[];models=[]
+        class Collection:
+            UPDATE_SCHEMA=staticmethod(default_model)
+            async def async_update_item(self,identifier,data):
+                updates.append((identifier,deepcopy(data)))
+                models.append((data.get('device_trackers'),records[identifier]['device_trackers']))
+                records[identifier]=await update_data(self,records[identifier],data)
+        collection=Collection()
+        async def create_image(data):
+            self.assertEqual(set(data),{'file'});return {'id':'a'*32}
+        async def executor(function):return function()
+        async def wait(predicate):self.assertTrue(predicate())
+        states=SimpleNamespace(get=lambda person:SimpleNamespace(attributes={'entity_picture':records[person]['picture']}))
+        hass=SimpleNamespace(data={'image_upload':SimpleNamespace(async_items=lambda:[],async_create_item=create_image),
+                                   'person':(None,collection)},states=states,async_add_executor_job=executor)
+        functions.update({'entities_in_person':lambda hass,person:records[person]['device_trackers'] if selection is None else selection,
+                          'wait_for':wait,'FileField':lambda *args:args,'CIMultiDict':dict,'CIMultiDictProxy':lambda value:value})
+        with tempfile.TemporaryDirectory() as directory:
+            image=Path(directory)/'synthetic-image-source.py';person=Path(directory)/'synthetic-person-source.py'
+            image.write_bytes(b'synthetic-module-byte-guard');person.write_bytes(b'synthetic-person-byte-guard')
+            functions.update({'image_component':SimpleNamespace(__file__=str(image)),'person_component':SimpleNamespace(__file__=str(person)),
+                              'API_SOURCES':{'image_upload':hashlib.sha256(image.read_bytes()).hexdigest(),
+                                             'person':hashlib.sha256(person.read_bytes()).hexdigest()}})
+            import io
+            functions['io']=io
+            registry=SimpleNamespace(async_get=lambda entity:SimpleNamespace(unique_id=entity))
+            try:await functions['create_portrait'](hass,people,registry)
+            except controller.Refused as error:
+                return records,before,updates,models,error
+        return records,before,updates,models,None
+
+    async def test_actual_picture_call_preserves_selected_tracker_under_tagged_default_transform(self):
+        old,before,updates,_,error=await self.exercise_portrait(baseline=True)
+        self.assertIsNone(error);self.assertEqual(set(updates[0][1]),{'picture'})
+        self.assertEqual(old['person.synthetic_a']['device_trackers'],[])
+        current,before,updates,models,error=await self.exercise_portrait()
+        self.assertIsNone(error);self.assertEqual(set(updates[0][1]),{'picture','device_trackers'})
+        self.assertEqual(current['person.synthetic_a']['device_trackers'],before['person.synthetic_a']['device_trackers'])
+        self.assertEqual(current['person.synthetic_a']['picture'],'/api/image/serve/'+'a'*32+'/512x512')
+        self.assertEqual(current['person.synthetic_a']['unrelated'],'retained')
+        self.assertEqual(current['person.synthetic_b'],before['person.synthetic_b'])
+        self.assertIsNot(models[0][0],models[0][1])
+
+    async def test_actual_picture_call_refuses_missing_foreign_or_multiple_selection_before_update(self):
+        functions,_,_=portrait_selection_functions();first,second=functions['TRACKERS']
+        for selection in ([],[second],[first,second],['device_tracker.synthetic_foreign']):
+            records,before,updates,_,error=await self.exercise_portrait(selection=selection)
+            self.assertIsNotNone(error);self.assertEqual(str(error),'qa_portrait_person_selection')
+            self.assertEqual(updates,[]);self.assertEqual(records,before)
