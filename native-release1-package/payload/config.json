@@ -1,11 +1,11 @@
 {
-  "candidate_source_commit": "6d2196ba640e1edd3e590f2a033f52dba080dc24",
+  "candidate_source_commit": "bed0676ff67b1ff1d88a934cde1e3a978f28b282",
   "candidate_source_prefix": "",
   "checker_sha256": "216331d16af8fb2ec636e1466303923ecfe32c76f78ea72f89d373c80c9713d2",
   "driver_sha256": "e97e3f71fc9f7ceb9391f86e0178c59c3b88a2fafe5f397e25a9fb69fe568e59",
   "expected_release_files": 113,
   "frontend_tests": 110,
-  "minimum_backend_passed": 1490,
+  "minimum_backend_passed": 1517,
   "required_backend_tests": [
     {
       "class": "tests.test_normalize",
@@ -70,11 +70,35 @@
     {
       "class": "tests.test_findmy_flow",
       "function": "test_empty_recovery_devices_after_consumed_code_ends_without_replay"
+    },
+    {
+      "class": "tests.test_findmy_recovery_protocol",
+      "function": "test_pet_service_failure_preserves_only_current_response_context"
+    },
+    {
+      "class": "tests.test_findmy_recovery_protocol",
+      "function": "test_pet_error_context_accepts_only_exact_bounded_metadata"
+    },
+    {
+      "class": "tests.test_findmy_recovery_protocol",
+      "function": "test_pet_transport_error_does_not_inherit_preceding_response_context"
+    },
+    {
+      "class": "tests.test_findmy_recovery_protocol",
+      "function": "test_pet_cancellation_still_propagates_and_cleans_clone"
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_recovery_bootstrap_logs_current_pet_phase_and_bounded_retry_only"
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_recovery_bootstrap_revalidates_mutated_pet_error_context"
     }
   ],
   "schema": 1,
   "source_files": 337,
-  "source_inventory_sha256": "a655675f20de9f6abe4e8cc2ffb8bd4eb064c3039979843942d49fd4d757dbe1",
-  "source_sha256": "2ad2b2aff4a4f7ff00bf159eac81fdf09ba9d7e52e8c1159de39a804cdeab244",
+  "source_inventory_sha256": "a2897df33aa1b72b92204d41b825b37a06601a9d526754387dfaceb19dd5313c",
+  "source_sha256": "8420838d3af9f2bf55acd2078dd79e0d227c28dd214875a550abbda7d90b5b72",
   "version": "0.1.0-beta.20"
 }
