@@ -1,11 +1,11 @@
 {
-  "candidate_source_commit": "bed0676ff67b1ff1d88a934cde1e3a978f28b282",
+  "candidate_source_commit": "37b367f8800672a9e0b5c68018c0f825a7a1a43e",
   "candidate_source_prefix": "",
   "checker_sha256": "216331d16af8fb2ec636e1466303923ecfe32c76f78ea72f89d373c80c9713d2",
   "driver_sha256": "e97e3f71fc9f7ceb9391f86e0178c59c3b88a2fafe5f397e25a9fb69fe568e59",
   "expected_release_files": 113,
   "frontend_tests": 110,
-  "minimum_backend_passed": 1517,
+  "minimum_backend_passed": 1528,
   "required_backend_tests": [
     {
       "class": "tests.test_normalize",
@@ -94,11 +94,27 @@
     {
       "class": "tests.test_findmy_setup",
       "function": "test_recovery_bootstrap_revalidates_mutated_pet_error_context"
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_discovery_error_site_reports_only_bound_own_source"
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_discovery_error_site_rejects_unbound_or_oversized_sites"
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_discovery_error_site_prefers_innermost_allowlisted_frame"
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_discovery_logs_fixed_pcs_subclass_and_site_without_retry"
     }
   ],
   "schema": 1,
   "source_files": 337,
-  "source_inventory_sha256": "a2897df33aa1b72b92204d41b825b37a06601a9d526754387dfaceb19dd5313c",
-  "source_sha256": "8420838d3af9f2bf55acd2078dd79e0d227c28dd214875a550abbda7d90b5b72",
+  "source_inventory_sha256": "a7e2e0d1be48b383f371cddbe17c4437b90a5f2b10efa274ce543e936d7f2531",
+  "source_sha256": "1250f6a2e64a147184ad0d7e78ed6330474eee11c36c4b47c6743d8eb83fe46a",
   "version": "0.1.0-beta.20"
 }

@@ -396,8 +396,8 @@
     "sha256": "8e5ad4aa024b7c8a790393cb99dfc29f3388c07e51d25136fb9d9f3ca246aa43"
   },
   "custom_components/homecircle/findmy_setup.py": {
-    "bytes": 47558,
-    "sha256": "f247f659a0696cc5d6bd4d50aad61e6a31ea648e7bcabcd37a81fffdabb74b75"
+    "bytes": 49265,
+    "sha256": "2f45d29a5a46453a4774a19acbc73606c42ba2e89567b46ab08bf8b088c9ffb8"
   },
   "custom_components/homecircle/findmy_storage.py": {
     "bytes": 1509,
@@ -1240,8 +1240,8 @@
     "sha256": "297ef7af4d1b8edbdef6bc67d94fb3f10deba05a25f459bee3215c13d5cc6527"
   },
   "tests/test_findmy_setup.py": {
-    "bytes": 28500,
-    "sha256": "9fcaa035d4d905d9c4dafe3f812d4fa6fbf7176e43d31a1076cd9a3f3250c890"
+    "bytes": 33220,
+    "sha256": "50d9609b9585188c36122951736ecb0ade38cdf9e861dd8ff4d62d7a776bf31e"
   },
   "tests/test_findmy_signin_diagnostics.py": {
     "bytes": 9261,
