@@ -1,3 +1,9 @@
+# Current vault-error candidate requalification — prepared only
+
+This packet retargets the successful 147-contract, eight-phase fixture at QA `2d7fcbb40b021d84a21de7457222ef8f7191197d` to source `91ae59106a661143b770d7a3564d363c7c11a7dd`, package `004c9bc4a968ad395e18033837cb42f5bd1d8719a8d90fc778fd20be4ff08f97`, qualified native run `39683890536`. Exactly one of 113 package members changes: findmy_vault.py; the other 112, served frontend, recovery guard, both transfer contexts, all restore ordering and acceptance gates remain unchanged. This new candidate still requires its own actual restore run. The remaining text below is preserved verbatim as historical documentation of the previously tested f4 fixture. This account-free partial restore does not validate saved provider vault restoration, enabled automatic guard protection, full-system, encrypted or cloud backups, or provider acceptance.
+
+---
+
 # Exact F4DA preview: explicit disabled-entry partial-restore witness
 
 Prepared for review only. No VM, CI or product change was made by preparing this

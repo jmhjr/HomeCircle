@@ -35,7 +35,7 @@ from guard_context import Context
 
 HAOS_URL = "https://github.com/home-assistant/operating-system/releases/download/18.3/haos_ova-18.3.qcow2.xz"
 HAOS_XZ_SHA = "fae6a728768cc10aff60d4820bfcd40d64cd77fab82c8bd92af13b3d9d414090"
-CANDIDATE_SHA = "6fb180fc1f5c7de70382f95f8fe9e718f94841598dfc96d1afe233c8f21495db"
+CANDIDATE_SHA = "004c9bc4a968ad395e18033837cb42f5bd1d8719a8d90fc778fd20be4ff08f97"
 BRANCH = "codex/native-amd64-validation"
 CORE = "2026.10.2"
 HA = "/usr/bin/docker exec hassio_cli ha"
@@ -634,7 +634,7 @@ def project_dependencies(value, complete):
             'skip_pip': value.get('skip_pip') if type(value.get('skip_pip')) is bool else None,
             'provider_or_native_imports_requested_by_probe': False}
 
-SOURCE_COMMIT = "f4da650e6e460382c6ee1f70827bddac43bf2780"
+SOURCE_COMMIT = "91ae59106a661143b770d7a3564d363c7c11a7dd"
 
 CONSTRAINTS_SHA = "7baa9a8f39ddeb9c5bb60a1036f6d5e33f4b84267f151f53cc2b95ef031a21b5"
 

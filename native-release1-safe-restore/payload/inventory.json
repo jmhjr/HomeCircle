@@ -1,5 +1,5 @@
 {
-  "archive_sha256": "6fb180fc1f5c7de70382f95f8fe9e718f94841598dfc96d1afe233c8f21495db",
+  "archive_sha256": "004c9bc4a968ad395e18033837cb42f5bd1d8719a8d90fc778fd20be4ff08f97",
   "files": {
     "LICENSE": {
       "bytes": 1070,
@@ -386,8 +386,8 @@
       "sha256": "1c3a91c1dab341bf4909af989e5cdb3ef43b6c72d5e954b30a57212d76f73787"
     },
     "findmy_vault.py": {
-      "bytes": 6065,
-      "sha256": "7c6a846cefba6a34647d84b7738a93d85738a948da32fbf752a96c4e1cf4c0f2"
+      "bytes": 6420,
+      "sha256": "1959c143d36c4f06aff13d85aed2886c32161de86680fd0567427bda418e12f5"
     },
     "frontend.py": {
       "bytes": 3415,

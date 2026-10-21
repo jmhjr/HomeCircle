@@ -31,23 +31,23 @@ jobs:
           import hashlib,subprocess
           root=Path('native-release1-safe-restore')
           expected={
-            "README.md": "cd9e8fe85bde41fbf6087b7c0b253ad810329f69b87d6933750245d9a1bd168a",
-            "accept_procedure.py": "caa61c89572f89f51a5513f5cfc41b1a16ab5175b6c85fe2447eec1c3bbb5023",
-            "controller.py": "fdc4e0eb6ad4476f3422c6b1f6dca071e64d35822e4404726a5744d5568c9f28",
+            "README.md": "b5db38a9f0dbde8bbaccb13fa58ccd73134b7fe216d0713821a0f5dc9f756bf7",
+            "accept_procedure.py": "29f4bfc26e3805a6d3d490d0e58af67b3749a0faf447bfe74bc6cd21f5fbe8a5",
+            "controller.py": "5e83a4d12d8d927e5305b3e5fe2e709794d75fb44cb82dbad4b1217869f835d1",
             "guard_context.py": "7d69de4b10ae725795c42a4089f61cb972a3d48c5f6032680eea26c935ef5922",
             "guard_transfer.py": "590030e0c7eff81457e56c4cfc7b0d75ad0c079be3ede6e6da083d8fb4e95d84",
-            "guest_helper/homecircle_safe_restore_qa/__init__.py": "ceb899b972558caa923ad7dbb5ba42e676933bbc9f2daac474699b04b5b6c2cf",
+            "guest_helper/homecircle_safe_restore_qa/__init__.py": "1c16b229aaad083c0d3cc703b9cd81155b50de1538dfeaaa6cc93f8720280f41",
             "guest_helper/homecircle_safe_restore_qa/dependency_probe.py": "7ac8e79aa5aea1868801e9273d9d1300db525b51bd7fe70a0a03a836a506a8d6",
             "guest_helper/homecircle_safe_restore_qa/manifest.json": "081ef7cc5799e6b7adea6ee90a0f6d95c8c898372f8da25932f4690748b3cf7a",
-            "payload/homecircle.zip": "6fb180fc1f5c7de70382f95f8fe9e718f94841598dfc96d1afe233c8f21495db",
-            "payload/inventory.json": "89831d176dc8a86d2a348c6702bef36050bde3dfe31a1eead3825e87cbd9d1cb",
-            "payload/provenance.json": "fba6941d8a435c0a72c9fb1c8b231b7df453aa520dbd7fe4b666ea45e38b0336",
+            "payload/homecircle.zip": "004c9bc4a968ad395e18033837cb42f5bd1d8719a8d90fc778fd20be4ff08f97",
+            "payload/inventory.json": "d7e70cb639d77836fa2ac15b26f95e2f31ea599dbfff580cfae60a5a827cfe5b",
+            "payload/provenance.json": "a780661b4aac6e141b7cbdec80298eb79c686873003a5c7e0138712596269f83",
             "reset_fresh_config.py": "df600d5695de2d09feabcded9e59d81dcc8149be2082b19b7931e0f11f12aa3c",
             "run_host.sh": "19e047f20d970b1728b790fba65354335b6a957a74362f457379d40e2f55ac1f",
             "test_guard_context.py": "a7525d54f499de631ec183a30aa07c98b8bc454678d14f9dd4c30ae57d90a32d",
             "test_inherited.py": "5ff850f550c8b1271a614211683ba983e5c8640a75e791fd2213f8a7ebb6a0d0",
             "test_phases.py": "7e375c09f7520f596ab42f8775291acdebc32b958da6b5852054abb5cd5403af",
-            "test_procedure.py": "b48315300f7ce743d694a4ecb0088b712b1935a535749dd82d55767b01e4a67e"
+            "test_procedure.py": "19ff1bb8dcb3334917c7c096e367944a631bc6baa5e585a3b74ddbe9182318db"
           }
           tracked=subprocess.check_output(['git','ls-files','-z','--',str(root)]).decode().split('\0')
           assert {n for n in tracked if n}=={str(root/n) for n in expected},'tracked_members_refused'

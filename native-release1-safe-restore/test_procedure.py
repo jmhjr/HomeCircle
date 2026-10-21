@@ -89,7 +89,7 @@ def synthetic_success():
             'network_transitions':['closed_before_restore','reopen_after_repaired_disabled','closed_before_final_restart'],
             'network_boundary':{'link_closed':True,'closed_probe_connected':False,'closed_probe_observations':5},
             'provenance':{'candidate_zip_sha256':gate.CANDIDATE,'candidate_files':113,
-                'candidate_source_commit':'f4da650e6e460382c6ee1f70827bddac43bf2780','release_published':False},
+                'candidate_source_commit':'91ae59106a661143b770d7a3564d363c7c11a7dd','release_published':False},
             'backup_requests':[{'action':name,'result':'ok','exit_code':0,'exact_job_id_returned':True,
                 'output_truncated':False,'signal':None} for name in ('create','restore')],
             'backup':{'archive':{'disabled_entry':True,'database_included':True,'candidate_match':True,'guard_sha256':'c'*64}},

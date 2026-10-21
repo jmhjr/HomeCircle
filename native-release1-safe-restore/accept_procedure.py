@@ -6,7 +6,7 @@ import sys
 
 PHASES = ('initialize','initial_restart','quarantine','mutate','automatic_disabled',
           'repaired_disabled','reenabled','restart')
-CANDIDATE = '6fb180fc1f5c7de70382f95f8fe9e718f94841598dfc96d1afe233c8f21495db'
+CANDIDATE = '004c9bc4a968ad395e18033837cb42f5bd1d8719a8d90fc778fd20be4ff08f97'
 
 
 def require(ok, reason):
@@ -47,7 +47,7 @@ def accept(host, phases):
             and host['network_boundary'].get('closed_probe_observations',0) >= 5, 'network_procedure_not_proven')
     provenance = host.get('provenance',{})
     require(provenance.get('candidate_zip_sha256') == CANDIDATE and provenance.get('candidate_files') == 113
-            and provenance.get('candidate_source_commit') == 'f4da650e6e460382c6ee1f70827bddac43bf2780'
+            and provenance.get('candidate_source_commit') == '91ae59106a661143b770d7a3564d363c7c11a7dd'
             and provenance.get('release_published') is False, 'exact_preview_input')
     requests = host.get('backup_requests',[])
     require(len(requests) == 2 and [x.get('action') for x in requests] == ['create','restore']
