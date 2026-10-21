@@ -562,38 +562,35 @@ def verify_stored_image_chain(container, image, daemon, blobs):
             'image_rootfs_matches_verified_config': True, 'repository_digest_checked': True}
 
 
-OFFLINE_API_CLIENT = 'set -eu\nset +x\n[ "$#" -eq 1 ] || exit 70\ncommand -v curl >/dev/null 2>&1 || exit 70\n[ -n "${SUPERVISOR_TOKEN:-}" ] || exit 70\ncase "$SUPERVISOR_TOKEN" in\n  *\'\n\'*|*\'\r\'*) exit 70 ;;\nesac\ncase "$1" in\n  info) method=GET; endpoint=http://supervisor/jobs/info ;;\n  apply) method=POST; endpoint=http://supervisor/jobs/options; body=\'{"ignore_conditions":["internet_host","internet_system"]}\' ;;\n  clear) method=POST; endpoint=http://supervisor/jobs/options; body=\'{"ignore_conditions":[]}\' ;;\n  *) exit 70 ;;\nesac\nif [ "$method" = GET ]; then\n  printf \'Authorization: Bearer %s\\nContent-Type: application/json\\n\' "$SUPERVISOR_TOKEN" |\n    curl -q --silent --show-error --fail --header @- --noproxy \'*\' --proto \'=http\' --proto-redir \'=http\' --max-redirs 0 --connect-timeout 3 --max-time 8 --request GET "$endpoint"\nelse\n  printf \'Authorization: Bearer %s\\nContent-Type: application/json\\n\' "$SUPERVISOR_TOKEN" |\n    curl -q --silent --show-error --fail --header @- --noproxy \'*\' --proto \'=http\' --proto-redir \'=http\' --max-redirs 0 --connect-timeout 3 --max-time 8 --request POST --data-binary "$body" "$endpoint"\nfi\n'
+DEFAULT_API_CLIENT = 'set -eu\nset +x\n[ "$#" -eq 1 ] || exit 70\ncommand -v curl >/dev/null 2>&1 || exit 70\n[ -n "${SUPERVISOR_TOKEN:-}" ] || exit 70\ncase "$SUPERVISOR_TOKEN" in\n  *\'\n\'*|*\'\r\'*) exit 70 ;;\nesac\ncase "$1" in\n  info) endpoint=http://supervisor/jobs/info ;;\n  network) endpoint=http://supervisor/network/info ;;\n  *) exit 70 ;;\nesac\nprintf \'Authorization: Bearer %s\\nContent-Type: application/json\\n\' "$SUPERVISOR_TOKEN" |\n  curl -q --silent --show-error --fail --header @- --noproxy \'*\' --proto \'=http\' --proto-redir \'=http\' --max-redirs 0 --connect-timeout 3 --max-time 8 --request GET "$endpoint"\n'
 JOB_OPTIONS_PERSISTENCE_PROGRAM = "import json,os,stat\nfrom pathlib import Path\npath=Path('/data/jobs.json')\nOWNER=0\ndef unique(pairs):\n    value={}\n    for key,item in pairs:\n        if key in value:raise ValueError\n        value[key]=item\n    return value\ndef identity(info):\n    return (info.st_dev,info.st_ino,info.st_size,info.st_mtime_ns,info.st_mode,info.st_uid,info.st_nlink)\nstate='refused'\nfd=None\ntry:\n    if os.geteuid()!=OWNER:raise ValueError\n    try:\n        fd=os.open(path,os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK)\n    except FileNotFoundError:\n        state='absent'\n    else:\n        info=os.fstat(fd)\n        if not (stat.S_ISREG(info.st_mode) and info.st_nlink==1 and info.st_uid==OWNER\n                and stat.S_IMODE(info.st_mode) in {0o600,0o644} and 0<info.st_size<=16384):raise ValueError\n        raw=os.read(fd,16385)\n        after=os.fstat(fd)\n        current=path.lstat()\n        if identity(info)!=identity(after) or identity(after)!=identity(current) or not stat.S_ISREG(current.st_mode):raise ValueError\n        if not 0<len(raw)<=16384:raise ValueError\n        value=json.loads(raw,object_pairs_hook=unique)\n        if type(value)is not dict or set(value)!={'ignore_conditions'} or type(value['ignore_conditions'])is not list:raise ValueError\n        conditions=value['ignore_conditions']\n        if any(type(item)is not str for item in conditions):raise ValueError\n        if conditions==[]:state='empty'\n        elif conditions==['internet_host','internet_system']:state='owned_two'\n        else:state='foreign'\nexcept (OSError,ValueError,TypeError,UnicodeError,RecursionError):\n    pass\nfinally:\n    if fd is not None:os.close(fd)\nprint(json.dumps({'schema':1,'state':state},sort_keys=True))\n"
 OFFLINE_INTERNET_CONDITIONS = ["internet_host", "internet_system"]
-OFFLINE_RECEIPT_BOOL_KEYS = frozenset({"global_persisted_override", "unsupported_conditions_override", "original_effective_empty",
-    "original_persisted_empty_or_absent", "relevant_visible_jobs_idle_before", "only_two_internet_conditions_ignored",
-    "all_other_job_conditions_retained", "active_persisted_exact", "original_options_restored", "final_persisted_empty",
-    "cached_same_core_image_verified_before", "cached_same_core_image_verified_after", "candidate113_archive_verified",
-    "network_closed_before", "network_closed_during", "network_closed_after", "final_effective_empty_observed", "foreign_options_refused", "cleanup_failed"})
+DEFAULT_RECEIPT_BOOL_KEYS = frozenset({'network_open_positive_control', 'supervisor_internet_true', 'candidate113_archive_verified', 'final_effective_empty_observed', 'original_persisted_empty_or_absent', 'cleanup_failed', 'original_effective_empty', 'network_close_acknowledged', 'restore_completed', 'foreign_options_refused', 'closed_boot_grant_written', 'cached_same_core_image_verified_before', 'cached_same_core_image_verified_after', 'network_open_acknowledged', 'network_closed_before', 'network_closed_after', 'final_persisted_empty_or_absent', 'disabled_unimported_config_verified', 'supervisor_host_internet_true', 'relevant_visible_jobs_idle_before'})
 
-def new_offline_receipt():
-    result = {key: False for key in OFFLINE_RECEIPT_BOOL_KEYS}
-    result.update(schema=1, mode="experimental_global_offline_conditions", global_persisted_override=True,
-        unsupported_conditions_override=True, ordinary_default_restore_qualified=False, apply_requests=0, reset_requests=0,
-        apply_ack="not_attempted", reset_ack="not_attempted", maximum_cleanup_seconds=90)
+def new_default_receipt():
+    result = {key: False for key in DEFAULT_RECEIPT_BOOL_KEYS}
+    result.update(schema=1, mode="default_conditions_disabled_saved_storage", jobs_option_mutation_requests=0,
+        global_persisted_override=False, unsupported_conditions_override=False,
+        network_open_requests=0, network_close_requests=0, network_info_requests=0,
+        maximum_cleanup_seconds=90, maximum_network_readiness_seconds=90)
     return result
 
-def project_offline_receipt(value, complete=False):
-    expected = new_offline_receipt()
-    require(type(value) is dict and set(value) == set(expected) and type(value["schema"]) is int and value["schema"] == 1
-            and value["mode"] == "experimental_global_offline_conditions" and value["ordinary_default_restore_qualified"] is False
-            and all(type(value[key]) is bool for key in OFFLINE_RECEIPT_BOOL_KEYS)
-            and type(value["maximum_cleanup_seconds"]) is int and value["maximum_cleanup_seconds"] == 90,
-            "offline_conditions_receipt_refused")
-    for key in ("apply_requests", "reset_requests"):
-        require(type(value[key]) is int and value[key] in {0, 1}, "offline_conditions_receipt_refused")
-    for key in ("apply_ack", "reset_ack"):
-        require(type(value[key]) is str and value[key] in {"not_attempted", "confirmed", "unconfirmed"},
-                "offline_conditions_receipt_refused")
+def project_default_receipt(value, complete=False):
+    expected = new_default_receipt()
+    require(type(value) is dict and set(value) == set(expected) and type(value['schema']) is int and value['schema'] == 1
+        and value['mode'] == 'default_conditions_disabled_saved_storage'
+        and value['global_persisted_override'] is False and value['unsupported_conditions_override'] is False
+        and type(value['jobs_option_mutation_requests']) is int and value['jobs_option_mutation_requests'] == 0
+        and all(type(value[key]) is bool for key in DEFAULT_RECEIPT_BOOL_KEYS)
+        and type(value['maximum_cleanup_seconds']) is int and value['maximum_cleanup_seconds'] == 90
+        and type(value['maximum_network_readiness_seconds']) is int and value['maximum_network_readiness_seconds'] == 90,
+        'default_conditions_receipt_refused')
+    for key in ('network_open_requests','network_close_requests','network_info_requests'):
+        require(type(value[key]) is int and 0 <= value[key] <= (18 if key == 'network_info_requests' else 1), 'default_conditions_receipt_refused')
     if complete:
-        require(all(value[key] is (key not in {"foreign_options_refused", "cleanup_failed"}) for key in OFFLINE_RECEIPT_BOOL_KEYS)
-                and value["apply_requests"] == value["reset_requests"] == 1
-                and value["apply_ack"] == value["reset_ack"] == "confirmed", "offline_conditions_complete_proof_required")
+        require(all(value[key] is (key not in {'foreign_options_refused','cleanup_failed'}) for key in DEFAULT_RECEIPT_BOOL_KEYS)
+            and value['network_open_requests'] == value['network_close_requests'] == 1
+            and 1 <= value['network_info_requests'] <= 18, 'default_conditions_complete_proof_required')
     return dict(value)
 
 def offline_jobs_info(raw):
@@ -898,7 +895,7 @@ class Controller:
             self.storage_proof = None
             self.joins_sha256 = None
             self.raw_phase_receipts = {}
-            self.offline_restore_conditions = None
+            self.default_restore_conditions = None
 
     def core_container_state(self, timeout):
         # Docker's documented name filter is a substring match; the parser
@@ -1398,6 +1395,7 @@ print(json.dumps({"connected":connected}))
         self.guest("set -eu; chmod 600 " + temporary + "; mv " + temporary + " " + control + "/phase.json", 30)
         if start:
             self.start_core()
+        self.grant_closed_boot(name)
         limit = time.monotonic() + self.remaining(660)
         while time.monotonic() < limit:
             try:
@@ -1429,7 +1427,7 @@ print(json.dumps({"connected":connected}))
         require(type(receipt) is dict and receipt.get("core_version") == CORE
                 and receipt.get("candidate_archive_sha256") == CANDIDATE_SHA
                 and receipt.get("entry_disabled") is True and receipt.get("entry_loaded") is False
-                and receipt.get("candidate_imported") is False and receipt.get("ha_config_entry_saved") is True and receipt.get("owner_accounts_used") is False
+                and receipt.get("candidate_imported") is False and receipt.get("ha_config_entry_saved") is True and receipt.get("closed_boot_grant_verified") is True and receipt.get("owner_accounts_used") is False
                 and receipt.get("production_configuration_used") is False
                 and receipt.get("provider_request_attempt_counts_measured") is False
                 and receipt.get("recovery_proof_attempt_counts_measured") is False, "phase_fixture_scope_refused")
@@ -1482,7 +1480,7 @@ print(json.dumps({"connected":connected}))
         if name == "repaired_storage_disabled":
             self.repaired_disabled = True
         return {"schema": 1, "phase": name, "generation": self.generation, "outcome": "passed",
-                "entry_disabled": True, "entry_loaded": False, "candidate_imported": False, "ha_config_entry_saved": True, "process": process,
+                "entry_disabled": True, "entry_loaded": False, "candidate_imported": False, "ha_config_entry_saved": True, "closed_boot_grant_verified": True, "process": process,
                 "package_files_count": 113, "package_payload_sha256": sha(canonical(self.inventories["candidate"])),
                 "storage_raw_matches_expected": True, "explicit_registry_joins_checked": True,
                 "selected_registry_joins": 4, "nonempty_options": True, "nonempty_place": True,
@@ -1593,7 +1591,7 @@ print(json.dumps({"connected":connected}))
         self.stage = "supervisor_saved_storage_archive_proof"
         require(self.storage_proof is not None and self.storage_proof["mutation"] is None
                 and self.joins_sha256 is not None, "baseline_before_archive_required")
-        script = 'import hashlib,json,re,tarfile\nfrom pathlib import Path,PurePosixPath\n\ndef require(ok):\n    if not ok: raise RuntimeError("saved_storage_archive_refused")\ndef sha(data): return hashlib.sha256(data).hexdigest()\ndef canonical(data): return json.dumps(data,sort_keys=True,separators=(",",":")).encode()\nexpected=__BASELINE__\nexpected_joins=__JOINS__\nroot=Path("/data/homeassistant")\ninputs=json.loads((root/"homecircle-safe-restore-qa-control/inputs.json").read_bytes())\npath=Path("/data/backup/homecircle-safe-restore-qa.tar")\nrequire(path.is_file() and not path.is_symlink() and 0<path.stat().st_size<=128*1024**2)\npackage,guard,pairs,private={}, {}, {}, {}\nentry=selection=registry=None\ndb=False\nwith tarfile.open(path,"r:") as outer:\n    members=outer.getmembers()\n    require(len(members)<=16 and all(not PurePosixPath(m.name).is_absolute() and ".." not in PurePosixPath(m.name).parts for m in members))\n    inner=[m for m in members if m.name.removeprefix("./")=="homeassistant.tar"]\n    require(len(inner)==1 and inner[0].isfile() and inner[0].size<=128*1024**2)\n    with outer.extractfile(inner[0]) as stream,tarfile.open(fileobj=stream,mode="r|") as archive:\n        count,total=0,0\n        for member in archive:\n            count+=1\n            require(count<=16384 and member.size<=64*1024**2)\n            name=member.name.removeprefix("./")\n            require(not PurePosixPath(name).is_absolute() and ".." not in PurePosixPath(name).parts and not member.issym() and not member.islnk())\n            require(name!="data/homecircle-safe-restore-qa-control/restore-barrier.json")\n            if not member.isfile(): continue\n            total+=member.size\n            require(total<=256*1024**2)\n            with archive.extractfile(member) as content:data=content.read(64*1024**2+1)\n            require(len(data)==member.size)\n            prefix="data/custom_components/homecircle/"\n            if name.startswith(prefix) and "__pycache__" not in name and not name.endswith(".pyc"):\n                package[name[len(prefix):]]={"bytes":len(data),"sha256":sha(data)}\n            prefix="data/.storage/homecircle_findmy/recovery_guard/"\n            if name.startswith(prefix):guard[name[len(prefix):]]={"bytes":len(data),"sha256":sha(data)}\n            if name.startswith("data/.storage/homecircle_findmy/homecircle_accounts/"):\n                require(re.fullmatch(r"data/[.]storage/homecircle_findmy/homecircle_accounts/[0-9a-f]{32}/session[.](?:key|vault)",name)\n                        and member.mode==0o600 and member.uid==0 and name not in pairs)\n                pairs[name]=sha(data)\n            if name=="data/.storage/core.config_entries":\n                entries=json.loads(data)["data"]["entries"]\n                found=[e for e in entries if e.get("domain")=="homecircle"]\n                require(len(found)==1 and found[0].get("disabled_by")=="user" and found[0].get("title")=="Synthetic saved storage verified")\n                entry=found[0]\n            if name=="data/.storage/core.entity_registry":registry=json.loads(data)["data"]["entities"]\n            if name=="data/homecircle-safe-restore-qa-control/storage-selection-private.json":selection=json.loads(data)\n            if name=="data/home-assistant_v2.db":\n                require(data[:16]==b"SQLite format 3\\x00" and len(data)>4096);db=True\nrequire(package==inputs["candidate_inventory"] and entry is not None and db and guard and selection is not None and type(registry)is list)\nrequire(entry["data"]==entry["options"] and sha(canonical({"data":entry["data"],"options":entry["options"]}))==expected["config_sha256"])\nrequire(sha(canonical(entry["options"]["life360_account"]))==expected["credentials_sha256"] and sha(canonical(selection))==expected["selection_sha256"])\nrequire(type(selection)is dict and set(selection)=={"schema","entry_id","joins"} and selection["schema"]==1 and selection["entry_id"]==entry["entry_id"]\n        and type(selection["joins"])is list and len(selection["joins"])==4)\nselected=sorted([{k:v[k] for k in ("entity_id","unique_id","config_entry_id")} for v in selection["joins"]],key=lambda x:x["entity_id"])\nrequire(len({v["entity_id"] for v in selected})==len({v["unique_id"] for v in selected})==4 and all(v["config_entry_id"]==entry["entry_id"] for v in selected))\nactual=sorted([{k:v.get(k) for k in ("entity_id","unique_id","config_entry_id")} for v in registry if v.get("entity_id") in {j["entity_id"] for j in selected}],key=lambda x:x["entity_id"])\nrequire(actual==selected and sha(canonical(actual))==expected_joins)\naccounts=entry["options"]["findmy_accounts"]\nrequire(type(accounts)is dict and len(accounts)==1)\nstorage_id=next(iter(accounts.values()))["storage_id"]\nrequire(type(storage_id)is str and re.fullmatch("[0-9a-f]{32}",storage_id))\nprefix="data/.storage/homecircle_findmy/homecircle_accounts/"+storage_id+"/"\nrequire(pairs=={prefix+"session.key":expected["key_sha256"],prefix+"session.vault":expected["vault_sha256"]})\nprint(json.dumps({"archive_bytes":path.stat().st_size,"database_included":True,"candidate_match":True,"disabled_entry":True,\n    "saved_pair_included":True,"saved_config_included":True,"saved_selection_included":True,"saved_registry_joins_included":True,\n    "guard_sha256":sha(canonical(guard))},sort_keys=True))\n\n'
+        script = 'import hashlib,json,re,tarfile\nfrom pathlib import Path,PurePosixPath\n\ndef require(ok):\n    if not ok: raise RuntimeError("saved_storage_archive_refused")\ndef sha(data): return hashlib.sha256(data).hexdigest()\ndef canonical(data): return json.dumps(data,sort_keys=True,separators=(",",":")).encode()\nexpected=__BASELINE__\nexpected_joins=__JOINS__\nroot=Path("/data/homeassistant")\ninputs=json.loads((root/"homecircle-safe-restore-qa-control/inputs.json").read_bytes())\npath=Path("/data/backup/homecircle-safe-restore-qa.tar")\nrequire(path.is_file() and not path.is_symlink() and 0<path.stat().st_size<=128*1024**2)\npackage,guard,pairs,private={}, {}, {}, {}\nentry=selection=registry=None\ndb=False\nwith tarfile.open(path,"r:") as outer:\n    members=outer.getmembers()\n    require(len(members)<=16 and all(not PurePosixPath(m.name).is_absolute() and ".." not in PurePosixPath(m.name).parts for m in members))\n    inner=[m for m in members if m.name.removeprefix("./")=="homeassistant.tar"]\n    require(len(inner)==1 and inner[0].isfile() and inner[0].size<=128*1024**2)\n    with outer.extractfile(inner[0]) as stream,tarfile.open(fileobj=stream,mode="r|") as archive:\n        count,total=0,0\n        for member in archive:\n            count+=1\n            require(count<=16384 and member.size<=64*1024**2)\n            name=member.name.removeprefix("./")\n            require(not PurePosixPath(name).is_absolute() and ".." not in PurePosixPath(name).parts and not member.issym() and not member.islnk())\n            require(name not in {"data/homecircle-safe-restore-qa-control/restore-barrier.json", "data/homecircle-safe-restore-qa-control/closed-boot-grant.json", "data/homecircle-safe-restore-qa-control/closed-boot-grant.tmp"})\n            if not member.isfile(): continue\n            total+=member.size\n            require(total<=256*1024**2)\n            with archive.extractfile(member) as content:data=content.read(64*1024**2+1)\n            require(len(data)==member.size)\n            prefix="data/custom_components/homecircle/"\n            if name.startswith(prefix) and "__pycache__" not in name and not name.endswith(".pyc"):\n                package[name[len(prefix):]]={"bytes":len(data),"sha256":sha(data)}\n            prefix="data/.storage/homecircle_findmy/recovery_guard/"\n            if name.startswith(prefix):guard[name[len(prefix):]]={"bytes":len(data),"sha256":sha(data)}\n            if name.startswith("data/.storage/homecircle_findmy/homecircle_accounts/"):\n                require(re.fullmatch(r"data/[.]storage/homecircle_findmy/homecircle_accounts/[0-9a-f]{32}/session[.](?:key|vault)",name)\n                        and member.mode==0o600 and member.uid==0 and name not in pairs)\n                pairs[name]=sha(data)\n            if name=="data/.storage/core.config_entries":\n                entries=json.loads(data)["data"]["entries"]\n                found=[e for e in entries if e.get("domain")=="homecircle"]\n                require(len(found)==1 and found[0].get("disabled_by")=="user" and found[0].get("title")=="Synthetic saved storage verified")\n                entry=found[0]\n            if name=="data/.storage/core.entity_registry":registry=json.loads(data)["data"]["entities"]\n            if name=="data/homecircle-safe-restore-qa-control/storage-selection-private.json":selection=json.loads(data)\n            if name=="data/home-assistant_v2.db":\n                require(data[:16]==b"SQLite format 3\\x00" and len(data)>4096);db=True\nrequire(package==inputs["candidate_inventory"] and entry is not None and db and guard and selection is not None and type(registry)is list)\nrequire(entry["data"]==entry["options"] and sha(canonical({"data":entry["data"],"options":entry["options"]}))==expected["config_sha256"])\nrequire(sha(canonical(entry["options"]["life360_account"]))==expected["credentials_sha256"] and sha(canonical(selection))==expected["selection_sha256"])\nrequire(type(selection)is dict and set(selection)=={"schema","entry_id","joins"} and selection["schema"]==1 and selection["entry_id"]==entry["entry_id"]\n        and type(selection["joins"])is list and len(selection["joins"])==4)\nselected=sorted([{k:v[k] for k in ("entity_id","unique_id","config_entry_id")} for v in selection["joins"]],key=lambda x:x["entity_id"])\nrequire(len({v["entity_id"] for v in selected})==len({v["unique_id"] for v in selected})==4 and all(v["config_entry_id"]==entry["entry_id"] for v in selected))\nactual=sorted([{k:v.get(k) for k in ("entity_id","unique_id","config_entry_id")} for v in registry if v.get("entity_id") in {j["entity_id"] for j in selected}],key=lambda x:x["entity_id"])\nrequire(actual==selected and sha(canonical(actual))==expected_joins)\naccounts=entry["options"]["findmy_accounts"]\nrequire(type(accounts)is dict and len(accounts)==1)\nstorage_id=next(iter(accounts.values()))["storage_id"]\nrequire(type(storage_id)is str and re.fullmatch("[0-9a-f]{32}",storage_id))\nprefix="data/.storage/homecircle_findmy/homecircle_accounts/"+storage_id+"/"\nrequire(pairs=={prefix+"session.key":expected["key_sha256"],prefix+"session.vault":expected["vault_sha256"]})\nprint(json.dumps({"archive_bytes":path.stat().st_size,"database_included":True,"candidate_match":True,"disabled_entry":True,\n    "saved_pair_included":True,"saved_config_included":True,"saved_selection_included":True,"saved_registry_joins_included":True,\n    "guard_sha256":sha(canonical(guard))},sort_keys=True))\n\n'
         script = script.replace("__BASELINE__", repr(self.storage_proof["baseline"])).replace("__JOINS__", repr(self.joins_sha256))
         self.guest_write(GUEST_ROOT + "/inspect-backup.py", script.encode())
         value = json.loads(self.guest("/usr/bin/docker exec -i hassio_supervisor python3 - < " + GUEST_ROOT + "/inspect-backup.py", 120))
@@ -1660,6 +1658,8 @@ print(json.dumps({"connected":connected}))
         path = self.config_path + "/" + CONTROL + "/restore-barrier.json"
         require(self.guest("test ! -e " + path + " && test ! -L " + path, 15).strip() == b"",
                 "restore_barrier_must_be_absent")
+        for suffix in ("closed-boot-grant.json", "closed-boot-grant.tmp"):
+            require(self.guest("test ! -e "+self.config_path+"/"+CONTROL+"/"+suffix+" && test ! -L "+self.config_path+"/"+CONTROL+"/"+suffix,15).strip()==b"", "default_grant_must_be_absent")
 
     def restored_boot_barrier(self):
         self.stage = "automatic_disabled_restore_observation"
@@ -1675,7 +1675,8 @@ print(json.dumps({"connected":connected}))
             require(type(value) is dict and value.get("schema") == 1 and value.get("token") == self.phase_token
                     and value.get("generation") == "before_restore" and value.get("branch_commit") == self.args.branch_commit
                     and value.get("entry_disabled") is True and value.get("entry_loaded") is False
-                    and value.get("candidate_imported") is False and value.get("ha_config_entry_saved") is True, "automatic_disabled_entry_required")
+                    and value.get("candidate_imported") is False and value.get("ha_config_entry_saved") is True
+                    and value.get("closed_boot_grant_verified") is True, "automatic_disabled_entry_required")
             expected = self.storage_proof["baseline"]
             require(type(value.get("observed_storage")) is dict and set(value["observed_storage"]) == RAW_STORAGE_FIELDS
                     and all(value["observed_storage"][key] == expected[key] for key in RAW_STORAGE_FIELDS)
@@ -1689,7 +1690,7 @@ print(json.dumps({"connected":connected}))
                     and process["start_ticks"] > self.phases[-1]["process"]["start_ticks"], "automatic_distinct_process_required")
             self.after_restore_barrier = True
             public = {"schema": 1, "phase": "automatic_restored_disabled", "generation": "before_restore", "outcome": "passed",
-                      "entry_disabled": True, "entry_loaded": False, "candidate_imported": False, "ha_config_entry_saved": True, "process": process,
+                      "entry_disabled": True, "entry_loaded": False, "candidate_imported": False, "ha_config_entry_saved": True, "closed_boot_grant_verified": True, "process": process,
                       "storage_raw_matches_expected": True, "explicit_registry_joins_checked": True, "selected_registry_joins": 4,
                       "guard_counter": 2, "guard_repaired_before_storage_load": False,
                       "provider_request_attempt_counts_measured": False, "recovery_proof_attempt_counts_measured": False}
@@ -1808,9 +1809,8 @@ print(json.dumps({"connected":connected}))
         self.preserve_latest_guard()
         self.assert_network_closed()
         self.require_restore_barrier_absent()
-        self.experimental_offline_restore()
-        require(self.offline_restore_conditions["original_options_restored"] is True
-                and self.offline_restore_conditions["final_persisted_empty"] is True, "offline_window_must_close_before_restore_observation")
+        self.default_conditions_restore()
+        project_default_receipt(self.default_restore_conditions, complete=True)
         self.restored_boot_barrier()
         require(self.actual_core_image() == self.minimum_core_image, "automatic_restore_image_changed")
         self.fresh_restore_control()
@@ -1823,7 +1823,7 @@ print(json.dumps({"connected":connected}))
         accept_guard_contexts(self.guard_transfer_contexts)
         accept_storage_contexts(self.storage_contexts)
         require(set(self.storage_results) == set(STORAGE_ACTIONS), "all_storage_actions_required")
-        self.stage = "experimental_offline_saved_storage_restore_complete"
+        self.stage = "default_conditions_saved_storage_restore_complete"
         self.acceptance = True
 
     def cleanup_vm(self):
@@ -1876,10 +1876,12 @@ print(json.dumps({"connected":connected}))
             "backup": {k: v for k, v in (self.backup or {}).items() if k != "slug"}, "restore": self.restore,
             "guard_transfer_contexts": self.guard_transfer_contexts, "storage_contexts": self.storage_contexts,
             "storage_results": self.storage_results, "host_newest_guard_retained": self.host_guard_retained,
-            "offline_restore_conditions": self.offline_restore_conditions, "temporary_global_offline_conditions": True,
+            "default_restore_conditions": self.default_restore_conditions, "temporary_global_offline_conditions": False,
             "ordinary_default_supervisor_restore_qualified": False,
-            "tested_experimental_offline_disabled_saved_storage_restore": passed,
-            "unsupported_conditions_override_used": bool(self.offline_restore_conditions and self.offline_restore_conditions["only_two_internet_conditions_ignored"]),
+            "default_conditions_disabled_synthetic_restore_qualified": passed,
+            "default_supervisor_conditions_used": True, "manual_newest_guard_repair_required": True,
+            "tested_default_conditions_disabled_saved_storage_restore": passed,
+            "unsupported_conditions_override_used": False,
             "guard_repaired_before_storage_load": self.guard_repaired and self.repaired_disabled,
             "network_boundary": self.network_boundary, "network_transitions": self.network_transitions,
             "tested_disabled_entry_saved_storage_restore": passed, "synthetic_saved_accounts_seeded": bool(self.storage_results),
@@ -1898,22 +1900,20 @@ print(json.dumps({"connected":connected}))
         print("saved_storage_outcome=" + value["outcome"], flush=True)
         return 0 if passed else 1
 
-    def offline_api(self, action, deadline):
-        require(action in {"info", "apply", "clear"} and type(action) is str, "offline_api_action_refused")
-        seconds = min(12, deadline - time.monotonic())
-        require(seconds > 1, "offline_api_deadline_exceeded")
-        # The literal script crosses stdin, so token expansion occurs only inside CLI.
-        result = self.guest("/usr/bin/docker exec -i hassio_cli /bin/sh -s -- " + action
-            + " < " + GUEST_ROOT + "/job-options-client.sh", seconds, capture=True)
-        require(time.monotonic() <= deadline, "offline_api_deadline_exceeded")
+    def default_api(self, action, deadline):
+        require(type(action) is str and action in {'info','network'}, 'default_api_action_refused')
+        seconds = min(12, deadline-time.monotonic())
+        require(seconds > 1, 'default_api_deadline_exceeded')
+        result = self.guest('/usr/bin/docker exec -i hassio_cli /bin/sh -s -- '+action+' < '+GUEST_ROOT+'/job-options-client.sh', seconds, capture=True)
+        require(time.monotonic() <= deadline, 'default_api_deadline_exceeded')
         return result
 
-    def offline_effective_state(self, deadline):
-        result = self.offline_api("info", deadline)
+    def default_effective_state(self, deadline):
+        result = self.default_api("info", deadline)
         require(offline_api_ack(result, info=True), "offline_options_GET_refused")
         return offline_jobs_info(result["stdout"])
 
-    def offline_persisted_state(self, deadline):
+    def default_persisted_state(self, deadline):
         seconds = min(10, deadline - time.monotonic())
         require(seconds > 1, "offline_persistence_deadline_exceeded")
         result = self.guest("/usr/bin/docker exec -i --user=0:0 hassio_supervisor python3 -B - < "
@@ -1930,94 +1930,178 @@ print(json.dumps({"connected":connected}))
                 "offline_persisted_options_refused")
         return value["state"]
 
-    def experimental_offline_restore(self):
-        self.stage = "offline_conditions_preflight"
-        record = new_offline_receipt()
-        self.offline_restore_conditions = record
+    def default_conditions_restore(self):
+        self.stage = 'default_conditions_preflight'
+        record = new_default_receipt()
+        self.default_restore_conditions = record
         original_deadline = self.deadline
-        require(original_deadline - time.monotonic() > 150, "offline_cleanup_reserve_required")
+        require(original_deadline-time.monotonic() > 180, 'default_cleanup_reserve_required')
+        self.deadline = original_deadline-90
         attempted = False
-        # Keep ninety seconds outside every normal-operation/restore deadline.
-        self.deadline = original_deadline - 90
         try:
-            self.assert_network_closed(); record["network_closed_before"] = True
-            require(self.core_container_state(min(10, self.remaining(10))) == "stopped", "offline_restore_core_must_be_stopped")
-            require(self.backup is not None and self.backup.get("homeassistant_version") == CORE
-                    and type(self.backup.get("archive")) is dict
-                    and all(self.backup["archive"].get(key) is True for key in ("candidate_match", "disabled_entry", "database_included",
-                        "saved_pair_included", "saved_config_included", "saved_selection_included", "saved_registry_joins_included"))
-                    and self.provenance.get("candidate_files") == 113 and self.provenance.get("candidate_zip_sha256") == CANDIDATE_SHA,
-                    "offline_same_core_local_archive_required")
-            self.verify_candidate(); record["candidate113_archive_verified"] = True
-            require(self.actual_core_image() == self.minimum_core_image, "offline_cached_image_before_refused")
-            record["cached_same_core_image_verified_before"] = True
-            for name, raw in (("job-options-client.sh", OFFLINE_API_CLIENT.encode()), ("job-options-persist.py", JOB_OPTIONS_PERSISTENCE_PROGRAM.encode())):
-                self.guest_write(GUEST_ROOT + "/" + name, raw)
-                require(self.guest_read(GUEST_ROOT + "/" + name) == raw, "offline_options_source_refused")
-            state, idle = self.offline_effective_state(self.deadline)
-            persisted = self.offline_persisted_state(self.deadline)
-            if state == "foreign" or persisted == "foreign":
-                record["foreign_options_refused"] = True
-            require(state == "empty" and persisted in {"absent", "empty"}, "offline_original_options_must_be_empty")
-            require(idle, "offline_relevant_visible_jobs_must_be_idle")
-            record.update(original_effective_empty=True, original_persisted_empty_or_absent=True, relevant_visible_jobs_idle_before=True)
-            self.stage = "offline_conditions_apply"
-            record["apply_requests"] = 1
-            attempted = True
-            try:
-                ack = offline_api_ack(self.offline_api("apply", self.deadline))
-            except Exception:
-                ack = False
-            record["apply_ack"] = "confirmed" if ack else "unconfirmed"
-            state, idle = self.offline_effective_state(self.deadline)
-            persisted = self.offline_persisted_state(self.deadline)
-            if state == "foreign" or persisted == "foreign":
-                record["foreign_options_refused"] = True
-            require(state == persisted == "owned_two" and idle, "offline_exact_two_conditions_required")
-            record.update(only_two_internet_conditions_ignored=True, all_other_job_conditions_retained=True, active_persisted_exact=True)
-            require(ack, "offline_apply_acknowledgement_required")
-            self.assert_network_closed(); record["network_closed_during"] = True
+            self.assert_network_closed(); record['network_closed_before'] = True
+            require(self.core_container_state(min(10,self.remaining(10))) == 'stopped', 'default_restore_core_must_be_stopped')
+            require(self.backup is not None and self.backup.get('homeassistant_version') == CORE
+                and type(self.backup.get('archive')) is dict
+                and all(self.backup['archive'].get(key) is True for key in ('candidate_match','disabled_entry','database_included',
+                    'saved_pair_included','saved_config_included','saved_selection_included','saved_registry_joins_included')),
+                'default_same_core_local_archive_required')
+            self.verify_candidate(); record['candidate113_archive_verified'] = True
+            require(self.actual_core_image() == self.minimum_core_image, 'default_cached_image_before_refused')
+            record['cached_same_core_image_verified_before'] = True
+            self.verify_disabled_preopen(); record['disabled_unimported_config_verified'] = True
+            for name,raw in (('job-options-client.sh',DEFAULT_API_CLIENT.encode()),('job-options-persist.py',JOB_OPTIONS_PERSISTENCE_PROGRAM.encode())):
+                self.guest_write(GUEST_ROOT+'/'+name,raw)
+                require(self.guest_read(GUEST_ROOT+'/'+name) == raw, 'default_readonly_source_refused')
+            state,idle = self.default_effective_state(self.deadline)
+            persisted = self.default_persisted_state(self.deadline)
+            record['foreign_options_refused'] = state != 'empty' or persisted not in {'empty','absent'}
+            require(state == 'empty' and persisted in {'empty','absent'}, 'default_original_options_must_be_empty')
+            require(idle, 'default_relevant_visible_jobs_must_be_idle')
+            record.update(original_effective_empty=True,original_persisted_empty_or_absent=True,relevant_visible_jobs_idle_before=True)
+            self.stage = 'default_restore_network_open'
+            attempted = True; record['network_open_requests'] = 1
+            self.set_restore_network_link(True)
+            record['network_open_acknowledged'] = True
+            self.network_boundary['link_closed'] = False
+            require(self.connectivity_probe() is True, 'default_network_positive_control_required')
+            record['network_open_positive_control'] = True
+            self.network_transitions.append('opened_for_default_restore')
+            self.wait_default_internet(record)
             self.backup_operation(restore=True)
+            record['restore_completed'] = True
         finally:
             previous_stage = self.stage
             self.deadline = original_deadline
             if attempted:
-                self.stage = "offline_conditions_cleanup"
-                cleanup_deadline = min(original_deadline, time.monotonic() + 90)
+                self.stage = 'default_restore_network_close'
+                cleanup_deadline = min(original_deadline,time.monotonic()+90)
                 self.deadline = cleanup_deadline
                 try:
-                    self.assert_network_closed()
-                    state, _idle = self.offline_effective_state(cleanup_deadline)
-                    persisted = self.offline_persisted_state(cleanup_deadline)
-                    if state == "foreign" or persisted == "foreign":
-                        record["foreign_options_refused"] = True
-                    require(state in {"empty", "owned_two"} and persisted in {"absent", "empty", "owned_two"},
-                            "offline_foreign_options_must_not_be_overwritten")
-                    record["reset_requests"] = 1
+                    record['network_close_requests'] = 1
                     try:
-                        ack = offline_api_ack(self.offline_api("clear", cleanup_deadline))
+                        self.set_restore_network_link(False)
+                        record['network_close_acknowledged'] = True
                     except Exception:
-                        ack = False
-                    record["reset_ack"] = "confirmed" if ack else "unconfirmed"
-                    state, _idle = self.offline_effective_state(cleanup_deadline)
-                    persisted = self.offline_persisted_state(cleanup_deadline)
-                    require(state == "empty" and persisted == "empty", "offline_original_options_not_restored")
-                    record.update(final_effective_empty_observed=True, final_persisted_empty=True)
-                    require(ack, "offline_clear_acknowledgement_required")
-                    self.assert_network_closed()
-                    require(time.monotonic() <= cleanup_deadline, "offline_cleanup_deadline_exceeded")
-                    record.update(original_options_restored=True, network_closed_after=True)
+                        pass
+                    connected = self.connectivity_probe()
+                    self.qga.call('guest-ping')
+                    require(record['network_close_acknowledged'] and connected is False, 'default_network_close_unproven')
+                    self.network_boundary.update(link_closed=True,closed_probe_connected=False,guest_agent_remained_available=True)
+                    self.network_boundary['closed_probe_observations'] = self.network_boundary.get('closed_probe_observations',0)+1
+                    record['network_closed_after'] = True
+                    self.network_transitions.append('closed_after_default_restore')
+                    state,_idle = self.default_effective_state(cleanup_deadline)
+                    persisted = self.default_persisted_state(cleanup_deadline)
+                    record['foreign_options_refused'] = state != 'empty' or persisted not in {'empty','absent'}
+                    require(state == 'empty' and persisted in {'empty','absent'}, 'default_final_options_not_empty')
+                    record.update(final_effective_empty_observed=True,final_persisted_empty_or_absent=True)
+                    require(time.monotonic() <= cleanup_deadline, 'default_network_cleanup_deadline_exceeded')
                 except BaseException:
-                    record["cleanup_failed"] = True
-                    raise Refused("offline_options_cleanup_failed") from None
+                    record['cleanup_failed'] = True
+                    raise Refused('default_network_cleanup_failed') from None
                 finally:
                     self.deadline = original_deadline
                 self.stage = previous_stage
-        require(record["original_options_restored"] and record["final_persisted_empty"], "offline_options_window_still_open")
-        require(self.actual_core_image() == self.minimum_core_image, "offline_cached_image_after_refused")
-        record["cached_same_core_image_verified_after"] = True
+        require(record['restore_completed'] and record['network_closed_after'] and record['final_effective_empty_observed']
+            and record['final_persisted_empty_or_absent'], 'default_window_must_close_before_private_reads')
+        require(self.actual_core_image() == self.minimum_core_image, 'default_cached_image_after_refused')
+        record['cached_same_core_image_verified_after'] = True
         self.verify_candidate()
-        project_offline_receipt(record, complete=True)
+        self.grant_closed_boot('automatic_restored_disabled')
+        record['closed_boot_grant_written'] = True
+        project_default_receipt(record,complete=True)
+
+    def set_restore_network_link(self, up):
+        require(type(up) is bool, 'default_link_state_refused')
+        deadline = time.monotonic()+self.remaining(20)
+        with socket.socket(socket.AF_UNIX,socket.SOCK_STREAM) as connection:
+            connection.settimeout(min(10,self.remaining(10)))
+            connection.connect(str(self.qmp_path))
+            stream=connection.makefile('rwb',buffering=0)
+            require('QMP' in json.loads(stream.readline(65536)), 'default_qmp_greeting_refused')
+            for identifier,execute,arguments in [('caps','qmp_capabilities',None),('restore_link','set_link',{'name':'qa-net0','up':up})]:
+                request={'execute':execute,'id':identifier}
+                if arguments is not None:request['arguments']=arguments
+                stream.write(canonical(request)+b'\n')
+                for _ in range(32):
+                    require(time.monotonic()<deadline, 'default_qmp_deadline_exceeded')
+                    connection.settimeout(min(10,deadline-time.monotonic()))
+                    response=json.loads(stream.readline(65536))
+                    if response.get('id')==identifier:
+                        require(response.get('return')=={} and 'error' not in response, 'default_qmp_link_refused')
+                        break
+                else:raise Refused('default_qmp_response_bound_refused')
+        require(time.monotonic()<=deadline, 'default_qmp_deadline_exceeded')
+
+    def wait_default_internet(self,record):
+        limit=min(self.deadline,time.monotonic()+90)
+        for index in range(18):
+            require(time.monotonic()<limit, 'default_internet_readiness_deadline')
+            record['network_info_requests']+=1
+            captured=self.default_api('network',limit)
+            require(offline_api_ack(captured,info=True), 'default_network_info_GET_refused')
+            value=json.loads(captured['stdout'])
+            data=value['data']
+            require(type(data.get('host_internet')) in {bool,type(None)} and type(data.get('supervisor_internet')) in {bool,type(None)},
+                'default_network_info_shape_refused')
+            if data.get('host_internet') is True and data.get('supervisor_internet') is True:
+                require(time.monotonic()<=limit, 'default_internet_readiness_deadline')
+                record.update(supervisor_host_internet_true=True,supervisor_internet_true=True)
+                return
+            if index<17:
+                require(time.monotonic()+5<limit, 'default_internet_readiness_deadline')
+                time.sleep(5)
+        raise Refused('default_internet_readiness_bound')
+
+    def verify_disabled_preopen(self):
+        require(len(self.phases)==2 and self.phases[-1]['phase']=='mutated_disabled'
+            and self.phases[-1]['entry_disabled'] is True and self.phases[-1]['candidate_imported'] is False
+            and self.phases[-1]['entry_loaded'] is False and self.host_guard_retained,
+            'default_disabled_phase_before_open_required')
+        # Only config/selection metadata are read; no key, vault or guard access.
+        script = "import hashlib,json,os,stat\nfrom pathlib import Path\nroot=Path('/data/homeassistant')\ndef read(path,managed=False):\n fd=os.open(path,os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK)\n try:\n  st=os.fstat(fd)\n  assert stat.S_ISREG(st.st_mode) and st.st_uid==0 and st.st_nlink==1 and stat.S_IMODE(st.st_mode) in ({0o600,0o644} if managed else {0o600}) and 0<st.st_size<=2*1024**2\n  raw=os.read(fd,2*1024**2+1);assert len(raw)==st.st_size\n  return json.loads(raw)\n finally:os.close(fd)\ndef digest(v):return hashlib.sha256(json.dumps(v,sort_keys=True,separators=(',',':')).encode()).hexdigest()\nrows=read(root/'.storage/core.config_entries',True)['data']['entries']\nfound=[r for r in rows if r.get('domain')=='homecircle']\nassert len(found)==1\ne=found[0]\nassert e.get('disabled_by')=='user' and e.get('title')=='Synthetic saved storage verified' and e['data']==e['options']\nassert digest({'data':e['data'],'options':e['options']})==__CONFIG__\nselection=read(root/'homecircle-safe-restore-qa-control/storage-selection-private.json')\nassert selection['entry_id']==e['entry_id'] and digest(selection)==__SELECTION__\nprint(json.dumps({'schema':1,'verified':True}))\n"
+        script=script.replace('__CONFIG__',repr(self.storage_proof['mutation']['config_sha256'])).replace('__SELECTION__',repr(self.storage_proof['mutation']['selection_sha256']))
+        self.guest_write(GUEST_ROOT+'/preopen-disabled.py',script.encode())
+        require(json.loads(self.guest('/usr/bin/docker exec -i --user=0:0 hassio_supervisor python3 -B - < '+GUEST_ROOT+'/preopen-disabled.py',20))
+            == {'schema':1,'verified':True}, 'default_disabled_config_before_open_refused')
+
+    def grant_closed_boot(self,name):
+        self.assert_network_closed()
+        automatic=name=='automatic_restored_disabled'
+        if automatic:
+            record=self.default_restore_conditions
+            require(record['restore_completed'] and record['network_closed_after'] and record['final_effective_empty_observed']
+                and record['final_persisted_empty_or_absent'], 'default_automatic_grant_before_close_refused')
+        control=self.config_path+'/'+CONTROL
+        for suffix in ('closed-boot-grant.json','closed-boot-grant.tmp'):
+            require(self.guest('test ! -e '+control+'/'+suffix+' && test ! -L '+control+'/'+suffix,10).strip()==b'', 'default_grant_collision_refused')
+        limit=time.monotonic()+self.remaining(60)
+        previous=self.phases[-1]['process']['start_ticks'] if self.phases else 0
+        while time.monotonic()<limit:
+            try:request=json.loads(self.guest_read(control+'/boot-request.json'))
+            except (Refused,OSError,ValueError):
+                time.sleep(0.5);continue
+            if type(request) is not dict or type(request.get('process')) is not dict:
+                raise Refused('default_boot_request_shape_refused')
+            proc=request['process']
+            if type(proc.get('start_ticks')) is int and proc['start_ticks']<=previous:
+                time.sleep(0.5);continue
+            expected={'schema':1,'source_commit':SOURCE_COMMIT,'candidate_sha256':CANDIDATE_SHA,'token':self.phase_token,
+                'generation':self.generation,'branch_commit':self.args.branch_commit,
+                'phase':'baseline_disabled' if automatic else name,'purpose':'automatic_restore' if automatic else 'phase',
+                'process':proc,'boot_nonce':request.get('boot_nonce')}
+            require(set(request)==set(expected) and request==expected and type(request['schema']) is int
+                and set(proc)=={'pid','start_ticks'} and all(type(v)is int and v>0 for v in proc.values())
+                and type(request['boot_nonce']) is str and re.fullmatch('[0-9a-f]{32}',request['boot_nonce']), 'default_boot_request_identity_refused')
+            grant={**request,'external_network_closed':True,'default_conditions_verified':automatic}
+            script='import json,os,stat\nfrom pathlib import Path\np=Path('+repr(control+'/closed-boot-grant.json')+')\nt=p.with_suffix(".tmp")\nraw='+repr(canonical(grant))+'\nassert not p.exists() and not p.is_symlink() and not t.exists() and not t.is_symlink()\nfd=os.open(t,os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600)\nwith os.fdopen(fd,"wb") as f:\n f.write(raw);f.flush();os.fsync(f.fileno());s=os.fstat(f.fileno());assert s.st_uid==0 and s.st_nlink==1 and stat.S_IMODE(s.st_mode)==0o600\nassert t.read_bytes()==raw\nos.rename(t,p)\nprint(json.dumps({"schema":1,"grant_written":True}))\n'
+            self.guest_write(GUEST_ROOT+'/grant-closed-boot.py',script.encode())
+            require(json.loads(self.guest('/usr/bin/docker exec -i --user=0:0 hassio_supervisor python3 -B - < '+GUEST_ROOT+'/grant-closed-boot.py',20))
+                == {'schema':1,'grant_written':True}, 'default_closed_grant_write_refused')
+            self.assert_network_closed()
+            return
+        raise Refused('default_boot_request_deadline')
 
     def run_storage_context(self, action):
         require(action in STORAGE_ACTIONS and [item["action"] for item in self.storage_contexts]

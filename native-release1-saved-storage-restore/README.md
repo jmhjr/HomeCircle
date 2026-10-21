@@ -15,8 +15,10 @@ The five phases are `baseline_disabled`, `mutated_disabled`,
 `automatic_restored_disabled`, `repaired_storage_disabled`, and
 `restart_disabled`. The HomeCircle entry remains disabled and the managed
 integration remains unimported throughout. The guest NIC closes before seeding
-and stays closed through cleanup. No provider factories, account login, real
-owner records, device passcodes, or provider requests are used.
+and stays closed for all seed/mutation, guard, and vault contexts. A single
+restore-only network window is described below. The direct providers remain
+unimported; no real owner records, device passcodes, or account login are used.
+Provider request counts remain unmeasured.
 
 The stopped-entry seed writes one schema 1.5 Home Assistant config entry with
 synthetic Apple account metadata and a real encrypted Fernet key/vault pair,
@@ -35,7 +37,13 @@ seven private fingerprints, including credentials, pair, ledger and selection,
 and advances the local synthetic recovery guard from 2 to 3. The newest guard
 is exported outside the entire guest. Backup inspection does not decrypt.
 
-Automatic restored boot is observed only through raw saved state: the baseline
+Every QA helper boot waits in its existing background task for a one-use host
+grant targeting that exact process and phase. It publishes only boot metadata
+before receiving a grant; no baseline, selection, key, vault or guard read can
+run first. Grants are private, exact-source/token/branch/generation/process bound,
+and consumed before dispatch. An unexpected restart receives no automatic grant.
+
+Automatic restored boot is observed only after the network is closed through raw saved state: the baseline
 pair/config/selection returns alongside old guard 2. A fresh, strictly newer
 process and an absent pre-restore marker are required. Managed Core then stops;
 the separate retained guard is imported through the existing bounded guard
@@ -88,47 +96,64 @@ candidate ZIP, both context security boundaries, five phases, 18 cloned negative
 cases, closed NIC and cleanup requirements are unchanged. This revision is
 prepared for a fresh trial; it does not reclassify the failed run as successful.
 
-## One experimental offline Supervisor-conditions trial
+## Retained trial history and new default-conditions procedure
 
 Run 39688084686 at `e44ae2a` passed actual synthetic seed and mutation (including
 Fernet), two managed phases, backup creation/archive inspection and newest-guard
 export. Supervisor then refused restore with `host_internet_unavailable` while
-the NIC was closed. Its independently verified negative record `117beac4…`
-retains those positive observations and the restore refusal; no saved-storage
-restore was accepted. This differs from the first run's unknown inner failure.
+the NIC was closed. Its negative record `117beac4…` retains those positive
+observations and the refusal. This differs from the first trial's unknown cause.
 
-This separate child permits one bounded experiment around the unchanged restore
-operation. In the fresh owned guest only, it temporarily changes the GLOBAL,
-PERSISTED Supervisor `ignore_conditions` list to exactly `internet_host` and
-`internet_system`. This marks Supervisor unsupported and is not a per-job option
-or ordinary/default-supported restore proof. Every other condition remains in
-force. HomeCircle stays disabled and unimported and the external NIC stays
-closed throughout.
+The separately authorized R4 run 39691770592 at `3c1e9e72` passed all five phases,
+four storage and two guard contexts under a temporary global, persisted,
+unsupported two-internet-condition override. Its independent audit `cb2cae2d…`
+qualifies that experimental procedure only; it does not become normal/default
+Supervisor evidence. R4 source and receipts remain frozen and unchanged.
 
-Before any write, the existing CLI container must have curl and its existing
-Supervisor token and must pass a fixed authenticated GET of jobs/info. Missing
-capability stops the trial; there is no client install, token discovery or
-alternate transport. The token remains inside CLI, passing from shell printf to
-curl's header stdin, with fixed HTTP origin, no redirects/proxies and bounded
-connect/request times. The wrapper requires empty original effective options,
-empty or absent persisted options, idle visible relevant backup/Core jobs, the
-same cached Core image and the inspected local 113-member archive.
+This R5 child uses Supervisor's ordinary restore conditions. It contains no
+jobs/options POST, reset, apply/clear action or global override. The read-only
+CLI bridge permits only fixed GET jobs/info and network/info. Its existing token
+stays inside the owned CLI container and reaches curl only through header stdin;
+there is no credential discovery, client install or alternative transport.
+Effective ignore_conditions must be exactly empty and the fixed persisted store
+must be empty or absent before and after the window. Unknown/foreign state
+refuses without writes. Visible relevant backup/Core jobs must be idle before
+opening; this is not a claim that hidden jobs or arbitrary requests are idle.
 
-Exactly one apply POST is permitted, and its affirmative ACK plus exact effective
-and persisted two-condition readbacks are required before restore. A FINALLY
-block reserves 90 seconds independently of the restore deadline and attempts at
-most one API POST back to the original empty list. Foreign or unknown lists are
-never overwritten. GREEN requires an affirmative clear ACK, effective empty
-options and a stable no-follow read of the present persisted empty list. Lost
-ACKs can retain fixed observations but keep the trial failed; no mutation is
-retried. Only semantic empty-list restoration is claimed, not original file
-bytes or absence. The option window must close before guard repair or restored
-vault loading; owned-VM cleanup remains mandatory on failure.
+Before opening, Core is stopped, the exact disabled/unimported mutated phase and
+single saved USER-disabled record are checked, all 113 package bytes and cached
+same-Core image are rechecked, and the already inspected local archive is bound.
+The controller reserves 90 seconds outside the normal deadline. It marks an
+opening attempt before one QMP up request, proves external connectivity with an
+independent TCP control, then waits at most 90 seconds/18 GETs with five-second
+spacing for network/info host_internet and supervisor_internet to be exactly
+true. No force/refresh/reload endpoint is called; failure stops cleanly.
 
-All 112 zero-skip local contracts are required. The original five phases, four
-storage contexts, two guard contexts, 18 cloned negative cases, package pins and
-privacy boundaries remain. Successful receipts explicitly identify an
-experimental global/unsupported override and keep default Supervisor restore,
-ordinary enabled/provider restore, automatic guard antirollback and stable
-approval false. This is one separately authorized attempt; no further procedure
-or fallback follows from its outcome.
+The unchanged synchronous Supervisor restore operation is invoked once. FINALLY
+always makes one bounded QMP down attempt after any opening attempt, including
+lost opening ACK, positive-probe failure, restore refusal, cancellation or lost
+restore response. A confirmed close, independent negative TCP probe, guest-agent
+ping and default-empty effective/persisted observations are required within the
+reserved deadline. Any uncertainty prevents postrestore grants and acceptance;
+owned guest cleanup still follows. There is no restore retry.
+
+Only an affirmative completed restore followed by verified closure/defaults can
+authorize the automatic restored process. Its metadata request must have a
+strictly newer start tick; stale requests carried by the archive cannot qualify.
+The private grant and its temporary path must be absent from both the inspected
+backup and the prewindow state. Its atomic writer verifies its own temporary
+bytes before publication; the helper may consume immediately, so the host does
+not assume the grant remains for a second read. The helper receipt proves grant
+consumption. This blanket gate also covers partial failures that boot old
+mutated controls or controls without a baseline file.
+
+All 116 zero-skip contracts are required: the original 97 applicable core/storage/
+guard cases plus 19 default-window/grant cases replace R4's 15 override-specific
+cases. All 32 protected infrastructure method ASTs, both context security
+boundaries, product bytes and 18 cloned negative cases remain unchanged.
+Successful scope is exactly a default-conditions DISABLED synthetic saved-account
+partial restore with explicit newest-guard repair. The precise accepted flag is
+`default_conditions_disabled_synthetic_restore_qualified`, with
+`default_supervisor_conditions_used` and `manual_newest_guard_repair_required`.
+Generic enabled/provider/automatic rollback/full-system/cloud/HACS/stable gates
+remain false. Preparation and contracts are not an actual R5 result.

@@ -3,7 +3,7 @@ from __future__ import annotations
 import sys
 if sys.platform != "linux":
     raise RuntimeError("qa_linux_required")
-import asyncio
+import asyncio, secrets
 from functools import partial
 import hashlib
 import json
@@ -396,6 +396,8 @@ class Rehearsal:
                    "provider_request_attempt_counts_measured": False, "recovery_proof_attempt_counts_measured": False}
         stage = "raw_storage"
         try:
+            check(getattr(self, "closed_boot_grant_verified", False) is True, "qa_closed_boot_grant_required")
+            receipt["closed_boot_grant_verified"] = True
             check(CORE_VERSION == "2026.10.2", "qa_core_version")
             users = await hass.auth.async_get_users()
             check(not any(not user.system_generated for user in users), "qa_no_owner_accounts")
@@ -454,7 +456,7 @@ class Rehearsal:
         await hass.async_add_executor_job(write_json, directory / RESULTS / (name + ".json"), receipt)
 
     async def poll(self):
-        seen, observed_boot = set(), False
+        seen, observed_boot, boot_request = set(), False, None
         while self.hass.is_running:
             try:
                 inputs = await self.hass.async_add_executor_job(inputs_at, self.directory)
@@ -476,8 +478,20 @@ class Rehearsal:
                         check(name in {"baseline_disabled", "repaired_storage_disabled"}, "qa_first_phase")
                         await self.hass.async_add_executor_job(write_json, nonce_path, {"token": token, "generation": generation})
                     if not observed_boot:
-                        observed_boot = True
+                        entry = current_entry(self.hass)
                         baseline_path = self.control / "baseline.json"
+                        automatic = generation == "before_restore" and name == "baseline_disabled" and baseline_path.exists()
+                        if boot_request is None:
+                            boot_request = closed_boot_request(phase, inputs, automatic)
+                            await self.hass.async_add_executor_job(write_json, self.control / "boot-request.json", boot_request)
+                        check(boot_request['token'] == token and boot_request['generation'] == generation
+                              and boot_request['phase'] == name and boot_request['branch_commit'] == inputs['branch_commit'], 'qa_boot_request_control_changed')
+                        assert_unimported(self.hass, entry)
+                        if not await self.hass.async_add_executor_job(consume_closed_boot_grant, self.control, boot_request):
+                            await asyncio.sleep(0.5)
+                            continue
+                        assert_unimported(self.hass, entry)
+                        self.closed_boot_grant_verified = True
                         if generation == "before_restore" and name == "baseline_disabled" and baseline_path.exists():
                             entry = current_entry(self.hass)
                             baseline = await self.hass.async_add_executor_job(read_json, baseline_path)
@@ -488,8 +502,12 @@ class Rehearsal:
                             await self.hass.async_add_executor_job(write_json, self.control / "restore-barrier.json",
                                 {"schema": 1, "token": token, "generation": generation, "branch_commit": inputs["branch_commit"],
                                  "process": process(), "entry_disabled": True, "entry_loaded": False, "candidate_imported": False,
-                                 "ha_config_entry_saved": True, "observed_storage": observed, "joins_sha256": joins, "guard_sha256": guard_sha})
+                                 "ha_config_entry_saved": True, "closed_boot_grant_verified": True, "observed_storage": observed, "joins_sha256": joins, "guard_sha256": guard_sha})
                             seen.add((generation, name))
+                        observed_boot = True
+                    check(boot_request["token"] == token and boot_request["generation"] == generation
+                          and boot_request["phase"] == name and boot_request["branch_commit"] == inputs["branch_commit"]
+                          and boot_request["process"] == process(), "qa_consumed_grant_control_changed")
                     identity = (generation, name)
                     if identity not in seen:
                         seen.add(identity)
@@ -500,6 +518,46 @@ class Rehearsal:
                 _LOGGER.error("Disposable saved-storage control refused (%s)", type(error).__name__)
                 return
             await asyncio.sleep(0.5)
+
+
+def closed_boot_request(phase, inputs, automatic):
+    return {'schema':1,'source_commit':inputs['source_commit'],'candidate_sha256':CANDIDATE,
+        'token':phase['token'],'generation':phase['generation'],'branch_commit':inputs['branch_commit'],
+        'phase':phase['phase'],'purpose':'automatic_restore' if automatic else 'phase',
+        'process':process(),'boot_nonce':secrets.token_hex(16)}
+
+def consume_closed_boot_grant(control, request):
+    path=control/'closed-boot-grant.json'
+    try:descriptor=os.open(path,os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK)
+    except FileNotFoundError:return False
+    try:
+        before=os.fstat(descriptor)
+        check(stat.S_ISREG(before.st_mode) and before.st_uid==os.getuid() and before.st_nlink==1
+            and stat.S_IMODE(before.st_mode)==0o600 and 0<before.st_size<=4096, 'qa_closed_grant_path')
+        raw=os.read(descriptor,4097)
+        after=os.fstat(descriptor);now=path.lstat()
+        identity=lambda st:(st.st_dev,st.st_ino,st.st_size,st.st_mtime_ns,st.st_mode,st.st_uid,st.st_nlink)
+        check(identity(before)==identity(after)==identity(now) and len(raw)==before.st_size, 'qa_closed_grant_stable')
+        def unique(pairs):
+            value={}
+            for key,item in pairs:
+                check(key not in value,'qa_closed_grant_duplicate');value[key]=item
+            return value
+        value=json.loads(raw,object_pairs_hook=unique)
+        expected={**request,'external_network_closed':True,'default_conditions_verified':request['purpose']=='automatic_restore'}
+        check(type(value)is dict and set(value)==set(expected) and value==expected
+            and type(value['schema'])is int and value['schema']==1
+            and type(value['external_network_closed'])is bool and type(value['default_conditions_verified'])is bool
+            and type(value['process'])is dict and set(value['process'])=={'pid','start_ticks'}
+            and all(type(v)is int and v>0 for v in value['process'].values())
+            and request['source_commit']=='91ae59106a661143b770d7a3564d363c7c11a7dd'
+            and request['candidate_sha256']==CANDIDATE and request['process']==process(), 'qa_closed_grant_identity')
+        # No second read after consume; the exact opened inode is checked first.
+        check(identity(path.lstat())==identity(before),'qa_closed_grant_replaced')
+        path.unlink()
+        check(not path.exists() and not path.is_symlink(),'qa_closed_grant_consumed')
+        return True
+    finally:os.close(descriptor)
 
 async def async_setup(hass, config):
     if config.get(DOMAIN, {}).get("disposable") is not True:
