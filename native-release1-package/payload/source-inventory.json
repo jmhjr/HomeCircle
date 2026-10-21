@@ -404,8 +404,8 @@
     "sha256": "1c3a91c1dab341bf4909af989e5cdb3ef43b6c72d5e954b30a57212d76f73787"
   },
   "custom_components/homecircle/findmy_vault.py": {
-    "bytes": 6065,
-    "sha256": "7c6a846cefba6a34647d84b7738a93d85738a948da32fbf752a96c4e1cf4c0f2"
+    "bytes": 6420,
+    "sha256": "1959c143d36c4f06aff13d85aed2886c32161de86680fd0567427bda418e12f5"
   },
   "custom_components/homecircle/frontend.py": {
     "bytes": 3415,
@@ -1096,8 +1096,8 @@
     "sha256": "d40999efa61430e3bba32ad2d2c6735ed8f11291d57a3776a72552e220fc014d"
   },
   "tests/test_findmy_identity_continuity.py": {
-    "bytes": 47179,
-    "sha256": "1ea36385766163f34d9d304390a7a508afb9d5d3bcc907e589fdf79bc5cc7b3e"
+    "bytes": 52292,
+    "sha256": "688cca2cb2342dfd134beb8ac0e791881e870900fd5e226108cd021052452cdb"
   },
   "tests/test_findmy_items.py": {
     "bytes": 12742,
@@ -1268,8 +1268,8 @@
     "sha256": "3c0afd59fb5ee40eaaf4bd1cf0643690d695369205f12a7ee0139beb78e17525"
   },
   "tests/test_findmy_vault_hardening.py": {
-    "bytes": 5052,
-    "sha256": "8a01bbe511262251e2e6b50b260410f60a5a436646d0a00e8a66452e49a779f9"
+    "bytes": 7706,
+    "sha256": "3510bf41c01390fbebf848439deae353e0bfd934cc2c63deca242643be8030c2"
   },
   "tests/test_findmy_verification_headers.py": {
     "bytes": 7924,

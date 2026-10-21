@@ -14,6 +14,7 @@ from pathlib import Path, PurePosixPath
 import platform
 import re
 import signal
+import shutil
 import subprocess
 import tarfile
 import time
@@ -108,7 +109,7 @@ def load_pins(path, expected_sha):
     check(type(value["minimum_backend_passed"]) is int
           and 1443 <= value["minimum_backend_passed"] <= 2400, "backend_minimum_refused")
     required, seen = value["required_backend_tests"], set()
-    check(isinstance(required, list) and 2 <= len(required) <= 32, "required_tests_config_refused")
+    check(isinstance(required, list) and 2 <= len(required) <= 36, "required_tests_config_refused")
     for item in required:
         check(isinstance(item, dict) and set(item) == {"class", "function"}
               and isinstance(item["class"], str) and re.fullmatch(r"tests\.[A-Za-z0-9_.]{1,160}", item["class"])
@@ -467,17 +468,89 @@ def backend_result(path):
             "required_regressions": required, "failure_labels": labels}, skipped
 
 
+# Exact baseline source and test cases are rendered into reviewed driver constants.
+BASELINE_SOURCE_COMMIT = 'fc0bba472cd60a06dac6bab30b7d011fd533624b'
+BASELINE_VAULT_SHA = '7c6a846cefba6a34647d84b7738a93d85738a948da32fbf752a96c4e1cf4c0f2'
+BASELINE_VAULT_NAME = "custom_components/homecircle/findmy_vault.py"
+BASELINE_RED_CASES = (('tests.test_findmy_vault_hardening', 'test_malformed_key_refuses_load_and_save_without_replacement[load-invalid_base64]'), ('tests.test_findmy_vault_hardening', 'test_malformed_key_refuses_load_and_save_without_replacement[save-invalid_base64]'), ('tests.test_findmy_vault_hardening', 'test_malformed_key_refuses_load_and_save_without_replacement[save_account-invalid_base64]'), ('tests.test_findmy_vault_hardening', 'test_malformed_key_refuses_load_and_save_without_replacement[load-short_decoded]'), ('tests.test_findmy_vault_hardening', 'test_malformed_key_refuses_load_and_save_without_replacement[save-short_decoded]'), ('tests.test_findmy_vault_hardening', 'test_malformed_key_refuses_load_and_save_without_replacement[save_account-short_decoded]'), ('tests.test_findmy_vault_hardening', 'test_missing_or_unreadable_store_load_is_redacted_without_creating_files[missing_directory]'), ('tests.test_findmy_vault_hardening', 'test_missing_or_unreadable_store_load_is_redacted_without_creating_files[missing_vault]'), ('tests.test_findmy_vault_hardening', 'test_missing_or_unreadable_store_load_is_redacted_without_creating_files[key_read_error]'), ('tests.test_findmy_identity_continuity', 'test_explicit_disconnect_removes_only_confirmed_malformed_or_missing_owned_store[invalid_base64_key]'), ('tests.test_findmy_identity_continuity', 'test_explicit_disconnect_removes_only_confirmed_malformed_or_missing_owned_store[short_decoded_key]'), ('tests.test_findmy_identity_continuity', 'test_explicit_disconnect_removes_only_confirmed_malformed_or_missing_owned_store[missing_directory]'), ('tests.test_findmy_identity_continuity', 'test_explicit_disconnect_removes_only_confirmed_malformed_or_missing_owned_store[missing_vault]'), ('tests.test_findmy_identity_continuity', 'test_explicit_disconnect_removes_only_confirmed_malformed_or_missing_owned_store[key_read_error]'))
+
+
+def backend_budget(deadline, maximum=900):
+    remaining = int(deadline - time.monotonic())
+    check(remaining >= 1, "combined_backend_deadline_refused")
+    return min(remaining, maximum)
+
+
+def baseline_red_result(path, code):
+    check(code == 1 and path.is_file() and not path.is_symlink()
+          and path.stat().st_size <= 16 * 1024**2, "baseline_red_exit_or_xml_refused")
+    root = ET.fromstring(path.read_bytes())
+    cases = root.findall(".//testcase")
+    identities = [(item.attrib.get("classname"), item.attrib.get("name")) for item in cases]
+    check(len(identities) == len(set(identities)) == len(BASELINE_RED_CASES)
+          and set(identities) == set(BASELINE_RED_CASES), "baseline_red_exact_cases_refused")
+    check(not root.findall(".//error") and not root.findall(".//skipped")
+          and len(root.findall(".//failure")) == len(cases)
+          and all(len(item.findall("failure")) == 1 for item in cases), "baseline_red_outcomes_refused")
+    return {"schema": 1, "outcome": "passed", "expected_failure_cases": len(cases),
+            "all_expected_regressions_observed": True, "collection_errors": 0, "skipped": 0}
+
+
+def baseline_red(args, files, bundle, deadline):
+    """Run expected red tests in a public-file-only private copy, never green tree."""
+    baseline = read_pinned(args.payload / "baseline-vault.py", BASELINE_VAULT_SHA, 1024 * 1024)
+    check(BASELINE_VAULT_NAME in files and files[BASELINE_VAULT_NAME] != baseline,
+          "baseline_and_fixed_vault_must_differ")
+    tree = args.results / "baseline-private-source"
+    check(not tree.exists() and not tree.is_symlink(), "fresh_baseline_tree_required")
+    xml = args.results / "baseline-private.xml"
+    source_unchanged(files, args.tree)
+    try:
+        extract({**files, BASELINE_VAULT_NAME: baseline}, tree)
+        # Only the two already verified generated frontend assets may supplement
+        # canonical public bytes. No .git, node_modules, cache, or untracked copy.
+        frontend = tree / "custom_components/homecircle/frontend"
+        frontend.mkdir(mode=0o700, parents=True, exist_ok=True)
+        for name in FRONTEND:
+            raw = (args.payload / name).read_bytes()
+            check(fingerprint(raw) == bundle[name], "baseline_frontend_pin_refused")
+            (frontend / name).write_bytes(raw)
+        expected = set(files) | {"custom_components/homecircle/frontend/" + name for name in FRONTEND}
+        check({path.relative_to(tree).as_posix() for path in tree.rglob("*") if path.is_file()} == expected
+              and all(not path.is_symlink() for path in tree.rglob("*")), "baseline_copy_scope_refused")
+        selectors = []
+        for classname, name in BASELINE_RED_CASES:
+            selectors.append(classname.replace(".", "/") + ".py::" + name)
+        code = run_owned([sys.executable, "-B", "-m", "pytest", "--junitxml", str(xml), *selectors],
+                         cwd=tree, log=args.results / "baseline-private.log", limit=backend_budget(deadline, 120))
+        result = baseline_red_result(xml, code)
+    finally:
+        if tree.exists():
+            check(tree.parent == args.results and not tree.is_symlink(), "baseline_cleanup_scope_refused")
+            shutil.rmtree(tree)
+        check(not tree.exists() and not tree.is_symlink(), "baseline_copy_cleanup_failed")
+        source_unchanged(files, args.tree)
+        frontend_matches(args.tree, bundle)
+    return {**result, "baseline_source_commit": BASELINE_SOURCE_COMMIT,
+            "baseline_vault_sha256": BASELINE_VAULT_SHA, "public_files_only_copy": True,
+            "private_copy_removed": True, "fixed_source_unchanged": True,
+            "provider_or_owner_accounts_used": False, "combined_red_green_deadline_seconds": 900}
+
+
 def acceptance(args, files):
+    deadline = time.monotonic() + 900
     source_unchanged(files, args.tree)
     bundle = staged_frontend(args)
     frontend_matches(args.tree, bundle)
+    red = baseline_red(args, files, bundle, deadline)
     result = build(args, files, bundle)
     installed = closure(constraints())
     xml = args.results / "backend-private.xml"
     code = run_owned([sys.executable, "-B", "-m", "pytest", "--junitxml", str(xml)],
-                     cwd=args.tree, log=args.results / "backend-private.log", limit=900)
+                     cwd=args.tree, log=args.results / "backend-private.log", limit=backend_budget(deadline))
+    backend_budget(deadline)
     backend, skipped = backend_result(xml)
-    result.update({"schema": 1, "outcome": "failed", "completed": False, "backend": backend})
+    result.update({"schema": 1, "outcome": "failed", "completed": False, "backend": backend, "baseline_red": red})
     atomic_json(args.results / "package-summary.json", result)
     check(code == 0 and backend["passed"] >= PINS["minimum_backend_passed"]
           and backend["failed"] == 0 and backend["skipped"] == 1, "backend_counts_refused")

@@ -139,5 +139,129 @@ class DriverContracts(unittest.TestCase):
         self.assertEqual(git("status", "--porcelain"), b"")
 
 
+class BaselineContracts(unittest.TestCase):
+    setUp = DriverContracts.setUp
+    load = DriverContracts.load
+    xml = DriverContracts.xml
+
+    def red_xml(self, outcome="failure", identities=None):
+        return self.xml("".join('<testcase classname="' + classname + '" name="' + name + '">' +
+                        ('<' + outcome + '>PRIVATE-CANARY</' + outcome + '>' if outcome else '') +
+                        '</testcase>' for classname, name in
+                        (driver.BASELINE_RED_CASES if identities is None else identities)))
+
+    def baseline_fixture(self):
+        from types import SimpleNamespace
+        tree, payload, results = (self.root / name for name in ("green", "payload", "results"))
+        payload.mkdir()
+        results.mkdir()
+        baseline = b"original baseline"
+        (payload / "baseline-vault.py").write_bytes(baseline)
+        files = {driver.BASELINE_VAULT_NAME: b"fixed vault", "tests/test_public.py": b"public"}
+        driver.extract(files, tree)
+        frontend = tree / "custom_components/homecircle/frontend"
+        frontend.mkdir(parents=True)
+        for name in driver.FRONTEND:
+            (payload / name).write_bytes(name.encode())
+            (frontend / name).write_bytes(name.encode())
+        private = tree / "node_modules/private"
+        private.parent.mkdir()
+        private.write_bytes(b"PRIVATE-CANARY")
+        return SimpleNamespace(tree=tree, payload=payload, results=results), files, baseline, driver.frontend_inventory(tree)
+
+    def test_required_function_bound_accepts_36_and_refuses_37(self):
+        required = [{"class": "tests.test_limit", "function": "test_case_" + str(index)} for index in range(37)]
+        self.assertEqual(len(self.load(dict(self.config, required_backend_tests=required[:36]))["required_backend_tests"]), 36)
+        with self.assertRaisesRegex(driver.Refused, "required_tests_config_refused"):
+            self.load(dict(self.config, required_backend_tests=required))
+
+    def test_baseline_parser_requires_all_fourteen_expected_failures_without_raw_text(self):
+        result = driver.baseline_red_result(self.red_xml(), 1)
+        self.assertEqual(result["expected_failure_cases"], 14)
+        self.assertTrue(result["all_expected_regressions_observed"])
+        self.assertNotIn("PRIVATE-CANARY", json.dumps(result))
+
+    def test_baseline_parser_refuses_success_errors_skips_or_unexpected_exit(self):
+        for outcome, code in (("", 0), ("error", 1), ("skipped", 1), ("", 1), ("failure", 0), ("failure", 2)):
+            with self.subTest(outcome=outcome, code=code), self.assertRaises(driver.Refused):
+                driver.baseline_red_result(self.red_xml(outcome), code)
+
+    def test_baseline_parser_refuses_missing_extra_duplicate_or_wrong_identity(self):
+        identities = list(driver.BASELINE_RED_CASES)
+        for selected in (identities[:-1], identities + [identities[0]],
+                         identities[:-1] + [("tests.test_wrong", "test_wrong")]):
+            with self.subTest(selected=selected), self.assertRaises(driver.Refused):
+                driver.baseline_red_result(self.red_xml(identities=selected), 1)
+
+    def test_baseline_parser_refuses_absent_and_symlink_xml(self):
+        path = self.root / "missing.xml"
+        with self.assertRaises(driver.Refused):
+            driver.baseline_red_result(path, 1)
+        actual = self.red_xml()
+        path.symlink_to(actual)
+        with self.assertRaises(driver.Refused):
+            driver.baseline_red_result(path, 1)
+
+    def test_combined_budget_uses_only_remaining_time_and_refuses_expiry(self):
+        with patch.object(driver.time, "monotonic", return_value=100):
+            self.assertEqual(driver.backend_budget(125, 120), 25)
+            self.assertEqual(driver.backend_budget(1000, 120), 120)
+            for deadline in (99, 100, 100.9):
+                with self.subTest(deadline=deadline), self.assertRaises(driver.Refused):
+                    driver.backend_budget(deadline)
+
+    def test_baseline_copy_is_public_only_pinned_and_removed_without_touching_green(self):
+        args, files, baseline, bundle = self.baseline_fixture()
+        def run(command, *, cwd, log, limit):
+            self.assertNotEqual(cwd, args.tree)
+            self.assertFalse((cwd / "node_modules").exists())
+            self.assertEqual((cwd / driver.BASELINE_VAULT_NAME).read_bytes(), baseline)
+            expected = set(files) | {"custom_components/homecircle/frontend/" + name for name in driver.FRONTEND}
+            self.assertEqual({path.relative_to(cwd).as_posix() for path in cwd.rglob("*") if path.is_file()}, expected)
+            self.assertEqual(len(command) - 6, 14)
+            self.assertLessEqual(limit, 120)
+            xml = Path(command[5])
+            xml.write_bytes(self.red_xml().read_bytes())
+            return 1
+        with patch.object(driver, "BASELINE_VAULT_SHA", driver.sha(baseline)), patch.object(driver, "run_owned", side_effect=run):
+            result = driver.baseline_red(args, files, bundle, driver.time.monotonic() + 900)
+        self.assertTrue(result["private_copy_removed"] and result["fixed_source_unchanged"])
+        self.assertFalse((args.results / "baseline-private-source").exists())
+        self.assertEqual((args.tree / driver.BASELINE_VAULT_NAME).read_bytes(), b"fixed vault")
+        self.assertNotIn("PRIVATE-CANARY", json.dumps(result))
+
+    def test_baseline_private_copy_is_removed_when_runner_fails(self):
+        args, files, baseline, bundle = self.baseline_fixture()
+        with patch.object(driver, "BASELINE_VAULT_SHA", driver.sha(baseline)), patch.object(driver, "run_owned", side_effect=RuntimeError("synthetic")):
+            with self.assertRaisesRegex(RuntimeError, "synthetic"):
+                driver.baseline_red(args, files, bundle, driver.time.monotonic() + 900)
+        self.assertFalse((args.results / "baseline-private-source").exists())
+        driver.source_unchanged(files, args.tree)
+
+    def test_baseline_private_copy_is_removed_when_expected_failures_are_missing(self):
+        args, files, baseline, bundle = self.baseline_fixture()
+        def run(command, **_kwargs):
+            Path(command[5]).write_bytes(self.red_xml(identities=[]).read_bytes())
+            return 1
+        with patch.object(driver, "BASELINE_VAULT_SHA", driver.sha(baseline)), patch.object(driver, "run_owned", side_effect=run):
+            with self.assertRaisesRegex(driver.Refused, "baseline_red_exact_cases_refused"):
+                driver.baseline_red(args, files, bundle, driver.time.monotonic() + 900)
+        self.assertFalse((args.results / "baseline-private-source").exists())
+
+    def test_baseline_refuses_tampered_original_before_runner(self):
+        args, files, _baseline, bundle = self.baseline_fixture()
+        with patch.object(driver, "run_owned") as run, self.assertRaisesRegex(driver.Refused, "input_hash_refused"):
+            driver.baseline_red(args, files, bundle, driver.time.monotonic() + 900)
+        run.assert_not_called()
+
+    def test_launcher_keeps_offline_deadline_and_four_member_payload_contract(self):
+        script = Path(driver.__file__).with_name("run_host.sh").read_text()
+        self.assertIn("printf '%s\\n' baseline-vault.py config.json source-inventory.json source.tgz", script)
+        self.assertEqual(script.count("for source in baseline-vault.py config.json source-inventory.json source.tgz; do"), 2)
+        self.assertIn('bounded 940 "${DOCKER[@]}" exec', script)
+        self.assertEqual(script.count(".baseline_red.expected_failure_cases==14"), 2)
+        self.assertEqual(script.count(".baseline_red.private_copy_removed==true"), 2)
+
+
 if __name__ == "__main__":
     unittest.main()

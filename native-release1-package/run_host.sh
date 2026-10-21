@@ -108,7 +108,12 @@ finish() {
       --arg commit "$source_commit" '.outcome=="passed" and .completed==true and .backend.passed >= $minimum and
       .backend.failed==0 and .backend.skipped==1 and .release_version=="0.1.0-beta.20" and .release_files==113 and
       (.backend.required_regressions|length)==$required and all(.backend.required_regressions[];.passed==true) and
-      .candidate_source_commit==$commit and .same_version_unreleased_development_preview==true' \
+      .baseline_red.outcome=="passed" and .baseline_red.expected_failure_cases==14 and
+      .baseline_red.all_expected_regressions_observed==true and .baseline_red.collection_errors==0 and
+      .baseline_red.skipped==0 and .baseline_red.public_files_only_copy==true and
+      .baseline_red.private_copy_removed==true and .baseline_red.fixed_source_unchanged==true and
+      .baseline_red.provider_or_owner_accounts_used==false and
+      .baseline_red.combined_red_green_deadline_seconds==900 and .candidate_source_commit==$commit and .same_version_unreleased_development_preview==true' \
       "$public/package-summary.json" >/dev/null || status=1
     jq -e --argjson count "$source_count" '.outcome=="passed" and .frontend_tests_passed==122 and
       .frontend_reproducible==true and .privacy.files_checked==$count and .privacy.checker_exit==0' \
@@ -185,9 +190,9 @@ required_regression_count=$parsed_required_regression_count
 }
 [[ -z $(find "$payload" -mindepth 1 ! -type f -print -quit) ]] || { echo payload_type_refused >&2; exit 2; }
 find "$payload" -type f -printf '%P\n' | LC_ALL=C sort >"$workspace/actual-members"
-printf '%s\n' config.json source-inventory.json source.tgz >"$workspace/expected-members"
+printf '%s\n' baseline-vault.py config.json source-inventory.json source.tgz >"$workspace/expected-members"
 cmp -s "$workspace/actual-members" "$workspace/expected-members" || { echo payload_members_refused >&2; exit 2; }
-for source in config.json source-inventory.json source.tgz; do
+for source in baseline-vault.py config.json source-inventory.json source.tgz; do
   cp -- "$payload/$source" "$workspace/input/$source"
 done
 [[ $(sha256sum "$workspace/input/source.tgz" | awk '{print $1}') == "$source_sha" &&
@@ -290,7 +295,7 @@ stage_file() {
   actual=$(docker_call exec "$cid" sha256sum "$destination" | awk '{print $1}')
   [[ $actual == "$expected" ]] || { echo container_staging_hash_refused >&2; return 1; }
 }
-for source in config.json source-inventory.json source.tgz; do
+for source in baseline-vault.py config.json source-inventory.json source.tgz; do
   stage_file "$workspace/input/$source" "/qa/input/$source"
 done
 stage_file "$workspace/results/frontend-summary.json" /qa/input/frontend-summary.json
@@ -325,7 +330,12 @@ jq -e --argjson minimum "$minimum_backend" --argjson required "$required_regress
   --arg commit "$source_commit" '.outcome=="passed" and .completed==true and .backend.passed >= $minimum and
   .backend.failed==0 and .backend.skipped==1 and .release_files==113 and .reproducible_archive==true and
   .candidate_source_commit==$commit and (.backend.required_regressions|length)==$required and
-  all(.backend.required_regressions[];.passed==true)' "$public/package-summary.json" >/dev/null
+  all(.backend.required_regressions[];.passed==true) and .baseline_red.outcome=="passed" and .baseline_red.expected_failure_cases==14 and
+      .baseline_red.all_expected_regressions_observed==true and .baseline_red.collection_errors==0 and
+      .baseline_red.skipped==0 and .baseline_red.public_files_only_copy==true and
+      .baseline_red.private_copy_removed==true and .baseline_red.fixed_source_unchanged==true and
+      .baseline_red.provider_or_owner_accounts_used==false and
+      .baseline_red.combined_red_green_deadline_seconds==900' "$public/package-summary.json" >/dev/null
 acceptance_pass=true
 stage=release_assets
 mkdir -m 700 "$workspace/release-assets"

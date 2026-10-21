@@ -1,11 +1,11 @@
 {
-  "candidate_source_commit": "f4da650e6e460382c6ee1f70827bddac43bf2780",
+  "candidate_source_commit": "3da605c71330a7651d63040981ce90466d53768c",
   "candidate_source_prefix": "",
   "checker_sha256": "216331d16af8fb2ec636e1466303923ecfe32c76f78ea72f89d373c80c9713d2",
-  "driver_sha256": "cbd0b887034fd2e933bec21bb21c2427345eccd87ed400da52f19ecd21893759",
+  "driver_sha256": "51a27a74c6dd640908c77df23b00e60aefbc07da0d901daee0d989ccd1b92930",
   "expected_release_files": 113,
   "frontend_tests": 122,
-  "minimum_backend_passed": 1678,
+  "minimum_backend_passed": 1698,
   "required_backend_tests": [
     {
       "class": "tests.test_normalize",
@@ -134,11 +134,27 @@
     {
       "class": "tests.test_findmy_pcs_hardening",
       "function": "test_signature_key_identifiers_accept_only_exact_trusted_p256_encodings"
+    },
+    {
+      "class": "tests.test_findmy_vault_hardening",
+      "function": "test_malformed_key_refuses_load_and_save_without_replacement"
+    },
+    {
+      "class": "tests.test_findmy_vault_hardening",
+      "function": "test_missing_or_unreadable_store_load_is_redacted_without_creating_files"
+    },
+    {
+      "class": "tests.test_findmy_identity_continuity",
+      "function": "test_explicit_disconnect_removes_only_confirmed_malformed_or_missing_owned_store"
+    },
+    {
+      "class": "tests.test_findmy_identity_continuity",
+      "function": "test_explicit_disconnect_preserves_unsafe_or_legacy_store_and_metadata"
     }
   ],
   "schema": 1,
   "source_files": 337,
-  "source_inventory_sha256": "381f844f1044e6c192ed20be18885933d7202310cb095b685323348d77f64de9",
-  "source_sha256": "687c76e7cd1864af1efb5a8d0d1158ae53ce24684f1eb861989e6636a0506e88",
+  "source_inventory_sha256": "b688f6bed1bdbe0a4d9d2fee1d11b18c2e8035d44cfe8b2bb59d77a9228426ff",
+  "source_sha256": "ec0acbe19d9f9758906406ff10cf50c1a08873cdf2912951c7770778a25d3c7e",
   "version": "0.1.0-beta.20"
 }
