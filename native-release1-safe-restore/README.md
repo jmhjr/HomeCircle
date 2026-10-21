@@ -125,6 +125,26 @@ This fixes the confirmed QA API mismatch without changing product behavior,
 tracker state, source/state waits or timing. It does not reclassify any prior
 negative run or prove the full restore procedure.
 
+The eighth negative run passed initialize, initial restart, quarantine and mutate,
+then failed the host's newest-guard export command. Its receipt did not retain the
+exit status or identify the cause. A diagnostic-only revision keeps that same
+export argv, 60-second timeout and zero-exit/nontruncation requirement. Only a
+failed host `host_private_newest_guard` stage may add `guard_export`, containing
+bounded exit/signal values, truncation and stream-presence flags, plus optional
+fixed helper stage/type labels. Presence is unknown (`null`) when generic capture
+redacts truncated streams; no absence is inferred from redacted bytes.
+
+The helper reads a bounded token from the existing external proof already
+validated by the host. Token-read failure cannot block a successful export. On
+an export error with a valid token, the wrapper writes one exact finite-schema
+stderr JSON; the host accepts only its current token, strips that token, and
+retains only catalog labels. Invalid, unrelated, oversized or ordinary stderr
+has no raw fallback. No raw bundle, error message, trace, account identity, path,
+owner value or file contents enter this diagnostic. No detailed labels are
+retained without a matching token. Matching this proof token identifies this QA
+invocation; it does not prove newest-guard export or repair succeeded. Successful
+stdout/data operations and successful public receipts are unchanged.
+
 ## Exact runtime and reuse
 
 The official machine reference is
@@ -154,7 +174,7 @@ requires the same module hashes in the guest before creating the synthetic image
 
 ## Contracts, privacy and limits
 
-Ninety-five standalone contracts currently pass without skips. They include
+Ninety-nine standalone contracts currently pass without skips. They include
 strict input/archive/OCI/dependency/blank-config checks; actual phase nonce and
 disabled automatic-boot barriers; old/new guard timeline, pending/uncertain and
 early-enable/network refusal; private bundle links/modes/size-before-read;
@@ -181,6 +201,16 @@ clearing the selection, verify the explicit current-list payload preserves it
 and the second Person, and refuse missing, foreign or multiple selections before
 any Person update. The complete probatio validator and HA lifecycle are not run
 by these standalone cases; actual managed acceptance remains required.
+
+Four additional contracts execute the actual import/token-reader/CLI wrapper,
+strict parsers and host export/finalization methods under synthetic I/O. They
+verify no import actions, real temporary-file bounds/link refusal, successful
+stdout byte identity even without a readable diagnostic token, same export
+command/timeout, fixed failures, wrong-token/schema/stage/type/duplicate/oversize
+and private-canary refusal, truncation's unknown flags and exact failed-stage
+projection. Linux/root guards are modeled in CLI unit cases; no Supervisor or VM
+execution is claimed by those tests. The actual export failure cause remains
+unknown. No mode/path relaxation, retry, deadline or acceptance change is made.
 
 Public output is exactly nine fixed JSON names on success: `host.json` and the
 eight phase names. Raw backup/database/configuration, guard bundle/account hashes,

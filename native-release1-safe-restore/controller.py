@@ -7,6 +7,7 @@ SSH, an existing VM, a production Home Assistant, or a human GitHub account.
 from __future__ import annotations
 
 from guard_transfer import decode as decode_guard, fingerprint as guard_fingerprint
+from guard_transfer import export_failure_labels, parse_export_failure
 import argparse
 import ast
 import base64
@@ -508,6 +509,41 @@ def source_setup_catalog():
             and all(type(item) is str and re.fullmatch(r'[a-z_]{1,40}', item) for item in labels),
             'setup_catalog_refused')
     return frozenset(labels)
+
+
+def public_guard_export(value):
+    keys = {'exit_code', 'signal', 'output_truncated', 'stdout_present', 'stderr_present', 'helper_failure'}
+    if type(value) is not dict or set(value) != keys or type(value['output_truncated']) is not bool:
+        return None
+    code, signal_value = value['exit_code'], value['signal']
+    if not (type(code) is int and 0 <= code <= 255 and signal_value is None
+            or code is None and type(signal_value) is int and 1 <= signal_value <= 64):
+        return None
+    for key in ('stdout_present', 'stderr_present'):
+        if value['output_truncated']:
+            if value[key] is not None:
+                return None
+        elif type(value[key]) is not bool:
+            return None
+    labels = value['helper_failure']
+    if labels is not None:
+        labels = export_failure_labels(labels)
+        if labels is None:
+            return None
+    return {key: labels if key == 'helper_failure' else value[key] for key in (
+        'exit_code', 'signal', 'output_truncated', 'stdout_present', 'stderr_present', 'helper_failure')}
+
+
+def guard_export_observation(result, token):
+    if type(result) is not dict or set(result) != {'exitcode', 'signal', 'stdout', 'stderr', 'truncated'} \
+            or type(result['stdout']) is not bytes or type(result['stderr']) is not bytes \
+            or type(result['truncated']) is not bool:
+        return None
+    return public_guard_export({'exit_code': result['exitcode'], 'signal': result['signal'],
+        'output_truncated': result['truncated'],
+        'stdout_present': None if result['truncated'] else bool(result['stdout']),
+        'stderr_present': None if result['truncated'] else bool(result['stderr']),
+        'helper_failure': None if result['truncated'] else parse_export_failure(result['stderr'], token)})
 
 
 def public_person_sources(value):
@@ -1527,7 +1563,10 @@ print(json.dumps({"archive_bytes":path.stat().st_size,"archive_sha256":sha(path.
                 'external_history_window_refused')
         self.external_proof = proof
         self.guest_write(GUEST_ROOT + '/guard-transfer.py', (ROOT/'guard_transfer.py').read_bytes())
-        raw = self.guest('/usr/bin/docker exec -i hassio_supervisor python3 - export < ' + GUEST_ROOT + '/guard-transfer.py',60)
+        result = self.guest('/usr/bin/docker exec -i hassio_supervisor python3 - export < ' + GUEST_ROOT + '/guard-transfer.py',60,capture=True)
+        self.guard_export = guard_export_observation(result, self.phase_token)
+        require(result['exitcode'] == 0 and not result['truncated'], 'guest_command_failed')
+        raw = result['stdout']
         require(guard_fingerprint(decode_guard(raw)) == self.latest_guard_sha256
                 and self.latest_guard_sha256 != self.backup_guard_sha256, 'host_newest_guard_binding_refused')
         path = self.private/'newest-guard-private.json'
@@ -1763,6 +1802,9 @@ print(json.dumps({"archive_bytes":path.stat().st_size,"archive_sha256":sha(path.
             'candidate_hacs_download_tested':False,'candidate_release_zip_transport_tested':False,
             'candidate_transport':'stopped_verified_zip_files','direct_candidate_installs':self.direct_installs,
             'host_elapsed_seconds':round(time.monotonic()-self.started,3),**self.cleanup}
+        if failure is not None and self.stage == 'host_private_newest_guard':
+            if observed := public_guard_export(getattr(self, 'guard_export', None)):
+                value['guard_export'] = observed
         if self.public is not None:write_json(self.public/'host.json',value)
         print('safe_restore_outcome='+value['outcome'],flush=True)
         return 0 if passed else 1

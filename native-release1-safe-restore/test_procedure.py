@@ -821,3 +821,134 @@ class PortraitSelectionContracts(unittest.IsolatedAsyncioTestCase):
             records,before,updates,_,error=await self.exercise_portrait(selection=selection)
             self.assertIsNotNone(error);self.assertEqual(str(error),'qa_portrait_person_selection')
             self.assertEqual(updates,[]);self.assertEqual(records,before)
+
+
+class GuardExportDiagnosticContracts(unittest.TestCase):
+    def test_import_has_no_actions_and_actual_token_reader_is_bounded_and_link_safe(self):
+        from contextlib import redirect_stdout,redirect_stderr
+        import io
+        raw=(controller.ROOT/'guard_transfer.py').read_bytes()
+        with patch('os.open',side_effect=AssertionError('unexpected action')) as opened:
+            exec(compile(raw,'guard_transfer_import_only','exec'),{'__name__':'guard_transfer_import_only'})
+            opened.assert_not_called()
+        token='b'*32
+        proof={'schema':1,'token':token,'generation':'before_restore','branch_commit':'a'*40,'postbackup_window':{}}
+        with tempfile.TemporaryDirectory() as directory:
+            path=Path(directory)/'proof.json';path.write_bytes(transfer.canonical(proof))
+            with patch.object(transfer,'EXPORT_PROOF',path):
+                self.assertEqual(transfer.read_export_token(),token)
+                stdout,stderr=io.StringIO(),io.StringIO();files=transfer.decode(bundle())
+                with patch.object(transfer.sys,'argv',['-','export']),patch.object(transfer.sys,'platform','linux'), \
+                        patch.object(transfer.os,'geteuid',return_value=0),patch.object(transfer,'blocked_status') as checked, \
+                        patch.object(transfer,'private_files',return_value=files) as private,redirect_stdout(stdout),redirect_stderr(stderr):
+                    transfer.cli()
+                checked.assert_called_once_with();private.assert_called_once_with(transfer.GUARD)
+                self.assertEqual(stdout.getvalue(),bundle().decode()+'\n');self.assertEqual(stderr.getvalue(),'')
+                saved=path.read_bytes();path.write_bytes(b'x'*65537)
+                with self.assertRaises(ValueError):transfer.read_export_token()
+                path.write_bytes(saved);linked=Path(directory)/'hardlink';os.link(path,linked)
+                with self.assertRaises(ValueError):transfer.read_export_token()
+                linked.unlink();path.unlink();path.symlink_to(Path(directory)/'missing')
+                with self.assertRaises(OSError):transfer.read_export_token()
+                path.unlink();path.write_bytes(saved.replace(b'"schema":1',b'"schema":1,"schema":1'))
+                with self.assertRaises(ValueError):transfer.read_export_token()
+
+    def test_actual_export_wrapper_emits_only_known_token_stage_and_type_or_nothing(self):
+        from contextlib import redirect_stdout,redirect_stderr
+        import io
+        token='b'*32
+        proof={'schema':1,'token':token,'generation':'before_restore','branch_commit':'a'*40,'postbackup_window':{}}
+        class PRIVATE_CANARY(ValueError):pass
+        for stage,error in [('blocked_status',ValueError('PRIVATE-CANARY /private/path')),
+                            ('blocked_status',PRIVATE_CANARY('PRIVATE-CANARY')),
+                            ('private_files',OSError('PRIVATE-CANARY')),
+                            ('encode',TypeError('PRIVATE-CANARY'))]:
+            with tempfile.TemporaryDirectory() as directory:
+                path=Path(directory)/'proof.json';path.write_bytes(transfer.canonical(proof))
+                stdout,stderr=io.StringIO(),io.StringIO()
+                status=Mock(side_effect=error if stage=='blocked_status' else None)
+                files=Mock(side_effect=error if stage=='private_files' else None,return_value={'ledger.json':b'PRIVATE-CANARY'})
+                original=transfer.canonical
+                canonical=Mock(side_effect=error) if stage=='encode' else original
+                with patch.object(transfer,'EXPORT_PROOF',path),patch.object(transfer.sys,'argv',['-','export']), \
+                        patch.object(transfer.sys,'platform','linux'),patch.object(transfer.os,'geteuid',return_value=0), \
+                        patch.object(transfer,'blocked_status',status),patch.object(transfer,'private_files',files), \
+                        patch.object(transfer,'canonical',canonical),redirect_stdout(stdout),redirect_stderr(stderr):
+                    with self.assertRaises(SystemExit) as stopped:transfer.cli()
+                self.assertEqual(stopped.exception.code,1);self.assertEqual(stdout.getvalue(),'')
+                raw=stderr.getvalue().encode();observed=transfer.parse_export_failure(raw,token)
+                self.assertEqual(observed,{'stage':stage,'failure_type':'unrecognized_failure_type' if type(error) is PRIVATE_CANARY else type(error).__name__})
+                self.assertNotIn('CANARY',raw.decode());self.assertNotIn('/private/path',raw.decode())
+                self.assertNotIn('Traceback',raw.decode())
+        stdout,stderr=io.StringIO(),io.StringIO()
+        with patch.object(transfer.sys,'argv',['-','export']),patch.object(transfer.sys,'platform','linux'), \
+                patch.object(transfer.os,'geteuid',return_value=0),patch.object(transfer,'read_export_token',side_effect=ValueError('PRIVATE-CANARY')), \
+                patch.object(transfer,'blocked_status',side_effect=RuntimeError('PRIVATE-CANARY')) as status,redirect_stdout(stdout),redirect_stderr(stderr):
+            with self.assertRaises(SystemExit):transfer.cli()
+            status.assert_called_once_with()
+        self.assertEqual(stdout.getvalue(),stderr.getvalue());self.assertEqual(stderr.getvalue(),'')
+        stdout,stderr=io.StringIO(),io.StringIO()
+        with patch.object(transfer.sys,'argv',['-','export']),patch.object(transfer.sys,'platform','linux'), \
+                patch.object(transfer.os,'geteuid',return_value=0),patch.object(transfer,'read_export_token',side_effect=ValueError('PRIVATE-CANARY')), \
+                patch.object(transfer,'blocked_status'),patch.object(transfer,'private_files',return_value=transfer.decode(bundle())), \
+                redirect_stdout(stdout),redirect_stderr(stderr):
+            transfer.cli()
+        self.assertEqual(stdout.getvalue(),bundle().decode()+'\n');self.assertEqual(stderr.getvalue(),'')
+
+    def test_actual_parser_and_host_projection_refuse_unknown_json_token_types_and_canaries(self):
+        token='b'*32
+        valid={'schema':1,'kind':'homecircle_guard_export_failure','token':token,'stage':'blocked_status','failure_type':'ValueError'}
+        encoded=transfer.canonical(valid)
+        self.assertEqual(transfer.parse_export_failure(encoded,token),{'stage':'blocked_status','failure_type':'ValueError'})
+        invalid=[b'',b'PRIVATE-CANARY traceback',b'{',b'x'*2049,encoded.replace(b'"schema":1',b'"schema":1,"schema":1')]
+        for key,value in [('schema',True),('kind','PRIVATE-CANARY'),('token','c'*32),('stage','PRIVATE-CANARY'),('failure_type','PRIVATE-CANARY')]:
+            body=dict(valid);body[key]=value;invalid.append(transfer.canonical(body))
+        extra=dict(valid,private='PRIVATE-CANARY');invalid.append(transfer.canonical(extra))
+        for raw in invalid:self.assertIsNone(transfer.parse_export_failure(raw,token))
+        for badtoken in (None,'PRIVATE-CANARY','b'*31):self.assertIsNone(transfer.parse_export_failure(encoded,badtoken))
+        result={'exitcode':17,'signal':None,'truncated':False,'stdout':b'PRIVATE-BUNDLE-CANARY','stderr':encoded}
+        observed=controller.guard_export_observation(result,token)
+        self.assertEqual(observed,{'exit_code':17,'signal':None,'output_truncated':False,'stdout_present':True,
+                                  'stderr_present':True,'helper_failure':{'stage':'blocked_status','failure_type':'ValueError'}})
+        self.assertNotIn(token,json.dumps(observed));self.assertNotIn('CANARY',json.dumps(observed))
+        result['stderr']=b'PRIVATE-CANARY raw error';self.assertIsNone(controller.guard_export_observation(result,token)['helper_failure'])
+        result.update(truncated=True,stdout=b'',stderr=b'')
+        observed=controller.guard_export_observation(result,token)
+        self.assertIsNone(observed['stdout_present']);self.assertIsNone(observed['stderr_present']);self.assertIsNone(observed['helper_failure'])
+        for key,value in [('exit_code',True),('signal',999),('stdout_present',False),('helper_failure',{'stage':'PRIVATE-CANARY','failure_type':'ValueError'})]:
+            body=dict(observed);body[key]=value;self.assertIsNone(controller.public_guard_export(body))
+
+    def test_actual_same_export_command_and_failed_finish_keep_only_fixed_observation(self):
+        from contextlib import redirect_stdout
+        import io
+        for success,truncated,signal_value in [(True,False,None),(False,False,None),(False,True,None),(False,False,9)]:
+            with tempfile.TemporaryDirectory() as directory:
+                root=Path(directory);host=controller.Controller(type('Args',(),{'branch_commit':'a'*40})())
+                host.config_path='/mnt/data/supervisor/homeassistant';host.private=root/'private';host.private.mkdir(mode=0o700)
+                host.public=root/'public';host.public.mkdir();host.stop_core=Mock();host.guest_write=Mock()
+                proof={'schema':1,'token':host.phase_token,'generation':'before_restore','branch_commit':'a'*40,
+                       'postbackup_window':{'start':1.0,'end':2.0,'rows':5,'sha256':'a'*64}}
+                host.guest_read=Mock(return_value=controller.canonical(proof));raw=bundle()
+                host.latest_guard_sha256=transfer.fingerprint(transfer.decode(raw));host.backup_guard_sha256='0'*64
+                diagnostic=transfer.canonical({'schema':1,'kind':'homecircle_guard_export_failure','token':host.phase_token,
+                    'stage':'private_files','failure_type':'ValueError'})
+                result={'exitcode':0 if success else None if signal_value else 17,'signal':signal_value,'truncated':truncated,
+                        'stdout':raw if success else b'','stderr':b'' if success or truncated else diagnostic}
+                host.guest=Mock(return_value=result)
+                if success:
+                    host.preserve_latest_guard();self.assertTrue(host.host_guard_retained)
+                    self.assertEqual(host.host_guard.read_bytes(),raw)
+                    failure=None
+                else:
+                    with self.assertRaisesRegex(controller.Refused,'^guest_command_failed$') as caught:host.preserve_latest_guard()
+                    failure=caught.exception;self.assertFalse(host.host_guard_retained)
+                host.guest.assert_called_once_with('/usr/bin/docker exec -i hassio_supervisor python3 - export < '+controller.GUEST_ROOT+'/guard-transfer.py',60,capture=True)
+                host.guest_write.assert_called_once_with(controller.GUEST_ROOT+'/guard-transfer.py',(controller.ROOT/'guard_transfer.py').read_bytes())
+                host.cleanup_vm=Mock();host.cleanup={'qemu_stopped':True,'private_workspace_removed':True,'cleanup_failed':False}
+                with redirect_stdout(io.StringIO()):host.finish(failure)
+                public=json.loads((host.public/'host.json').read_bytes())
+                self.assertEqual('guard_export' in public,not success)
+                self.assertNotIn('CANARY',json.dumps(public));self.assertNotIn(host.phase_token,json.dumps(public))
+                host.stage='initialize'
+                with redirect_stdout(io.StringIO()):host.finish(controller.Refused('guest_command_failed'))
+                self.assertNotIn('guard_export',json.loads((host.public/'host.json').read_bytes()))
