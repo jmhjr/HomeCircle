@@ -275,3 +275,15 @@ async def test_outer_timeout_after_verified_material_routes_to_resume(
     )
     assert status["verified"] == 1 and status["unresolved"] == 0
     await value.close()
+
+
+@pytest.mark.parametrize("reason,status,expected", [
+    ("transient", 429, "findmy_recovery_rate_limited"),
+    ("transient", 503, "findmy_recovery_transient"),
+    ("transient", None, "findmy_recovery_transient"),
+    ("transient", "429", "findmy_recovery_transient"),
+    ("transient", True, "findmy_recovery_transient"),
+    ("protocol", 429, "findmy_recovery_protocol"),
+])
+def test_recovery_rate_limit_requires_exact_preproof_transient_status(reason, status, expected):
+    assert recovery_error(RecoveryPETError(reason, http_status=status)) == expected

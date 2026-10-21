@@ -40,9 +40,40 @@ _TERMINAL_SIGNIN_ERRORS = frozenset(
         "findmy_initial_refused",
         "findmy_identity_failed",
         "findmy_recovery_signin_required",
+        "findmy_recovery_rate_limited",
         "findmy_recovery_material_failed",
     }
 )
+
+
+# These errors can follow successful code consumption before recovery opens.
+# Keep them terminal only at the code step; later recovery retries keep their
+# existing stage, proof accounting and recovered-material handling.
+_CONSUMED_CODE_RECOVERY_ERRORS = frozenset(
+    {
+        "findmy_account_mismatch",
+        "findmy_duplicate_item",
+        "findmy_identity_unavailable",
+        "findmy_missing_item_identity",
+        "findmy_recovery_failed",
+        "findmy_recovery_limit",
+        "findmy_recovery_material_failed",
+        "findmy_recovery_protocol",
+        "findmy_recovery_rate_limited",
+        "findmy_recovery_refused",
+        "findmy_recovery_signin_required",
+        "findmy_recovery_storage",
+        "findmy_recovery_transient",
+        "findmy_recovery_uncertain",
+    }
+)
+
+
+def _ends_signin(error, retry_step):
+    return type(error) is str and (
+        error in _TERMINAL_SIGNIN_ERRORS
+        or retry_step == "findmy_code" and error in _CONSUMED_CODE_RECOVERY_ERRORS
+    )
 
 
 async def _finish_saved_transaction(task):
@@ -400,7 +431,7 @@ class FindMyFlow:
                 progress_task=self.findmy_task,
             )
         if self.findmy_error:
-            if self.findmy_error in _TERMINAL_SIGNIN_ERRORS:
+            if _ends_signin(self.findmy_error, getattr(self, "findmy_retry", None)):
                 return self.async_show_progress_done(next_step_id="findmy_signin_ended")
             if self.findmy_error == "findmy_report_access_unavailable":
                 return self.async_show_progress_done(
@@ -433,7 +464,7 @@ class FindMyFlow:
         """End consumed or mismatched authentication without resubmitting a code."""
         reason = (
             self.findmy_error
-            if self.findmy_error in _TERMINAL_SIGNIN_ERRORS
+            if _ends_signin(self.findmy_error, getattr(self, "findmy_retry", None))
             else "findmy_signin_state"
         )
         await self.finish_findmy_setup()

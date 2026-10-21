@@ -122,6 +122,8 @@ def recovery_error(error):
             "findmy_missing_item_identity",
         } else "findmy_identity_unavailable"
     if isinstance(error, RecoveryPETError):
+        if error.reason == "transient" and type(error.http_status) is int and error.http_status == 429:
+            return "findmy_recovery_rate_limited"
         return {
             "identity_mismatch": "findmy_account_mismatch",
             "transient": "findmy_recovery_transient",
