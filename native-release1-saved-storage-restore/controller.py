@@ -562,12 +562,86 @@ def verify_stored_image_chain(container, image, daemon, blobs):
             'image_rootfs_matches_verified_config': True, 'repository_digest_checked': True}
 
 
+OFFLINE_API_CLIENT = 'set -eu\nset +x\n[ "$#" -eq 1 ] || exit 70\ncommand -v curl >/dev/null 2>&1 || exit 70\n[ -n "${SUPERVISOR_TOKEN:-}" ] || exit 70\ncase "$SUPERVISOR_TOKEN" in\n  *\'\n\'*|*\'\r\'*) exit 70 ;;\nesac\ncase "$1" in\n  info) method=GET; endpoint=http://supervisor/jobs/info ;;\n  apply) method=POST; endpoint=http://supervisor/jobs/options; body=\'{"ignore_conditions":["internet_host","internet_system"]}\' ;;\n  clear) method=POST; endpoint=http://supervisor/jobs/options; body=\'{"ignore_conditions":[]}\' ;;\n  *) exit 70 ;;\nesac\nif [ "$method" = GET ]; then\n  printf \'Authorization: Bearer %s\\nContent-Type: application/json\\n\' "$SUPERVISOR_TOKEN" |\n    curl -q --silent --show-error --fail --header @- --noproxy \'*\' --proto \'=http\' --proto-redir \'=http\' --max-redirs 0 --connect-timeout 3 --max-time 8 --request GET "$endpoint"\nelse\n  printf \'Authorization: Bearer %s\\nContent-Type: application/json\\n\' "$SUPERVISOR_TOKEN" |\n    curl -q --silent --show-error --fail --header @- --noproxy \'*\' --proto \'=http\' --proto-redir \'=http\' --max-redirs 0 --connect-timeout 3 --max-time 8 --request POST --data-binary "$body" "$endpoint"\nfi\n'
+JOB_OPTIONS_PERSISTENCE_PROGRAM = "import json,os,stat\nfrom pathlib import Path\npath=Path('/data/jobs.json')\nOWNER=0\ndef unique(pairs):\n    value={}\n    for key,item in pairs:\n        if key in value:raise ValueError\n        value[key]=item\n    return value\ndef identity(info):\n    return (info.st_dev,info.st_ino,info.st_size,info.st_mtime_ns,info.st_mode,info.st_uid,info.st_nlink)\nstate='refused'\nfd=None\ntry:\n    if os.geteuid()!=OWNER:raise ValueError\n    try:\n        fd=os.open(path,os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK)\n    except FileNotFoundError:\n        state='absent'\n    else:\n        info=os.fstat(fd)\n        if not (stat.S_ISREG(info.st_mode) and info.st_nlink==1 and info.st_uid==OWNER\n                and stat.S_IMODE(info.st_mode) in {0o600,0o644} and 0<info.st_size<=16384):raise ValueError\n        raw=os.read(fd,16385)\n        after=os.fstat(fd)\n        current=path.lstat()\n        if identity(info)!=identity(after) or identity(after)!=identity(current) or not stat.S_ISREG(current.st_mode):raise ValueError\n        if not 0<len(raw)<=16384:raise ValueError\n        value=json.loads(raw,object_pairs_hook=unique)\n        if type(value)is not dict or set(value)!={'ignore_conditions'} or type(value['ignore_conditions'])is not list:raise ValueError\n        conditions=value['ignore_conditions']\n        if any(type(item)is not str for item in conditions):raise ValueError\n        if conditions==[]:state='empty'\n        elif conditions==['internet_host','internet_system']:state='owned_two'\n        else:state='foreign'\nexcept (OSError,ValueError,TypeError,UnicodeError,RecursionError):\n    pass\nfinally:\n    if fd is not None:os.close(fd)\nprint(json.dumps({'schema':1,'state':state},sort_keys=True))\n"
+OFFLINE_INTERNET_CONDITIONS = ["internet_host", "internet_system"]
+OFFLINE_RECEIPT_BOOL_KEYS = frozenset({"global_persisted_override", "unsupported_conditions_override", "original_effective_empty",
+    "original_persisted_empty_or_absent", "relevant_visible_jobs_idle_before", "only_two_internet_conditions_ignored",
+    "all_other_job_conditions_retained", "active_persisted_exact", "original_options_restored", "final_persisted_empty",
+    "cached_same_core_image_verified_before", "cached_same_core_image_verified_after", "candidate113_archive_verified",
+    "network_closed_before", "network_closed_during", "network_closed_after", "final_effective_empty_observed", "foreign_options_refused", "cleanup_failed"})
+
+def new_offline_receipt():
+    result = {key: False for key in OFFLINE_RECEIPT_BOOL_KEYS}
+    result.update(schema=1, mode="experimental_global_offline_conditions", global_persisted_override=True,
+        unsupported_conditions_override=True, ordinary_default_restore_qualified=False, apply_requests=0, reset_requests=0,
+        apply_ack="not_attempted", reset_ack="not_attempted", maximum_cleanup_seconds=90)
+    return result
+
+def project_offline_receipt(value, complete=False):
+    expected = new_offline_receipt()
+    require(type(value) is dict and set(value) == set(expected) and type(value["schema"]) is int and value["schema"] == 1
+            and value["mode"] == "experimental_global_offline_conditions" and value["ordinary_default_restore_qualified"] is False
+            and all(type(value[key]) is bool for key in OFFLINE_RECEIPT_BOOL_KEYS)
+            and type(value["maximum_cleanup_seconds"]) is int and value["maximum_cleanup_seconds"] == 90,
+            "offline_conditions_receipt_refused")
+    for key in ("apply_requests", "reset_requests"):
+        require(type(value[key]) is int and value[key] in {0, 1}, "offline_conditions_receipt_refused")
+    for key in ("apply_ack", "reset_ack"):
+        require(type(value[key]) is str and value[key] in {"not_attempted", "confirmed", "unconfirmed"},
+                "offline_conditions_receipt_refused")
+    if complete:
+        require(all(value[key] is (key not in {"foreign_options_refused", "cleanup_failed"}) for key in OFFLINE_RECEIPT_BOOL_KEYS)
+                and value["apply_requests"] == value["reset_requests"] == 1
+                and value["apply_ack"] == value["reset_ack"] == "confirmed", "offline_conditions_complete_proof_required")
+    return dict(value)
+
+def offline_jobs_info(raw):
+    def unique(pairs):
+        result = {}
+        for key, item in pairs:
+            require(key not in result, "offline_options_duplicate_key_refused")
+            result[key] = item
+        return result
+    require(type(raw) is bytes and 0 < len(raw) <= 2 * 1024**2, "offline_options_response_refused")
+    value = json.loads(raw, object_pairs_hook=unique)
+    require(type(value) is dict and value.get("result") == "ok" and type(value.get("data")) is dict
+            and set(value["data"]) == {"ignore_conditions", "jobs"}, "offline_options_response_refused")
+    ignored = value["data"]["ignore_conditions"]
+    require(type(ignored) is list and len(ignored) <= 64 and all(type(item) is str for item in ignored),
+            "offline_options_response_refused")
+    state = "empty" if ignored == [] else "owned_two" if ignored == OFFLINE_INTERNET_CONDITIONS else "foreign"
+    jobs = public_jobs(value)
+    idle = not any(job["name"] in BACKUP_DIAGNOSTIC_JOBS and job["done"] is not True for job in jobs)
+    return state, idle
+
+def offline_api_ack(result, info=False):
+    if (type(result) is not dict or set(result) != {"exitcode", "signal", "stdout", "stderr", "truncated"}
+            or type(result.get("exitcode")) is not int or result["exitcode"] != 0
+            or not (result.get("signal") is None or type(result.get("signal")) is int and result["signal"] == 0)
+            or result.get("truncated") is not False or type(result.get("stderr")) is not bytes or result["stderr"] != b""
+            or type(result.get("stdout")) is not bytes or not 0 < len(result["stdout"]) <= (2 * 1024**2 if info else 65536)):
+        return False
+    def unique(pairs):
+        value = {}
+        for key, item in pairs:
+            if key in value: raise ValueError
+            value[key] = item
+        return value
+    try:
+        value = json.loads(result["stdout"], object_pairs_hook=unique)
+    except (UnicodeError, ValueError, TypeError, RecursionError):
+        return False
+    return (type(value) is dict and set(value) == {"result", "data"} and value["result"] == "ok"
+            and type(value["data"]) is dict and (info or value["data"] == {}))
+
+
 def source_failure_catalog():
     """Finite literal labels from only these reviewed, hash-bound QA sources."""
     paths = (ROOT / 'controller.py', ROOT / 'reset_fresh_config.py',
              ROOT / 'guest_helper/homecircle_safe_restore_qa/__init__.py',
              ROOT / 'guest_helper/homecircle_safe_restore_qa/dependency_probe.py', ROOT/'guard_transfer.py', ROOT/'storage_context.py', ROOT/'storage_transfer.py')
-    codes, stages = set(), set(PHASES)
+    codes, stages = set(), set(PHASES) | {"supervisor_partial_create", "supervisor_partial_restore"}
     for path in paths:
         tree = ast.parse(path.read_bytes())
         for node in ast.walk(tree):
@@ -824,6 +898,7 @@ class Controller:
             self.storage_proof = None
             self.joins_sha256 = None
             self.raw_phase_receipts = {}
+            self.offline_restore_conditions = None
 
     def core_container_state(self, timeout):
         # Docker's documented name filter is a substring match; the parser
@@ -1733,7 +1808,9 @@ print(json.dumps({"connected":connected}))
         self.preserve_latest_guard()
         self.assert_network_closed()
         self.require_restore_barrier_absent()
-        self.backup_operation(restore=True)
+        self.experimental_offline_restore()
+        require(self.offline_restore_conditions["original_options_restored"] is True
+                and self.offline_restore_conditions["final_persisted_empty"] is True, "offline_window_must_close_before_restore_observation")
         self.restored_boot_barrier()
         require(self.actual_core_image() == self.minimum_core_image, "automatic_restore_image_changed")
         self.fresh_restore_control()
@@ -1746,7 +1823,7 @@ print(json.dumps({"connected":connected}))
         accept_guard_contexts(self.guard_transfer_contexts)
         accept_storage_contexts(self.storage_contexts)
         require(set(self.storage_results) == set(STORAGE_ACTIONS), "all_storage_actions_required")
-        self.stage = "disabled_saved_storage_restore_complete"
+        self.stage = "experimental_offline_saved_storage_restore_complete"
         self.acceptance = True
 
     def cleanup_vm(self):
@@ -1799,6 +1876,10 @@ print(json.dumps({"connected":connected}))
             "backup": {k: v for k, v in (self.backup or {}).items() if k != "slug"}, "restore": self.restore,
             "guard_transfer_contexts": self.guard_transfer_contexts, "storage_contexts": self.storage_contexts,
             "storage_results": self.storage_results, "host_newest_guard_retained": self.host_guard_retained,
+            "offline_restore_conditions": self.offline_restore_conditions, "temporary_global_offline_conditions": True,
+            "ordinary_default_supervisor_restore_qualified": False,
+            "tested_experimental_offline_disabled_saved_storage_restore": passed,
+            "unsupported_conditions_override_used": bool(self.offline_restore_conditions and self.offline_restore_conditions["only_two_internet_conditions_ignored"]),
             "guard_repaired_before_storage_load": self.guard_repaired and self.repaired_disabled,
             "network_boundary": self.network_boundary, "network_transitions": self.network_transitions,
             "tested_disabled_entry_saved_storage_restore": passed, "synthetic_saved_accounts_seeded": bool(self.storage_results),
@@ -1816,6 +1897,127 @@ print(json.dumps({"connected":connected}))
             write_json(self.public / "host.json", value)
         print("saved_storage_outcome=" + value["outcome"], flush=True)
         return 0 if passed else 1
+
+    def offline_api(self, action, deadline):
+        require(action in {"info", "apply", "clear"} and type(action) is str, "offline_api_action_refused")
+        seconds = min(12, deadline - time.monotonic())
+        require(seconds > 1, "offline_api_deadline_exceeded")
+        # The literal script crosses stdin, so token expansion occurs only inside CLI.
+        result = self.guest("/usr/bin/docker exec -i hassio_cli /bin/sh -s -- " + action
+            + " < " + GUEST_ROOT + "/job-options-client.sh", seconds, capture=True)
+        require(time.monotonic() <= deadline, "offline_api_deadline_exceeded")
+        return result
+
+    def offline_effective_state(self, deadline):
+        result = self.offline_api("info", deadline)
+        require(offline_api_ack(result, info=True), "offline_options_GET_refused")
+        return offline_jobs_info(result["stdout"])
+
+    def offline_persisted_state(self, deadline):
+        seconds = min(10, deadline - time.monotonic())
+        require(seconds > 1, "offline_persistence_deadline_exceeded")
+        result = self.guest("/usr/bin/docker exec -i --user=0:0 hassio_supervisor python3 -B - < "
+            + GUEST_ROOT + "/job-options-persist.py", seconds, capture=True)
+        require(type(result) is dict and type(result.get("exitcode")) is int and result["exitcode"] == 0
+                and (result.get("signal") is None or type(result.get("signal")) is int and result["signal"] == 0) and result.get("truncated") is False and result.get("stderr") == b""
+                and type(result.get("stdout")) is bytes and 0 < len(result["stdout"]) <= 128,
+                "offline_persisted_options_refused")
+        require(time.monotonic() <= deadline, "offline_persistence_deadline_exceeded")
+        value = json.loads(result["stdout"])
+        require(type(value) is dict and set(value) == {"schema", "state"} and type(value["schema"]) is int
+                and value["schema"] == 1 and type(value["state"]) is str
+                and value["state"] in {"absent", "empty", "owned_two", "foreign", "refused"},
+                "offline_persisted_options_refused")
+        return value["state"]
+
+    def experimental_offline_restore(self):
+        self.stage = "offline_conditions_preflight"
+        record = new_offline_receipt()
+        self.offline_restore_conditions = record
+        original_deadline = self.deadline
+        require(original_deadline - time.monotonic() > 150, "offline_cleanup_reserve_required")
+        attempted = False
+        # Keep ninety seconds outside every normal-operation/restore deadline.
+        self.deadline = original_deadline - 90
+        try:
+            self.assert_network_closed(); record["network_closed_before"] = True
+            require(self.core_container_state(min(10, self.remaining(10))) == "stopped", "offline_restore_core_must_be_stopped")
+            require(self.backup is not None and self.backup.get("homeassistant_version") == CORE
+                    and type(self.backup.get("archive")) is dict
+                    and all(self.backup["archive"].get(key) is True for key in ("candidate_match", "disabled_entry", "database_included",
+                        "saved_pair_included", "saved_config_included", "saved_selection_included", "saved_registry_joins_included"))
+                    and self.provenance.get("candidate_files") == 113 and self.provenance.get("candidate_zip_sha256") == CANDIDATE_SHA,
+                    "offline_same_core_local_archive_required")
+            self.verify_candidate(); record["candidate113_archive_verified"] = True
+            require(self.actual_core_image() == self.minimum_core_image, "offline_cached_image_before_refused")
+            record["cached_same_core_image_verified_before"] = True
+            for name, raw in (("job-options-client.sh", OFFLINE_API_CLIENT.encode()), ("job-options-persist.py", JOB_OPTIONS_PERSISTENCE_PROGRAM.encode())):
+                self.guest_write(GUEST_ROOT + "/" + name, raw)
+                require(self.guest_read(GUEST_ROOT + "/" + name) == raw, "offline_options_source_refused")
+            state, idle = self.offline_effective_state(self.deadline)
+            persisted = self.offline_persisted_state(self.deadline)
+            if state == "foreign" or persisted == "foreign":
+                record["foreign_options_refused"] = True
+            require(state == "empty" and persisted in {"absent", "empty"}, "offline_original_options_must_be_empty")
+            require(idle, "offline_relevant_visible_jobs_must_be_idle")
+            record.update(original_effective_empty=True, original_persisted_empty_or_absent=True, relevant_visible_jobs_idle_before=True)
+            self.stage = "offline_conditions_apply"
+            record["apply_requests"] = 1
+            attempted = True
+            try:
+                ack = offline_api_ack(self.offline_api("apply", self.deadline))
+            except Exception:
+                ack = False
+            record["apply_ack"] = "confirmed" if ack else "unconfirmed"
+            state, idle = self.offline_effective_state(self.deadline)
+            persisted = self.offline_persisted_state(self.deadline)
+            if state == "foreign" or persisted == "foreign":
+                record["foreign_options_refused"] = True
+            require(state == persisted == "owned_two" and idle, "offline_exact_two_conditions_required")
+            record.update(only_two_internet_conditions_ignored=True, all_other_job_conditions_retained=True, active_persisted_exact=True)
+            require(ack, "offline_apply_acknowledgement_required")
+            self.assert_network_closed(); record["network_closed_during"] = True
+            self.backup_operation(restore=True)
+        finally:
+            previous_stage = self.stage
+            self.deadline = original_deadline
+            if attempted:
+                self.stage = "offline_conditions_cleanup"
+                cleanup_deadline = min(original_deadline, time.monotonic() + 90)
+                self.deadline = cleanup_deadline
+                try:
+                    self.assert_network_closed()
+                    state, _idle = self.offline_effective_state(cleanup_deadline)
+                    persisted = self.offline_persisted_state(cleanup_deadline)
+                    if state == "foreign" or persisted == "foreign":
+                        record["foreign_options_refused"] = True
+                    require(state in {"empty", "owned_two"} and persisted in {"absent", "empty", "owned_two"},
+                            "offline_foreign_options_must_not_be_overwritten")
+                    record["reset_requests"] = 1
+                    try:
+                        ack = offline_api_ack(self.offline_api("clear", cleanup_deadline))
+                    except Exception:
+                        ack = False
+                    record["reset_ack"] = "confirmed" if ack else "unconfirmed"
+                    state, _idle = self.offline_effective_state(cleanup_deadline)
+                    persisted = self.offline_persisted_state(cleanup_deadline)
+                    require(state == "empty" and persisted == "empty", "offline_original_options_not_restored")
+                    record.update(final_effective_empty_observed=True, final_persisted_empty=True)
+                    require(ack, "offline_clear_acknowledgement_required")
+                    self.assert_network_closed()
+                    require(time.monotonic() <= cleanup_deadline, "offline_cleanup_deadline_exceeded")
+                    record.update(original_options_restored=True, network_closed_after=True)
+                except BaseException:
+                    record["cleanup_failed"] = True
+                    raise Refused("offline_options_cleanup_failed") from None
+                finally:
+                    self.deadline = original_deadline
+                self.stage = previous_stage
+        require(record["original_options_restored"] and record["final_persisted_empty"], "offline_options_window_still_open")
+        require(self.actual_core_image() == self.minimum_core_image, "offline_cached_image_after_refused")
+        record["cached_same_core_image_verified_after"] = True
+        self.verify_candidate()
+        project_offline_receipt(record, complete=True)
 
     def run_storage_context(self, action):
         require(action in STORAGE_ACTIONS and [item["action"] for item in self.storage_contexts]

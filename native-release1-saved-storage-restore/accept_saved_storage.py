@@ -4,11 +4,11 @@ from pathlib import Path
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from storage_context import digest_value
-from controller import PHASES, SOURCE_COMMIT, CANDIDATE_SHA, STORAGE_ACTIONS, project_storage_result, project_recorder
+from controller import PHASES, SOURCE_COMMIT, CANDIDATE_SHA, STORAGE_ACTIONS, project_storage_result, project_recorder, project_offline_receipt
 from guard_context import accept_contexts as accept_guard_contexts
 from storage_context import accept_contexts as accept_storage_contexts
 
-HOST_KEYS = frozenset({'qemu_stopped', 'host_newest_guard_retained', 'network_transitions', 'actual_kvm_confirmed', 'direct_candidate_installs', 'host_elapsed_seconds', 'private_workspace_removed', 'provider_authentication_after_restore_tested', 'automatic_guard_antirollback', 'real_provider_accounts_configured', 'restore', 'full_system_restore_tested', 'full_encrypted_cloud_backup_tested', 'backup', 'storage_results', 'recovery_proof_attempt_counts_measured', 'actual_core', 'core_actions', 'failure_code', 'phases', 'provider_request_attempt_counts_measured', 'provider_session_renewal_tested', 'failure_type', 'schema', 'candidate_hacs_download_tested', 'actual_supervisor', 'provenance', 'storage_contexts', 'fresh_owned_config', 'tested_disabled_entry_saved_storage_restore', 'guard_transfer_contexts', 'owner_credentials_used', 'failure_or_final_stage', 'candidate_release_zip_transport_tested', 'current_core_image', 'backup_requests', 'normal_managed_dependencies', 'provider_activation_after_restore_tested', 'stable_release_approval', 'synthetic_saved_accounts_seeded', 'outcome', 'network_boundary', 'cleanup_failed', 'production_configuration_used', 'ordinary_enabled_restore_safety_accepted', 'candidate_transport', 'initial_managed_environment', 'prepared_dependency_preload_used', 'guard_repaired_before_storage_load'})
+HOST_KEYS = frozenset({"offline_restore_conditions", "temporary_global_offline_conditions", "ordinary_default_supervisor_restore_qualified", "tested_experimental_offline_disabled_saved_storage_restore", "unsupported_conditions_override_used", 'qemu_stopped', 'host_newest_guard_retained', 'network_transitions', 'actual_kvm_confirmed', 'direct_candidate_installs', 'host_elapsed_seconds', 'private_workspace_removed', 'provider_authentication_after_restore_tested', 'automatic_guard_antirollback', 'real_provider_accounts_configured', 'restore', 'full_system_restore_tested', 'full_encrypted_cloud_backup_tested', 'backup', 'storage_results', 'recovery_proof_attempt_counts_measured', 'actual_core', 'core_actions', 'failure_code', 'phases', 'provider_request_attempt_counts_measured', 'provider_session_renewal_tested', 'failure_type', 'schema', 'candidate_hacs_download_tested', 'actual_supervisor', 'provenance', 'storage_contexts', 'fresh_owned_config', 'tested_disabled_entry_saved_storage_restore', 'guard_transfer_contexts', 'owner_credentials_used', 'failure_or_final_stage', 'candidate_release_zip_transport_tested', 'current_core_image', 'backup_requests', 'normal_managed_dependencies', 'provider_activation_after_restore_tested', 'stable_release_approval', 'synthetic_saved_accounts_seeded', 'outcome', 'network_boundary', 'cleanup_failed', 'production_configuration_used', 'ordinary_enabled_restore_safety_accepted', 'candidate_transport', 'initial_managed_environment', 'prepared_dependency_preload_used', 'guard_repaired_before_storage_load'})
 PHASE_KEYS = frozenset({'guard_repaired_before_storage_load', 'generation', 'entry_loaded', 'process', 'candidate_imported', 'package_files_count', 'nonempty_place', 'nonempty_options', 'phase', 'explicit_registry_joins_checked', 'package_payload_sha256', 'recovery_proof_attempt_counts_measured', 'recorder', 'provider_request_attempt_counts_measured', 'guard_counter', 'storage_raw_matches_expected', 'schema', 'selected_registry_joins', 'entry_disabled', 'outcome', 'ha_config_entry_saved'})
 AUTOMATIC_KEYS = frozenset({'recovery_proof_attempt_counts_measured', 'guard_repaired_before_storage_load', 'generation', 'entry_loaded', 'guard_counter', 'schema', 'provider_request_attempt_counts_measured', 'phase', 'process', 'entry_disabled', 'selected_registry_joins', 'candidate_imported', 'outcome', 'ha_config_entry_saved', 'storage_raw_matches_expected', 'explicit_registry_joins_checked'})
 
@@ -16,7 +16,7 @@ FALSE_GATES = ("cleanup_failed", "real_provider_accounts_configured", "owner_cre
     "normal_managed_dependencies", "prepared_dependency_preload_used", "ordinary_enabled_restore_safety_accepted",
     "automatic_guard_antirollback", "provider_activation_after_restore_tested", "provider_authentication_after_restore_tested",
     "provider_session_renewal_tested", "provider_request_attempt_counts_measured", "recovery_proof_attempt_counts_measured",
-    "full_system_restore_tested", "full_encrypted_cloud_backup_tested", "stable_release_approval",
+    "full_system_restore_tested", "full_encrypted_cloud_backup_tested", "stable_release_approval", "ordinary_default_supervisor_restore_qualified",
     "candidate_hacs_download_tested", "candidate_release_zip_transport_tested")
 
 def require(ok, code):
@@ -26,12 +26,14 @@ def require(ok, code):
 def accept(host, phases):
     require(type(host) is dict and set(host) == HOST_KEYS and host.get("schema") == 1 and type(host["schema"]) is int
             and host.get("outcome") == "passed" and host.get("phases") == 5 and type(host["phases"]) is int
-            and host.get("failure_or_final_stage") == "disabled_saved_storage_restore_complete"
+            and host.get("failure_or_final_stage") == "experimental_offline_saved_storage_restore_complete"
             and host.get("failure_code") is None and host.get("failure_type") is None, "incomplete_saved_storage")
     require(type(phases) is dict and set(phases) == set(PHASES), "exact_five_phases_required")
+    project_offline_receipt(host.get("offline_restore_conditions"), complete=True)
     require(digest_value(CANDIDATE_SHA), "qualified_candidate_binding_required")
     for key in ("actual_kvm_confirmed", "host_newest_guard_retained", "guard_repaired_before_storage_load",
-                "tested_disabled_entry_saved_storage_restore", "synthetic_saved_accounts_seeded", "qemu_stopped", "private_workspace_removed"):
+                "tested_disabled_entry_saved_storage_restore", "synthetic_saved_accounts_seeded", "qemu_stopped", "private_workspace_removed",
+                "temporary_global_offline_conditions", "tested_experimental_offline_disabled_saved_storage_restore", "unsupported_conditions_override_used"):
         require(host.get(key) is True, "missing_required_host_gate")
     for key in FALSE_GATES:
         require(host.get(key) is False, "scope_or_cleanup_not_qualified")
@@ -126,6 +128,8 @@ def accept(host, phases):
                         and record["postrestore_sha256"]==restored_record["postrestore_sha256"], "new_history_restart_changed")
             restored_record=record
     return {"schema":1,"outcome":"passed","tested_disabled_entry_saved_storage_restore":True,
+            "tested_experimental_offline_disabled_saved_storage_restore":True, "temporary_global_offline_conditions":True,
+            "unsupported_conditions_override_used":True, "ordinary_default_supervisor_restore_qualified":False,
             "ordinary_enabled_restore_safety_accepted":False,"automatic_guard_antirollback":False,
             "provider_authentication_after_restore_tested":False,"full_encrypted_cloud_backup_tested":False,"stable_release_approval":False}
 

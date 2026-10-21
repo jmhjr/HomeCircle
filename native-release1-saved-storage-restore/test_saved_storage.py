@@ -6,12 +6,12 @@ import io
 import os
 import re
 import stat
+import sys
 import subprocess
 import tarfile
 import copy
 import base64
 import hashlib
-import importlib.util
 import json
 from pathlib import Path
 import tempfile
@@ -42,7 +42,9 @@ def record(post=False,mutation=False):
 def packet():
     host=dict.fromkeys(a.HOST_KEYS,None)
     host.update({key:False for key in a.FALSE_GATES})
-    host.update(schema=1,outcome="passed",phases=5,failure_or_final_stage="disabled_saved_storage_restore_complete",
+    host.update(schema=1,outcome="passed",phases=5,failure_or_final_stage="experimental_offline_saved_storage_restore_complete",
+        temporary_global_offline_conditions=True,ordinary_default_supervisor_restore_qualified=False,
+        tested_experimental_offline_disabled_saved_storage_restore=True,unsupported_conditions_override_used=True,
         actual_kvm_confirmed=True,host_newest_guard_retained=True,guard_repaired_before_storage_load=True,
         tested_disabled_entry_saved_storage_restore=True,synthetic_saved_accounts_seeded=True,qemu_stopped=True,
         private_workspace_removed=True,actual_core="2026.10.2",actual_supervisor="2026.10.3",
@@ -64,6 +66,8 @@ def packet():
             "restored_old_guard_sha256":"d"*64,"promoted_newest_guard_sha256":"e"*64},
         guard_transfer_contexts=[g.public_success(x) for x in ["export","import"]],
         storage_contexts=[s.public_success(x) for x in c.STORAGE_ACTIONS],storage_results={x:result(x) for x in c.STORAGE_ACTIONS})
+    offline=c.new_offline_receipt();offline.update({key:key not in {"foreign_options_refused","cleanup_failed"} for key in c.OFFLINE_RECEIPT_BOOL_KEYS})
+    offline.update(apply_requests=1,reset_requests=1,apply_ack="confirmed",reset_ack="confirmed");host["offline_restore_conditions"]=offline
     phases={}
     for index,name in enumerate(c.PHASES):
         phase=dict.fromkeys(a.AUTOMATIC_KEYS if name=="automatic_restored_disabled" else a.PHASE_KEYS,None)
@@ -150,6 +154,69 @@ def selection_fixture(root):
     value={"schema":1,"entry_id":entry_id,"joins":joins};control=root/c.CONTROL;control.mkdir(mode=0o700)
     path=control/"storage-selection-private.json";path.write_bytes(c.canonical(value));path.chmod(0o600)
     return SimpleNamespace(entry_id=entry_id,data=copy.deepcopy(config),options=copy.deepcopy(config)),value,path
+
+def offline_host(fault=None):
+    clock=[100.0];events=[]
+    host=c.Controller.__new__(c.Controller);host.deadline=2000.0;host.offline_restore_conditions=None
+    host.minimum_core_image={"pinned":True};host.provenance={"candidate_files":113,"candidate_zip_sha256":c.CANDIDATE_SHA}
+    host.backup={"homeassistant_version":c.CORE,"archive":dict.fromkeys(("candidate_match","disabled_entry","database_included","saved_pair_included","saved_config_included","saved_selection_included","saved_registry_joins_included"),True)}
+    state={"effective":"foreign" if fault=="foreign_initial" else "empty","persisted":"foreign" if fault=="foreign_initial" else "absent"}
+    staged={};writes=[];network_checks=[];gets=[0]
+    def network():
+        events.append("NIC_closed");network_checks.append(host.deadline)
+        if fault=="NIC_before" and len(network_checks)==1:raise c.Refused("network_boundary_refused")
+        if fault=="delayed_final_probe" and len(network_checks)==4:clock[0]+=91
+    host.assert_network_closed=network
+    host.core_container_state=lambda _:(events.append("Core_stopped") or "stopped")
+    host.verify_candidate=lambda:events.append("candidate113")
+    host.actual_core_image=lambda:(events.append("same_image") or host.minimum_core_image)
+    host.guest_write=lambda name,raw:staged.__setitem__(name,raw)
+    host.guest_read=lambda name:staged[name]
+    def capture(data,ok=True):return {"exitcode":0 if ok else 1,"signal":None,"stdout":c.canonical(data),"stderr":b"","truncated":False}
+    def api(action,deadline):
+        events.append(action)
+        if action=="info":
+            gets[0]+=1
+            if fault=="GET_preflight" and gets[0]==1:return capture({"result":"error","data":{}},False)
+            values=[] if state["effective"]=="empty" else c.OFFLINE_INTERNET_CONDITIONS if state["effective"]=="owned_two" else ["PRIVATE_FOREIGN_CANARY"]
+            jobs=[{"name":"backup_manager_partial_backup","done":False,"child_jobs":[]}] if fault=="busy_initial" and gets[0]==1 else []
+            return capture({"result":"ok","data":{"ignore_conditions":values,"jobs":jobs}})
+        writes.append(action)
+        if action=="apply":
+            state.update(effective="owned_two",persisted="empty" if fault=="apply_save_failed" else "owned_two")
+            if fault=="apply_lost_ACK":raise OSError("PRIVATE_ACK_CANARY")
+            if fault=="apply_error":return capture({"result":"error","data":{}},False)
+        else:
+            state.update(effective="empty",persisted="owned_two" if fault=="clear_save_failed" else "empty")
+            if fault=="clear_lost_ACK":raise OSError("PRIVATE_ACK_CANARY")
+            if fault=="clear_error":return capture({"result":"error","data":{}},False)
+        return capture({"result":"ok","data":{}})
+    host.offline_api=api
+    persisted_reads=[0]
+    def persisted(deadline):
+        events.append("persisted");persisted_reads[0]+=1
+        if fault=="delayed_final_read" and persisted_reads[0]==4:clock[0]+=91
+        return state["persisted"]
+    host.offline_persisted_state=persisted
+    def backup(restore=False):
+        if restore is not True:raise AssertionError("restore only")
+        events.append("restore_job_complete")
+        if fault=="restore_error":raise c.Refused("backup_operation_api_refused")
+        if fault=="restore_deadline":
+            clock[0]=host.deadline+1
+            raise c.Refused("host_deadline_exceeded")
+        if fault=="foreign_cleanup":state.update(effective="foreign",persisted="foreign")
+    host.backup_operation=backup
+    return host,clock,events,writes,state,network_checks
+
+def execute_persistence(path):
+    # Only the fixed path and expected UID are localized for owned Mac temp I/O.
+    program=c.JOB_OPTIONS_PERSISTENCE_PROGRAM
+    assert program.count("path=Path('/data/jobs.json')")==program.count("OWNER=0")==1
+    program=program.replace("path=Path('/data/jobs.json')","path=Path("+repr(str(path))+")").replace("OWNER=0","OWNER="+str(os.geteuid()))
+    output=io.StringIO()
+    with redirect_stdout(output):exec(compile(program,"<actual-fixed-persisted-options-consumer>","exec"),{})
+    return json.loads(output.getvalue())
 
 class Contracts(unittest.TestCase):
     def accept(self,host,phases):
@@ -446,7 +513,7 @@ class Contracts(unittest.TestCase):
             run=next(n for n in cls.body if isinstance(n,ast.FunctionDef) and n.name=="run")
             direct=[n.value for n in run.body if isinstance(n,ast.Expr) and isinstance(n.value,ast.Call)]
             names=[node.func.attr for node in direct if isinstance(node.func,ast.Attribute)]
-            self.assertEqual(names[names.index("require_restore_barrier_absent"):names.index("restored_boot_barrier")+1],["require_restore_barrier_absent","backup_operation","restored_boot_barrier"])
+            self.assertEqual(names[names.index("require_restore_barrier_absent"):names.index("restored_boot_barrier")+1],["require_restore_barrier_absent","experimental_offline_restore","restored_boot_barrier"])
 
     def test_failure_stage_catalog_exactly_matches_source_producer(self):
         source=ast.parse((ROOT/"storage_transfer.py").read_bytes())
@@ -516,5 +583,160 @@ class Contracts(unittest.TestCase):
                 with self.assertRaises(OSError):namespace["read_managed_json"](root,name)
                 path.unlink()
             with self.assertRaises(namespace["Refused"]):namespace["read_managed_json"](root,"session.key")
+
+    def test_actual_experimental_wrapper_single_apply_restore_clear_and_all_scope_gates(self):
+        host,clock,events,writes,state,checks=offline_host()
+        with patch.object(c.time,"monotonic",lambda:clock[0]):host.experimental_offline_restore()
+        self.assertEqual(writes,["apply","clear"]);self.assertEqual(events.count("restore_job_complete"),1)
+        self.assertEqual(state,{"effective":"empty","persisted":"empty"});self.assertEqual(host.deadline,2000)
+        self.assertEqual(checks,[1910,1910,190,190])
+        self.assertEqual(c.project_offline_receipt(host.offline_restore_conditions,True),host.offline_restore_conditions)
+        self.assertLess(events.index("apply"),events.index("restore_job_complete"));self.assertLess(events.index("restore_job_complete"),events.index("clear"))
+        self.assertIs(host.offline_restore_conditions["ordinary_default_restore_qualified"],False)
+
+    def test_foreign_prior_options_busy_jobs_and_missing_GET_capability_abort_before_writes(self):
+        for fault in ("foreign_initial","busy_initial","GET_preflight","NIC_before"):
+            host,clock,events,writes,state,checks=offline_host(fault)
+            with self.subTest(fault=fault),patch.object(c.time,"monotonic",lambda:clock[0]),self.assertRaises(c.Refused):host.experimental_offline_restore()
+            self.assertEqual(writes,[]);self.assertNotIn("restore_job_complete",events);self.assertEqual(host.deadline,2000)
+
+    def test_apply_lost_ACK_or_error_cleans_once_and_never_invokes_restore(self):
+        for fault in ("apply_lost_ACK","apply_error","apply_save_failed"):
+            host,clock,events,writes,state,_=offline_host(fault)
+            with self.subTest(fault=fault),patch.object(c.time,"monotonic",lambda:clock[0]),self.assertRaises(c.Refused):host.experimental_offline_restore()
+            self.assertEqual(writes,["apply","clear"]);self.assertNotIn("restore_job_complete",events)
+            self.assertEqual(state,{"effective":"empty","persisted":"empty"})
+            self.assertIs(host.offline_restore_conditions["original_options_restored"],True)
+            with self.assertRaises(c.Refused):c.project_offline_receipt(host.offline_restore_conditions,True)
+            self.assertNotIn("PRIVATE_ACK_CANARY",json.dumps(host.offline_restore_conditions))
+
+    def test_restore_failure_still_restores_original_options_without_retry(self):
+        host,clock,events,writes,state,_=offline_host("restore_error")
+        with patch.object(c.time,"monotonic",lambda:clock[0]),self.assertRaisesRegex(c.Refused,"backup_operation_api_refused"):host.experimental_offline_restore()
+        self.assertEqual(writes,["apply","clear"]);self.assertEqual(events.count("restore_job_complete"),1)
+        self.assertEqual(state,{"effective":"empty","persisted":"empty"})
+        self.assertIs(host.offline_restore_conditions["original_options_restored"],True)
+
+    def test_clear_lost_ACK_error_or_save_failure_never_qualifies_completion(self):
+        for fault in ("clear_lost_ACK","clear_error","clear_save_failed"):
+            host,clock,events,writes,state,_=offline_host(fault)
+            with self.subTest(fault=fault),patch.object(c.time,"monotonic",lambda:clock[0]),self.assertRaisesRegex(c.Refused,"offline_options_cleanup_failed"):host.experimental_offline_restore()
+            self.assertEqual(writes,["apply","clear"]);self.assertIs(host.offline_restore_conditions["original_options_restored"],False)
+            self.assertIs(host.offline_restore_conditions["cleanup_failed"],True)
+            with self.assertRaises(c.Refused):c.project_offline_receipt(host.offline_restore_conditions,True)
+
+    def test_foreign_options_appearing_during_restore_are_not_overwritten(self):
+        host,clock,events,writes,state,_=offline_host("foreign_cleanup")
+        with patch.object(c.time,"monotonic",lambda:clock[0]),self.assertRaisesRegex(c.Refused,"offline_options_cleanup_failed"):host.experimental_offline_restore()
+        self.assertEqual(writes,["apply"]);self.assertEqual(state,{"effective":"foreign","persisted":"foreign"})
+        self.assertIs(host.offline_restore_conditions["foreign_options_refused"],True)
+
+    def test_finally_regains_reserved_deadline_after_restore_budget_exhaustion(self):
+        host,clock,events,writes,state,checks=offline_host("restore_deadline")
+        with patch.object(c.time,"monotonic",lambda:clock[0]),self.assertRaisesRegex(c.Refused,"host_deadline_exceeded"):host.experimental_offline_restore()
+        self.assertEqual(writes,["apply","clear"]);self.assertIs(host.offline_restore_conditions["original_options_restored"],True)
+        self.assertEqual(host.deadline,2000);self.assertTrue(all(value==2000 for value in checks[2:]))
+
+    def test_delayed_final_persistence_or_network_probe_refuses_ninety_second_claim(self):
+        for fault in ("delayed_final_read","delayed_final_probe"):
+            host,clock,events,writes,state,checks=offline_host(fault)
+            with self.subTest(fault=fault),patch.object(c.time,"monotonic",lambda:clock[0]),self.assertRaisesRegex(c.Refused,"offline_options_cleanup_failed"):host.experimental_offline_restore()
+            self.assertIs(host.offline_restore_conditions["original_options_restored"],False)
+            self.assertEqual(writes,["apply","clear"]);self.assertEqual(host.deadline,2000)
+
+    def test_experimental_success_acceptor_requires_all_new_scope_and_restoration_fields(self):
+        host,phases=packet();value=self.accept(host,phases)
+        self.assertIs(value["tested_experimental_offline_disabled_saved_storage_restore"],True)
+        self.assertIs(value["ordinary_default_supervisor_restore_qualified"],False)
+        for key in c.OFFLINE_RECEIPT_BOOL_KEYS:
+            altered=copy.deepcopy(host);altered["offline_restore_conditions"][key]=not altered["offline_restore_conditions"][key]
+            with self.subTest(key=key),self.assertRaises(Exception):self.accept(altered,phases)
+        for key in ("apply_ack","reset_ack"):
+            altered=copy.deepcopy(host);altered["offline_restore_conditions"][key]="unconfirmed"
+            with self.assertRaises(Exception):self.accept(altered,phases)
+        for key,value in [("temporary_global_offline_conditions",False),("ordinary_default_supervisor_restore_qualified",True),
+            ("tested_experimental_offline_disabled_saved_storage_restore",False),("unsupported_conditions_override_used",False)]:
+            altered=copy.deepcopy(host);altered[key]=value
+            with self.assertRaises(Exception):self.accept(altered,phases)
+
+    def test_jobs_projection_accepts_only_exact_internet_pair_and_checks_visible_relevant_jobs(self):
+        for ignored,expected in [([],"empty"),(c.OFFLINE_INTERNET_CONDITIONS,"owned_two"),(["healthy"],"foreign"),(["internet_host"],"foreign")]:
+            state,idle=c.offline_jobs_info(c.canonical({"result":"ok","data":{"ignore_conditions":ignored,"jobs":[]}}))
+            self.assertEqual((state,idle),(expected,True))
+        raw=c.canonical({"result":"ok","data":{"ignore_conditions":[],"jobs":[{"name":"outer","done":True,"child_jobs":[{"name":"home_assistant_core_start","done":False}]}]}})
+        self.assertEqual(c.offline_jobs_info(raw),("empty",False))
+        for raw in [b'{"result":"ok","data":{"ignore_conditions":[],"ignore_conditions":[],"jobs":[]}}',
+            c.canonical({"result":"ok","data":{"ignore_conditions":False,"jobs":[]}}),b"PRIVATE_RESPONSE_CANARY"]:
+            with self.assertRaises(Exception):c.offline_jobs_info(raw)
+
+    def test_actual_internal_curl_script_has_token_only_on_header_stdin_and_fixed_public_requests(self):
+        token="PRIVATE_SYNTHETIC_TOKEN_CANARY"
+        stub="""#!"""+sys.executable+"""
+import sys,json,os
+args=sys.argv[1:];header=sys.stdin.read();method=args[args.index('--request')+1]
+print(json.dumps({'first':args[0],'method':method,'endpoint':args[-1],'body':args[args.index('--data-binary')+1] if '--data-binary' in args else None,
+'header_auth':header.startswith('Authorization: Bearer '+os.environ['SUPERVISOR_TOKEN']+'\\n'),'header_count':len(header.splitlines()),
+'secret_in_argv':any(os.environ['SUPERVISOR_TOKEN'] in value for value in args),'args':args}))
+"""
+        with tempfile.TemporaryDirectory(prefix="hc-curl-bridge-") as raw:
+            folder=Path(raw);curl=folder/"curl";curl.write_text(stub);curl.chmod(0o700)
+            env={"PATH":str(folder)+":"+os.defpath,"SUPERVISOR_TOKEN":token,"LANG":"C"}
+            for action,method,endpoint,body in [("info","GET","http://supervisor/jobs/info",None),("apply","POST","http://supervisor/jobs/options",{"ignore_conditions":c.OFFLINE_INTERNET_CONDITIONS}),("clear","POST","http://supervisor/jobs/options",{"ignore_conditions":[]})]:
+                result=subprocess.run(["/bin/sh","-s","--",action],input=c.OFFLINE_API_CLIENT.encode(),stdout=subprocess.PIPE,stderr=subprocess.PIPE,env=env,timeout=5,check=False)
+                self.assertEqual(result.returncode,0,result.stderr);value=json.loads(result.stdout)
+                self.assertEqual((value["first"],value["method"],value["endpoint"]),("-q",method,endpoint))
+                self.assertEqual(json.loads(value["body"]) if value["body"] else None,body)
+                self.assertIs(value["header_auth"],True);self.assertEqual(value["header_count"],2);self.assertIs(value["secret_in_argv"],False)
+                self.assertNotIn("-L",value["args"]);self.assertEqual(value["args"][value["args"].index("--noproxy")+1],"*")
+                self.assertEqual(value["args"][value["args"].index("--max-redirs")+1],"0")
+                self.assertNotIn(token,result.stdout.decode())
+            for action,secret in [("invalid",token),("info",""),("apply",token+"\nBAD")]:
+                result=subprocess.run(["/bin/sh","-s","--",action],input=c.OFFLINE_API_CLIENT.encode(),stdout=subprocess.PIPE,stderr=subprocess.PIPE,env={**env,"SUPERVISOR_TOKEN":secret},timeout=5,check=False)
+                self.assertNotEqual(result.returncode,0);self.assertEqual(result.stdout,b"");self.assertEqual(result.stderr,b"")
+
+    def test_actual_persistence_reader_classifies_only_fixed_options_and_rejects_unsafe_inputs(self):
+        with tempfile.TemporaryDirectory(prefix="hc-job-options-") as raw:
+            path=Path(raw)/"jobs.json"
+            self.assertEqual(execute_persistence(path),{"schema":1,"state":"absent"})
+            for value,state in [({"ignore_conditions":[]},"empty"),({"ignore_conditions":c.OFFLINE_INTERNET_CONDITIONS},"owned_two"),
+                ({"ignore_conditions":["PRIVATE_FOREIGN_CANARY"]},"foreign"),({"ignore_conditions":False},"refused"),({"extra":"PRIVATE_CANARY"},"refused")]:
+                path.write_bytes(c.canonical(value));path.chmod(0o644);result=execute_persistence(path)
+                self.assertEqual(result,{"schema":1,"state":state});self.assertNotIn("PRIVATE",json.dumps(result))
+            path.write_bytes(b'{"ignore_conditions":[],"ignore_conditions":[]}');path.chmod(0o600)
+            self.assertEqual(execute_persistence(path)["state"],"refused")
+            path.unlink();path.symlink_to(Path(raw)/"absent")
+            self.assertEqual(execute_persistence(path)["state"],"refused")
+            path.unlink();path.write_bytes(c.canonical({"ignore_conditions":[]}));path.chmod(0o666)
+            self.assertEqual(execute_persistence(path)["state"],"refused")
+
+    def test_persistence_reader_rejects_detached_old_inode_during_atomic_replacement(self):
+        with tempfile.TemporaryDirectory(prefix="hc-detached-job-options-") as raw:
+            path=Path(raw)/"jobs.json";path.write_bytes(c.canonical({"ignore_conditions":[]}));path.chmod(0o644)
+            original=os.read
+            def replaced(descriptor,count):
+                value=original(descriptor,count)
+                fresh=path.with_suffix(".new");fresh.write_bytes(c.canonical({"ignore_conditions":[]}));fresh.chmod(0o644);os.replace(fresh,path)
+                return value
+            with patch.object(os,"read",replaced):self.assertEqual(execute_persistence(path),{"schema":1,"state":"refused"})
+
+    def test_offline_ACK_parser_rejects_unknown_types_shapes_and_expired_transport(self):
+        good={"exitcode":0,"signal":None,"stdout":c.canonical({"result":"ok","data":{}}),"stderr":b"","truncated":False}
+        self.assertIs(c.offline_api_ack(good),True)
+        for key,value in [("exitcode",False),("signal",False),("stderr",b"PRIVATE_CANARY"),("truncated",0),
+            ("stdout",b'{"result":"ok","result":"ok","data":{}}'),("stdout",c.canonical({"result":"ok","data":{},"extra":"PRIVATE"})),
+            ("stdout",c.canonical({"result":"ok","data":{"ignore_conditions":[]}}))]:
+            with self.subTest(key=key,value=value):self.assertIs(c.offline_api_ack(dict(good,**{key:value})),False)
+        host=c.Controller.__new__(c.Controller)
+        host.guest=lambda *_args,**_kwargs:good
+        with patch.object(c.time,"monotonic",side_effect=[100,113]),self.assertRaisesRegex(c.Refused,"offline_api_deadline_exceeded"):
+            host.offline_api("info",112)
+
+    def test_fixed_computed_backup_stages_and_window_order_are_catalogued(self):
+        self.assertTrue({"supervisor_partial_create","supervisor_partial_restore"}<=c.FAILURE_STAGES)
+        tree=ast.parse((ROOT/"controller.py").read_bytes());cls=next(n for n in tree.body if isinstance(n,ast.ClassDef) and n.name=="Controller")
+        run=next(n for n in cls.body if isinstance(n,ast.FunctionDef) and n.name=="run")
+        calls=[n.value.func.attr for n in run.body if isinstance(n,ast.Expr) and isinstance(n.value,ast.Call) and isinstance(n.value.func,ast.Attribute)]
+        self.assertLess(calls.index("experimental_offline_restore"),calls.index("restored_boot_barrier"))
+        self.assertLess(calls.index("experimental_offline_restore"),calls.index("fresh_restore_control"))
 
 if __name__=="__main__":unittest.main()

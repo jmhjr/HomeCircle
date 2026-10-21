@@ -87,3 +87,48 @@ acceptance. All 97 offline contracts must pass. Product source, the 113-member
 candidate ZIP, both context security boundaries, five phases, 18 cloned negative
 cases, closed NIC and cleanup requirements are unchanged. This revision is
 prepared for a fresh trial; it does not reclassify the failed run as successful.
+
+## One experimental offline Supervisor-conditions trial
+
+Run 39688084686 at `e44ae2a` passed actual synthetic seed and mutation (including
+Fernet), two managed phases, backup creation/archive inspection and newest-guard
+export. Supervisor then refused restore with `host_internet_unavailable` while
+the NIC was closed. Its independently verified negative record `117beac4…`
+retains those positive observations and the restore refusal; no saved-storage
+restore was accepted. This differs from the first run's unknown inner failure.
+
+This separate child permits one bounded experiment around the unchanged restore
+operation. In the fresh owned guest only, it temporarily changes the GLOBAL,
+PERSISTED Supervisor `ignore_conditions` list to exactly `internet_host` and
+`internet_system`. This marks Supervisor unsupported and is not a per-job option
+or ordinary/default-supported restore proof. Every other condition remains in
+force. HomeCircle stays disabled and unimported and the external NIC stays
+closed throughout.
+
+Before any write, the existing CLI container must have curl and its existing
+Supervisor token and must pass a fixed authenticated GET of jobs/info. Missing
+capability stops the trial; there is no client install, token discovery or
+alternate transport. The token remains inside CLI, passing from shell printf to
+curl's header stdin, with fixed HTTP origin, no redirects/proxies and bounded
+connect/request times. The wrapper requires empty original effective options,
+empty or absent persisted options, idle visible relevant backup/Core jobs, the
+same cached Core image and the inspected local 113-member archive.
+
+Exactly one apply POST is permitted, and its affirmative ACK plus exact effective
+and persisted two-condition readbacks are required before restore. A FINALLY
+block reserves 90 seconds independently of the restore deadline and attempts at
+most one API POST back to the original empty list. Foreign or unknown lists are
+never overwritten. GREEN requires an affirmative clear ACK, effective empty
+options and a stable no-follow read of the present persisted empty list. Lost
+ACKs can retain fixed observations but keep the trial failed; no mutation is
+retried. Only semantic empty-list restoration is claimed, not original file
+bytes or absence. The option window must close before guard repair or restored
+vault loading; owned-VM cleanup remains mandatory on failure.
+
+All 112 zero-skip local contracts are required. The original five phases, four
+storage contexts, two guard contexts, 18 cloned negative cases, package pins and
+privacy boundaries remain. Successful receipts explicitly identify an
+experimental global/unsupported override and keep default Supervisor restore,
+ordinary enabled/provider restore, automatic guard antirollback and stable
+approval false. This is one separately authorized attempt; no further procedure
+or fallback follows from its outcome.
