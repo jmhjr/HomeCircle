@@ -1,11 +1,11 @@
 {
-  "candidate_source_commit": "b4047a1fe8fe7b4dc3b0eb39301a887f082c4883",
+  "candidate_source_commit": "580e7b343d97f56cd383f2f2d0d86e054248916f",
   "candidate_source_prefix": "",
   "checker_sha256": "216331d16af8fb2ec636e1466303923ecfe32c76f78ea72f89d373c80c9713d2",
   "driver_sha256": "e97e3f71fc9f7ceb9391f86e0178c59c3b88a2fafe5f397e25a9fb69fe568e59",
   "expected_release_files": 113,
   "frontend_tests": 110,
-  "minimum_backend_passed": 1558,
+  "minimum_backend_passed": 1676,
   "required_backend_tests": [
     {
       "class": "tests.test_normalize",
@@ -130,11 +130,15 @@
     {
       "class": "tests.test_findmy_setup",
       "function": "test_outer_auth_import_failure_preserves_original_discovery_failure"
+    },
+    {
+      "class": "tests.test_findmy_pcs_hardening",
+      "function": "test_signature_key_identifiers_accept_only_exact_trusted_p256_encodings"
     }
   ],
   "schema": 1,
   "source_files": 337,
-  "source_inventory_sha256": "4441864a3c5268dcc31d27d2e00ddf454155afcae4b0aa7feda588ae143be523",
-  "source_sha256": "0030514300742eda3c04c7fd944a83064e8933f0c44cb43be3f7c3643d09178f",
+  "source_inventory_sha256": "952303e0fe517a1fedf3aba9bb54cfab28e3010a2f252f9a090059cdbe7a9c74",
+  "source_sha256": "67dc39b890f99d667d3a940d612976eee54414a89927eab54302998426b9c9b8",
   "version": "0.1.0-beta.20"
 }

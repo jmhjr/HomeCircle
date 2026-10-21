@@ -120,8 +120,8 @@
     "sha256": "c4085182917fb6979d19760ad717b5b3aea95b6f21c185fdf12c90edbb5efc1e"
   },
   "custom_components/homecircle/_vendor_findmy/cloudkit/pcs.py": {
-    "bytes": 75345,
-    "sha256": "00c4a9a23b34b6797ac9c65bf97ad8daf79f67a35c891c87be60a9f65cd5e98a"
+    "bytes": 75854,
+    "sha256": "a3106e721c1f6d8ed1c5a5cdcd509a57da7f78fdf0909b4d5b5fea1957d57a36"
   },
   "custom_components/homecircle/_vendor_findmy/cloudkit/proto/__init__.py": {
     "bytes": 66,
@@ -1128,8 +1128,8 @@
     "sha256": "63c02fe52d5d620a7e99049a319aed074c5d6cea550620b09d343e1b60291195"
   },
   "tests/test_findmy_pcs_hardening.py": {
-    "bytes": 18304,
-    "sha256": "c79c38f8f7a51f65b13a07c9a007b8bcf5bf38245537a30283990e9ad2f57c3e"
+    "bytes": 26333,
+    "sha256": "fc225277a7a1b920f299d91e3c7f1560d4831e3c88196fb55a22021ed3ebfe0e"
   },
   "tests/test_findmy_plist_compat.py": {
     "bytes": 1688,
