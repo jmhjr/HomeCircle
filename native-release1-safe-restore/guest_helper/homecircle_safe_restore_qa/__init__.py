@@ -70,6 +70,15 @@ def check(condition, label):
         raise Refused(label)
 
 
+SETUP_STEPS = frozenset({'active_details', 'active_http_bundle', 'active_http_portrait', 'flow_assign_tracker', 'flow_confirm_save', 'flow_entry_loaded', 'flow_household', 'flow_member', 'flow_user', 'options_city_form', 'options_entry_loaded', 'options_save', 'options_start', 'person_create', 'person_registry', 'person_sources', 'person_states', 'portrait_api_sources', 'portrait_image_create', 'portrait_person_update', 'portrait_state', 'resource_initialization', 'snapshot', 'unclassified', 'unrelated_resource_create'})
+
+
+def setup_mark(progress, step):
+    """Only finite setup labels; never runtime values or entry metadata."""
+    if progress is not None:
+        progress["step"] = step if type(step) is str and step in SETUP_STEPS else "unclassified"
+
+
 def entry_scope(entries):
     """Count only fixed categories; permit the normal enabled system entries."""
     check(type(entries) is list and len(entries) <= 16, 'qa_entry_count_bound')
@@ -208,14 +217,17 @@ def checked_step(result, step):
     return result
 
 
-async def create_homecircle(hass, registry):
+async def create_homecircle(hass, registry, progress=None):
     check(not hass.config_entries.async_entries("homecircle"), "qa_existing_homecircle")
     before = {item.entity_id for item in registry.entities.values() if item.domain == "person"}
     check(not any(state.name in PERSON_NAMES for state in hass.states.async_all("person")), "qa_person_collision")
+    setup_mark(progress, "person_create")
     for name in PERSON_NAMES:
         await async_create_person(hass, name, device_trackers=[])
+    setup_mark(progress, "person_registry")
     await wait_for(lambda: len([item for item in registry.entities.values()
                                if item.domain == "person" and item.entity_id not in before]) == 2)
+    setup_mark(progress, "person_states")
     await wait_for(lambda: sum(state.name in PERSON_NAMES for state in hass.states.async_all("person")) == 2)
     people = []
     for name in PERSON_NAMES:
@@ -223,41 +235,55 @@ async def create_homecircle(hass, registry):
         check(len(matches) == 1, "qa_created_person")
         people.append(matches[0])
     manager = hass.config_entries.flow
+    setup_mark(progress, "flow_user")
     flow = checked_step(await manager.async_init("homecircle", context={"source": SOURCE_USER}), "household")
+    setup_mark(progress, "flow_household")
     flow = checked_step(await manager.async_configure(flow["flow_id"],
                         {"people": people, "primary_home": "zone.home", "places": [PLACE]}), "assign_tracker")
     for index, tracker in enumerate(TRACKERS):
+        setup_mark(progress, "flow_assign_tracker")
         flow = checked_step(await manager.async_configure(flow["flow_id"], {"tracker": tracker}), "member")
+        setup_mark(progress, "flow_member")
         flow = checked_step(await manager.async_configure(flow["flow_id"],
                             {"trackers": [tracker], "additional_residences": [], "kind": "person"}),
                             "assign_tracker" if index == 0 else "confirm")
+    setup_mark(progress, "flow_confirm_save")
     flow = await manager.async_configure(flow["flow_id"], {"next_step_id": "confirm_save"})
     check(flow.get("type") == "create_entry" and not flow.get("errors"), "qa_config_flow_save")
     entry = flow["result"]
+    setup_mark(progress, "flow_entry_loaded")
     await wait_for(lambda: entry.state == ConfigEntryState.LOADED)
     previous_runtime = entry.runtime_data
     options = hass.config_entries.options
+    setup_mark(progress, "options_start")
     flow = checked_step(await options.async_init(entry.entry_id), "init")
+    setup_mark(progress, "options_city_form")
     flow = checked_step(await options.async_configure(flow["flow_id"], {"next_step_id": "city_lookup"}), "city_lookup")
+    setup_mark(progress, "options_save")
     result = await options.async_configure(flow["flow_id"], {"city_lookup_enabled": False})
     check(result.get("type") == "create_entry" and not result.get("errors"), "qa_options_save")
+    setup_mark(progress, "options_entry_loaded")
     await wait_for(lambda: entry.state == ConfigEntryState.LOADED and bool(entry.options)
                    and entry.runtime_data is not previous_runtime)
     check(entry.options.get("city_lookup_enabled") is False, "qa_nonempty_options")
     return entry, people
 
 
-async def create_portrait(hass,people,registry):
+async def create_portrait(hass,people,registry, progress=None):
+    setup_mark(progress, "portrait_api_sources")
     for name,module in [('image_upload',image_component),('person',person_component)]:
         check(await hass.async_add_executor_job(lambda: digest(Path(module.__file__).read_bytes())) == API_SOURCES[name],
               'qa_pinned_image_person_api')
     check(not list(hass.data['image_upload'].async_items()), 'qa_image_collision')
+    setup_mark(progress, "portrait_image_create")
     with io.BytesIO(PNG) as source:
         uploaded = FileField('file','synthetic.png',source,'image/png',CIMultiDictProxy(CIMultiDict()))
         record = await hass.data['image_upload'].async_create_item({'file':uploaded})
     person_id = registry.async_get(people[0]).unique_id
     url = '/api/image/serve/'+record['id']+'/512x512'
+    setup_mark(progress, "portrait_person_update")
     await hass.data['person'][1].async_update_item(person_id,{'picture':url})
+    setup_mark(progress, "portrait_state")
     await wait_for(lambda: hass.states.get(people[0]) is not None
                    and hass.states.get(people[0]).attributes.get('entity_picture') == url)
 
@@ -284,7 +310,8 @@ def tracker_state(hass, state, marker):
              "qa_backup_marker": marker})
 
 
-async def person_sources(hass, people, state="home"):
+async def person_sources(hass, people, state="home", progress=None):
+    setup_mark(progress, "person_sources")
     await wait_for(lambda: all(hass.states.get(person) is not None
         and hass.states.get(person).attributes.get("source") == tracker
         and hass.states.get(person).state == state
@@ -325,7 +352,8 @@ async def stable_snapshot(hass, entry, people, registry):
             "dashboard_sha256": digest(config)}
 
 
-async def active_details(hass, entry, people, inputs):
+async def active_details(hass, entry, people, inputs, progress=None):
+    setup_mark(progress, "active_details")
     from custom_components.homecircle import api, frontend
 
     check(entry.disabled_by is None and entry.state == ConfigEntryState.LOADED, "qa_entry_loaded")
@@ -346,6 +374,7 @@ async def active_details(hass, entry, people, inputs):
         Path(hass.config.path("custom_components/homecircle/frontend/homecircle-card.js")).read_bytes)
     port = hass.http.server_port
     check(type(port) is int and 1 <= port <= 65535 and hass.http.context is None, "qa_http_fixture")
+    setup_mark(progress, "active_http_bundle")
     async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=30), trust_env=False) as session:
         async with session.get(f"http://127.0.0.1:{port}" + url, allow_redirects=False) as response:
             check(response.status == 200, "qa_served_bundle_status")
@@ -356,6 +385,7 @@ async def active_details(hass, entry, people, inputs):
             check(bytes(body) == bundle, "qa_served_bundle")
     portrait = await portrait_snapshot(hass,people)
     image_url = '/api/image/serve/'+portrait['record']['id']+'/original'
+    setup_mark(progress, "active_http_portrait")
     async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=20),trust_env=False) as session:
         async with session.get(f'http://127.0.0.1:{port}'+image_url,allow_redirects=False) as response:
             check(response.status == 200, 'qa_picture_response_status')
@@ -588,6 +618,7 @@ class Rehearsal:
         hass, directory = self.hass, self.directory
         name = phase["phase"]
         stage = "platform"
+        setup_progress = {}
         receipt = {"schema": 1, "token": phase["token"], "generation": phase["generation"],
                    "phase": name, "branch_commit": inputs["branch_commit"], "outcome": "failed",
                    "process": process(), "core_version": CORE_VERSION,
@@ -620,15 +651,18 @@ class Rehearsal:
                         suggested_object_id=SENTINEL.split(".", 1)[1])
                     check(sensor.entity_id == SENTINEL, "qa_sentinel_identity")
                     tracker_state(hass, "home", "initial")
-                    entry, people = await create_homecircle(hass, registry)
-                    await create_portrait(hass,people,registry)
+                    entry, people = await create_homecircle(hass, registry, progress=setup_progress)
+                    await create_portrait(hass,people,registry,progress=setup_progress)
                     resources = hass.data[LOVELACE_DATA].resources
+                    setup_mark(setup_progress, "resource_initialization")
                     await resources.async_get_info()
                     check(not any(item["url"] == UNRELATED for item in resources.async_items()), "qa_unrelated_collision")
+                    setup_mark(setup_progress, "unrelated_resource_create")
                     await resources.async_create_item({"res_type": "module", "url": UNRELATED})
-                    await person_sources(hass, people)
+                    await person_sources(hass, people, progress=setup_progress)
+                    setup_mark(setup_progress, "snapshot")
                     active = await stable_snapshot(hass, entry, people, registry)
-                    details = await active_details(hass, entry, people, inputs)
+                    details = await active_details(hass, entry, people, inputs, progress=setup_progress)
                     stage = "guard_two"
                     from custom_components.homecircle.findmy_recovery_guard import get_recovery_guard
 
@@ -811,6 +845,8 @@ class Rehearsal:
                 receipt["outcome"] = "passed"
         except Exception as error:
             receipt.update({"outcome": "failed", "stage": stage, "failure_type": type(error).__name__})
+            if stage == "persistent_setup" and setup_progress:
+                receipt["setup_step"] = setup_progress["step"]
             if isinstance(error, Refused):
                 receipt["failure_code"] = str(error)
             # No exception messages, locals, entity IDs, timestamps or account values.

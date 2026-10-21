@@ -495,6 +495,25 @@ def source_failure_catalog():
     return frozenset(codes), frozenset(stages)
 
 
+def source_setup_catalog():
+    """Read only the literal diagnostic catalog from the frozen helper source."""
+    tree = ast.parse((ROOT / 'guest_helper/homecircle_safe_restore_qa/__init__.py').read_bytes())
+    values = [node.value for node in tree.body if isinstance(node, ast.Assign)
+              and any(isinstance(target, ast.Name) and target.id == 'SETUP_STEPS' for target in node.targets)]
+    require(len(values) == 1 and isinstance(values[0], ast.Call)
+            and isinstance(values[0].func, ast.Name) and values[0].func.id == 'frozenset'
+            and len(values[0].args) == 1 and not values[0].keywords, 'setup_catalog_refused')
+    labels = ast.literal_eval(values[0].args[0])
+    require(type(labels) is set and 1 <= len(labels) <= 32
+            and all(type(item) is str and re.fullmatch(r'[a-z_]{1,40}', item) for item in labels),
+            'setup_catalog_refused')
+    return frozenset(labels)
+
+
+def public_setup_step(value):
+    return value if type(value) is str and value in SETUP_STEPS else None
+
+
 def failure_projection(value):
     stage, kind, code = value.get('stage'), value.get('failure_type'), value.get('failure_code')
     return {'stage': stage if isinstance(stage, str) and stage in FAILURE_STAGES else 'unrecognized_stage',
@@ -589,6 +608,7 @@ CLOSURE = frozenset(('aiohappyeyeballs', 'aiohttp', 'aiosignal', 'anisette', 'ap
     'unicorn', 'urllib3', 'yarl'))
 
 
+SETUP_STEPS = source_setup_catalog()
 FAILURE_CODES, FAILURE_STAGES = source_failure_catalog()
 FAILURE_TYPES = frozenset({"Refused", "RuntimeError", "OSError", "ValueError", "TypeError", "AttributeError", "KeyError", "JSONDecodeError", "TimeoutError", "TimeoutExpired", "FileNotFoundError", "PermissionError", "ImportError", "ModuleNotFoundError", "PackageNotFoundError", "ClientError", "ClientConnectorError", "ClientResponseError", "CancelledError"})
 
@@ -1155,6 +1175,9 @@ print(json.dumps({"connected":connected}))
                 failure.update(failure_projection(receipt))
                 if probe := public_http_probe(receipt.get("http_probe")):
                     failure["http_probe"] = probe
+                if name == 'initialize' and receipt.get('stage') == 'persistent_setup' \
+                        and (step := public_setup_step(receipt.get('setup_step'))):
+                    failure['setup_step'] = step
                 if scope := public_entry_scope(receipt.get('entry_scope')):
                     failure['entry_scope'] = scope
                 write_json(self.public / (name + ".json"), failure)

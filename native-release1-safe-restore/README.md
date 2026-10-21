@@ -92,6 +92,15 @@ separate from analytics sharing consent; the fixture does not call preference or
 onboarding APIs. No zero-request claim follows from this entry policy. The prior
 run recorded one unknown system domain; it did not retain that domain's identity.
 
+On a failed initialization inside `persistent_setup`, optional `setup_step`
+contains only one of 25 fixed source labels. It distinguishes Person registry and
+state waits, flow/options load, portrait state, resource/source/snapshot work and
+the two existing HTTP waits. No response text, exception message, entity/entry
+metadata, ID, URL, path or arbitrary label is retained. Other stages and successful
+receipts do not gain this field. A timeout label identifies the active await
+region, not its cause. The fifth negative receipt lacked this observation, so
+its exact timeout remains unknown. No deadline or acceptance criterion changes.
+
 ## Exact runtime and reuse
 
 The official machine reference is
@@ -121,7 +130,7 @@ requires the same module hashes in the guest before creating the synthetic image
 
 ## Contracts, privacy and limits
 
-Eighty-five standalone contracts currently pass without skips. They include
+Eighty-nine standalone contracts currently pass without skips. They include
 strict input/archive/OCI/dependency/blank-config checks; actual phase nonce and
 disabled automatic-boot barriers; old/new guard timeline, pending/uncertain and
 early-enable/network refusal; private bundle links/modes/size-before-read;
@@ -131,7 +140,9 @@ transfer and current-constraint pin regressions, and actual preparation through
 an existing private workspace with missing/link/mode/owner refusals. The actual
 system-entry predicate, delayed discovery readiness and finite count-only failure
 projection are also tested, including the exact tagged Analytics system-flow
-body and delayed Analytics readiness. They do not import HA, a native
+body and delayed Analytics readiness. Four further contracts execute the actual
+Person/setup waits with injected timeouts, the actual guest failure body and
+controller projection, and fixed-catalog privacy checks. They do not import HA, a native
 provider or run a VM. The future workflow must bind every committed input before
 imports and require exactly the reviewed contract count with zero skips.
 

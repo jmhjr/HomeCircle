@@ -458,4 +458,121 @@ class EntryReadinessContracts(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(receipt['entry_scope']['domains']['analytics'],0)
 
 
+def diagnostic_helpers():
+    source=(controller.ROOT/'guest_helper/homecircle_safe_restore_qa/__init__.py').read_bytes()
+    tree=ast.parse(source)
+    selected=[]
+    for node in tree.body:
+        if isinstance(node,ast.Assign) and any(isinstance(t,ast.Name) and t.id in {'SETUP_STEPS','PERSON_NAMES','TRACKERS','PLACE'} for t in node.targets):
+            selected.append(node)
+        elif isinstance(node,(ast.FunctionDef,ast.AsyncFunctionDef)) and node.name in {'setup_mark','checked_step','create_homecircle'}:
+            selected.append(node)
+    namespace={'check':controller.require,'ConfigEntryState':SimpleNamespace(LOADED='loaded'),'SOURCE_USER':'user'}
+    exec(compile(ast.Module(body=selected,type_ignores=[]),'actual_setup_diagnostics','exec'),namespace)
+    return namespace,tree
+
+
+class SetupDiagnosticContracts(unittest.IsolatedAsyncioTestCase):
+    def test_catalog_and_actual_markers_are_exact_and_private_values_are_refused(self):
+        functions,tree=diagnostic_helpers()
+        calls=[n for n in ast.walk(tree) if isinstance(n,ast.Call) and isinstance(n.func,ast.Name) and n.func.id=='setup_mark']
+        self.assertTrue(calls)
+        for node in calls:
+            self.assertEqual(len(node.args),2)
+            self.assertIsInstance(node.args[1],ast.Constant)
+            self.assertIs(type(node.args[1].value),str)
+        self.assertEqual({n.args[1].value for n in calls}|{'unclassified'},functions['SETUP_STEPS'])
+        self.assertEqual(functions['SETUP_STEPS'],controller.SETUP_STEPS)
+        self.assertEqual(len(controller.SETUP_STEPS),25)
+        for value in controller.SETUP_STEPS:
+            self.assertEqual(controller.public_setup_step(value),value)
+        class PrivateString(str):pass
+        for value in ('bare_private_canary','person_registry/PRIVATE-CANARY',{},[],None,True,1,PrivateString('person_registry')):
+            self.assertIsNone(controller.public_setup_step(value))
+            progress={};functions['setup_mark'](progress,value)
+            self.assertEqual(progress,{'step':'unclassified'})
+        functions['setup_mark'](None,'person_registry')
+
+    def test_actual_failed_phase_retains_only_fixed_step_without_private_body(self):
+        for phase,stage,value in [('initialize','persistent_setup',value) for value in
+                ('person_registry','bare_private_canary',None,{'private':'PRIVATE-CANARY'})]+[
+                ('initialize','guard_two','person_registry'),
+                ('initial_restart','persistent_setup','person_registry')]:
+            with tempfile.TemporaryDirectory() as name:
+                host=controller.Controller(type('Args',(),{'branch_commit':'a'*40})())
+                host.public=Path(name);host.config_path='/mnt/data/supervisor/homeassistant'
+                host.guest_write=Mock();host.guest=Mock()
+                host.phases=[{}]*controller.PHASES.index(phase)
+                receipt={'schema':1,'token':host.phase_token,'phase':phase,'generation':host.generation,
+                    'branch_commit':'a'*40,'outcome':'failed','stage':stage,'failure_code':None,
+                    'failure_type':'TimeoutError','setup_step':value,'private':'PRIVATE-CANARY'}
+                host.guest_read=Mock(return_value=controller.canonical(receipt))
+                with self.assertRaisesRegex(controller.Refused,'^guest_acceptance_failed$'):host.phase(phase)
+                public=json.loads((Path(name)/(phase+'.json')).read_bytes())
+                self.assertEqual(public.get('setup_step'),'person_registry' if phase=='initialize' and stage=='persistent_setup' and value=='person_registry' else None)
+                self.assertNotIn('CANARY',json.dumps(public));self.assertNotIn('canary',json.dumps(public))
+                self.assertEqual(public['failure_type'],'TimeoutError')
+
+    def test_actual_helper_exception_body_omits_stale_step_and_private_error_message(self):
+        functions,tree=diagnostic_helpers()
+        cls=next(n for n in tree.body if isinstance(n,ast.ClassDef) and n.name=='Rehearsal')
+        run=next(n for n in cls.body if isinstance(n,ast.AsyncFunctionDef) and n.name=='run')
+        handler=next(n for n in ast.walk(run) if isinstance(n,ast.ExceptHandler) and isinstance(n.type,ast.Name) and n.type.id=='Exception')
+        code=compile(ast.Module(body=handler.body,type_ignores=[]),'actual_helper_exception_body','exec')
+        for stage,progress,expected in [('persistent_setup',{'step':'flow_entry_loaded'},'flow_entry_loaded'),
+                ('guard_two',{'step':'flow_entry_loaded'},None),('persistent_setup',{},None)]:
+            receipt={};namespace={'receipt':receipt,'stage':stage,'setup_progress':progress,
+                'error':TimeoutError('PRIVATE-CANARY /owner/private'),'Refused':controller.Refused,'_LOGGER':Mock()}
+            exec(code,namespace)
+            self.assertEqual(receipt.get('setup_step'),expected)
+            self.assertEqual(receipt['failure_type'],'TimeoutError')
+            self.assertNotIn('CANARY',json.dumps(receipt));self.assertNotIn('/owner/private',json.dumps(receipt))
+        keywords=[n for n in ast.walk(run) if isinstance(n,ast.keyword) and n.arg=='progress']
+        self.assertTrue(keywords)
+        self.assertTrue(all(isinstance(n.value,ast.Name) and n.value.id=='setup_progress' for n in keywords))
+
+    async def test_actual_person_registry_states_load_and_options_waits_keep_specific_steps(self):
+        async def exercise(timeout_at):
+            functions,_=diagnostic_helpers();registry=SimpleNamespace(entities={});states=[];calls=[]
+            entry=SimpleNamespace(entry_id='synthetic',state='loaded',runtime_data=object(),options={})
+            async def create_person(hass,name,device_trackers):
+                self.assertEqual(device_trackers,[])
+                entity_id='person.synthetic_'+str(len(states))
+                registry.entities[entity_id]=SimpleNamespace(domain='person',entity_id=entity_id)
+                states.append(SimpleNamespace(name=name,entity_id=entity_id))
+            results=iter(['assign_tracker','member','assign_tracker','member','confirm','create_entry'])
+            async def flow_init(*args,**kwargs):calls.append(('flow_init',args,kwargs));return {'step_id':'household','flow_id':'f'}
+            async def configure(*args):
+                calls.append(('configure',args));step=next(results)
+                return {'type':'create_entry','result':entry} if step=='create_entry' else {'step_id':step,'flow_id':'f'}
+            async def options_init(*args):return {'step_id':'init','flow_id':'o'}
+            async def options_configure(identifier,data):
+                if 'next_step_id' in data:return {'step_id':'city_lookup','flow_id':'o'}
+                entry.runtime_data=object();entry.options=dict(data);return {'type':'create_entry'}
+            hass=SimpleNamespace(config_entries=SimpleNamespace(async_entries=lambda domain:[],
+                flow=SimpleNamespace(async_init=flow_init,async_configure=configure),
+                options=SimpleNamespace(async_init=options_init,async_configure=options_configure)),
+                states=SimpleNamespace(async_all=lambda domain:states))
+            waits=0;progress={}
+            async def wait(predicate,seconds=120):
+                nonlocal waits
+                waits+=1;self.assertEqual(seconds,120)
+                if waits==timeout_at:raise TimeoutError('PRIVATE-CANARY')
+                self.assertTrue(predicate())
+            functions.update(async_create_person=create_person,wait_for=wait)
+            try:
+                result=await functions['create_homecircle'](hass,registry,progress=progress)
+                return progress,waits,result,calls
+            except TimeoutError:
+                return progress,waits,None,calls
+        for index,expected in enumerate(('person_registry','person_states','flow_entry_loaded','options_entry_loaded'),1):
+            progress,waits,result,calls=await exercise(index)
+            self.assertIsNone(result);self.assertEqual(waits,index);self.assertEqual(progress['step'],expected)
+            self.assertNotIn('CANARY',json.dumps(progress))
+        progress,waits,result,calls=await exercise(None)
+        self.assertEqual(waits,4);self.assertEqual(len(result[1]),2)
+        self.assertEqual(result[0].options,{'city_lookup_enabled':False})
+        self.assertEqual(len(calls),7)
+
+
 if __name__=='__main__':unittest.main()
