@@ -1,11 +1,11 @@
 {
-  "candidate_source_commit": "37b367f8800672a9e0b5c68018c0f825a7a1a43e",
+  "candidate_source_commit": "b4047a1fe8fe7b4dc3b0eb39301a887f082c4883",
   "candidate_source_prefix": "",
   "checker_sha256": "216331d16af8fb2ec636e1466303923ecfe32c76f78ea72f89d373c80c9713d2",
   "driver_sha256": "e97e3f71fc9f7ceb9391f86e0178c59c3b88a2fafe5f397e25a9fb69fe568e59",
   "expected_release_files": 113,
   "frontend_tests": 110,
-  "minimum_backend_passed": 1528,
+  "minimum_backend_passed": 1558,
   "required_backend_tests": [
     {
       "class": "tests.test_normalize",
@@ -110,11 +110,31 @@
     {
       "class": "tests.test_findmy_setup",
       "function": "test_discovery_logs_fixed_pcs_subclass_and_site_without_retry"
+    },
+    {
+      "class": "tests.test_findmy_pcs_hardening",
+      "function": "test_strict_outer_auth_failure_exposes_fixed_reason_before_key_unwrap"
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_outer_auth_reason_sanitizer_accepts_only_exact_pcs_codes"
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_outer_auth_reason_sanitizer_redacts_mutated_or_spoofed_metadata"
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_discovery_logs_only_fixed_outer_auth_reason_without_reproof"
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_outer_auth_import_failure_preserves_original_discovery_failure"
     }
   ],
   "schema": 1,
   "source_files": 337,
-  "source_inventory_sha256": "a7e2e0d1be48b383f371cddbe17c4437b90a5f2b10efa274ce543e936d7f2531",
-  "source_sha256": "1250f6a2e64a147184ad0d7e78ed6330474eee11c36c4b47c6743d8eb83fe46a",
+  "source_inventory_sha256": "4441864a3c5268dcc31d27d2e00ddf454155afcae4b0aa7feda588ae143be523",
+  "source_sha256": "0030514300742eda3c04c7fd944a83064e8933f0c44cb43be3f7c3643d09178f",
   "version": "0.1.0-beta.20"
 }

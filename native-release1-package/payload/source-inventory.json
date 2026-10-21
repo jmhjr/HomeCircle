@@ -120,8 +120,8 @@
     "sha256": "c4085182917fb6979d19760ad717b5b3aea95b6f21c185fdf12c90edbb5efc1e"
   },
   "custom_components/homecircle/_vendor_findmy/cloudkit/pcs.py": {
-    "bytes": 74398,
-    "sha256": "13a991006b2a23efa55a8f2635922836c6994e255a5260a81a4344e3fb646aca"
+    "bytes": 75345,
+    "sha256": "00c4a9a23b34b6797ac9c65bf97ad8daf79f67a35c891c87be60a9f65cd5e98a"
   },
   "custom_components/homecircle/_vendor_findmy/cloudkit/proto/__init__.py": {
     "bytes": 66,
@@ -396,8 +396,8 @@
     "sha256": "8e5ad4aa024b7c8a790393cb99dfc29f3388c07e51d25136fb9d9f3ca246aa43"
   },
   "custom_components/homecircle/findmy_setup.py": {
-    "bytes": 49265,
-    "sha256": "2f45d29a5a46453a4774a19acbc73606c42ba2e89567b46ab08bf8b088c9ffb8"
+    "bytes": 49998,
+    "sha256": "0821cba837a2327a3f7217bc12a324dab743870bc7f6f134b6d4dac1173f5062"
   },
   "custom_components/homecircle/findmy_storage.py": {
     "bytes": 1509,
@@ -1128,8 +1128,8 @@
     "sha256": "63c02fe52d5d620a7e99049a319aed074c5d6cea550620b09d343e1b60291195"
   },
   "tests/test_findmy_pcs_hardening.py": {
-    "bytes": 16811,
-    "sha256": "d830f4704d8782c667bda933008d972d5bb17f96d65e6ff319f43f70eee84580"
+    "bytes": 18304,
+    "sha256": "c79c38f8f7a51f65b13a07c9a007b8bcf5bf38245537a30283990e9ad2f57c3e"
   },
   "tests/test_findmy_plist_compat.py": {
     "bytes": 1688,
@@ -1240,8 +1240,8 @@
     "sha256": "297ef7af4d1b8edbdef6bc67d94fb3f10deba05a25f459bee3215c13d5cc6527"
   },
   "tests/test_findmy_setup.py": {
-    "bytes": 33220,
-    "sha256": "50d9609b9585188c36122951736ecb0ade38cdf9e861dd8ff4d62d7a776bf31e"
+    "bytes": 37997,
+    "sha256": "a1e5f6a2a943f70829b38983b6096891e44c05564dbfec263017446f5767c684"
   },
   "tests/test_findmy_signin_diagnostics.py": {
     "bytes": 9261,
