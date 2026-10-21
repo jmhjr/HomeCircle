@@ -362,3 +362,36 @@ capabilities, network isolation, eight-phase gates, and cleanup remain unchanged
 All prior 138 contracts remain; five added meaningful contracts use the exact
 standalone product module and temporary synthetic guards (143 total). No runtime
 cause or successful restore is claimed by this prepared diagnostic revision.
+
+
+## Owned guest staging ownership revision
+
+The preceding run [39672835001](https://github.com/jmhjr/HomeCircle/actions/runs/39672835001)
+again passed four phases and created the disabled-entry partial backup, then
+refused at guard_module_file before the product status API. It performed no
+restore and retained no newest host guard. Owned context, VM, and workspace
+cleanup passed. That failed run remains unaccepted; its actual module/ancestor
+UIDs and modes were not retained, so its precise filesystem failure is unproven.
+
+A separate source-confirmed fixture portability defect was reproduced through
+the actual Controller.prepare method with fake guest IO: run_host.sh umask077
+creates host-runner-owned private staging directories/files, and tarfile.add
+retains that foreign ownership. A guest root extractor may preserve those owners,
+leaving the private package inaccessible to root0 with all capabilities dropped.
+Normal managed Core access does not prove that stricter context can access it.
+
+This revision normalizes only the fresh owned custom_components staging tar's
+numeric UID/GID to0 and clears owner/group names and PAX uid/gid/uname/gname
+overrides. Member names, modes, types, payloads, timestamps, and other metadata
+stay intact. It rejects links, special members, and paths outside that staging
+scope. No permissions are widened, capabilities added, context controls changed,
+or product code changed. Normalized ownership works whether the guest extractor
+preserves header owners or creates files as its root0 caller; no guest tar
+implementation is claimed from the failed run.
+
+All143 prior contracts remain, with four added actual-prepare/ownership/PAX/scope
+contracts (147 total). The exact113-file f4da650 candidate, c8 product guard,
+diagnostic transfer helper, strict Core2/Supervisor3, all8 phases, both offline
+contexts, and cleanup gates remain unchanged. A fresh native success is still
+required; correcting the fixture ownership construction does not itself establish
+the failed run's cause or backup/restore acceptance.

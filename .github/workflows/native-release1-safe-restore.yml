@@ -31,9 +31,9 @@ jobs:
           import hashlib,subprocess
           root=Path('native-release1-safe-restore')
           expected={
-            "README.md": "9356dbf5645b39205a54578b3520466f51a3ecc0d71f4e0036e67ce8e8f60d5b",
+            "README.md": "cd9e8fe85bde41fbf6087b7c0b253ad810329f69b87d6933750245d9a1bd168a",
             "accept_procedure.py": "caa61c89572f89f51a5513f5cfc41b1a16ab5175b6c85fe2447eec1c3bbb5023",
-            "controller.py": "daff13357f2e2c082085ef17f31cdae73b44a4429f9240ffaefe94612e62be9e",
+            "controller.py": "fdc4e0eb6ad4476f3422c6b1f6dca071e64d35822e4404726a5744d5568c9f28",
             "guard_context.py": "7d69de4b10ae725795c42a4089f61cb972a3d48c5f6032680eea26c935ef5922",
             "guard_transfer.py": "590030e0c7eff81457e56c4cfc7b0d75ad0c079be3ede6e6da083d8fb4e95d84",
             "guest_helper/homecircle_safe_restore_qa/__init__.py": "ceb899b972558caa923ad7dbb5ba42e676933bbc9f2daac474699b04b5b6c2cf",
@@ -47,7 +47,7 @@ jobs:
             "test_guard_context.py": "a7525d54f499de631ec183a30aa07c98b8bc454678d14f9dd4c30ae57d90a32d",
             "test_inherited.py": "5ff850f550c8b1271a614211683ba983e5c8640a75e791fd2213f8a7ebb6a0d0",
             "test_phases.py": "7e375c09f7520f596ab42f8775291acdebc32b958da6b5852054abb5cd5403af",
-            "test_procedure.py": "f2cfa5e6d03187f798386986b6481de5d61616efe992d39965fc31644c25e683"
+            "test_procedure.py": "b48315300f7ce743d694a4ecb0088b712b1935a535749dd82d55767b01e4a67e"
           }
           tracked=subprocess.check_output(['git','ls-files','-z','--',str(root)]).decode().split('\0')
           assert {n for n in tracked if n}=={str(root/n) for n in expected},'tracked_members_refused'
@@ -72,7 +72,7 @@ jobs:
           test -r /usr/share/OVMF/OVMF_CODE_4M.fd
           test -f /usr/share/OVMF/OVMF_VARS_4M.fd
           test -r /usr/share/OVMF/OVMF_VARS_4M.fd
-      - name: Require all 143 zero-skip contracts
+      - name: Require all 147 zero-skip contracts
         timeout-minutes: 3
         shell: bash
         run: |
@@ -80,7 +80,7 @@ jobs:
           PYTHONDONTWRITEBYTECODE=1 python3 -B - <<'PY'
           import unittest
           suite=unittest.defaultTestLoader.discover('native-release1-safe-restore',pattern='test_*.py')
-          assert suite.countTestCases()==143,'contract_count_refused'
+          assert suite.countTestCases()==147,'contract_count_refused'
           result=unittest.TextTestRunner(verbosity=2).run(suite)
           assert result.wasSuccessful() and not result.skipped,'contract_failure_or_skip'
           PY

@@ -666,6 +666,20 @@ SETUP_STEPS = source_setup_catalog()
 FAILURE_CODES, FAILURE_STAGES = source_failure_catalog()
 FAILURE_TYPES = frozenset({"Refused", "RuntimeError", "OSError", "ValueError", "TypeError", "AttributeError", "KeyError", "JSONDecodeError", "TimeoutError", "TimeoutExpired", "FileNotFoundError", "PermissionError", "ImportError", "ModuleNotFoundError", "PackageNotFoundError", "ClientError", "ClientConnectorError", "ClientResponseError", "CancelledError"})
 
+def guest_staging_owner(info):
+    """Normalize only the fresh owned guest staging archive's ownership."""
+    require(type(info) is tarfile.TarInfo, 'owned_staging_member_refused')
+    path = PurePosixPath(info.name)
+    require(info.name == path.as_posix() and not path.is_absolute() and '..' not in path.parts
+            and path.parts and path.parts[0] == 'custom_components'
+            and (info.isfile() or info.isdir()), 'owned_staging_member_refused')
+    info.uid = info.gid = 0
+    info.uname = info.gname = ''
+    info.pax_headers = {key: value for key, value in info.pax_headers.items()
+                        if key not in {'uid', 'gid', 'uname', 'gname'}}
+    return info
+
+
 class Controller:
     def __init__(self, args):
         self.args = args
@@ -1170,7 +1184,7 @@ print(json.dumps({"connected":connected}))
             archive.extractall(components / "homecircle")
         archive_path = self.private / "guest-staging.tgz"
         with tarfile.open(archive_path, "w:gz", format=tarfile.PAX_FORMAT) as archive:
-            archive.add(components, arcname="custom_components")
+            archive.add(components, arcname="custom_components", filter=guest_staging_owner)
         data = archive_path.read_bytes()
         self.guest_write(GUEST_ROOT + "/staging.tgz", data)
         require(self.guest("sha256sum " + GUEST_ROOT + "/staging.tgz", 30).split()[0].decode() == sha(data),

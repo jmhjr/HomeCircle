@@ -1515,3 +1515,111 @@ class ExportBoundaryStageContracts(unittest.TestCase):
         calls=[node for node in ast.walk(status)if isinstance(node,ast.Call)
                and isinstance(node.func,ast.Attribute)and node.func.attr=='status']
         self.assertEqual(len(calls),1)
+
+
+
+class GuestStagingOwnerContracts(unittest.TestCase):
+    def actual_prepared_archive(self,filtered):
+        import io
+        from types import MethodType
+        with tempfile.TemporaryDirectory(prefix='synthetic-actual-staging-')as directory:
+            candidate=controller.ROOT/'payload/homecircle.zip'
+            inventory=json.loads((controller.ROOT/'payload/inventory.json').read_bytes())['files']
+            host=controller.Controller(SimpleNamespace(branch_commit='a'*40,candidate_zip=candidate))
+            host.private=Path(directory).resolve();host.config_path='/mnt/data/supervisor/homeassistant'
+            writes={};host.stop_core=Mock();host.verify_candidate=Mock()
+            host.guest_write=lambda path,raw:writes.__setitem__(path,raw)
+            def guest(command,seconds):
+                if command.startswith('sha256sum '):
+                    return (hashlib.sha256(writes[controller.GUEST_ROOT+'/staging.tgz']).hexdigest()+'  staging.tgz\n').encode()
+                return b''
+            host.guest=guest
+            if not filtered:
+                tree=ast.parse((controller.ROOT/'controller.py').read_bytes())
+                cls=next(node for node in tree.body if isinstance(node,ast.ClassDef)and node.name=='Controller')
+                method=next(node for node in cls.body if isinstance(node,ast.FunctionDef)and node.name=='prepare')
+                removed=0
+                for node in ast.walk(method):
+                    if isinstance(node,ast.Call)and isinstance(node.func,ast.Attribute)and node.func.attr=='add':
+                        previous=len(node.keywords);node.keywords=[key for key in node.keywords if key.arg!='filter']
+                        removed+=previous-len(node.keywords)
+                self.assertEqual(removed,1)
+                namespace=dict(controller.__dict__)
+                exec(compile(ast.Module(body=[method],type_ignores=[]),'actual_pre_fix_prepare','exec'),namespace)
+                host.prepare=MethodType(namespace['prepare'],host)
+            mask=os.umask(0o077)
+            try:host.prepare(inventory)
+            finally:os.umask(mask)
+            raw=writes[controller.GUEST_ROOT+'/staging.tgz']
+            with tarfile.open(fileobj=io.BytesIO(raw),mode='r:gz')as archive:
+                return {item.name:{'uid':item.uid,'gid':item.gid,'uname':item.uname,'gname':item.gname,
+                    'mode':item.mode,'type':item.type,'size':item.size,'linkname':item.linkname,
+                    'pax_ownership':{key:value for key,value in item.pax_headers.items()if key in {'uid','gid','uname','gname'}},
+                    'payload':archive.extractfile(item).read()if item.isfile()else None}for item in archive.getmembers()}
+
+    def test_actual_prepare_root_ownership_fixes_foreign_private_metadata_without_payload_or_mode_changes(self):
+        self.assertNotEqual(os.getuid(),0,'nonroot_native_contract_caller_required')
+        before=self.actual_prepared_archive(False);after=self.actual_prepared_archive(True)
+        self.assertEqual(set(before),set(after))
+        for name in before:
+            with self.subTest(name=name):
+                self.assertEqual(before[name]['uid'],os.getuid())
+                self.assertEqual(before[name]['gid'],os.getgid())
+                self.assertEqual({key:after[name][key]for key in ('uid','gid','uname','gname','pax_ownership')},
+                                 {'uid':0,'gid':0,'uname':'','gname':'','pax_ownership':{}})
+                for key in ('mode','type','size','linkname','payload'):
+                    self.assertEqual(before[name][key],after[name][key])
+        self.assertEqual(before['custom_components']['mode'],0o700)
+        self.assertEqual(before['custom_components/homecircle']['mode'],0o700)
+        self.assertEqual(before['custom_components/homecircle/findmy_recovery_guard.py']['mode'],0o600)
+        inventory=json.loads((controller.ROOT/'payload/inventory.json').read_bytes())['files']
+        self.assertEqual(len(inventory),113)
+        for name,expected in inventory.items():
+            raw=after['custom_components/homecircle/'+name]['payload']
+            self.assertEqual({'bytes':len(raw),'sha256':hashlib.sha256(raw).hexdigest()},expected)
+        self.assertEqual(hashlib.sha256(after['custom_components/homecircle/findmy_recovery_guard.py']['payload']).hexdigest(),transfer.MODULE_SHA)
+
+    def test_ownership_filter_removes_numeric_names_and_pax_overrides_preserving_all_other_metadata(self):
+        item=tarfile.TarInfo('custom_components/homecircle/synthetic.py')
+        item.uid=1001;item.gid=1002;item.uname='PRIVATE-CANARY';item.gname='PRIVATE-CANARY'
+        item.mode=0o600;item.size=3;item.mtime=123.25;item.type=tarfile.REGTYPE
+        item.pax_headers={'uid':'1001','gid':'1002','uname':'PRIVATE-CANARY','gname':'PRIVATE-CANARY',
+                          'mtime':'123.25','comment':'synthetic retained metadata'}
+        preserved={key:getattr(item,key)for key in ('name','mode','type','size','mtime','linkname','devmajor','devminor')}
+        result=controller.guest_staging_owner(item)
+        self.assertIs(result,item)
+        self.assertEqual((item.uid,item.gid,item.uname,item.gname),(0,0,'',''))
+        self.assertEqual(item.pax_headers,{'mtime':'123.25','comment':'synthetic retained metadata'})
+        self.assertEqual({key:getattr(item,key)for key in preserved},preserved)
+
+    def test_serialized_pax_ownership_cannot_override_normalized_root_headers(self):
+        import io
+        item=tarfile.TarInfo('custom_components/homecircle/synthetic.py')
+        item.uid=item.gid=0;item.uname=item.gname=''
+        item.mode=0o600;item.size=3
+        item.pax_headers={'uid':'1001','gid':'1002','uname':'PRIVATE-CANARY','gname':'PRIVATE-CANARY'}
+        def roundtrip(value):
+            stream=io.BytesIO()
+            with tarfile.open(fileobj=stream,mode='w',format=tarfile.PAX_FORMAT)as archive:
+                archive.addfile(value,io.BytesIO(b'abc'))
+            with tarfile.open(fileobj=io.BytesIO(stream.getvalue()),mode='r:')as archive:
+                member=archive.getmembers()[0]
+                return member,archive.extractfile(member).read()
+        unfiltered,payload=roundtrip(deepcopy(item))
+        self.assertEqual((unfiltered.uid,unfiltered.gid),(1001,1002))
+        normalized,payload2=roundtrip(controller.guest_staging_owner(deepcopy(item)))
+        self.assertEqual((normalized.uid,normalized.gid,normalized.uname,normalized.gname),(0,0,'',''))
+        self.assertEqual(normalized.mode,0o600);self.assertEqual(payload,payload2)
+        self.assertFalse(set(normalized.pax_headers)&{'uid','gid','uname','gname'})
+
+    def test_ownership_filter_refuses_links_special_members_and_outside_owned_staging_scope(self):
+        for name,kind in [('custom_components/homecircle/link',tarfile.SYMTYPE),
+                          ('custom_components/homecircle/link',tarfile.LNKTYPE),
+                          ('custom_components/homecircle/fifo',tarfile.FIFOTYPE),
+                          ('custom_components/homecircle/device',tarfile.CHRTYPE),
+                          ('../private',tarfile.REGTYPE),('/private',tarfile.REGTYPE),
+                          ('other/synthetic.py',tarfile.REGTYPE),('custom_components/../private',tarfile.REGTYPE)]:
+            item=tarfile.TarInfo(name);item.type=kind;item.uid=1001
+            with self.subTest(name=name,kind=kind),self.assertRaises(controller.Refused):
+                controller.guest_staging_owner(item)
+            self.assertEqual(item.uid,1001)
