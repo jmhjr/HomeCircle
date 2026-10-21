@@ -83,3 +83,9 @@ the crosslink in the historical prose. Earlier failed attempts remain failed;
 their unretained guest ownership and precise filesystem cause are not measured
 retroactively. A documentation child records this result; it does not change
 the tested f4da650 runtime or establish runtime validation of a later source head.
+
+
+## Vault-error candidate and saved-storage evidence
+
+See [the vault-error candidate and restore requalification](RELEASE-1.0-VAULT-RESTORE-REQUALIFICATION.md)
+for the separately tested source, retained negative trials, and experimental offline restore limits.
