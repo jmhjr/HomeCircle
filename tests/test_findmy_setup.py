@@ -682,3 +682,95 @@ async def test_recovery_bootstrap_revalidates_mutated_pet_error_context(phase, r
     assert "'recovery_credential_retry_after_seconds': None" in caplog.text
     assert "synthetic-private" not in caplog.text
     await flow.close()
+
+
+def _synthetic_discovery_exception(error_type=RuntimeError, *, filename="pcs.py",
+                                   function="unwrap_zone", module=None, offset=0):
+    """Actual tracebacks with synthetic private data; no provider code executes."""
+    import ast
+
+    module = module or "custom_components.homecircle._vendor_findmy.cloudkit." + filename[:-3]
+    source = "/synthetic-private-path/custom_components/homecircle/_vendor_findmy/cloudkit/" + filename
+    program = ast.parse("def " + function + "():\n"
+                        "    private_key = 'synthetic-private-key-canary'\n"
+                        "    raise error_type('synthetic-private-response-canary')\n")
+    ast.increment_lineno(program, offset)
+    namespace = {"__name__": module, "error_type": error_type}
+    exec(compile(program, source, "exec"), namespace)
+    try:
+        namespace[function]()
+    except Exception as error:
+        return error
+    raise AssertionError("synthetic exception was not raised")
+
+
+@pytest.mark.parametrize("filename,function", [("pcs.py", "unwrap_zone"), ("beacons.py", "zone_keys")])
+def test_discovery_error_site_reports_only_bound_own_source(filename, function):
+    from custom_components.homecircle.findmy_setup import _discovery_failure_site
+
+    safe = _discovery_failure_site(_synthetic_discovery_exception(filename=filename, function=function))
+    assert safe == {
+        "error_module": "custom_components.homecircle._vendor_findmy.cloudkit." + filename[:-3],
+        "error_file": filename, "error_function": function, "error_line": 3,
+    }
+    assert "synthetic-private" not in repr(safe)
+
+
+@pytest.mark.parametrize("change", ["module", "filename", "function", "line"])
+def test_discovery_error_site_rejects_unbound_or_oversized_sites(change):
+    from custom_components.homecircle.findmy_setup import _discovery_failure_site
+
+    arguments = {
+        "module": {"module": "synthetic.private.module"},
+        "filename": {"filename": "synthetic-private-file.py",
+                     "module": "custom_components.homecircle._vendor_findmy.cloudkit.pcs"},
+        "function": {"function": "synthetic_private_function"},
+        "line": {"offset": 100000},
+    }[change]
+    safe = _discovery_failure_site(_synthetic_discovery_exception(**arguments))
+    assert safe == {"error_module": None, "error_file": None,
+                    "error_function": None, "error_line": None}
+    assert "synthetic-private" not in repr(safe)
+
+
+def test_discovery_error_site_prefers_innermost_allowlisted_frame():
+    from custom_components.homecircle.findmy_setup import _discovery_failure_site
+
+    namespace = {"__name__": "custom_components.homecircle._vendor_findmy.cloudkit.pcs"}
+    source = "/synthetic-private-path/custom_components/homecircle/_vendor_findmy/cloudkit/pcs.py"
+    exec(compile("def unwrap_protection():\n    return unwrap_zone()\n"
+                 "def unwrap_zone():\n    raise RuntimeError('synthetic-private-response-canary')\n",
+                 source, "exec"), namespace)
+    try:
+        namespace["unwrap_protection"]()
+    except RuntimeError as error:
+        safe = _discovery_failure_site(error)
+    assert safe["error_function"] == "unwrap_zone" and safe["error_line"] == 4
+    assert "synthetic-private" not in repr(safe)
+
+
+@pytest.mark.parametrize("name", ["PCSError", "MissingKeyError", "BeaconExportError", "SyntheticPrivateError"])
+async def test_discovery_logs_fixed_pcs_subclass_and_site_without_retry(name, caplog):
+    flow, account, client = setup()
+    await flow.open_recovery()
+    flow.keys_recovered = True
+    account._recovery_diagnostics.update(recovered_keys_present=True, operation_http=200,
+                                         operation_type=201, private="synthetic-private-diagnostic-canary")
+    error_type = type(name, (RuntimeError,), {})
+    client.accessories.side_effect = _synthetic_discovery_exception(error_type)
+    with pytest.raises(FindMySetupError, match="^findmy_recovery_failed$"):
+        await flow.retry_discovery()
+    expected = name if name != "SyntheticPrivateError" else "other"
+    assert "'error_class': '" + expected + "'" in caplog.text
+    assert "'error_file': 'pcs.py'" in caplog.text
+    assert "'error_function': 'unwrap_zone'" in caplog.text
+    assert "'error_line': 3" in caplog.text
+    assert "'recovered_keys_present': True" in caplog.text
+    assert "synthetic-private" not in caplog.text
+    assert "SyntheticPrivateError" not in caplog.text
+    assert flow.keys_recovered is True and account._password is None
+    assert flow.unlock_attempts == 0
+    client.unlock.assert_not_awaited()
+    client.accessories.assert_awaited_once_with()
+    account.login.assert_not_awaited()
+    await flow.close()

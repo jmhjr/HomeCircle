@@ -13,6 +13,42 @@ from .findmy_profile import configure_account
 _LOGGER = logging.getLogger(__name__)
 
 
+def _discovery_failure_site(error):
+    """Return only a fixed own-code site, never traceback paths or local values."""
+    sites = {
+        "pcs.py": {
+            "from_der", "unwrap_zone", "unwrap_protection", "_find_our_key",
+            "unwrap_share_key", "_split_wrapped_key", "_unframe_master_key",
+            "read_meta", "parse_meta", "_identity_keys", "master_ec_keys",
+        },
+        "beacons.py": {
+            "zone_keys", "fetch_accessories", "fetch_records",
+            "zone_record_defaults", "decrypt_record", "decrypt_records",
+            "accessories_from_records",
+        },
+    }
+    result = {"error_module": None, "error_file": None,
+              "error_function": None, "error_line": None}
+    site = error.__traceback__
+    for _ in range(64):
+        if site is None:
+            break
+        code = site.tb_frame.f_code
+        for filename, functions in sites.items():
+            suffix = "/custom_components/homecircle/_vendor_findmy/cloudkit/" + filename
+            module = "custom_components.homecircle._vendor_findmy.cloudkit." + filename[:-3]
+            if (
+                code.co_filename.replace("\\", "/").endswith(suffix)
+                and site.tb_frame.f_globals.get("__name__") == module
+                and code.co_name in functions
+                and type(site.tb_lineno) is int and 0 < site.tb_lineno <= 100000
+            ):
+                result = {"error_module": module, "error_file": filename, "error_function": code.co_name,
+                          "error_line": site.tb_lineno}
+        site = site.tb_next
+    return result
+
+
 def require_nonempty_report_grant(account, session=None):
     """A completed Apple login alone cannot authorize a Find My connection."""
     try:
@@ -861,7 +897,8 @@ class FindMySetup:
             present = raw.get("recovered_keys_present")
             safe["recovered_keys_present"] = present if type(present) is bool else None
             name = type(error).__name__
-            safe["error_class"] = name if name in ("EscrowError", "RecoveryError", "KeychainSessionError", "CloudKitError", "UnauthorizedError", "UnhandledProtocolError", "InvalidTag", "InvalidSignature", "ValueError", "KeyError", "TypeError", "DecodeError", "TimeoutError") else "other"
+            safe["error_class"] = name if name in ("EscrowError", "RecoveryError", "KeychainSessionError", "CloudKitError", "UnauthorizedError", "UnhandledProtocolError", "PCSError", "MissingKeyError", "BeaconExportError", "InvalidTag", "InvalidSignature", "ValueError", "KeyError", "TypeError", "DecodeError", "TimeoutError") else "other"
+            safe.update(_discovery_failure_site(error))
             for key in ("escrow_http", "operation_http"):
                 value = raw.get(key)
                 safe[key] = value if type(value) is int and 100 <= value <= 599 else None
