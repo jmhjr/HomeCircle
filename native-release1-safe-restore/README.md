@@ -336,3 +336,29 @@ The original 135 offline contracts remain; three added contracts independently
 exercise both version gates and the fixed public diagnostic projection (138 total).
 No Mac upgrade, owner account, provider call, or ordinary enabled-entry restore
 safety claim is introduced.
+
+
+## Export diagnostic boundary revision
+
+The preceding strict-version run [39670706233](https://github.com/jmhjr/HomeCircle/actions/runs/39670706233)
+proved initial API/container Core 2026.10.2 and Supervisor 2026.10.3, the first
+four phases, and creation of the disabled-entry partial backup. Export then
+refused with ValueError at the broad blocked_status helper stage. No restore
+was requested, no newest host guard was retained, and the owned export context,
+VM, and private workspace were removed. That failed run remains unaccepted.
+
+The broad label covered source-file, source-hash, module-load, actual status-call,
+and returned-status validation boundaries. Exact-candidate temporary probes show
+that a missing module, wrong hash, and valid unblocked status can share that label;
+they do not establish which happened in the native guest. This derivative fixes
+only that diagnostic ambiguity with fixed guard_module_file, guard_module_hash,
+guard_module_load, blocked_status, and blocked_status_validation stages. It adds
+no public path, hash, counter value, exception text, or owner data.
+
+The QA guard-transfer helper bytes change only for stage assignments/catalog.
+The exact c8abe90 product RecoveryGuard, same single status call, three-rejection
+predicate, import repair, source-bound storage observer, Core image, mounts,
+capabilities, network isolation, eight-phase gates, and cleanup remain unchanged.
+All prior 138 contracts remain; five added meaningful contracts use the exact
+standalone product module and temporary synthetic guards (143 total). No runtime
+cause or successful restore is claimed by this prepared diagnostic revision.

@@ -1389,3 +1389,129 @@ class ManagedVersionContracts(unittest.TestCase):
             result=eval(actual,{'self':SimpleNamespace(**values),'public_core_version':controller.public_core_version})
             self.assertEqual(result,dict.fromkeys(expected))
             self.assertNotIn('PRIVATE-CANARY',json.dumps(result))
+
+
+
+class ExportBoundaryStageContracts(unittest.TestCase):
+    def setUp(self):
+        self.temp=tempfile.TemporaryDirectory(prefix='synthetic-guard-export-stage-')
+        self.base=Path(self.temp.name).resolve()
+        self.package=self.base/'package';self.package.mkdir()
+        self.path=self.package/'findmy_recovery_guard.py';self.path.write_bytes(STORAGE_RAW)
+        self.root=self.base/'.storage/homecircle_findmy/recovery_guard'
+        self.module=types.ModuleType('exact_guard_export_stage_seed')
+        exec(compile(STORAGE_RAW,'exact-export-stage-seed','exec'),self.module.__dict__)
+        self.guard=self.module.RecoveryGuard(self.root)
+        self.token='b'*32
+        self.proof=self.base/'proof.json'
+        self.proof.write_bytes(transfer.canonical({'schema':1,'token':self.token,'generation':'before_restore',
+            'branch_commit':'a'*40,'postbackup_window':{}}))
+
+    def tearDown(self):
+        self.temp.cleanup()
+
+    def seed(self,count=3):
+        async def seed():
+            for _ in range(count):
+                async with self.guard.attempt(transfer.IDENTITY) as attempt:
+                    await attempt.before_dispatch();await attempt.refused()
+        asyncio.run(seed())
+
+    def bytes_before(self):
+        return {path.name:path.read_bytes()for path in self.root.iterdir()}
+
+    def invoke(self,failed):
+        from contextlib import redirect_stdout,redirect_stderr
+        import io
+        stdout,stderr=io.StringIO(),io.StringIO()
+        original=transfer.private_files
+        real_uid=os.getuid()
+        def local_files(root):
+            with patch.object(transfer.os,'geteuid',return_value=real_uid):
+                return original(root)
+        runner=asyncio.run
+        with patch.object(transfer,'PACKAGE',self.package),patch.object(transfer,'GUARD',self.root), \
+                patch.object(transfer,'EXPORT_PROOF',self.proof),patch.object(transfer.sys,'argv',['-','export']), \
+                patch.object(transfer.sys,'platform','linux'),patch.object(transfer.os,'geteuid',return_value=0), \
+                patch.object(transfer,'private_files',side_effect=local_files), \
+                patch.object(transfer.asyncio,'run',wraps=runner)as calls,redirect_stdout(stdout),redirect_stderr(stderr):
+            if failed:
+                with self.assertRaises(SystemExit)as stopped:transfer.cli()
+                self.assertEqual(stopped.exception.code,1)
+            else:
+                transfer.cli()
+        return stdout.getvalue().encode(),stderr.getvalue().encode(),calls.call_count
+
+    def assert_private_free(self,stderr,stage):
+        labels=transfer.parse_export_failure(stderr,self.token)
+        self.assertEqual(labels,{'stage':stage,'failure_type':'ValueError'})
+        public=controller.guard_export_observation({'exitcode':1,'signal':None,'truncated':False,
+            'stdout':b'','stderr':stderr},self.token)
+        self.assertEqual(public['helper_failure'],labels)
+        rendered=json.dumps(public)
+        for private in ('PRIVATE-CANARY',str(self.base),self.token,'Traceback'):
+            self.assertNotIn(private,rendered)
+        self.assertEqual(set(labels),{'stage','failure_type'})
+
+    def test_valid_exact_three_rejection_export_calls_status_once_without_guard_mutation(self):
+        self.seed();before=self.bytes_before()
+        stdout,stderr,calls=self.invoke(failed=False)
+        self.assertEqual(calls,1);self.assertEqual(stderr,b'')
+        self.assertEqual(transfer.decode(stdout.strip()),before)
+        self.assertEqual(self.bytes_before(),before)
+        self.assertEqual(transfer._export_stage,'encode')
+        self.assertIsNone(transfer._export_storage_failure)
+
+    def test_missing_symlink_hash_and_load_failures_have_precise_private_free_stages(self):
+        self.seed();before=self.bytes_before()
+        for fault,stage in [('missing','guard_module_file'),('symlink','guard_module_file'),
+                            ('hash','guard_module_hash'),('load','guard_module_load')]:
+            with self.subTest(fault=fault):
+                if self.path.is_symlink()or self.path.exists():self.path.unlink()
+                self.path.write_bytes(STORAGE_RAW)
+                if fault=='missing':self.path.unlink()
+                elif fault=='symlink':
+                    other=self.package/'synthetic_source.py';other.write_bytes(STORAGE_RAW)
+                    self.path.unlink();self.path.symlink_to(other)
+                elif fault=='hash':self.path.write_bytes(STORAGE_RAW+b'\n')
+                if fault=='load':
+                    with patch.object(transfer.importlib.util,'module_from_spec',side_effect=ValueError('PRIVATE-CANARY')):
+                        stdout,stderr,calls=self.invoke(failed=True)
+                else:stdout,stderr,calls=self.invoke(failed=True)
+                self.assertEqual(stdout,b'');self.assertEqual(calls,0)
+                self.assert_private_free(stderr,stage)
+                self.assertEqual(self.bytes_before(),before)
+
+    def test_returned_two_rejection_status_is_refused_at_validation_without_mutation(self):
+        self.seed(2);before=self.bytes_before()
+        stdout,stderr,calls=self.invoke(failed=True)
+        self.assertEqual(stdout,b'');self.assertEqual(calls,1)
+        self.assert_private_free(stderr,'blocked_status_validation')
+        self.assertEqual(self.bytes_before(),before)
+        self.assertIsNone(transfer._export_storage_failure)
+
+    def test_new_stage_catalog_and_host_projection_refuse_unlisted_or_private_metadata(self):
+        for stage in ('guard_module_file','guard_module_hash','guard_module_load','blocked_status_validation'):
+            value={'schema':1,'kind':'homecircle_guard_export_failure','token':self.token,
+                   'stage':stage,'failure_type':'ValueError'}
+            self.assert_private_free(transfer.canonical(value),stage)
+            self.assertIsNone(transfer.parse_export_failure(transfer.canonical(dict(value,private='PRIVATE-CANARY')),self.token))
+            self.assertIsNone(transfer.export_failure_labels({'stage':stage,'failure_type':'ValueError','storage_failure':{}}))
+        for stage in (None,False,1,'PRIVATE-CANARY','guard_module_file PRIVATE-CANARY'):
+            self.assertIsNone(transfer.export_failure_labels({'stage':stage,'failure_type':'ValueError'}))
+
+    def test_diagnostic_stage_assignments_preserve_original_actual_source_and_status_checks(self):
+        tree=ast.parse(Path(transfer.__file__).read_bytes())
+        expected={'actual_guard': 'a8e6df5a304a4ed8e8e2d7c5cdf69e4e30b03860d93f6b952480c770b7fa7ac3', 'blocked_status': 'df270636257fde6605a6de668242df5e7e60793b3bf27357f089d25b318eb4ec'}
+        for name,digest in expected.items():
+            node=next(node for node in tree.body if isinstance(node,ast.FunctionDef)and node.name==name)
+            for statement in node.body:
+                if isinstance(statement,ast.Global):statement.names.remove('_export_stage')
+            node.body=[statement for statement in node.body if not(isinstance(statement,ast.Assign)
+                and len(statement.targets)==1 and isinstance(statement.targets[0],ast.Name)
+                and statement.targets[0].id=='_export_stage')]
+            self.assertEqual(hashlib.sha256(ast.dump(node).encode()).hexdigest(),digest)
+        status=next(node for node in tree.body if isinstance(node,ast.FunctionDef)and node.name=='blocked_status')
+        calls=[node for node in ast.walk(status)if isinstance(node,ast.Call)
+               and isinstance(node.func,ast.Attribute)and node.func.attr=='status']
+        self.assertEqual(len(calls),1)

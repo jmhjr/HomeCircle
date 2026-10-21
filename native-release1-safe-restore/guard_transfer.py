@@ -282,7 +282,8 @@ MODULE_SHA = 'c8abe90b71c216e14d63b8d7382f377128aa0cce83ce53e553039fee3005ea6a'
 IDENTITY = 'a' * 64
 EXPORT_PROOF = Path('/data/homeassistant/homecircle-safe-restore-qa-control/external-proof.json')
 EXPORT_STAGES = frozenset({'platform', 'arguments', 'diagnostic_token', 'blocked_status',
-                          'private_files', 'encode', 'unrecognized_export_stage'})
+                          'guard_module_file', 'guard_module_hash', 'guard_module_load',
+                          'blocked_status_validation', 'private_files', 'encode', 'unrecognized_export_stage'})
 EXPORT_FAILURE_TYPES = frozenset({'ValueError', 'RuntimeError', 'OSError', 'FileNotFoundError',
     'PermissionError', 'ImportError', 'ModuleNotFoundError', 'AttributeError', 'TypeError',
     'KeyError', 'JSONDecodeError', 'UnicodeDecodeError', 'TimeoutError', 'RecoveryGuardError',
@@ -418,16 +419,20 @@ def private_files(root):
 
 
 def actual_guard():
-    global _export_binding
+    global _export_binding, _export_stage
+    _export_stage = 'guard_module_file'
     path = PACKAGE / 'findmy_recovery_guard.py'
     require(path.is_file() and not path.is_symlink())
     raw = path.read_bytes()
+    _export_stage = 'guard_module_hash'
     require(sha(raw) == MODULE_SHA)
     # Exact standalone product module: no integration/native/provider import.
+    _export_stage = 'guard_module_load'
     spec = importlib.util.spec_from_file_location('owned_exact_recovery_guard', path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     guard = module.RecoveryGuard(GUARD)
+    _export_stage = 'blocked_status'
     _export_binding = None
     if _export_stage == 'blocked_status' and type(_export_token) is str \
             and re.fullmatch(r'[0-9a-f]{32}', _export_token):
@@ -439,7 +444,7 @@ def actual_guard():
 
 
 def blocked_status():
-    global _export_storage_failure
+    global _export_storage_failure, _export_stage
     try:
         status = asyncio.run(actual_guard().status(IDENTITY))
     except Exception as error:
@@ -449,6 +454,7 @@ def blocked_status():
             except Exception:
                 _export_storage_failure = None
         raise
+    _export_stage = 'blocked_status_validation'
     require(status['blocked'] is True and status['unresolved'] == status['rejected'] == 3
             and status['pending'] == status['uncertain'] == 0)
 
