@@ -500,6 +500,7 @@ async def test_recovery_bootstrap_after_consumed_code_closes_real_flow_without_r
     ("findmy_recovery_transient", True),
     ("findmy_recovery_protocol", True),
     ("findmy_recovery_storage", True),
+    ("findmy_no_recovery_device", True),
     ("findmy_code_failed", False),
     ("findmy_code_request_failed", False),
     ("synthetic-private-error", False),
@@ -552,3 +553,34 @@ async def test_later_passcode_transient_keeps_its_retry_stage(hass):
     finally:
         if flow_id in {item["flow_id"] for item in manager.async_progress()}:manager.async_abort(flow_id)
         await hass.async_block_till_done()
+
+
+async def test_empty_recovery_devices_after_consumed_code_ends_without_replay(hass):
+    entry,result = await options(hass)
+    manager = hass.config_entries.options
+    fake = fake_setup()
+    fake.login = AsyncMock(return_value="factor")
+    factor = SimpleNamespace(request=AsyncMock(),submit=AsyncMock(return_value=3))
+    fake.methods = [factor]
+    client = fake.client_factory.return_value
+    client.recovery_options = AsyncMock(return_value=SimpleNamespace(recoverable=[]))
+    with (
+        patch("custom_components.homecircle.findmy_flow.FindMySetup.create",return_value=fake),
+        patch("custom_components.homecircle.findmy_flow.Vault.save_account") as save,
+    ):
+        result = await manager.async_configure(result["flow_id"],{"label":"Example account","consent":True})
+        result = await manager.async_configure(result["flow_id"],{"username":"example@example.invalid","password":"example-secret"})
+        result = await finish_background_progress(manager,result)
+        assert result["step_id"] == "findmy_factor"
+        result = await manager.async_configure(result["flow_id"],{"method":"0"})
+        result = await finish_background_progress(manager,result)
+        result = await manager.async_configure(result["flow_id"],{"code":"synthetic-private-code"})
+        result = await finish_background_progress(manager,result)
+        assert result["type"] is FlowResultType.ABORT and result["reason"] == "findmy_no_recovery_device"
+        assert fake.closed and not entry.options
+        factor.submit.assert_awaited_once_with("synthetic-private-code")
+        fake.login.assert_awaited_once()
+        fake.account.login.assert_not_awaited()
+        client.unlock.assert_not_awaited()
+        client.close.assert_awaited_once()
+        save.assert_not_called()

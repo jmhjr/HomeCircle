@@ -55,6 +55,7 @@ _CONSUMED_CODE_RECOVERY_ERRORS = frozenset(
         "findmy_duplicate_item",
         "findmy_identity_unavailable",
         "findmy_missing_item_identity",
+        "findmy_no_recovery_device",
         "findmy_recovery_failed",
         "findmy_recovery_limit",
         "findmy_recovery_material_failed",
