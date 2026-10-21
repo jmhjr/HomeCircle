@@ -360,3 +360,140 @@ def test_strict_outer_auth_failure_exposes_fixed_reason_before_key_unwrap(case, 
     assert caught.value.__dict__["_homecircle_outer_auth_reason"] == expected
     assert str(caught.value) == "Protection structure's outer authentication was not confirmed: " + original_reason + "."
     blocked.assert_not_called()
+
+
+def _signature_identifier_fixture(case, version, read_only, identifier, held):
+    """Derivative writer; old fixtures retain their original bytes and defaults."""
+    if held == "single":
+        control = signed_fixture(version=version, read_only=read_only, outer_signature="valid")
+        keys = [control.receiver]
+    else:
+        control, first, signer = multi_recipient_fixture(version=version, read_only=read_only)
+        keys = [first, signer] if held == "forward" else [signer, first]
+    order = 0xFFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632551
+    scalar = int.from_bytes(hashlib.pbkdf2_hmac(
+        "sha256", control.raw_key, b"full master key", 10, 128)[:32], "little")
+    if scalar > order:
+        scalar -= order
+    inner_signer = ec.derive_private_key(scalar, ec.SECP256R1())
+    outer_signer = control.outer_signer
+    if case == "outer_unrelated":
+        outer_signer = ec.generate_private_key(ec.SECP256R1())
+        keys.append(outer_signer)  # Locally held, but absent from the recipient keyset.
+    inner_public = inner_signer.public_key().public_bytes(Encoding.X962, PublicFormat.UncompressedPoint)
+    signed = control.protection.keyset_der + control.protection.meta + struct.pack(
+        ">IIII", 3, 1, 0, 1) + inner_public
+
+    def key_identifier(key, level):
+        public = key.public_key()
+        compact = public.public_numbers().x.to_bytes(32, "big")
+        compressed = public.public_bytes(Encoding.X962, PublicFormat.CompressedPoint)
+        value = compact if identifier == "producer32" else compressed
+        if case == level + "_wrong_x":
+            return value[:-1] + bytes([value[-1] ^ 1])
+        if case == level + "_short":
+            return compact[:-1]
+        if case == level + "_long":
+            return compressed + b"\x00"
+        if case == level + "_prefix":
+            return bytes([compressed[0] ^ 1]) + compact
+        if case == level + "_uncompressed":
+            return public.public_bytes(Encoding.X962, PublicFormat.UncompressedPoint)
+        return value
+
+    def signature(key, level):
+        if case == level + "_signature":
+            return b"invalid"
+        if case == level + "_inverse_y":
+            key = ec.derive_private_key(order - key.private_numbers().private_value, ec.SECP256R1())
+        return key.sign(signed, ec.ECDSA(hashes.SHA256()))
+
+    object_signature = sequence(
+        integer(1), integer(3), sequence(integer(1), octets(inner_public)),
+        sequence(octets(key_identifier(inner_signer, "inner")), integer(1),
+                 octets(signature(inner_signer, "inner"))),
+    )
+    meta = control.protection.meta
+    if case == "outer_covered_data":
+        meta = meta[:-1] + bytes([meta[-1] ^ 1])
+    mac = hmac.digest(kdf(control.field_key, b"hmackey-of-masterkey"),
+                      control.protection.keyset_der + meta + object_signature, "sha256")
+    if case == "hmac":
+        mac = mac[:-1] + bytes([mac[-1] ^ 1])
+    outer = sequence(
+        octets(key_identifier(outer_signer, "outer")),
+        integer(2 if case == "outer_digest" else 1), octets(signature(outer_signer, "outer")),
+    )
+    encoded = tlv(0x61, sequence(
+        control.protection.keyset_der, tlv(0xA0, octets(meta)),
+        tlv(0xA1, sequence(integer(version), octets(object_signature))), octets(mac),
+        tlv(0xA2, octets(key_id(control.field_key)[:4])), tlv(0xA3, outer),
+        *([tlv(0xA4, sequence(sequence(integer(7), octets(b"owner-review-control"))))]
+          if case == "owner_review" else []),
+    ))
+    return control, keys, pcs.ShareProtection.from_der(encoded), encoded
+
+
+_SIGNATURE_KEY_IDENTIFIER_CASES = [
+    *(('valid', version, read_only, identifier, held)
+      for version, read_only in ((5, False), (4, False), (4, True))
+      for identifier in ('producer32', 'x96233') for held in ('single', 'forward', 'reverse')),
+    *(('outer_' + failure, version, read_only, identifier, 'single')
+      for version, read_only in ((5, False), (4, False), (4, True))
+      for identifier in ('producer32', 'x96233')
+      for failure in ('wrong_x', 'short', 'long', 'prefix', 'uncompressed', 'inverse_y',
+                      'signature', 'digest', 'unrelated', 'covered_data')),
+    *(('inner_' + failure, version, False, identifier, 'single')
+      for version in (5, 4) for identifier in ('producer32', 'x96233')
+      for failure in ('wrong_x', 'short', 'long', 'prefix', 'uncompressed', 'inverse_y', 'signature')),
+    *((failure, version, read_only, identifier, 'single')
+      for version, read_only in ((5, False), (4, False), (4, True))
+      for identifier in ('producer32', 'x96233') for failure in ('hmac', 'owner_review')),
+]
+
+
+@pytest.mark.parametrize(('case', 'version', 'read_only', 'identifier', 'held'), _SIGNATURE_KEY_IDENTIFIER_CASES)
+def test_signature_key_identifiers_accept_only_exact_trusted_p256_encodings(
+    case, version, read_only, identifier, held, monkeypatch,
+):
+    control, keys, protection, encoded = _signature_identifier_fixture(
+        case, version, read_only, identifier, held)
+    if case == 'valid':
+        if identifier == 'producer32':
+            # Reproducing the pre-fix equality policy must reject this valid control.
+            with monkeypatch.context() as old_policy:
+                old_policy.setattr(pcs, '_signature_key_id_matches',
+                                   lambda value, key: value == pcs.compress_public_key(key))
+                assert pcs.describe_protection_signature(protection, control.raw_key) == pcs.SIGNATURE_WRONG_SIGNER
+                with pytest.raises(pcs.PCSError, match='outer authentication'):
+                    pcs.unwrap_protection(protection, keys, require_hmac=True, require_signature=True)
+        assert pcs.describe_protection_signature(protection, control.raw_key) is None
+        opened = pcs.unwrap_protection(protection, keys, require_hmac=True, require_signature=True)
+        assert opened.master_key == control.field_key and opened.hmac_verified
+        assert opened.signature_verified is (None if read_only else True)
+        for unwrap in (pcs.unwrap_zone, pcs.unwrap_zone_record_defaults):
+            assert unwrap(encoded, keys)
+        if version == 5 and identifier == 'producer32' and held == 'single':
+            public = control.receiver.public_key()
+            compact = public.public_numbers().x.to_bytes(32, 'big')
+            assert pcs._signature_key_id_matches(compact, public)
+            for value in (bytearray(compact), memoryview(compact), 1, compact[:-1],
+                          b'\x04' + compact, public.public_bytes(Encoding.X962, PublicFormat.UncompressedPoint)):
+                assert not pcs._signature_key_id_matches(value, public)
+            other_curve = ec.generate_private_key(ec.SECP384R1()).public_key()
+            assert pcs._signature_key_id_matches(
+                other_curve.public_bytes(Encoding.X962, PublicFormat.CompressedPoint), other_curve)
+            assert not pcs._signature_key_id_matches(other_curve.public_numbers().x.to_bytes(48, 'big'), other_curve)
+            assert not pcs._signature_key_id_matches(compact, other_curve)
+        return
+    assert pcs.verify_protection_hmac(protection, control.field_key) is (case != 'hmac')
+    if case.endswith('_inverse_y'):
+        # Same x is only an identifier hint; verification still uses the held point.
+        if case.startswith('outer_'):
+            assert pcs._signature_key_id_matches(protection.signature.key_id, control.outer_signer.public_key())
+            assert pcs.describe_outer_protection_signature(protection, control.outer_signer.public_key()) is not None
+        else:
+            assert pcs.describe_protection_signature(protection, control.raw_key) == pcs.SIGNATURE_REJECTED
+    expected = 'outer authentication' if case.startswith('outer_') or case == 'owner_review' else 'HMAC' if case == 'hmac' else 'signature'
+    with pytest.raises(pcs.PCSError, match=expected):
+        pcs.unwrap_protection(protection, keys, require_hmac=True, require_signature=True)

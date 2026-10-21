@@ -549,6 +549,19 @@ def bare_x(public_key: ec.EllipticCurvePublicKey) -> bytes:
     return uncompressed[1 : 1 + coordinate]
 
 
+def _signature_key_id_matches(key_id: bytes, public_key: ec.EllipticCurvePublicKey) -> bool:
+    """Match the held point's exact compressed encoding or producer P-256 bare x."""
+    if key_id == compress_public_key(public_key):
+        return True
+    return (
+        type(key_id) is bytes
+        and isinstance(public_key, ec.EllipticCurvePublicKey)
+        and isinstance(public_key.curve, ec.SECP256R1)
+        and len(key_id) == 32
+        and key_id == bare_x(public_key)
+    )
+
+
 def public_key_forms(public_key: ec.EllipticCurvePublicKey) -> set[bytes]:
     """
     Every way this protocol writes a public key, for matching one against another.
@@ -808,9 +821,9 @@ def describe_protection_signature(protection: ShareProtection, master_key: bytes
 
     considered = 0
     for candidate in candidates:
-        # A non-empty keyid is the signer's compressed public key. Checking it first names
-        # the wrong key immediately, where a failed verification does not.
-        if candidate.key_id and candidate.key_id != compress_public_key(public_key):
+        # A non-empty keyid is an exact supported encoding of the signer's public key.
+        # Checking it first names the wrong key, where failed verification does not.
+        if candidate.key_id and not _signature_key_id_matches(candidate.key_id, public_key):
             continue
 
         considered += 1
@@ -852,7 +865,7 @@ def describe_outer_protection_signature(
         return None
     if candidate.digest != 1:
         return "the outer signature declares an unsupported digest"
-    if candidate.key_id and candidate.key_id != compress_public_key(trusted_key):
+    if candidate.key_id and not _signature_key_id_matches(candidate.key_id, trusted_key):
         return "the outer signature names a signer other than the matched local key"
     try:
         object_signature = ObjectSignature.from_der(protection.signature_data.data)
