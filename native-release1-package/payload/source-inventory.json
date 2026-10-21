@@ -356,8 +356,8 @@
     "sha256": "739829527b54869489044ac86431d75172bb8915ff870f2d4afb66978f3df1fd"
   },
   "custom_components/homecircle/findmy_flow.py": {
-    "bytes": 69042,
-    "sha256": "40c2de90f14ab42b9a34d11510c1d9c418ea0575002fb9f9153436bced04ec39"
+    "bytes": 70138,
+    "sha256": "af7567bd5ac15ae724bea1048b9ca7beb08bfbf4042300dbd1db7852a22ce186"
   },
   "custom_components/homecircle/findmy_identity.py": {
     "bytes": 7518,
@@ -396,8 +396,8 @@
     "sha256": "8e5ad4aa024b7c8a790393cb99dfc29f3388c07e51d25136fb9d9f3ca246aa43"
   },
   "custom_components/homecircle/findmy_setup.py": {
-    "bytes": 46961,
-    "sha256": "9e9670c1c733a2b28ecb2f1f872e09abe356ac1a22d9060e2effd6434c38baf1"
+    "bytes": 47115,
+    "sha256": "32efad58521e6425d36d17434a6f90b1634112819ee75c6ee99b54e61a6483fd"
   },
   "custom_components/homecircle/findmy_storage.py": {
     "bytes": 1509,
@@ -448,16 +448,16 @@
     "sha256": "e69ad35f68062501c13f931b5fb279fd29a74913fc63ba81f051a4202ab4a32b"
   },
   "custom_components/homecircle/strings.json": {
-    "bytes": 88003,
-    "sha256": "3cb08295f1e13b7c15414851f078cf9e1ebe90eb58d2c36fc5219ca620424cfd"
+    "bytes": 92511,
+    "sha256": "59ba9eac81f5123328771bed04c02b0c88a262f2769552da231ea63554a9406c"
   },
   "custom_components/homecircle/tracker_providers.py": {
     "bytes": 8841,
     "sha256": "c0d18a68009d7ffedc2f095ee1c8bba8a59202e38ca4bdecb9c8804d6d1d5e99"
   },
   "custom_components/homecircle/translations/en.json": {
-    "bytes": 88003,
-    "sha256": "3cb08295f1e13b7c15414851f078cf9e1ebe90eb58d2c36fc5219ca620424cfd"
+    "bytes": 92511,
+    "sha256": "59ba9eac81f5123328771bed04c02b0c88a262f2769552da231ea63554a9406c"
   },
   "custom_components/homecircle/zone_setup.py": {
     "bytes": 1824,
@@ -1084,8 +1084,8 @@
     "sha256": "adb28ae80ef860153e130b43f31faebfc71a9f9e7c75fb2da00b9ce08076dd19"
   },
   "tests/test_findmy_flow.py": {
-    "bytes": 19115,
-    "sha256": "e1cb56217d7b10fe402e9fe665fe1bbe1e42a0e20771facd988723923ec0a869"
+    "bytes": 24590,
+    "sha256": "825b248237d9303e7727153ef0ee65dd8d0fa5cc73217df224e53b6a15162cbd"
   },
   "tests/test_findmy_gsa_client.py": {
     "bytes": 3694,
@@ -1176,8 +1176,8 @@
     "sha256": "014c1e372fbdd8fa7b1c821e1d3650a66b7b33c0354b545df025dbaf46c9897e"
   },
   "tests/test_findmy_recovery_integration.py": {
-    "bytes": 10338,
-    "sha256": "6d4e0371655d591084668028837099c371054f938fc54dac1d1738fe853463f7"
+    "bytes": 10900,
+    "sha256": "84c65f5d09a4226a120c79ec80641c4edee05e61e5dfbab8b5573f23f9af220a"
   },
   "tests/test_findmy_recovery_protocol.py": {
     "bytes": 21222,

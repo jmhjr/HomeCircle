@@ -43,7 +43,7 @@ jobs:
         run: |
           timeout --signal=TERM --kill-after=150s 3500s bash native-release1-package/run_host.sh \
             --payload native-release1-package/payload \
-            --pins-sha e01459f6df336d181292cbead6a765959432d688a766024c4564c658d9e5b246 \
+            --pins-sha b32d417d70523c3de6c87d00ad5b445e749f6345cbcd553877dc8d62bb0db147 \
             --source-repository "$GITHUB_WORKSPACE" \
             --output native-release1-package-results
           jq -e '.outcome=="passed" and .container_stopped==true and .container_removed==true and
