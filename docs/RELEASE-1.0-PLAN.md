@@ -60,7 +60,7 @@ Infrastructure failures receive one bounded diagnosis before any reasoned retry.
 | 3. Close provenance and provider decisions | Open; inventory and notice preview complete; depends on stage 1 for final scope | Maintainer/specialist, agent supplies evidence | Exact-source/installed-dependency notices and obligations disposition; source/permission/service/name decisions for shipped scope |
 | 4. Enabled backup/restore safety | Both published-beta and exact-development prepared investigations completed; operational/manual repair passed, automatic guard protection failed | Agent | Ordinary enabled startup after restore, restored data/identities, stale-backup safeguard result and bounded request evidence |
 | 5. Cryptographic and format assurance | Synthetic independent source review complete; external assurance open if Find My ships | Specialist, agent fixes; owner only for controlled acceptance | Review disposition, independent format vectors, authenticated rejection/recovery cases and fixes rechecked |
-| 6. Advertised compatibility | Four native endpoint QA-container lifecycle cells passed; exact-C managed amd64 investigation completed; remaining support cells open | Agent | All advertised cells have candidate dependency/install/start/restart evidence; unsupported cells excluded explicitly |
+| 6. Advertised compatibility | Four native QA-container lifecycle cells and both scoped managed ARM endpoints passed; fresh consumer/RC support gates open | Agent | All advertised cells have candidate dependency/install/start/restart evidence; unsupported cells excluded explicitly |
 | 7. Real-account acceptance | Open for included providers; requires stages 3/5 disposition and owner participation | Owner, agent guides/records | Controlled setup, discovery, selections, session lifecycle and successful recovery receipts without deliberately wrong passcodes |
 | 8. Sustained field acceptance | Earlier observations exist; final scope incomplete; depends on stages 6/7 as applicable | Owner observes, agent analyzes | Agreed observation window and movement/outage/renewal/staleness cases with genuine source-report times |
 | 9. Dashboard, access and privacy | Exact-source privacy and scoped desktop Safari picture checks passed; remaining final acceptance open | Agent plus owner for real displays | Desktop/mobile/physical display, admin/household permissions, privacy/deletion, real attribution/request checks |
@@ -134,6 +134,12 @@ phases and manual repair with C, independently reproducing guard rollback.
   experiment, preserving all six phase, identity/history, byte and cleanup
   receipts and explicit negative automatic-safety disposition.
 
+The subsequent [explicit-procedure investigations](RELEASE-1.0-INCOMPLETE-PILOTS.md#explicit-restore-procedure-eight-incomplete-runs) retain seven prior zero-phase negatives. The eighth run passed initialize,
+initial restart, quarantine and mutate, including normal requirements and the
+portrait correction, then failed host-held newest-guard retention. Its cause
+remains unidentified; the full procedure is unaccepted at the October 21,
+01:02 UTC cutoff. No product defect is inferred.
+
 - [ ] Rehearse an ordinary Supervisor backup with HomeCircle enabled, restore
   it, and observe the first automatic startup in a disposable synthetic HAOS
   instance. Preserve entry/Person/tracker/settings/places/pictures/history and
@@ -175,8 +181,8 @@ managed amd64 restore investigation and the [minimum-Core amd64 managed
 startup/restart pass](RELEASE-1.0-MINIMUM-HAOS.md). The [eight consumer and seven
 local ARM negatives](RELEASE-1.0-INCOMPLETE-PILOTS.md) remain preserved. The
 subsequent [four native consumer entrypoint witnesses](RELEASE-1.0-INCOMPLETE-PILOTS.md#scoped-consumer-followup-four-native-cells-passed) passed prepared-cache startup/stop/restart at both
-Core endpoints on both CPUs. Exact-C ARM managed phases and broader release
-gates remain open.
+Core endpoints on both CPUs. Subsequent [ARM managed followups](RELEASE-1.0-INCOMPLETE-PILOTS.md#scoped-arm-managed-followup-both-core-endpoints-passed) passed normal requirements and startup/restart at both endpoints.
+Fresh online consumer and broader release gates remain open.
 
 - [x] Qualify exact-C scripted native Core lifecycle on amd64 and ARM64 at
   2026.9.4 and 2026.10.2: 12 focused cases and four separate Core processes per
@@ -195,6 +201,12 @@ gates remain open.
   acceptance and owned cleanup. Fresh online resolution and provider/native-worker
   acceptance remain outside these witnesses.
 
+- [x] Verify scoped native ARM64 HAOS normal-requirements startup/restart at
+  Core 2026.9.4 and 2026.10.2. Current attempt 7 and minimum attempt 4 preserved
+  exact C453 loaded/served bytes, explicit selections, nonempty saved settings
+  and identities; graceful cleanup passed. Provider/native-worker, HACS, restore
+  and final-RC scope remain separate.
+
 - [ ] Freeze the advertised matrix. The current proposal has eight cells:
   HAOS/Container × amd64/ARM64 × Core 2026.9.4/2026.10.2.
 - [ ] For each cell, verify actual requirements installation, exact candidate
@@ -210,8 +222,13 @@ gates remain open.
 ### 7. Controlled owner account acceptance
 
 The [controlled account protocol](RELEASE-1.0-ACCOUNT-ACCEPTANCE.md) is ready.
-Execution awaits an identified HA instance and its test or everyday-use status;
-no new owner account attempt has started during this preparation.
+The maintainer delegated target selection; a separate new dedicated test
+instance was chosen, preserving original instances. A corrected explicit network
+record passed stopped-export readback with one loopback-bound NAT forward;
+online startup succeeded. Normal Core boot was active in the latest root
+observation at October 21, 00:58 UTC. At the 01:02 UTC cutoff, UI onboarding,
+owner accounts and HACS readiness have not been
+accepted. No owner account attempt has started during this preparation.
 
 - [ ] For each included direct provider, accept sign-in/verification, discovery,
   explicit item/member selection, cancel/abandon, reconnect, disconnect and

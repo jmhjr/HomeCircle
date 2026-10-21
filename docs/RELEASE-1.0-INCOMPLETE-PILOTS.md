@@ -1,10 +1,10 @@
 # Consumer, ARM managed and restore-procedure pilot evidence
 
 Eight consumer and seven local ARM negative results remain preserved below,
-alongside five incomplete restore-procedure runs. Subsequent witnesses passed
+alongside eight incomplete restore-procedure runs. Subsequent witnesses passed
 the original consumer entrypoint with prepared normal-config dependencies on all
-four proposed native endpoint/CPU cells. Exact-preview ARM managed and restore
-acceptance remain open. The tested source is
+four proposed native endpoint/CPU cells. Subsequent scoped ARM managed startup/
+restart witnesses passed at both Core endpoints; restore safety remains open. The tested source is
 `9bf03eb45d2cf43274074534e9dfe2de841f4011`; the intended candidate is the same
 113-file `c4530d94be3b2996f8d6c8948db88a51868566047d68558eefde7967f270a861`
 unreleased preview. Reaching a preparer or staging step does not establish that
@@ -134,7 +134,7 @@ dependencies and grant no fresh online consumer resolution, managed HAOS,
 provider/native-worker, HACS or stable-release acceptance. The eight older
 consumer negatives remain preserved.
 
-## Local ARM managed attempts: no accepted phase
+## Local ARM managed negative attempts
 
 The first owned ARM64/HVF attempt verified its fresh managed current-Core target
 and stored OCI chain before candidate staging, then failed at `initial` with
@@ -213,7 +213,46 @@ Uninspected original disk/snapshot contents are not claimed verified. The
 readiness protocol for a future attempt must establish a positive read-only guest
 transport observation before continuation; preparation alone is not a pass.
 
-## Explicit restore procedure: five incomplete runs
+## Scoped ARM managed followup: both Core endpoints passed
+
+Current attempt 7 and minimum attempt 4 subsequently passed account-free ordinary-
+requirements startup/restart on actual HAOS 18.3/aarch64, native HVF, Supervisor
+2026.10.2 and Python 3.14.6. Strict source-bound OCI index/manifest/config and
+22-layer metadata, exact C453 113-file installation, loaded implementation and
+real loopback HTTP-served frontend matched. Explicit Person/tracker selections,
+nonempty saved options and entry/resource/dashboard/snapshot identities survived
+distinct Core process starts. Precreation scope was three enabled SYSTEM entries
+(Analytics/Backup/Hassio); restart retained those plus one USER HomeCircle.
+
+| Witness | Core / completed actions | Transport scope | Independent report SHA-256 |
+| --- | --- | --- | --- |
+| Current attempt 7 | 2026.10.2; five actions | Bootstrap 49 calls, seven read-only host-nonzero attempts; continuation 368 calls, zero read failures | `69db38b1f42614d38600b7aa9891e9aeb1efe0fb5b5d9364f1809990dac18924` |
+| Minimum attempt 4 | 2026.9.4; seven actions | Bootstrap 56 calls, eleven read-only host-nonzero attempts; continuation 1,404 calls, zero read failures | `0cd9671a08aaa5825750f7a90c35ebd022f547f2461ba20896b8d0ede3da1c45` |
+
+Zero read failures applies only to continuation. Minimum separately observed
+stock Core 2026.10.2, one supported 2026.9.4 selection, actual `not_created` state
+and one supported start creating the target; readiness alone did not establish
+minimum version. Fresh resets measured 24 files/13 children each, 294,198 bytes
+current and 302,384 minimum, with no owner or prior candidate.
+
+Normal managed requirements remained enabled without preload or skip-pip.
+Anisette, Life360 and Unicorn were unavailable before setup; the exact 24-package
+metadata closure was present and stable afterward. The `core_image` origin label
+means the system-site path, not immutable-image provenance. Individual installer
+network transactions and provider request attempts were not measured.
+
+Each witness retained 21 narrow receipts and passed all five graceful cleanup
+checks without force, preserving original registry/known QA disk metadata.
+Private raw bytes were deleted; verification checks retained controller hashes
+and counts, not deleted bytes or uninspected original disks/snapshots. All seven
+prior ARM negatives remain unchanged. These passes do not establish provider/
+native-worker, HACS, restore, final-RC or stable acceptance. The separate new
+persistent account-test instance passed corrected stopped-network export and
+online start, with one loopback-bound NAT forward. The latest root observation
+at October 21, 00:58 UTC had normal Core boot active. At this 01:02 UTC cutoff,
+UI onboarding, accounts and HACS readiness have not been accepted.
+
+## Explicit restore procedure: eight incomplete runs
 
 The first account-free procedure run,
 [39511219817](https://github.com/jmhjr/HomeCircle/actions/runs/39511219817), failed
@@ -303,25 +342,93 @@ with exactly `host.json` and failed `initialize.json`. Independent checks bound
 all 16 published inputs, actual source/control provenance and the unchanged
 procedure gate. QEMU stopped and private workspace cleanup passed.
 
-All five results remain negative. The procedure gate rejects the incomplete
-second through fifth receipts. New preparation or a running followup adds no
-accepted restore result.
+The sixth run,
+[39520412969](https://github.com/jmhjr/HomeCircle/actions/runs/39520412969), passed
+89 zero-skip contracts but accepted no phase. Initialization timed out at
+`persistent_setup / person_sources / TimeoutError`, without a fixed code.
+Presence/state/link predicates were not retained, so its precise failing
+component remains unknown. The earlier three-system-entry gate passed. Four
+preliminary Core controls and one 113-file installation do not establish full
+loaded/served acceptance. Artifact 12310778757 is 3,018 bytes, SHA-256
+`e8d2ef147b90e2821ad453a1f70b5a6d6eeae75947ded9220266225b4b81bb01`,
+with exactly `host.json` and failed `initialize.json`; cleanup passed. Independent
+report SHA-256 is
+`36efa3bab15b8140977466537e738f0d45602a9fbfcdda8f070736f612f62c1f`.
+
+The seventh run,
+[39522551863](https://github.com/jmhjr/HomeCircle/actions/runs/39522551863), passed
+93 zero-skip contracts and failed the same bounded Person-source wait with zero
+accepted phases. At index 0, Person/tracker presence and tracker-Home were true;
+Person-Home, selected-source and configured-link match were false. All six
+booleans at index 1 were true. The actual moment of selection loss was not
+recorded. The startup entry gate passed; backup, guard transfer, restore, repair
+and re-enable were not reached. Artifact 12311327544 is 3,099 bytes, SHA-256
+`0d5b69ab7249e88f22a9d25564ea91d561846546a8acceeedb6f145984aacfde`,
+with exactly `host.json` and failed `initialize.json`; cleanup passed. Independent
+report SHA-256 is
+`dae05622948e2eae89d2b3ca3275704f1e689048cedfc30c21ef38ba12ced399`.
+
+Separately, pinned Core Person source confirms a QA API mismatch: the optional
+`device_trackers` update field defaults to an empty list, while this fixture's
+portrait-only update omitted it. Core's own picture update explicitly preserves
+existing trackers. The retained actual-method/default-list regression supports
+a minimal fixture correction carrying that list. It subsequently passed the
+initialization and managed restart prefix in the eighth run below. No HomeCircle
+product defect or earlier unretained OTHER identity is inferred.
+
+The eighth run,
+[39524048553](https://github.com/jmhjr/HomeCircle/actions/runs/39524048553), at QA
+`e7c65b2a3f79d81b64bf6085bb5f5fc597615a7c`, passed 95 native zero-skip
+contracts and all 16 published-input bindings. Four actual phases passed:
+initialize, initial restart, quarantine and mutate. The first two established
+normal managed requirements with the exact 24-package constrained closure and
+six direct requirements, no preload or skip-pip, 113-file loaded/served bytes,
+nonempty settings/place/persisted picture, explicit Person/source consistency
+and Recorder history across distinct Core processes. These phase-specific
+checks passed; the host's whole-procedure dependency summary remains false
+because the complete procedure did not finish.
+
+The entry was disabled and unloaded before a real Supervisor database partial
+backup was created and inspected in the guest. Its guard count was two; mutate
+established a distinct count-three guard through the actual API, blocked true,
+pending/uncertain zero, while the entry remained disabled/unloaded. Existing
+history and a nonempty postbackup marker were observed. The private backup was
+not exported or downloaded.
+
+The host then stopped at `host_private_newest_guard / guest_command_failed`.
+Seven Core controls completed and the last stop succeeded. The retained fixed
+receipt does not identify the failed later guest operation or underlying cause.
+The newest host-held guard was not marked retained; network closure, restore,
+repair, re-enable and final restart were not reached. The full eight-phase
+procedure gate remains false.
+
+Artifact 12311619277 is 8,120 bytes, SHA-256
+`65935637f4e2b3d453f5ece7c6a51535a45abf247fca2dd5695cd3479b46c96a`,
+with exactly `host.json` and those four passed phase receipts. QEMU stopped,
+private cleanup passed and cleanup failure was false; elapsed time was 235.343
+seconds. Independent report SHA-256 is
+`243666ad68ec615358935f2a6c29b8daaf2bbd095ec03286b93dd3e1ab1c0851`.
+At the October 21, 01:02 UTC cutoff, all eight overall procedure runs remain
+incomplete. The first seven accepted zero phases; the eighth accepted the four
+phases above. Partial acceptance does not establish a passed restore procedure.
 Ordinary enabled-restore safety, automatic antirollback and stable-release
 approval remain false, and provider request-attempt counts remain unmeasured.
 
-At this checkpoint the newer current ARM attempt 7 and minimum ARM attempt 4
-profiles are prepared and unrun. Their preparation adds no runtime acceptance.
+At the public e918 checkpoint, current ARM attempt 7 and minimum attempt 4 were
+prepared and unrun. Their later scoped passes are recorded above; the historical
+checkpoint and all earlier negatives remain preserved.
 
 ## Evidence and remaining disposition
 
 [Machine-readable evidence](RELEASE-1.0-INCOMPLETE-PILOTS.json) preserves each
 consumer run's exact independent verification, narrow artifact member bindings
-and result, including the later scoped consumer pass, plus the five incomplete procedure records. It also records byte/hash bindings and limited public
+and result, including the later scoped consumer pass, plus eight incomplete procedure records and two scoped ARM successes. It also records byte/hash bindings and limited public
 projections of the six current and one minimum ARM host/failure records, including the third readiness record. Raw private logs,
 credentials and owner configurations are excluded.
 
 The actual [minimum-Core amd64 managed pass](RELEASE-1.0-MINIMUM-HAOS.md) and
 [QA-container lifecycle checks](RELEASE-1.0-COMPATIBILITY.md) retain their separate
 successful scopes. The prepared-cache consumer entrypoint scope is complete across four cells;
-exact-preview ARM managed acceptance and broader release gates remain open. These pilots used no owner/provider accounts, add no
+ordinary-requirements ARM managed startup/restart also passed at both endpoints.
+Broader platform, provider, restore and final-release gates remain open. These pilots used no owner/provider accounts, add no
 native Apple-worker acceptance and grant no stable release approval.

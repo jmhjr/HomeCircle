@@ -48,6 +48,8 @@ The endpoint runs and scoped managed witnesses were independently verified:
 | Container / Core 2026.10.2 | Native amd64 and ARM64; original entrypoint, stop/restart with prepared normal-config cache | [four native consumer entrypoint witnesses](RELEASE-1.0-INCOMPLETE-PILOTS.md#scoped-consumer-followup-four-native-cells-passed), runs 39516737435 and 39517742934 |
 | HAOS 18.3 / Core 2026.9.4 / Supervisor 2026.10.2 | Native amd64/KVM; normal managed dependency setup and two service observations | [Minimum managed witness](RELEASE-1.0-MINIMUM-HAOS.md), run 39504506480 |
 | HAOS 18.3 / Core and Supervisor 2026.10.2 | Native amd64/KVM; six managed phases | [Prepared restore investigation](RELEASE-1.0-HAOS-RESTORE.md), run 39494958171 |
+| HAOS 18.3 / Core 2026.9.4 / Supervisor 2026.10.2 | Native ARM64/HVF; normal requirements and startup/restart | [Scoped minimum ARM managed witness](RELEASE-1.0-INCOMPLETE-PILOTS.md#scoped-arm-managed-followup-both-core-endpoints-passed), minimum attempt 4 |
+| HAOS 18.3 / Core and Supervisor 2026.10.2 | Native ARM64/HVF; normal requirements and startup/restart | [Scoped current ARM managed witness](RELEASE-1.0-INCOMPLETE-PILOTS.md#scoped-arm-managed-followup-both-core-endpoints-passed), current attempt 7 |
 
 The four QA-container cells add 48 executions of the same 12 focused cases,
 zero failures/skips and 16 fresh Core processes, with exact loaded/served bytes,
@@ -64,7 +66,15 @@ remain preserved. The subsequent [four native consumer entrypoint witnesses](REL
 loaded/served bytes, settings/source/resource continuity, legitimate unload/setup,
 offline acceptance and cleanup at both Core endpoints on both CPUs. They used
 prepared normal-config dependencies; fresh online consumer resolution is outside
-that scope. No exact-C ARM managed phase has been accepted.
+that scope. The subsequent [two ARM managed witnesses](RELEASE-1.0-INCOMPLETE-PILOTS.md#scoped-arm-managed-followup-both-core-endpoints-passed) passed normal dependency setup, 113-file loaded/served bytes and stable saved
+settings/source/resource/dashboard identities through real Core restarts. Both
+ran on native HVF/HAOS 18.3/Supervisor 2026.10.2/Python 3.14.6, at Core 2026.9.4
+and 2026.10.2. Missing Anisette/Life360/Unicorn before setup and the stable 24-
+package metadata closure afterward were observed without preload or skip-pip.
+System-site origin does not establish immutable-image provenance or individual
+network transactions. All five graceful cleanup gates passed in each. Bootstrap
+read-only host-nonzero attempts (seven current, eleven minimum) remain distinct
+from zero-failure continuations (368 and 1,404 calls).
 No provider account or native Apple worker was exercised by these new runs.
 
 ## What can be carried forward
@@ -109,8 +119,8 @@ volume combinations or an HAOS-managed installation.
 | Container / ARM64 / 2026.10.2 | F: official ARM64 QA container, native/lifecycle, full suite, process-level upgrades/recovery and a separately scoped public anonymous runtime check. [Detailed results](https://github.com/jmhjr/HomeCircle/blob/v0.1.0-beta.20/docs/LINUX-HAOS-VALIDATION.md#regression-upgrade-and-recovery-results) | C: [current lifecycle](RELEASE-1.0-CURRENT-LIFECYCLE.md) passed exact-C dependency setup, loaded/served bytes, 12 focused cases and four Core processes. The [four native consumer entrypoint witnesses](RELEASE-1.0-INCOMPLETE-PILOTS.md#scoped-consumer-followup-four-native-cells-passed) separately passed this cell with prepared dependencies. Native worker execution was not repeated. |
 | HAOS / amd64 / 2026.9.4 | C: native KVM/HAOS 18.3/Supervisor 2026.10.2, normal managed requirement setup and exact Core 2026.9.4 image/runtime. | [Run 39504506480](RELEASE-1.0-MINIMUM-HAOS.md) passed exact-C enabled startup/restart, 113 installed files and exact loaded/served hashes, nonempty settings and persisted identities; restart external NIC closed and cleanup passed. Direct verified ZIP installation, not HACS, historical migration, native-worker repetition, removal or backup/restore. |
 | HAOS / amd64 / 2026.10.2 | F: native KVM HAOS 18.3 managed setup/restart and prepared disabled-entry partial backup/Recorder restore. B: eight genuine HACS phases in [39461573392](https://github.com/jmhjr/HomeCircle/actions/runs/39461573392), preserving synthetic selections/options/identities and exact served bundle. | C: [six-phase managed investigation](RELEASE-1.0-HAOS-RESTORE.md) passed actual startup/restart, exact loaded/served bytes, settings/identity/history restoration and separate manual guard repair with prepared dependencies. Automatic guard protection failed. Default dependency reinstallation, real C/RC HACS delivery and full restore remain separate. Changed city/passive cases passed in the focused QA-container runs. |
-| HAOS / ARM64 / 2026.9.4 | No recorded managed minimum-Core installation/restart result; only the separate F QA container. | The [first exact-C minimum managed attempt](RELEASE-1.0-INCOMPLETE-PILOTS.md) selected actual 2026.9.4 and completed a fresh reset, then failed the source-bound initial entry-scope check without an accepted phase. The unexpected domain remains unknown. This managed-cell gap stays open, independent of the amd64 result. |
-| HAOS / ARM64 / 2026.10.2 | F: normal managed dependency install, real explicit Person/tracker flow, native probe and actual restart with all 112 installed hashes, registry/config/resource/dashboard identities preserved. [Managed scope](https://github.com/jmhjr/HomeCircle/blob/v0.1.0-beta.20/docs/LINUX-HAOS-VALIDATION.md#actual-haos-managed-core-loading-and-restart) | Reuse unchanged native/setup design evidence narrowly. [Six local current-Core preparations/attempts](RELEASE-1.0-INCOMPLETE-PILOTS.md) failed without an accepted initial/restart phase; their cleanup passed. Exact-C managed install/restart/unload and generated bundle serving remain open; no B or C native ARM64 genuine-HACS result is asserted. |
+| HAOS / ARM64 / 2026.9.4 | C: scoped native HVF/HAOS 18.3/Supervisor 2026.10.2 managed witness. | [Minimum attempt 4](RELEASE-1.0-INCOMPLETE-PILOTS.md#scoped-arm-managed-followup-both-core-endpoints-passed) passed normal requirements, exact C453 startup/restart, loaded/served bytes, nonempty settings and identity continuity. One supported stock 2026.10.2 → 2026.9.4 selection, actual absent-container start and seven completed actions are retained. The earlier minimum negative remains preserved. No provider/native-worker, HACS, restore or final-RC claim. |
+| HAOS / ARM64 / 2026.10.2 | F: managed normal install/restart/native evidence for its 112-file input; C: scoped native HVF/HAOS 18.3 current witness. | [Current attempt 7](RELEASE-1.0-INCOMPLETE-PILOTS.md#scoped-arm-managed-followup-both-core-endpoints-passed) passed normal requirements, exact C453 startup/restart, loaded/served bytes, explicit selections and nonempty settings/identities across five completed actions. All six prior current negatives remain preserved. No B/C native ARM genuine-HACS, new provider/native-worker or restore acceptance is asserted. |
 
 Additional native Ubuntu 24.04/amd64 glibc 2.39/Core 2026.10.2 acceptance for B
 passed [39474571811](https://github.com/jmhjr/HomeCircle/actions/runs/39474571811):
@@ -119,17 +129,24 @@ specific runtime; it does not fill a C cell or every glibc distribution.
 Earlier emulated amd64 timeout failures remain failed/unqualified in their own
 scope and are not erased by later native results.
 
+At the October 21, 01:02 UTC cutoff, restore-procedure followup 39524048553
+passed normal setup/restart, quarantine and mutate after 95 native contracts and
+16 published-input checks. Host-held newest-guard retention then failed with no
+underlying cause established; the full restore gate remains false. Phase-level
+dependency/source/served acceptance does not imply completed restore safety.
+
 ## Next compatibility work
 
 The former minimum/current exact-C QA-container lifecycle gap is now closed on
 both CPUs within the scripted scope above. Repeating the full suite on every
 wrapper is unnecessary. The proposed matrix is still not fully accepted:
 
-- Verify the consumer Container entrypoint/installation procedure with an
-  identified candidate and protected disposable configuration.
-- Preserve the completed minimum-Core amd64 managed witness and obtain the
-  still-missing ARM64 minimum/current managed startup/restart witnesses, or
-  explicitly narrow the proposed support statement before the final release.
+- Preserve the four prepared-cache original-entrypoint passes. Qualify fresh
+  online installation through the unmodified Core requirements route, followed
+  by measured isolated acceptance/restart; new file-only planning is not a pass.
+- Preserve the completed minimum-Core amd64 and both ARM managed ordinary-
+  requirements startup/restart witnesses. Close only the remaining advertised
+  final-RC, provider/native, delivery and removal scope before release.
 - Identify a final RC for genuine HACS delivery and freshly inspected
   installed-state migration. The unreleased same-version ZIP cannot supply
   ordinary release-selection acceptance.

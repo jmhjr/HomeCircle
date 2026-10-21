@@ -17,8 +17,17 @@ passed normal dependency setup and exact-preview startup/restart. The
 [eight consumer and seven local ARM negative results](RELEASE-1.0-INCOMPLETE-PILOTS.md)
 remain preserved. The subsequent [four native consumer entrypoint witnesses](RELEASE-1.0-INCOMPLETE-PILOTS.md#scoped-consumer-followup-four-native-cells-passed) passed startup/restart and
 identity continuity at both Core endpoints on both CPUs, with prepared
-normal-config dependencies and offline acceptance. Exact-C ARM managed phases
-and broader release gates remain open.
+normal-config dependencies and offline acceptance. Subsequent [ARM managed
+followups](RELEASE-1.0-INCOMPLETE-PILOTS.md#scoped-arm-managed-followup-both-core-endpoints-passed) passed normal requirements and exact-preview startup/restart at both
+Core endpoints, preserving settings/source/served identities with graceful
+cleanup. Bootstrap read-only transport attempts are separate from zero-failure
+continuations. Eight restore-procedure runs remain incomplete: the first seven
+accepted no phases; the eighth passed initialization, managed restart, quarantine
+and mutate, including the corrected portrait selection and normal dependency
+checks. It then failed host-held newest-guard retention; the cause remains
+unidentified and the full restore gate is false at the October 21, 01:02 UTC
+cutoff. Fresh online consumer resolution, provider accounts,
+restore safety, final RC/HACS and broader release gates remain open.
 The [compatibility disposition](RELEASE-1.0-COMPATIBILITY.md) retains the
 remaining target gaps. Both direct providers remain selected for 1.0. This is not a
 published release, and the

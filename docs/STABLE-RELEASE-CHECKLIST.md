@@ -23,9 +23,17 @@ artifacts below. These scoped results do not approve the full advertised matrix.
   startup/stop/restart, exact bytes, settings/source/resource continuity,
   legitimate unload/setup and cleanup at both Core endpoints on both CPUs,
   with prepared normal-config dependencies and offline acceptance.
-- [ ] Accept the remaining exact-C ARM64 managed cells. The [eight consumer and seven local ARM negatives](RELEASE-1.0-INCOMPLETE-PILOTS.md)
-  remain preserved; no ARM phase was accepted. Fresh online consumer resolution
-  is outside the prepared-cache consumer witnesses.
+- [x] Record both [scoped ARM managed startup/restart passes](RELEASE-1.0-INCOMPLETE-PILOTS.md#scoped-arm-managed-followup-both-core-endpoints-passed): current attempt 7 and minimum attempt 4 passed normal
+  requirements, 113-file loaded/served bytes, nonempty settings, identity
+  continuity and cleanup. All prior consumer/ARM negatives remain preserved.
+  Provider/native-worker, HACS, restore and final RC remain separate.
+- [ ] Qualify fresh online consumer dependency installation through normal Core;
+  the four prepared-cache entrypoint passes retain their narrower scope.
+- [ ] Complete the explicit safe-restore procedure. [Run 39524048553](https://github.com/jmhjr/HomeCircle/actions/runs/39524048553) passed the
+  first four phases, including normal setup/restart and the portrait correction,
+  then failed host-held newest-guard retention. The cause remains unidentified
+  and the full eight-phase gate is false at the October 21, 01:02 UTC cutoff.
+  The seven prior zero-phase negatives remain preserved.
 - [ ] Resolve the [automatic guard rollback finding](RELEASE-1.0-HAOS-RESTORE.md)
   and the other final-RC, provider, notice/assurance and owner-acceptance gates
   in the [release plan](RELEASE-1.0-PLAN.md). Passing manual prepared restore
