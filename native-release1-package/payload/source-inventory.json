@@ -356,8 +356,8 @@
     "sha256": "739829527b54869489044ac86431d75172bb8915ff870f2d4afb66978f3df1fd"
   },
   "custom_components/homecircle/findmy_flow.py": {
-    "bytes": 70138,
-    "sha256": "af7567bd5ac15ae724bea1048b9ca7beb08bfbf4042300dbd1db7852a22ce186"
+    "bytes": 70175,
+    "sha256": "c22d1c7a7f7dcc55e651e3778c357a6cee1dece2f24a50d67a7d65e4a6f3eba5"
   },
   "custom_components/homecircle/findmy_identity.py": {
     "bytes": 7518,
@@ -448,16 +448,16 @@
     "sha256": "e69ad35f68062501c13f931b5fb279fd29a74913fc63ba81f051a4202ab4a32b"
   },
   "custom_components/homecircle/strings.json": {
-    "bytes": 92511,
-    "sha256": "59ba9eac81f5123328771bed04c02b0c88a262f2769552da231ea63554a9406c"
+    "bytes": 92664,
+    "sha256": "f3a42624d6db2ab5b9cb39c963bc359ac23418b081fe7c19c85dc6aa9b81c500"
   },
   "custom_components/homecircle/tracker_providers.py": {
     "bytes": 8841,
     "sha256": "c0d18a68009d7ffedc2f095ee1c8bba8a59202e38ca4bdecb9c8804d6d1d5e99"
   },
   "custom_components/homecircle/translations/en.json": {
-    "bytes": 92511,
-    "sha256": "59ba9eac81f5123328771bed04c02b0c88a262f2769552da231ea63554a9406c"
+    "bytes": 92664,
+    "sha256": "f3a42624d6db2ab5b9cb39c963bc359ac23418b081fe7c19c85dc6aa9b81c500"
   },
   "custom_components/homecircle/zone_setup.py": {
     "bytes": 1824,
@@ -1084,8 +1084,8 @@
     "sha256": "adb28ae80ef860153e130b43f31faebfc71a9f9e7c75fb2da00b9ce08076dd19"
   },
   "tests/test_findmy_flow.py": {
-    "bytes": 24590,
-    "sha256": "825b248237d9303e7727153ef0ee65dd8d0fa5cc73217df224e53b6a15162cbd"
+    "bytes": 26425,
+    "sha256": "da8a17d08fa85f9ba76f1f32e26ab52ef5c160a7d32b7920abe4cc7a168f86b6"
   },
   "tests/test_findmy_gsa_client.py": {
     "bytes": 3694,
