@@ -510,6 +510,22 @@ def source_setup_catalog():
     return frozenset(labels)
 
 
+def public_person_sources(value):
+    """Only two fixed indices and strict boolean observations may leave QA."""
+    fields = ('person_present', 'tracker_present', 'person_home', 'tracker_home',
+              'source_matches_selected', 'configured_link_matches_selected')
+    if type(value) is not dict or set(value) != {'0', '1'}:
+        return None
+    result = {}
+    for index in ('0', '1'):
+        row = value[index]
+        if type(row) is not dict or set(row) != set(fields) \
+                or any(type(row[field]) is not bool for field in fields):
+            return None
+        result[index] = {field: row[field] for field in fields}
+    return result
+
+
 def public_setup_step(value):
     return value if type(value) is str and value in SETUP_STEPS else None
 
@@ -1178,6 +1194,9 @@ print(json.dumps({"connected":connected}))
                 if name == 'initialize' and receipt.get('stage') == 'persistent_setup' \
                         and (step := public_setup_step(receipt.get('setup_step'))):
                     failure['setup_step'] = step
+                    if step == 'person_sources' \
+                            and (observation := public_person_sources(receipt.get('person_sources'))):
+                        failure['person_sources'] = observation
                 if scope := public_entry_scope(receipt.get('entry_scope')):
                     failure['entry_scope'] = scope
                 write_json(self.public / (name + ".json"), failure)

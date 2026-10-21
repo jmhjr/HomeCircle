@@ -310,12 +310,58 @@ def tracker_state(hass, state, marker):
              "qa_backup_marker": marker})
 
 
+def public_person_sources(value):
+    """Only two fixed indices and strict boolean observations may leave QA."""
+    fields = ('person_present', 'tracker_present', 'person_home', 'tracker_home',
+              'source_matches_selected', 'configured_link_matches_selected')
+    if type(value) is not dict or set(value) != {'0', '1'}:
+        return None
+    result = {}
+    for index in ('0', '1'):
+        row = value[index]
+        if type(row) is not dict or set(row) != set(fields) \
+                or any(type(row[field]) is not bool for field in fields):
+            return None
+        result[index] = {field: row[field] for field in fields}
+    return result
+
+
+def observe_person_sources(hass, people):
+    """Read the same two selections without returning names, IDs or values."""
+    if type(people) is not list or len(people) != 2 or len(TRACKERS) != 2:
+        return None
+    result = {}
+    for index, (person, tracker) in enumerate(zip(people, TRACKERS, strict=True)):
+        person_state = hass.states.get(person)
+        tracker_state = hass.states.get(tracker)
+        result[str(index)] = {
+            'person_present': person_state is not None,
+            'tracker_present': tracker_state is not None,
+            'person_home': person_state is not None and person_state.state == 'home',
+            'tracker_home': tracker_state is not None and tracker_state.state == 'home',
+            'source_matches_selected': person_state is not None
+                and person_state.attributes.get('source') == tracker,
+            'configured_link_matches_selected': entities_in_person(hass, person) == [tracker],
+        }
+    return public_person_sources(result)
+
+
 async def person_sources(hass, people, state="home", progress=None):
     setup_mark(progress, "person_sources")
-    await wait_for(lambda: all(hass.states.get(person) is not None
-        and hass.states.get(person).attributes.get("source") == tracker
-        and hass.states.get(person).state == state
-        for person, tracker in zip(people, TRACKERS, strict=True)))
+    try:
+        await wait_for(lambda: all(hass.states.get(person) is not None
+            and hass.states.get(person).attributes.get("source") == tracker
+            and hass.states.get(person).state == state
+            for person, tracker in zip(people, TRACKERS, strict=True)))
+    except TimeoutError:
+        if progress is not None:
+            try:
+                observation = observe_person_sources(hass, people)
+            except Exception:
+                observation = None
+            if observation is not None:
+                progress['person_sources'] = observation
+        raise
 
 
 async def stable_snapshot(hass, entry, people, registry):
@@ -847,6 +893,10 @@ class Rehearsal:
             receipt.update({"outcome": "failed", "stage": stage, "failure_type": type(error).__name__})
             if stage == "persistent_setup" and setup_progress:
                 receipt["setup_step"] = setup_progress["step"]
+            if stage == 'persistent_setup' and setup_progress.get('step') == 'person_sources' \
+                    and name == 'initialize':
+                if observation := public_person_sources(setup_progress.get('person_sources')):
+                    receipt['person_sources'] = observation
             if isinstance(error, Refused):
                 receipt["failure_code"] = str(error)
             # No exception messages, locals, entity IDs, timestamps or account values.

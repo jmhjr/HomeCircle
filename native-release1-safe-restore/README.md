@@ -99,7 +99,21 @@ the two existing HTTP waits. No response text, exception message, entity/entry
 metadata, ID, URL, path or arbitrary label is retained. Other stages and successful
 receipts do not gain this field. A timeout label identifies the active await
 region, not its cause. The fifth negative receipt lacked this observation, so
-its exact timeout remains unknown. No deadline or acceptance criterion changes.
+its exact timeout remains unknown. The sixth negative receipt identified
+`person_sources`, without showing which part of that predicate was false.
+
+Only a failed initialization at `persistent_setup / person_sources` may add
+`person_sources`: exactly two fixed indices (`0`, `1`), each containing six
+strict booleans: `person_present`, `tracker_present`, `person_home`,
+`tracker_home`, `source_matches_selected` and `configured_link_matches_selected`.
+They read the current states and configured Person links in one event-loop turn
+after the existing wait raises `TimeoutError`. No names, IDs, state strings,
+coordinates, timestamps or link values leave the helper. If observation itself
+fails, it is omitted and the original timeout is re-raised. Both helper and
+host reject unknown fields and types and omit the object outside that exact
+failure scope. Success receipts are unchanged. This diagnoses a failed wait;
+it does not establish a cause or alter a fixture, predicate, deadline or
+acceptance criterion.
 
 ## Exact runtime and reuse
 
@@ -130,7 +144,7 @@ requires the same module hashes in the guest before creating the synthetic image
 
 ## Contracts, privacy and limits
 
-Eighty-nine standalone contracts currently pass without skips. They include
+Ninety-three standalone contracts currently pass without skips. They include
 strict input/archive/OCI/dependency/blank-config checks; actual phase nonce and
 disabled automatic-boot barriers; old/new guard timeline, pending/uncertain and
 early-enable/network refusal; private bundle links/modes/size-before-read;
@@ -142,7 +156,11 @@ system-entry predicate, delayed discovery readiness and finite count-only failur
 projection are also tested, including the exact tagged Analytics system-flow
 body and delayed Analytics readiness. Four further contracts execute the actual
 Person/setup waits with injected timeouts, the actual guest failure body and
-controller projection, and fixed-catalog privacy checks. They do not import HA, a native
+controller projection, and fixed-catalog privacy checks. Four more execute the
+actual boolean observer with independent faults at both indices, both exact
+projectors with malformed/private canaries, the unchanged wait and original
+exception identity, and both actual failure paths across allowed/refused scopes.
+They do not import HA, a native
 provider or run a VM. The future workflow must bind every committed input before
 imports and require exactly the reviewed contract count with zero skips.
 

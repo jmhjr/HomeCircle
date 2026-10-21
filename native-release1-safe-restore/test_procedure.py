@@ -576,3 +576,150 @@ class SetupDiagnosticContracts(unittest.IsolatedAsyncioTestCase):
 
 
 if __name__=='__main__':unittest.main()
+
+
+def person_diagnostic_functions():
+    tree=ast.parse((controller.ROOT/'guest_helper/homecircle_safe_restore_qa/__init__.py').read_bytes())
+    names={'public_person_sources','observe_person_sources','person_sources','setup_mark'}
+    nodes=[node for node in tree.body if isinstance(node,(ast.FunctionDef,ast.AsyncFunctionDef))
+           and node.name in names or isinstance(node,ast.Assign) and any(
+               isinstance(target,ast.Name) and target.id in {'TRACKERS','SETUP_STEPS'} for target in node.targets)]
+    namespace={}
+    exec(compile(ast.Module(body=nodes,type_ignores=[]),'actual_person_source_diagnostics','exec'),namespace)
+    return namespace,tree
+
+
+class PersonSourceDiagnosticContracts(unittest.IsolatedAsyncioTestCase):
+    def test_actual_observer_reports_each_independent_fixed_index_fault_without_values(self):
+        functions,_=person_diagnostic_functions()
+        people=['person.PRIVATE-CANARY-a','person.PRIVATE-CANARY-b']
+        trackers=functions['TRACKERS']
+        fields=('person_present','tracker_present','person_home','tracker_home',
+                'source_matches_selected','configured_link_matches_selected')
+        for index in (0,1):
+            for fault in ('none',*fields):
+                values={person:SimpleNamespace(state='home',attributes={'source':tracker,'private':'PRIVATE-CANARY'})
+                        for person,tracker in zip(people,trackers,strict=True)}
+                values.update({tracker:SimpleNamespace(state='home',attributes={'private':'PRIVATE-CANARY'}) for tracker in trackers})
+                links={person:[tracker] for person,tracker in zip(people,trackers,strict=True)}
+                if fault=='person_present':values.pop(people[index])
+                elif fault=='tracker_present':values.pop(trackers[index])
+                elif fault=='person_home':values[people[index]].state='PRIVATE-CANARY'
+                elif fault=='tracker_home':values[trackers[index]].state='PRIVATE-CANARY'
+                elif fault=='source_matches_selected':values[people[index]].attributes['source']='device_tracker.PRIVATE-CANARY'
+                elif fault=='configured_link_matches_selected':links[people[index]]=['device_tracker.PRIVATE-CANARY']
+                functions['entities_in_person']=lambda hass,person:links[person]
+                result=functions['observe_person_sources'](SimpleNamespace(states=SimpleNamespace(get=values.get)),people)
+                self.assertEqual(set(result),{'0','1'})
+                self.assertEqual(result[str(1-index)],dict.fromkeys(fields,True))
+                expected=dict.fromkeys(fields,True)
+                if fault!='none':expected[fault]=False
+                if fault=='person_present':expected.update(person_home=False,source_matches_selected=False)
+                if fault=='tracker_present':expected['tracker_home']=False
+                self.assertEqual(result[str(index)],expected)
+                self.assertNotIn('CANARY',json.dumps(result))
+        self.assertIsNone(functions['observe_person_sources'](None,people[:1]))
+        self.assertIsNone(functions['observe_person_sources'](None,tuple(people)))
+
+    def test_actual_helper_and_host_projectors_refuse_unknown_shape_types_and_canaries(self):
+        functions,_=person_diagnostic_functions()
+        fields=('person_present','tracker_present','person_home','tracker_home',
+                'source_matches_selected','configured_link_matches_selected')
+        valid={index:dict.fromkeys(fields,True) for index in ('0','1')}
+        class PrivateDict(dict):pass
+        invalid=[None,[],True,PrivateDict(valid),{'person.PRIVATE-CANARY':valid['0'],'1':valid['1']}]
+        for change in ('extra_index','missing_index','extra_field','missing_field','int_boolean','private_value','dict_subclass'):
+            value=deepcopy(valid)
+            if change=='extra_index':value['2']=value['0']
+            elif change=='missing_index':del value['1']
+            elif change=='extra_field':value['0']['PRIVATE-CANARY']=False
+            elif change=='missing_field':del value['0']['person_home']
+            elif change=='int_boolean':value['0']['person_home']=1
+            elif change=='private_value':value['0']['person_home']='PRIVATE-CANARY'
+            else:value['0']=PrivateDict(value['0'])
+            invalid.append(value)
+        for project in (functions['public_person_sources'],controller.public_person_sources):
+            self.assertEqual(project(valid),valid)
+            self.assertIsNot(project(valid),valid)
+            for value in invalid:self.assertIsNone(project(value))
+        helper_node=next(node for node in ast.parse((controller.ROOT/'guest_helper/homecircle_safe_restore_qa/__init__.py').read_bytes()).body
+                         if isinstance(node,ast.FunctionDef) and node.name=='public_person_sources')
+        host_node=next(node for node in ast.parse((controller.ROOT/'controller.py').read_bytes()).body
+                       if isinstance(node,ast.FunctionDef) and node.name=='public_person_sources')
+        self.assertEqual(ast.dump(helper_node),ast.dump(host_node))
+
+    async def test_actual_wait_keeps_predicate_timeout_error_identity_and_diagnostic_fault_disposition(self):
+        functions,_=person_diagnostic_functions();trackers=functions['TRACKERS']
+        people=['person.PRIVATE-CANARY-a','person.PRIVATE-CANARY-b']
+        values={person:SimpleNamespace(state='home',attributes={'source':tracker})
+                for person,tracker in zip(people,trackers,strict=True)}
+        values.update({tracker:SimpleNamespace(state='home',attributes={}) for tracker in trackers})
+        hass=SimpleNamespace(states=SimpleNamespace(get=values.get))
+        functions['entities_in_person']=lambda hass,person:[trackers[people.index(person)]]
+        async def succeeds(predicate):self.assertTrue(predicate())
+        functions['wait_for']=succeeds;progress={}
+        await functions['person_sources'](hass,people,progress=progress)
+        self.assertEqual(progress,{'step':'person_sources'})
+        values[people[0]].attributes['source']='device_tracker.PRIVATE-CANARY'
+        failure=TimeoutError('PRIVATE-CANARY /owner/path')
+        async def expires(predicate):self.assertFalse(predicate());raise failure
+        functions['wait_for']=expires;progress={}
+        with self.assertRaises(TimeoutError) as caught:await functions['person_sources'](hass,people,progress=progress)
+        self.assertIs(caught.exception,failure)
+        self.assertFalse(progress['person_sources']['0']['source_matches_selected'])
+        self.assertTrue(progress['person_sources']['1']['source_matches_selected'])
+        self.assertNotIn('CANARY',json.dumps(progress))
+        functions['observe_person_sources']=Mock(side_effect=OSError('PRIVATE-CANARY'))
+        progress={}
+        with self.assertRaises(TimeoutError) as caught:await functions['person_sources'](hass,people,progress=progress)
+        self.assertIs(caught.exception,failure);self.assertEqual(progress,{'step':'person_sources'})
+        functions['observe_person_sources'].reset_mock()
+        with self.assertRaises(TimeoutError):await functions['person_sources'](hass,people)
+        functions['observe_person_sources'].assert_not_called()
+        for error in (OSError('PRIVATE-CANARY'),asyncio.CancelledError()):
+            async def other_failure(predicate):raise error
+            functions['wait_for']=other_failure;progress={}
+            with self.assertRaises(type(error)) as caught:await functions['person_sources'](hass,people,progress=progress)
+            self.assertIs(caught.exception,error);self.assertEqual(progress,{'step':'person_sources'})
+        # The actual wait call still supplies exactly the original predicate, no timeout override.
+        original=next(node for node in ast.parse((controller.ROOT/'guest_helper/homecircle_safe_restore_qa/__init__.py').read_bytes()).body
+                      if isinstance(node,ast.AsyncFunctionDef) and node.name=='person_sources')
+        wait=next(node for node in ast.walk(original) if isinstance(node,ast.Call) and isinstance(node.func,ast.Name) and node.func.id=='wait_for')
+        self.assertEqual(len(wait.args),1);self.assertEqual(wait.keywords,[])
+
+    def test_actual_helper_and_host_failure_paths_require_exact_person_source_scope(self):
+        functions,tree=person_diagnostic_functions()
+        fields=('person_present','tracker_present','person_home','tracker_home',
+                'source_matches_selected','configured_link_matches_selected')
+        valid={index:dict.fromkeys(fields,False) for index in ('0','1')}
+        malformed=deepcopy(valid);malformed['0']['source_matches_selected']='PRIVATE-CANARY'
+        cls=next(node for node in tree.body if isinstance(node,ast.ClassDef) and node.name=='Rehearsal')
+        run=next(node for node in cls.body if isinstance(node,ast.AsyncFunctionDef) and node.name=='run')
+        handler=next(node for node in ast.walk(run) if isinstance(node,ast.ExceptHandler) and isinstance(node.type,ast.Name) and node.type.id=='Exception')
+        code=compile(ast.Module(body=handler.body,type_ignores=[]),'actual_person_failure_handler','exec')
+        cases=[('initialize','persistent_setup','person_sources',valid,True),
+               ('initialize','guard_two','person_sources',valid,False),
+               ('initial_restart','persistent_setup','person_sources',valid,False),
+               ('initialize','persistent_setup','snapshot',valid,False),
+               ('initialize','persistent_setup','person_sources',malformed,False),
+               ('initialize','persistent_setup','person_sources',None,False)]
+        for phase,stage,step,observation,expected in cases:
+            receipt={};namespace={'receipt':receipt,'stage':stage,'name':phase,
+                'setup_progress':{'step':step,'person_sources':observation},
+                'error':TimeoutError('PRIVATE-CANARY'),'Refused':controller.Refused,'_LOGGER':Mock(),
+                'public_person_sources':functions['public_person_sources']}
+            exec(code,namespace)
+            self.assertEqual(receipt.get('person_sources'),valid if expected else None)
+            self.assertNotIn('CANARY',json.dumps(receipt))
+            with tempfile.TemporaryDirectory() as directory:
+                host=controller.Controller(type('Args',(),{'branch_commit':'a'*40})())
+                host.public=Path(directory);host.config_path='/mnt/data/supervisor/homeassistant'
+                host.guest_write=Mock();host.guest=Mock();host.phases=[{}]*controller.PHASES.index(phase)
+                body={'schema':1,'token':host.phase_token,'phase':phase,'generation':host.generation,
+                      'branch_commit':'a'*40,'outcome':'failed','stage':stage,'setup_step':step,
+                      'person_sources':observation,'failure_type':'TimeoutError','private':'PRIVATE-CANARY'}
+                host.guest_read=Mock(return_value=controller.canonical(body))
+                with self.assertRaisesRegex(controller.Refused,'^guest_acceptance_failed$'):host.phase(phase)
+                public=json.loads((Path(directory)/(phase+'.json')).read_bytes())
+                self.assertEqual(public.get('person_sources'),valid if expected else None)
+                self.assertNotIn('CANARY',json.dumps(public))
