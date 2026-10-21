@@ -79,3 +79,9 @@ The earlier [published beta 20 investigation](ENABLED-RESTORE-PREPARED.md)
 and [incomplete first attempt](ENABLED-RESTORE-VALIDATION.md) remain separate
 historical results. This new run does not retroactively prove the first
 timeout's sole cause.
+
+
+## Explicit disabled-entry restore evidence
+
+See [the explicit disabled-entry partial-restore evidence](RELEASE-1.0-EXPLICIT-RESTORE.md)
+for the separately tested procedure, required external guard retention, and its limits.

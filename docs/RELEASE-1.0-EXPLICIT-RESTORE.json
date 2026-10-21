@@ -1,0 +1,317 @@
+{
+  "QA_input_map_sha256": "756731c3ff1d411af71271b8ff85d42f4909d282f95d5f07f071146d3df8bd2a",
+  "actual_QA_commit": "2d7fcbb40b021d84a21de7457222ef8f7191197d",
+  "actual_artifact": {
+    "artifact_id": 12382106055,
+    "bytes": 14328,
+    "github_digest_matched": true,
+    "members": [
+      "automatic_disabled.json",
+      "host.json",
+      "initial_restart.json",
+      "initialize.json",
+      "mutate.json",
+      "quarantine.json",
+      "reenabled.json",
+      "repaired_disabled.json",
+      "restart.json"
+    ],
+    "sha256": "42625be11611f7db48e7e3f7d80116e0c5d652412390b999df349a380d4cdc37"
+  },
+  "actual_run": {
+    "attempt": 1,
+    "conclusion": "success",
+    "exact_QA_source_inputs_verified": 18,
+    "id": 39674846677,
+    "offline_contracts": 147,
+    "offline_skipped": 0,
+    "url": "https://github.com/jmhjr/HomeCircle/actions/runs/39674846677"
+  },
+  "authenticated_provider_recovery_tested": false,
+  "automatic_guard_antirollback": false,
+  "candidate_files": 113,
+  "candidate_hacs_download_tested": false,
+  "candidate_inventory_sha256": "89831d176dc8a86d2a348c6702bef36050bde3dfe31a1eead3825e87cbd9d1cb",
+  "candidate_is_unreleased_development_preview": true,
+  "candidate_release_zip_transport_tested": false,
+  "candidate_version": "0.1.0-beta.20",
+  "candidate_zip_bytes": 617757,
+  "candidate_zip_sha256": "6fb180fc1f5c7de70382f95f8fe9e718f94841598dfc96d1afe233c8f21495db",
+  "current_explicit_procedure_accepted": true,
+  "documentation_commit_runtime_validated": false,
+  "documentation_only_record": true,
+  "documentation_parent_commit": "f4da650e6e460382c6ee1f70827bddac43bf2780",
+  "final_RC_acceptance": false,
+  "full_encrypted_cloud_backup_tested": false,
+  "full_system_addon_encrypted_cloud_restore_tested": false,
+  "historical_enabled_restore_findings_preserved": {
+    "automatic_antirollback_failed": true,
+    "automatically_restored_guard": 2,
+    "backed_up_guard": 2,
+    "development_run": 39494958171,
+    "document": "RELEASE-1.0-HAOS-RESTORE.json",
+    "document_sha256": "1456f595175aadfa6bb6dec99e9ae6e79254502fae0ad5af4586ed539127a9fc",
+    "newest_guard": 3,
+    "published_beta20_run": 39492348166,
+    "repaired_guard": 3
+  },
+  "independent_replay": {
+    "all_eight_phases_accepted": true,
+    "both_bounded_Core_image_contexts_accepted": true,
+    "cleanup_accepted": true,
+    "outcome": "passed",
+    "report_sha256": "4723c347a332607136221f63d916dd6c6c7ea217b374df0a0dd92d2bd7773d47",
+    "source_provenance_bound": true
+  },
+  "installed_runtime_changed_by_documentation": false,
+  "new_provider_report_advancement_tested": false,
+  "observed_backup_restore": {
+    "actual_jobs_completed_without_reported_errors": true,
+    "automatic_restored_guard_rejected": 2,
+    "automatic_start_candidate_imported": false,
+    "automatic_start_entry_disabled": true,
+    "backup_guard_rejected": 2,
+    "candidate_match": true,
+    "compressed": false,
+    "database_included": true,
+    "disabled_entry_in_backup": true,
+    "exact_job_id_returned_for_each_request": true,
+    "host_copy_outside_entire_guest": true,
+    "newest_guard_files_sha256": "6a539827f2c55dc92c6221bc2edee2ad3e18ada0a2bccf607f2f502b9c309106",
+    "newest_guard_rejected": 3,
+    "old_guard_files_sha256": "9df3bd3987e0b2e070259432ebd8c39b29b23c055e8788364af668907fbb0ba6",
+    "older_guard_returned_automatically": true,
+    "protected": false,
+    "repaired_before_enable": true,
+    "repaired_guard_rejected": 3,
+    "type": "partial"
+  },
+  "observed_cleanup": {
+    "both_owned_context_containers_removed": true,
+    "cleanup_failed": false,
+    "host_elapsed_seconds": 388.491,
+    "private_workspace_removed": true,
+    "qemu_stopped": true
+  },
+  "observed_contexts": [
+    {
+      "action": "export",
+      "image": "sha256:45f009d6ff1061971102e81f0802cf2762bdd5c5007231c938bd36030cbd0a12",
+      "local_image_verified": true,
+      "managed_core_same_stopped_process": true,
+      "maximum_total_seconds": 60,
+      "offline_network_none": true,
+      "outcome": "passed",
+      "owned_container_removed": true,
+      "owned_identity_security_mount_checked": true,
+      "schema": 1,
+      "unchanged_transfer_stdin": true
+    },
+    {
+      "action": "import",
+      "image": "sha256:45f009d6ff1061971102e81f0802cf2762bdd5c5007231c938bd36030cbd0a12",
+      "local_image_verified": true,
+      "managed_core_same_stopped_process": true,
+      "maximum_total_seconds": 60,
+      "offline_network_none": true,
+      "outcome": "passed",
+      "owned_container_removed": true,
+      "owned_identity_security_mount_checked": true,
+      "schema": 1,
+      "unchanged_transfer_stdin": true
+    }
+  ],
+  "observed_network_boundary": {
+    "closed_probe_connected": false,
+    "closed_probe_observations": 5,
+    "guest_agent_remained_available": true,
+    "link_closed_at_final_restart": true,
+    "transitions": [
+      "closed_before_restore",
+      "reopen_after_repaired_disabled",
+      "closed_before_final_restart"
+    ]
+  },
+  "observed_phases": [
+    {
+      "entry_disabled": false,
+      "entry_loaded": true,
+      "guard_blocked": false,
+      "guard_rejected": 2,
+      "outcome": "passed",
+      "phase": "initialize"
+    },
+    {
+      "entry_disabled": false,
+      "entry_loaded": true,
+      "guard_blocked": false,
+      "guard_rejected": 2,
+      "outcome": "passed",
+      "phase": "initial_restart"
+    },
+    {
+      "entry_disabled": true,
+      "entry_loaded": false,
+      "guard_blocked": false,
+      "guard_rejected": 2,
+      "outcome": "passed",
+      "phase": "quarantine"
+    },
+    {
+      "entry_disabled": true,
+      "entry_loaded": false,
+      "guard_blocked": true,
+      "guard_rejected": 3,
+      "outcome": "passed",
+      "phase": "mutate"
+    },
+    {
+      "entry_disabled": true,
+      "entry_loaded": false,
+      "guard_blocked": false,
+      "guard_rejected": 2,
+      "outcome": "passed",
+      "phase": "automatic_disabled"
+    },
+    {
+      "entry_disabled": true,
+      "entry_loaded": false,
+      "guard_blocked": true,
+      "guard_rejected": 3,
+      "outcome": "passed",
+      "phase": "repaired_disabled"
+    },
+    {
+      "entry_disabled": false,
+      "entry_loaded": true,
+      "guard_blocked": true,
+      "guard_rejected": 3,
+      "outcome": "passed",
+      "phase": "reenabled"
+    },
+    {
+      "entry_disabled": false,
+      "entry_loaded": true,
+      "guard_blocked": true,
+      "guard_rejected": 3,
+      "outcome": "passed",
+      "phase": "restart"
+    }
+  ],
+  "ordinary_enabled_restore_safety_accepted": false,
+  "owner_credentials_used": false,
+  "preceding_failed_QA_runs_remain_unaccepted": [
+    39668981647,
+    39670706233,
+    39672835001
+  ],
+  "prior_failed_filesystem_cause_retroactively_proven": false,
+  "prior_failed_guest_ownership_measured": false,
+  "production_configuration_used": false,
+  "provider_accounts_configured": false,
+  "provider_request_counts_measured": false,
+  "public_receipt_fingerprints": {
+    "automatic_disabled.json": {
+      "bytes": 662,
+      "sha256": "df85789074689ffcb0ba9139129eb6b4a7559e48c4caab1ab53d59f78bf88ec9"
+    },
+    "host.json": {
+      "bytes": 13902,
+      "sha256": "9cf6855ef4c480700b3d41fc6ff19742e1dd5e1a8151488e5d5737437d175146"
+    },
+    "initial_restart.json": {
+      "bytes": 6385,
+      "sha256": "74fbee2a620e4d3d30a9a8eddb31c9fa52fd0630c26a8afe1d97881ad1886421"
+    },
+    "initialize.json": {
+      "bytes": 6380,
+      "sha256": "46583c209bf761a678ae044dfd9ad6d4ec8b81804d62906d85b2ba0041391bbe"
+    },
+    "mutate.json": {
+      "bytes": 1387,
+      "sha256": "c2fd004b63cc3b6d73f8e4167e089d72e79899b7a7b508507c9951004fdfe61a"
+    },
+    "quarantine.json": {
+      "bytes": 1516,
+      "sha256": "5ff9dbf900f47aaded289127d100559d8c454ef5096f1ba96055aced0b7bc914"
+    },
+    "reenabled.json": {
+      "bytes": 6499,
+      "sha256": "25dfedf19a58224f380bbf1c66e3b9a1304e606bd01c4c7bbb865f15fcb27e1d"
+    },
+    "repaired_disabled.json": {
+      "bytes": 6030,
+      "sha256": "a4a2e4fe602b75faaf480544982e1b2dc191b065b3dd7c68abed1b7080570341"
+    },
+    "restart.json": {
+      "bytes": 6435,
+      "sha256": "cce2a043639c2c76c5e8425c94a38c6512a047c145b2b3e044bd85a41856b336"
+    }
+  },
+  "raw_guard_backup_logs_or_account_data_published": false,
+  "recovery_proof_counts_measured": false,
+  "release_published": false,
+  "required_gate_definition": {
+    "both_context_gate": true,
+    "cleanup": true,
+    "context_actions": [
+      "export",
+      "import"
+    ],
+    "disabled_first_automatic_start": true,
+    "exact_public_JSON_members": 9,
+    "newest_guard_retained_outside_guest": true,
+    "offline_contracts": 147,
+    "phases": [
+      "initialize",
+      "initial_restart",
+      "quarantine",
+      "mutate",
+      "automatic_disabled",
+      "repaired_disabled",
+      "reenabled",
+      "restart"
+    ],
+    "plain_procedure_gate": true,
+    "repair_before_enable_and_network_reopen": true,
+    "zero_skips": true
+  },
+  "runtime": {
+    "actual_kvm_confirmed": true,
+    "architecture": "amd64",
+    "core": "2026.10.2",
+    "haos": "18.3",
+    "initial_managed_environment": {
+      "api_core": "2026.10.2",
+      "container_core": "2026.10.2",
+      "supervisor": "2026.10.3"
+    },
+    "normal_managed_dependencies": true,
+    "prepared_dependency_preload_used": false,
+    "python": "3.14.6",
+    "supervisor": "2026.10.3"
+  },
+  "saved_provider_credentials_or_encrypted_session_vault_restore_tested": false,
+  "schema": 1,
+  "selection_identity_settings_and_history": {
+    "all_nonmutation_snapshots_match": true,
+    "loaded_integration_source_sha256": "1044e86e5ed15dccc73094cf14037c4df51095a0f2cd44e16515b42130c76aa0",
+    "new_postrestore_rows": 10,
+    "new_postrestore_rows_persist_restart": true,
+    "nonempty_place_picture_selections_identity_proven": true,
+    "postbackup_marker_rows_added": 10,
+    "postbackup_marker_rows_after_restore": 0,
+    "postrestore_rows_sha256": "68129ec6ddee7c5355f6d32f77cba6346439afc469d1736def10e5e357ff9566",
+    "prebackup_exact_match_after_restore": true,
+    "prebackup_rows": 10,
+    "prebackup_rows_sha256": "41aa9a131108859af2932c7b2d0c9f8b58171d92197b84ab196e7b2338b4de29",
+    "recorder_integrity_ok": true,
+    "served_bundle_sha256": "77f429fb1908acc21cde2c89614f05f12c60a09bb37fa6ca78a1830ec07c6f91",
+    "snapshot_sha256": "4abe6bc27f3dc3b5177d22780b668e469346f2cf7a03e8442537e127bfe62f2e"
+  },
+  "source_commit": "f4da650e6e460382c6ee1f70827bddac43bf2780",
+  "stable_release_approval": false,
+  "status": "passed_explicit_disabled_entry_partial_restore_only",
+  "tested_disabled_entry_partial_restore_procedure": true,
+  "tested_runtime_source_commit": "f4da650e6e460382c6ee1f70827bddac43bf2780"
+}
