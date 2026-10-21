@@ -1096,8 +1096,8 @@
     "sha256": "d40999efa61430e3bba32ad2d2c6735ed8f11291d57a3776a72552e220fc014d"
   },
   "tests/test_findmy_identity_continuity.py": {
-    "bytes": 52292,
-    "sha256": "688cca2cb2342dfd134beb8ac0e791881e870900fd5e226108cd021052452cdb"
+    "bytes": 52316,
+    "sha256": "423bf086c9cb468cc3822e85e32150af9924c8d173737783fcd25d8b574c0d87"
   },
   "tests/test_findmy_items.py": {
     "bytes": 12742,

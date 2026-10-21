@@ -109,7 +109,7 @@ finish() {
       .backend.failed==0 and .backend.skipped==1 and .release_version=="0.1.0-beta.20" and .release_files==113 and
       (.backend.required_regressions|length)==$required and all(.backend.required_regressions[];.passed==true) and
       .baseline_red.outcome=="passed" and .baseline_red.expected_failure_cases==14 and
-      .baseline_red.all_expected_regressions_observed==true and .baseline_red.collection_errors==0 and
+      .baseline_red.all_expected_regressions_observed==true and .baseline_red.cause_verified==true and .baseline_red.collection_errors==0 and
       .baseline_red.skipped==0 and .baseline_red.public_files_only_copy==true and
       .baseline_red.private_copy_removed==true and .baseline_red.fixed_source_unchanged==true and
       .baseline_red.provider_or_owner_accounts_used==false and
@@ -331,7 +331,7 @@ jq -e --argjson minimum "$minimum_backend" --argjson required "$required_regress
   .backend.failed==0 and .backend.skipped==1 and .release_files==113 and .reproducible_archive==true and
   .candidate_source_commit==$commit and (.backend.required_regressions|length)==$required and
   all(.backend.required_regressions[];.passed==true) and .baseline_red.outcome=="passed" and .baseline_red.expected_failure_cases==14 and
-      .baseline_red.all_expected_regressions_observed==true and .baseline_red.collection_errors==0 and
+      .baseline_red.all_expected_regressions_observed==true and .baseline_red.cause_verified==true and .baseline_red.collection_errors==0 and
       .baseline_red.skipped==0 and .baseline_red.public_files_only_copy==true and
       .baseline_red.private_copy_removed==true and .baseline_red.fixed_source_unchanged==true and
       .baseline_red.provider_or_owner_accounts_used==false and

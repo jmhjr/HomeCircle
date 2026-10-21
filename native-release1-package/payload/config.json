@@ -1,8 +1,8 @@
 {
-  "candidate_source_commit": "3da605c71330a7651d63040981ce90466d53768c",
+  "candidate_source_commit": "91ae59106a661143b770d7a3564d363c7c11a7dd",
   "candidate_source_prefix": "",
   "checker_sha256": "216331d16af8fb2ec636e1466303923ecfe32c76f78ea72f89d373c80c9713d2",
-  "driver_sha256": "51a27a74c6dd640908c77df23b00e60aefbc07da0d901daee0d989ccd1b92930",
+  "driver_sha256": "de4497483353e36960d5c8886944cf6dfc5044e33861ab59674e800734aa4072",
   "expected_release_files": 113,
   "frontend_tests": 122,
   "minimum_backend_passed": 1698,
@@ -154,7 +154,7 @@
   ],
   "schema": 1,
   "source_files": 337,
-  "source_inventory_sha256": "b688f6bed1bdbe0a4d9d2fee1d11b18c2e8035d44cfe8b2bb59d77a9228426ff",
-  "source_sha256": "ec0acbe19d9f9758906406ff10cf50c1a08873cdf2912951c7770778a25d3c7e",
+  "source_inventory_sha256": "25874cd64372ec90a6ba955bb5b1e1e9892eeb5cfd52580dadb8955f07f503bd",
+  "source_sha256": "ffac27457402e86ac8ffa6b6dc587304af20db3b443e9bc3b1555931e53a3144",
   "version": "0.1.0-beta.20"
 }

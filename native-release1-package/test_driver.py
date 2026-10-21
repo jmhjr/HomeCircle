@@ -146,6 +146,7 @@ class BaselineContracts(unittest.TestCase):
 
     def red_xml(self, outcome="failure", identities=None):
         return self.xml("".join('<testcase classname="' + classname + '" name="' + name + '">' +
+                        '<properties><property name="' + driver.BASELINE_PROPERTY + '" value="verified"/></properties>' +
                         ('<' + outcome + '>PRIVATE-CANARY</' + outcome + '>' if outcome else '') +
                         '</testcase>' for classname, name in
                         (driver.BASELINE_RED_CASES if identities is None else identities)))
@@ -218,9 +219,9 @@ class BaselineContracts(unittest.TestCase):
             self.assertEqual((cwd / driver.BASELINE_VAULT_NAME).read_bytes(), baseline)
             expected = set(files) | {"custom_components/homecircle/frontend/" + name for name in driver.FRONTEND}
             self.assertEqual({path.relative_to(cwd).as_posix() for path in cwd.rglob("*") if path.is_file()}, expected)
-            self.assertEqual(len(command) - 6, 14)
+            self.assertEqual(len(command) - 7, 14)
             self.assertLessEqual(limit, 120)
-            xml = Path(command[5])
+            xml = Path(command[6])
             xml.write_bytes(self.red_xml().read_bytes())
             return 1
         with patch.object(driver, "BASELINE_VAULT_SHA", driver.sha(baseline)), patch.object(driver, "run_owned", side_effect=run):
@@ -241,7 +242,7 @@ class BaselineContracts(unittest.TestCase):
     def test_baseline_private_copy_is_removed_when_expected_failures_are_missing(self):
         args, files, baseline, bundle = self.baseline_fixture()
         def run(command, **_kwargs):
-            Path(command[5]).write_bytes(self.red_xml(identities=[]).read_bytes())
+            Path(command[6]).write_bytes(self.red_xml(identities=[]).read_bytes())
             return 1
         with patch.object(driver, "BASELINE_VAULT_SHA", driver.sha(baseline)), patch.object(driver, "run_owned", side_effect=run):
             with self.assertRaisesRegex(driver.Refused, "baseline_red_exact_cases_refused"):
@@ -261,6 +262,117 @@ class BaselineContracts(unittest.TestCase):
         self.assertIn('bounded 940 "${DOCKER[@]}" exec', script)
         self.assertEqual(script.count(".baseline_red.expected_failure_cases==14"), 2)
         self.assertEqual(script.count(".baseline_red.private_copy_removed==true"), 2)
+
+
+class CauseContracts(unittest.TestCase):
+    setUp = DriverContracts.setUp
+    xml = DriverContracts.xml
+    red_xml = BaselineContracts.red_xml
+
+    def test_cause_trace_requires_exact_builtin_type_and_bound_code(self):
+        def failure():
+            raise ValueError("PRIVATE-CAUSE-CANARY")
+        def unrelated():
+            pass
+        try:
+            failure()
+        except ValueError as error:
+            self.assertTrue(driver.baseline_trace_matches(error, ValueError, (failure.__code__,)))
+            self.assertFalse(driver.baseline_trace_matches(error, TypeError, (failure.__code__,)))
+            self.assertFalse(driver.baseline_trace_matches(error, ValueError, (unrelated.__code__,)))
+        class CustomError(ValueError):
+            pass
+        self.assertFalse(driver.baseline_trace_matches(CustomError("PRIVATE-CAUSE-CANARY"), ValueError, ()))
+
+    def test_cause_trace_requires_exact_assertion_line(self):
+        def failure():
+            assert False, "PRIVATE-CAUSE-CANARY"
+        try:
+            failure()
+        except AssertionError as error:
+            current = error.__traceback__
+            while current.tb_next is not None:
+                current = current.tb_next
+            site = (failure.__code__, current.tb_lineno)
+            self.assertTrue(driver.baseline_trace_matches(error, AssertionError, (), (site,)))
+            self.assertFalse(driver.baseline_trace_matches(error, AssertionError, (), ((site[0], site[1] + 1),)))
+            self.assertFalse(driver.baseline_trace_matches(error, TypeError, (), (site,)))
+
+    def test_cause_parser_requires_one_fixed_property_for_every_case(self):
+        source = self.red_xml().read_text()
+        tag = '<property name="' + driver.BASELINE_PROPERTY + '" value="verified"/>'
+        for changed in (source.replace(tag, "", 1), source.replace(tag, tag * 2, 1),
+                        source.replace(tag, '<property name="PRIVATE-CAUSE-CANARY" value="verified"/>', 1),
+                        source.replace(tag, tag.replace('"verified"', '"refused"'), 1),
+                        source.replace(tag, tag.replace('/>', '>PRIVATE-CAUSE-CANARY</property>'), 1)):
+            path = self.root / "cause.xml"
+            path.write_text(changed)
+            with self.subTest(), self.assertRaisesRegex(driver.Refused, "baseline_red_cause_refused"):
+                driver.baseline_red_result(path, 1)
+        result = driver.baseline_red_result(self.red_xml(), 1)
+        self.assertTrue(result["cause_verified"])
+        self.assertNotIn("PRIVATE-CAUSE-CANARY", json.dumps(result))
+
+    def test_cause_unwrap_preserves_async_source_and_refuses_cycles_or_properties(self):
+        import asyncio
+        import functools
+        async def original():
+            assert False, "PRIVATE-CAUSE-CANARY"
+        @functools.wraps(original)
+        def wrapper():
+            return asyncio.run(original())
+        self.assertIs(driver.baseline_unwrap(wrapper), original)
+        try:
+            wrapper()
+        except AssertionError as error:
+            self.assertTrue(driver.baseline_trace_matches(error, AssertionError, (driver.baseline_unwrap(wrapper).__code__,)))
+            self.assertFalse(driver.baseline_trace_matches(error, TypeError, (original.__code__,)))
+        wrapper.__wrapped__ = wrapper
+        self.assertIsNone(driver.baseline_unwrap(wrapper))
+        class Trap:
+            @property
+            def __wrapped__(self):
+                raise AssertionError("custom property must not execute")
+        self.assertIsNone(driver.baseline_unwrap(Trap()))
+
+    def test_unknown_cause_identity_refuses_before_any_read(self):
+        with patch.object(driver, "read_pinned") as read:
+            self.assertFalse(driver.baseline_failure_cause(lambda: None, ("tests.test_private", "test_private"), TypeError()))
+        read.assert_not_called()
+
+    def test_cause_hook_emits_only_call_phase_fixed_property_and_fails_closed(self):
+        import sys
+        from types import SimpleNamespace
+        seen = []
+        def main(arguments, plugins):
+            self.assertEqual(arguments, ["synthetic-case"])
+            probe = plugins[0]
+            item = SimpleNamespace(function=lambda: None, name="synthetic-case", user_properties=[])
+            for phase in ("setup", "teardown"):
+                probe.pytest_runtest_makereport(item, SimpleNamespace(when=phase))
+            self.assertEqual(item.user_properties, [])
+            with patch.object(driver, "baseline_failure_cause", return_value=True):
+                probe.pytest_runtest_makereport(item, SimpleNamespace(when="call", excinfo=SimpleNamespace(value=ValueError())))
+            with patch.object(driver, "baseline_failure_cause", side_effect=TypeError("PRIVATE-CAUSE-CANARY")):
+                probe.pytest_runtest_makereport(item, SimpleNamespace(when="call", excinfo=SimpleNamespace(value=TypeError())))
+            seen.extend(item.user_properties)
+            return 1
+        fake = SimpleNamespace(hookimpl=lambda **kwargs: (lambda function: function), main=main)
+        with patch.dict(sys.modules, {"pytest": fake}), patch.object(sys, "path", list(sys.path)):
+            self.assertEqual(driver.baseline_pytest(["synthetic-case"]), 1)
+        self.assertEqual(seen, [(driver.BASELINE_PROPERTY, "verified"), (driver.BASELINE_PROPERTY, "refused")])
+        self.assertNotIn("PRIVATE-CAUSE-CANARY", json.dumps(seen))
+
+    def test_cause_wrapper_loads_only_existing_absolute_driver_without_extra_copy_file(self):
+        import ast
+        source = Path(driver.__file__).read_text()
+        self.assertIn('"-c", BASELINE_WRAPPER, str(Path(__file__).resolve())', source)
+        self.assertIn("spec_from_file_location('homecircle_baseline_driver',sys.argv[1])", driver.BASELINE_WRAPPER)
+        self.assertIn("m.baseline_pytest(sys.argv[2:])", driver.BASELINE_WRAPPER)
+        tree = ast.parse(driver.BASELINE_WRAPPER)
+        self.assertEqual({node.func.attr for node in ast.walk(tree)
+                          if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)},
+                         {"spec_from_file_location", "module_from_spec", "exec_module", "baseline_pytest"})
 
 
 if __name__ == "__main__":

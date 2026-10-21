@@ -3,6 +3,7 @@
 import sys
 
 import argparse
+import ast
 import gzip
 import hashlib
 import importlib.metadata
@@ -475,6 +476,129 @@ BASELINE_VAULT_NAME = "custom_components/homecircle/findmy_vault.py"
 BASELINE_RED_CASES = (('tests.test_findmy_vault_hardening', 'test_malformed_key_refuses_load_and_save_without_replacement[load-invalid_base64]'), ('tests.test_findmy_vault_hardening', 'test_malformed_key_refuses_load_and_save_without_replacement[save-invalid_base64]'), ('tests.test_findmy_vault_hardening', 'test_malformed_key_refuses_load_and_save_without_replacement[save_account-invalid_base64]'), ('tests.test_findmy_vault_hardening', 'test_malformed_key_refuses_load_and_save_without_replacement[load-short_decoded]'), ('tests.test_findmy_vault_hardening', 'test_malformed_key_refuses_load_and_save_without_replacement[save-short_decoded]'), ('tests.test_findmy_vault_hardening', 'test_malformed_key_refuses_load_and_save_without_replacement[save_account-short_decoded]'), ('tests.test_findmy_vault_hardening', 'test_missing_or_unreadable_store_load_is_redacted_without_creating_files[missing_directory]'), ('tests.test_findmy_vault_hardening', 'test_missing_or_unreadable_store_load_is_redacted_without_creating_files[missing_vault]'), ('tests.test_findmy_vault_hardening', 'test_missing_or_unreadable_store_load_is_redacted_without_creating_files[key_read_error]'), ('tests.test_findmy_identity_continuity', 'test_explicit_disconnect_removes_only_confirmed_malformed_or_missing_owned_store[invalid_base64_key]'), ('tests.test_findmy_identity_continuity', 'test_explicit_disconnect_removes_only_confirmed_malformed_or_missing_owned_store[short_decoded_key]'), ('tests.test_findmy_identity_continuity', 'test_explicit_disconnect_removes_only_confirmed_malformed_or_missing_owned_store[missing_directory]'), ('tests.test_findmy_identity_continuity', 'test_explicit_disconnect_removes_only_confirmed_malformed_or_missing_owned_store[missing_vault]'), ('tests.test_findmy_identity_continuity', 'test_explicit_disconnect_removes_only_confirmed_malformed_or_missing_owned_store[key_read_error]'))
 
 
+# No pytest/HA/cryptography import occurs at driver import time.
+BASELINE_PROPERTY = "homecircle_expected_failure_cause"
+BASELINE_TEST_SHAS = {
+    "tests.test_findmy_vault_hardening": "3510bf41c01390fbebf848439deae353e0bfd934cc2c63deca242643be8030c2",
+    "tests.test_findmy_identity_continuity": "423bf086c9cb468cc3822e85e32150af9924c8d173737783fcd25d8b574c0d87",
+}
+BASELINE_WRAPPER = (
+    "import importlib.util,sys; "
+    "s=importlib.util.spec_from_file_location('homecircle_baseline_driver',sys.argv[1]); "
+    "m=importlib.util.module_from_spec(s); sys.modules[s.name]=m; s.loader.exec_module(m); "
+    "raise SystemExit(m.baseline_pytest(sys.argv[2:]))"
+)
+
+
+def baseline_trace_matches(error, expected_type, codes, lines=()):
+    """Inspect only the escaping exact exception and bound code identities."""
+    if type(error) is not expected_type:
+        return False
+    seen = []
+    current = error.__traceback__
+    while current is not None:
+        if len(seen) >= 64:
+            return False
+        seen.append((current.tb_frame.f_code, current.tb_lineno))
+        current = current.tb_next
+    return all(any(code is actual for actual, _ in seen) for code in codes) and all(
+        any(code is actual and line == actual_line for actual, actual_line in seen) for code, line in lines
+    )
+
+
+def baseline_unwrap(function):
+    """Resolve bounded functools.wraps chains without invoking custom properties."""
+    seen = set()
+    for _ in range(8):
+        if type(function) is not type(baseline_unwrap) or id(function) in seen:
+            return None
+        seen.add(id(function))
+        wrapped = function.__dict__.get("__wrapped__")
+        if wrapped is None:
+            return function
+        function = wrapped
+    return None
+
+
+def baseline_failure_cause(function, identity, error):
+    """Require the actual old-vault failure, or the exact confirmed-flow assert."""
+    if identity not in BASELINE_RED_CASES:
+        return False
+    function = baseline_unwrap(function)
+    if function is None:
+        return False
+    classname, case = identity
+    test_path = Path.cwd() / (classname.replace(".", "/") + ".py")
+    raw = read_pinned(test_path, BASELINE_TEST_SHAS[classname], 1024 * 1024)
+    if Path(function.__code__.co_filename).resolve() != test_path.resolve():
+        return False
+    vault_path = Path.cwd() / BASELINE_VAULT_NAME
+    read_pinned(vault_path, BASELINE_VAULT_SHA, 1024 * 1024)
+    module = sys.modules.get("custom_components.homecircle.findmy_vault")
+    if module is None or Path(module.__file__).resolve() != vault_path.resolve():
+        return False
+    vault = module.Vault
+    if any(Path(getattr(vault, name).__code__.co_filename).resolve() != vault_path.resolve()
+           for name in ("_check", "_cipher")):
+        return False
+    name = case.split("[", 1)[0]
+    if function.__name__ != name:
+        return False
+    if name == "test_malformed_key_refuses_load_and_save_without_replacement":
+        constructor = vault._cipher.__globals__["Fernet"].__init__
+        return baseline_trace_matches(error, ValueError, (vault._cipher.__code__, constructor.__code__))
+    if name == "test_missing_or_unreadable_store_load_is_redacted_without_creating_files":
+        if case.endswith("[key_read_error]"):
+            nested = [code for code in function.__code__.co_consts
+                      if type(code) is type(function.__code__) and code.co_name == "read"]
+            return len(nested) == 1 and baseline_trace_matches(
+                error, PermissionError, (vault._cipher.__code__, nested[0]))
+        return baseline_trace_matches(error, FileNotFoundError, (vault._check.__code__,))
+    if name == "test_explicit_disconnect_removes_only_confirmed_malformed_or_missing_owned_store":
+        tree = ast.parse(raw, filename=str(test_path))
+        definitions = [node for node in tree.body if isinstance(node, ast.AsyncFunctionDef) and node.name == name]
+        if len(definitions) != 1:
+            return False
+        candidates = []
+        for node in ast.walk(definitions[0]):
+            if not isinstance(node, ast.Assert):
+                continue
+            for call in ast.walk(node):
+                if (isinstance(call, ast.Call) and isinstance(call.func, ast.Attribute)
+                        and call.func.attr == "async_step_findmy_disconnect" and len(call.args) == 1
+                        and isinstance(call.args[0], ast.Dict)
+                        and len(call.args[0].keys) == len(call.args[0].values) == 1
+                        and isinstance(call.args[0].keys[0], ast.Constant) and call.args[0].keys[0].value == "confirm"
+                        and isinstance(call.args[0].values[0], ast.Constant) and call.args[0].values[0].value is True):
+                    candidates.append(node.lineno)
+        return len(candidates) == 1 and baseline_trace_matches(
+            error, AssertionError, (), ((function.__code__, candidates[0]),))
+    return False
+
+
+def baseline_pytest(arguments):
+    """Only the networkless baseline child imports pytest and attaches this hook."""
+    import pytest
+
+    sys.path.insert(0, str(Path.cwd()))
+
+    class CauseProbe:
+        @pytest.hookimpl(tryfirst=True)
+        def pytest_runtest_makereport(self, item, call):
+            if call.when != "call":
+                return
+            verified = False
+            if call.excinfo is not None:
+                try:
+                    verified = baseline_failure_cause(
+                        item.function, (item.function.__module__, item.name), call.excinfo.value)
+                except Exception:
+                    pass
+            item.user_properties.append((BASELINE_PROPERTY, "verified" if verified else "refused"))
+
+    return pytest.main(arguments, plugins=[CauseProbe()])
+
+
 def backend_budget(deadline, maximum=900):
     remaining = int(deadline - time.monotonic())
     check(remaining >= 1, "combined_backend_deadline_refused")
@@ -492,7 +616,15 @@ def baseline_red_result(path, code):
     check(not root.findall(".//error") and not root.findall(".//skipped")
           and len(root.findall(".//failure")) == len(cases)
           and all(len(item.findall("failure")) == 1 for item in cases), "baseline_red_outcomes_refused")
-    return {"schema": 1, "outcome": "passed", "expected_failure_cases": len(cases),
+    check(len(root.findall(".//property")) == len(cases), "baseline_red_cause_refused")
+    for item in cases:
+        groups = item.findall("properties")
+        check(len(groups) == 1 and groups[0].attrib == {} and len(groups[0]) == 1,
+              "baseline_red_cause_refused")
+        prop = groups[0][0]
+        check(prop.tag == "property" and prop.attrib == {"name": BASELINE_PROPERTY, "value": "verified"}
+              and len(prop) == 0 and prop.text in (None, ""), "baseline_red_cause_refused")
+    return {"schema": 1, "outcome": "passed", "cause_verified": True, "expected_failure_cases": len(cases),
             "all_expected_regressions_observed": True, "collection_errors": 0, "skipped": 0}
 
 
@@ -521,7 +653,7 @@ def baseline_red(args, files, bundle, deadline):
         selectors = []
         for classname, name in BASELINE_RED_CASES:
             selectors.append(classname.replace(".", "/") + ".py::" + name)
-        code = run_owned([sys.executable, "-B", "-m", "pytest", "--junitxml", str(xml), *selectors],
+        code = run_owned([sys.executable, "-B", "-c", BASELINE_WRAPPER, str(Path(__file__).resolve()), "--junitxml", str(xml), *selectors],
                          cwd=tree, log=args.results / "baseline-private.log", limit=backend_budget(deadline, 120))
         result = baseline_red_result(xml, code)
     finally:
