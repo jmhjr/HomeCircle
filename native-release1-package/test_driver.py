@@ -21,7 +21,7 @@ class DriverContracts(unittest.TestCase):
             "version": driver.VERSION, "expected_release_files": 113, "minimum_backend_passed": 1443,
             "required_backend_tests": [{"class": "tests.test_one", "function": "test_regression_one"},
                                        {"class": "tests.test_two", "function": "test_regression_two"}],
-            "frontend_tests": 110}
+            "frontend_tests": 122}
 
     def load(self, value=None):
         path = self.root / "config.json"
@@ -42,7 +42,7 @@ class DriverContracts(unittest.TestCase):
 
     def test_source_config_and_version_cannot_silently_change_scope(self):
         for key, value in (("source_files", True), ("source_files", 0), ("expected_release_files", 112),
-                           ("frontend_tests", 109), ("minimum_backend_passed", 1442),
+                           ("frontend_tests", 121), ("minimum_backend_passed", 1442),
                            ("version", "1.0.0"), ("candidate_source_prefix", "../private/")):
             with self.subTest(key=key), self.assertRaises(driver.Refused):
                 self.load(dict(self.config, **{key: value}))

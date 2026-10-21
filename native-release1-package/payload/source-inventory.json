@@ -24,8 +24,8 @@
     "sha256": "0ad333f01ddc698e4de34c6360d8589bc4c2dfcc32ccd5deafaf2d28518f5180"
   },
   "custom_components/homecircle/__init__.py": {
-    "bytes": 13562,
-    "sha256": "d877f4132c8aeaf18af3e507129098a40e7262c3440d259c5646102ba8eaf946"
+    "bytes": 13755,
+    "sha256": "1044e86e5ed15dccc73094cf14037c4df51095a0f2cd44e16515b42130c76aa0"
   },
   "custom_components/homecircle/_findmy_runtime/LICENSE.md": {
     "bytes": 20800,
@@ -820,8 +820,8 @@
     "sha256": "ae12996f6a457dcdec0ff6b05250be209277bed321c0f19d2274bd8790e113b1"
   },
   "frontend/homecircle-card/src/card.js": {
-    "bytes": 58034,
-    "sha256": "5188db6173d3529fc8145226c9a8e684def3e7f11a738191504c41f7a41930bd"
+    "bytes": 60486,
+    "sha256": "fd9c44bb24f7ad0a5a55a3ea164034040887e9651300d61b294716b5353415a4"
   },
   "frontend/homecircle-card/src/member-avatar.js": {
     "bytes": 1473,
@@ -860,8 +860,8 @@
     "sha256": "ecdc230fd6dd1e447ab58e778025b129d85f6b806cc9547c8bf399e8c5c04108"
   },
   "frontend/homecircle-card/test/lifecycle.test.mjs": {
-    "bytes": 104115,
-    "sha256": "59d0384c60fb13d3694533374be9414b566a492525bb354f79e2157d22b4a34f"
+    "bytes": 115915,
+    "sha256": "d56500f17363af4c290b6eb789a7945db93375bd1cca6996ecb6655bea2e232e"
   },
   "frontend/homecircle-card/test/location-request-details.test.mjs": {
     "bytes": 2273,
@@ -1284,8 +1284,8 @@
     "sha256": "5b7902611dbabd744933a348208bb80058104a88a65e951479f4cb41aebb2b80"
   },
   "tests/test_frontend.py": {
-    "bytes": 25242,
-    "sha256": "2ed0cc8ee106ce9e143f7c1fd3d475f22450f431e05c803c74e872d843427667"
+    "bytes": 27758,
+    "sha256": "373671d44019159247109fd0e0ea4112bfddc57baeb3874a912e110cf53985e3"
   },
   "tests/test_life360_direct.py": {
     "bytes": 21642,

@@ -103,7 +103,7 @@ def load_pins(path, expected_sha):
           "source_count_config_refused")
     check(value["version"] == VERSION and value["expected_release_files"] == 113
           and type(value["expected_release_files"]) is int
-          and value["frontend_tests"] == 110 and type(value["frontend_tests"]) is int,
+          and value["frontend_tests"] == 122 and type(value["frontend_tests"]) is int,
           "candidate_scope_refused")
     check(type(value["minimum_backend_passed"]) is int
           and 1443 <= value["minimum_backend_passed"] <= 2400, "backend_minimum_refused")
@@ -304,13 +304,13 @@ def frontend(args, files):
           "leaflet_notice_copy_refused")
     check(args.npm_log.is_file() and args.npm_log.stat().st_size <= 32 * 1024**2, "npm_log_refused")
     text = args.npm_log.read_text()
-    for key, count in (("tests", 110), ("pass", 110), ("fail", 0), ("cancelled", 0), ("skipped", 0), ("todo", 0)):
+    for key, count in (("tests", 122), ("pass", 122), ("fail", 0), ("cancelled", 0), ("skipped", 0), ("todo", 0)):
         check(re.findall(r"^# " + key + r" ([0-9]+)\s*$", text, re.MULTILINE) == [str(count)],
               "frontend_test_counts_refused")
     privacy_result = json.loads((args.results / "privacy-summary.json").read_bytes())
     check(privacy_result.get("outcome") == "passed" and privacy_result.get("files_checked") == COUNT
           and privacy_result.get("checker_sha256") == CHECKER_SHA, "prior_source_privacy_required")
-    safe = {"schema": 1, "outcome": "passed", "completed": True, "frontend_tests_passed": 110,
+    safe = {"schema": 1, "outcome": "passed", "completed": True, "frontend_tests_passed": 122,
             "frontend_tests_failed": 0, "frontend_reproducible": True, "frontend_bundle": actual,
             "leaflet_notice_matches_dependency": True, "source_sha256": SOURCE_SHA,
             "source_inventory_sha256": INVENTORY_SHA, "source_files": COUNT,
@@ -401,7 +401,7 @@ def staged_frontend(args):
     check(summary.get("outcome") == "passed" and summary.get("completed") is True
           and summary.get("source_sha256") == SOURCE_SHA and summary.get("source_inventory_sha256") == INVENTORY_SHA
           and summary.get("candidate_source_commit") == SOURCE_COMMIT and summary.get("source_files") == COUNT
-          and summary.get("frontend_tests_passed") == 110 and summary.get("frontend_tests_failed") == 0
+          and summary.get("frontend_tests_passed") == 122 and summary.get("frontend_tests_failed") == 0
           and summary.get("frontend_reproducible") is True, "staged_frontend_summary_refused")
     bundle = summary.get("frontend_bundle")
     check(isinstance(bundle, dict) and set(bundle) == set(FRONTEND), "staged_frontend_inventory_refused")

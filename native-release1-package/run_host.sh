@@ -110,7 +110,7 @@ finish() {
       (.backend.required_regressions|length)==$required and all(.backend.required_regressions[];.passed==true) and
       .candidate_source_commit==$commit and .same_version_unreleased_development_preview==true' \
       "$public/package-summary.json" >/dev/null || status=1
-    jq -e --argjson count "$source_count" '.outcome=="passed" and .frontend_tests_passed==110 and
+    jq -e --argjson count "$source_count" '.outcome=="passed" and .frontend_tests_passed==122 and
       .frontend_reproducible==true and .privacy.files_checked==$count and .privacy.checker_exit==0' \
       "$public/frontend-summary.json" >/dev/null || status=1
   fi
