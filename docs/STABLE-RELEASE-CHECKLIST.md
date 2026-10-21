@@ -19,10 +19,13 @@ artifacts below. These scoped results do not approve the full advertised matrix.
   startup/restart, nonempty settings, persisted identities and served bytes,
   closed external NIC at restart and owned cleanup. This used direct verified
   ZIP installation; HACS, migration, removal and backup/restore were outside it.
-- [ ] Accept the standard consumer Container entrypoint and remaining ARM64
-  managed cells. The [four consumer and two local ARM pilots](RELEASE-1.0-INCOMPLETE-PILOTS.md)
-  failed without a completed consumer phase or accepted ARM phase. Retain the
-  negative evidence and confirmed diagnostic/setup gaps before another attempt.
+- [x] Record the [four native consumer entrypoint witnesses](RELEASE-1.0-INCOMPLETE-PILOTS.md#scoped-consumer-followup-four-native-cells-passed): runs 39516737435 and 39517742934 passed
+  startup/stop/restart, exact bytes, settings/source/resource continuity,
+  legitimate unload/setup and cleanup at both Core endpoints on both CPUs,
+  with prepared normal-config dependencies and offline acceptance.
+- [ ] Accept the remaining exact-C ARM64 managed cells. The [eight consumer and seven local ARM negatives](RELEASE-1.0-INCOMPLETE-PILOTS.md)
+  remain preserved; no ARM phase was accepted. Fresh online consumer resolution
+  is outside the prepared-cache consumer witnesses.
 - [ ] Resolve the [automatic guard rollback finding](RELEASE-1.0-HAOS-RESTORE.md)
   and the other final-RC, provider, notice/assurance and owner-acceptance gates
   in the [release plan](RELEASE-1.0-PLAN.md). Passing manual prepared restore

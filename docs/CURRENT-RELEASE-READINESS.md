@@ -14,8 +14,11 @@ passed on both CPUs. The [exact-preview managed HAOS investigation](RELEASE-1.0-
 completed operational restore and manual repair, while automatic guard protection
 failed. The [minimum-Core amd64 managed witness](RELEASE-1.0-MINIMUM-HAOS.md)
 passed normal dependency setup and exact-preview startup/restart. The
-[four consumer and two local ARM pilots](RELEASE-1.0-INCOMPLETE-PILOTS.md)
-remain unsuccessful, with no completed consumer phase or accepted ARM phase.
+[eight consumer and seven local ARM negative results](RELEASE-1.0-INCOMPLETE-PILOTS.md)
+remain preserved. The subsequent [four native consumer entrypoint witnesses](RELEASE-1.0-INCOMPLETE-PILOTS.md#scoped-consumer-followup-four-native-cells-passed) passed startup/restart and
+identity continuity at both Core endpoints on both CPUs, with prepared
+normal-config dependencies and offline acceptance. Exact-C ARM managed phases
+and broader release gates remain open.
 The [compatibility disposition](RELEASE-1.0-COMPATIBILITY.md) retains the
 remaining target gaps. Both direct providers remain selected for 1.0. This is not a
 published release, and the

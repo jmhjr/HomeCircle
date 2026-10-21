@@ -172,9 +172,11 @@ it does not qualify the remaining advertised matrix by itself.
 The [compatibility disposition](RELEASE-1.0-COMPATIBILITY.md) now records
 minimum/current QA-container lifecycle passes on both CPUs, the exact-C
 managed amd64 restore investigation and the [minimum-Core amd64 managed
-startup/restart pass](RELEASE-1.0-MINIMUM-HAOS.md). The [four consumer and two
-local ARM pilots](RELEASE-1.0-INCOMPLETE-PILOTS.md) remain unsuccessful; their
-cleanup does not close the remaining managed/consumer scopes.
+startup/restart pass](RELEASE-1.0-MINIMUM-HAOS.md). The [eight consumer and seven
+local ARM negatives](RELEASE-1.0-INCOMPLETE-PILOTS.md) remain preserved. The
+subsequent [four native consumer entrypoint witnesses](RELEASE-1.0-INCOMPLETE-PILOTS.md#scoped-consumer-followup-four-native-cells-passed) passed prepared-cache startup/stop/restart at both
+Core endpoints on both CPUs. Exact-C ARM managed phases and broader release
+gates remain open.
 
 - [x] Qualify exact-C scripted native Core lifecycle on amd64 and ARM64 at
   2026.9.4 and 2026.10.2: 12 focused cases and four separate Core processes per
@@ -185,6 +187,13 @@ cleanup does not close the remaining managed/consumer scopes.
   Run 39504506480 preserved explicit selections, nonempty settings, identities
   and served bytes across a real restart with the external NIC closed.
   HACS, historical migration, removal and backup/restore were outside this run.
+
+- [x] Witness the original consumer entrypoint on both native CPUs and both Core
+  endpoints with prepared normal-config dependencies. Runs 39516737435 and
+  39517742934 passed eight service starts with clean stops, exact installed/served
+  bytes, settings/source/resource continuity, legitimate unload/setup, offline
+  acceptance and owned cleanup. Fresh online resolution and provider/native-worker
+  acceptance remain outside these witnesses.
 
 - [ ] Freeze the advertised matrix. The current proposal has eight cells:
   HAOS/Container × amd64/ARM64 × Core 2026.9.4/2026.10.2.
