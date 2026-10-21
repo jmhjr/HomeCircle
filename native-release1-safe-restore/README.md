@@ -229,3 +229,16 @@ is QA-only; a maintainer-supported private administrator preservation procedure
 must be documented before consumer instructions or stage-4 disposition. If the
 latest intact guard is unavailable, leave HomeCircle disabled and preserve that
 uncertainty; never reset counts or infer remaining Apple allowance.
+
+
+The next focused diagnostic observes only an exception already escaping the
+same standalone guard status call. The exact c8 product source and loaded code
+objects must match before optional finite storage detail can be projected. Only
+operation, substage, fixed role, exception family, errno label and original
+rejecting-stat booleans may leave the helper. The observer does not read files,
+format exceptions, add tracing hooks, retry status, change modes, reset a guard
+or submit recovery. Unknown origin or an observer error omits detail and keeps
+the original failure. The existing fresh export token, 60-second command,
+zero-exit gate, success stdout, restore procedure and cleanup remain required.
+Seventeen exact-module fault contracts and five complete export-path contracts supplement the prior 99 contracts, for 121 total.
+Actual Supervisor failure cause and full restore acceptance remain unproven.

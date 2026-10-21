@@ -952,3 +952,379 @@ class GuardExportDiagnosticContracts(unittest.TestCase):
                 host.stage='initialize'
                 with redirect_stdout(io.StringIO()):host.finish(controller.Refused('guest_command_failed'))
                 self.assertNotIn('guard_export',json.loads((host.public/'host.json').read_bytes()))
+
+
+# Exact-candidate standalone storage faults, in the same pure contract suite.
+import errno
+import stat
+import sys
+import threading
+import types
+import zipfile
+with zipfile.ZipFile(controller.ROOT / 'payload/homecircle.zip') as storage_archive:
+    STORAGE_RAW = storage_archive.read('findmy_recovery_guard.py')
+
+class Proxy:
+    def __init__(self, target, **replacements):
+        self.target = target
+        self.replacements = replacements
+
+    def __getattr__(self, name):
+        return self.replacements.get(name, getattr(self.target, name))
+
+
+class GuardFailureTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory(prefix='owned-guard-diagnostic-')
+        self.base = Path(self.temp.name).resolve()
+        self.root = self.base / '.storage/homecircle_findmy/recovery_guard'
+        self.module = types.ModuleType('owned_exact_guard_fault_fixture')
+        exec(compile(STORAGE_RAW, 'exact-candidate-guard', 'exec'), self.module.__dict__)
+        self.guard = self.module.RecoveryGuard(self.root)
+        async def seed():
+            for _ in range(3):
+                async with self.guard.attempt(transfer.IDENTITY) as attempt:
+                    await attempt.before_dispatch()
+                    await attempt.refused()
+        asyncio.run(seed())
+        self.binding = transfer.SourceBinding(self.guard, STORAGE_RAW)
+
+    def tearDown(self):
+        self.module.os = os
+        self.temp.cleanup()
+
+    def observed(self):
+        try:
+            asyncio.run(self.guard.status(transfer.IDENTITY))
+        except self.module.RecoveryGuardStorageError as error:
+            observation = self.binding.observe(error)
+            self.assertIsNotNone(observation)
+            self.assertEqual(transfer.public_observation(observation), observation)
+            self.assertNotIn('private-canary', json.dumps(observation))
+            return error, observation
+        self.fail('actual_guard_fault_did_not_refuse')
+
+    def assert_fields(self, observation, **expected):
+        self.assertEqual({key: observation[key] for key in expected}, expected)
+
+    def test_success_has_no_observation_or_changed_bytes_or_trace_hooks(self):
+        before = {path.name: hashlib.sha256(path.read_bytes()).hexdigest()
+                  for path in self.root.iterdir()}
+        hooks = (sys.gettrace(), threading.gettrace())
+        result = asyncio.run(self.guard.status(transfer.IDENTITY))
+        self.assertTrue(result['blocked'])
+        self.assertEqual(result['rejected'], 3)
+        self.assertEqual(before, {path.name: hashlib.sha256(path.read_bytes()).hexdigest()
+                                 for path in self.root.iterdir()})
+        self.assertEqual(hooks, (sys.gettrace(), threading.gettrace()))
+
+    def test_private_parent_and_guard_root_permission_predicates(self):
+        for path, role in ((self.root.parent, 'private_parent'), (self.root, 'guard_root')):
+            with self.subTest(role=role):
+                path.chmod(0o755)
+                _, value = self.observed()
+                self.assert_fields(value, operation='directory', substage='private_directory_policy',
+                                   role=role, node_kind='directory', owner_matches_uid=True,
+                                   mode_matches=False, single_link=None, errno=None)
+                path.chmod(0o700)
+
+    def test_original_owner_check_is_distinct_from_mode(self):
+        def fstat(descriptor):
+            info = os.fstat(descriptor)
+            fields = list(info)
+            fields[4] = os.getuid() + 1
+            return os.stat_result(fields)
+        self.module.os = Proxy(os, fstat=fstat)
+        _, value = self.observed()
+        self.assert_fields(value, substage='private_directory_policy', role='private_parent',
+                           mode_matches=True, owner_matches_uid=False)
+
+    def test_ledger_and_lock_mode_policy_roles(self):
+        for name, role in (('ledger.json', 'ledger'), ('ledger.lock', 'ledger_lock')):
+            with self.subTest(role=role):
+                path = self.root / name
+                path.chmod(0o644)
+                _, value = self.observed()
+                self.assert_fields(value, substage='private_file_policy', role=role,
+                                   node_kind='regular', owner_matches_uid=True,
+                                   mode_matches=False, single_link=True)
+                path.chmod(0o600)
+
+    def test_original_regular_file_and_single_link_predicates(self):
+        lock = self.root / 'ledger.lock'
+        os.link(lock, self.base / 'owned-hardlink')
+        _, value = self.observed()
+        self.assert_fields(value, role='ledger_lock', node_kind='regular',
+                           mode_matches=True, single_link=False)
+        (self.base / 'owned-hardlink').unlink()
+        lock.unlink()
+        lock.mkdir(mode=0o600)
+        _, value = self.observed()
+        self.assert_fields(value, operation='lock', substage='lock_open',
+                           role='ledger_lock', failure_type='IsADirectoryError',
+                           node_kind=None, owner_matches_uid=None, mode_matches=None)
+
+    def test_nonregular_ledger_is_reported_without_content_read(self):
+        path = self.root / 'ledger.json'
+        path.unlink()
+        os.mkfifo(path, mode=0o600)
+        _, value = self.observed()
+        self.assert_fields(value, role='ledger', substage='private_file_policy',
+                           node_kind='other', mode_matches=True, single_link=True)
+
+    def test_parent_symlink_is_ancestor_open_error_without_stale_stat(self):
+        target = self.root.parent.with_name('owned-private-parent')
+        self.root.parent.rename(target)
+        self.root.parent.symlink_to(target, target_is_directory=True)
+        _, value = self.observed()
+        self.assertEqual(value['role'], 'private_parent')
+        self.assertEqual(value['substage'], 'ancestor_open')
+        self.assertIn(value['errno'], {'ELOOP', 'ENOTDIR'})
+        self.assert_fields(value, node_kind=None, owner_matches_uid=None, mode_matches=None)
+        self.root.parent.unlink()
+        target.rename(self.root.parent)
+
+    def test_ledger_symlink_has_fixed_role_and_errno_only(self):
+        path = self.root / 'ledger.json'
+        target = self.base / 'owned-ledger-target'
+        path.rename(target)
+        path.symlink_to(target)
+        _, value = self.observed()
+        self.assert_fields(value, role='ledger', substage='ledger_open', errno='ELOOP',
+                           node_kind=None, owner_matches_uid=None, mode_matches=None)
+
+    def test_malformed_json_schema_and_counters_are_distinct(self):
+        path = self.root / 'ledger.json'
+        cases = [
+            (b'{"private-canary":', 'ledger_json', 'JSONDecodeError'),
+            (b'{"version":1,"version":1,"accounts":{}}', 'ledger_duplicate_keys', 'ValueError'),
+            (b'[]', 'ledger_schema', 'ValueError'),
+            (b'{"version":2,"accounts":{}}', 'ledger_version', 'ValueError'),
+            (b'{"version":1,"accounts":[]}', 'ledger_accounts', 'ValueError'),
+            (json.dumps({'version': 1, 'accounts': {'private-canary': {}}}).encode(),
+             'ledger_account_identity', 'ValueError'),
+            (json.dumps({'version': 1, 'accounts': {transfer.IDENTITY: {}}}).encode(),
+             'ledger_entry_schema', 'ValueError'),
+        ]
+        for key, data, expected in (
+                ('rejected', -1, 'ledger_counters'), ('pending', 'private-canary', 'ledger_pending')):
+            item = dict(rejected=3, uncertain=0, verified=0, pending=None)
+            item[key] = data
+            cases.append((json.dumps({'version': 1, 'accounts': {transfer.IDENTITY: item}}).encode(),
+                          expected, 'ValueError'))
+        for raw, stage, kind in cases:
+            with self.subTest(stage=stage):
+                path.write_bytes(raw)
+                _, value = self.observed()
+                self.assert_fields(value, role='ledger', substage=stage, failure_type=kind,
+                                   errno=None, node_kind=None)
+
+    def test_ledger_size_rejection_does_not_read_or_export_content(self):
+        (self.root / 'ledger.json').write_bytes(b' ' * (1024 * 1024 + 1))
+        _, value = self.observed()
+        self.assert_fields(value, role='ledger', substage='ledger_size', failure_type='ValueError')
+
+    def test_actual_lock_open_and_flock_os_errors_retain_fixed_errno(self):
+        original = os.open
+        def denied(path, flags, *args, **kwargs):
+            if path == 'ledger.lock':
+                raise PermissionError(errno.EACCES, 'private-canary', '/private-canary')
+            return original(path, flags, *args, **kwargs)
+        self.module.os = Proxy(os, open=denied)
+        error, value = self.observed()
+        self.assertIsInstance(error.__context__, PermissionError)
+        self.assert_fields(value, role='ledger_lock', substage='lock_open', errno='EACCES',
+                           failure_type='PermissionError')
+        self.module.os = os
+        original_fcntl = self.module.fcntl
+        def failed_flock(*args):
+            raise OSError(errno.EIO, 'private-canary', '/private-canary')
+        self.module.fcntl = Proxy(original_fcntl, flock=failed_flock)
+        _, value = self.observed()
+        self.assert_fields(value, substage='ledger_lock_acquire', role='ledger_lock', errno='EIO')
+
+    def test_handled_missing_file_is_not_a_false_failure(self):
+        (self.root / 'ledger.json').unlink()
+        (self.root / 'ledger.lock').unlink()
+        result = asyncio.run(self.guard.status(transfer.IDENTITY))
+        self.assertEqual(result['rejected'], 0)
+        self.assertFalse(result['blocked'])
+
+    def test_cleanup_error_is_not_replaced_by_older_handled_policy_failure(self):
+        (self.root / 'ledger.json').chmod(0o644)
+        def failed_close(descriptor):
+            info = os.fstat(descriptor)
+            os.close(descriptor)
+            if stat.S_ISREG(info.st_mode) and stat.S_IMODE(info.st_mode) == 0o644:
+                raise OSError(errno.EIO, 'private-canary', '/private-canary')
+        self.module.os = Proxy(os, close=failed_close)
+        error, value = self.observed()
+        self.assertIsInstance(error.__context__, OSError)
+        self.assertIsInstance(error.__context__.__context__, self.module.RecoveryGuardStorageError)
+        self.assert_fields(value, role='ledger', substage='ledger_read_cleanup', errno='EIO',
+                           failure_type='OSError', node_kind=None, mode_matches=None)
+
+    def test_wrapped_error_context_cycle_is_bounded_and_unknown(self):
+        def denied(*args, **kwargs):
+            raise OSError(errno.EACCES, 'private-canary')
+        self.module.os = Proxy(os, open=denied)
+        error, _ = self.observed()
+        error.__context__ = error
+        self.assertIsNone(self.binding.observe(error))
+
+    def test_observer_performs_no_filesystem_calls_or_message_conversion(self):
+        (self.root / 'ledger.json').chmod(0o644)
+        try:
+            asyncio.run(self.guard.status(transfer.IDENTITY))
+        except self.module.RecoveryGuardStorageError as error:
+            calls = []
+            class NoIO:
+                stat_result = os.stat_result
+                def __getattr__(self, name):
+                    calls.append(name)
+                    raise AssertionError('observer_io_attempt')
+            original = transfer.os
+            transfer.os = NoIO()
+            try:
+                self.assertIsNotNone(self.binding.observe(error))
+            finally:
+                transfer.os = original
+            self.assertEqual(calls, [])
+        else:
+            self.fail('fault_required')
+
+    def test_wrong_source_modified_code_and_foreign_errors_are_unknown(self):
+        with self.assertRaises(ValueError):
+            transfer.SourceBinding(self.guard, STORAGE_RAW + b'\n')
+        self.assertIsNone(self.binding.observe(ValueError('private-canary')))
+        try:
+            raise self.module.RecoveryGuardStorageError('private-canary')
+        except self.module.RecoveryGuardStorageError as error:
+            self.assertIsNone(self.binding.observe(error))
+        original = self.module.RecoveryGuard._root_fd
+        def replacement(self):
+            return None
+        self.module.RecoveryGuard._root_fd = replacement
+        with self.assertRaises(ValueError):
+            transfer.SourceBinding(self.guard, STORAGE_RAW)
+        self.module.RecoveryGuard._root_fd = original
+
+    def test_public_projection_rejects_unknown_fields_and_valid_looking_text(self):
+        (self.root / 'ledger.json').chmod(0o644)
+        _, value = self.observed()
+        for key in value:
+            for bad in ('private-canary', [], {}, 42):
+                with self.subTest(key=key, bad=type(bad).__name__):
+                    altered = dict(value, **{key: bad})
+                    self.assertIsNone(transfer.public_observation(altered))
+        self.assertIsNone(transfer.public_observation(dict(value, extra=False)))
+
+
+
+class StorageExportIntegrationContracts(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory(prefix='owned-storage-export-')
+        self.base = Path(self.temp.name).resolve()
+        self.package = self.base / 'package'; self.package.mkdir()
+        (self.package / 'findmy_recovery_guard.py').write_bytes(STORAGE_RAW)
+        self.root = self.base / '.storage/homecircle_findmy/recovery_guard'
+        module = types.ModuleType('owned_exact_export_seed')
+        exec(compile(STORAGE_RAW, 'exact-export-seed', 'exec'), module.__dict__)
+        guard = module.RecoveryGuard(self.root)
+        async def seed():
+            for _ in range(3):
+                async with guard.attempt(transfer.IDENTITY) as attempt:
+                    await attempt.before_dispatch(); await attempt.refused()
+        asyncio.run(seed())
+        self.token = 'b' * 32
+        self.proof = self.base / 'proof.json'
+        self.proof.write_bytes(transfer.canonical({'schema':1,'token':self.token,
+            'generation':'before_restore','branch_commit':'a'*40,'postbackup_window':{}}))
+
+    def tearDown(self):
+        self.temp.cleanup()
+
+    def invoke(self, failed=True):
+        from contextlib import redirect_stdout, redirect_stderr
+        import io
+        stdout, stderr = io.StringIO(), io.StringIO()
+        with patch.object(transfer,'PACKAGE',self.package),patch.object(transfer,'GUARD',self.root), \
+                patch.object(transfer,'EXPORT_PROOF',self.proof),patch.object(transfer.sys,'argv',['-','export']), \
+                patch.object(transfer.sys,'platform','linux'),patch.object(transfer.os,'geteuid',return_value=0), \
+                redirect_stdout(stdout),redirect_stderr(stderr):
+            if failed:
+                with self.assertRaises(SystemExit) as error:transfer.cli()
+                self.assertEqual(error.exception.code,1)
+            else:
+                transfer.cli()
+        return stdout.getvalue().encode(), stderr.getvalue().encode()
+
+    def test_actual_status_to_cli_to_host_preserves_only_exact_token_bound_stat_detail(self):
+        self.root.parent.chmod(0o755)
+        stdout, stderr = self.invoke()
+        self.assertEqual(stdout,b'')
+        labels=transfer.parse_export_failure(stderr,self.token)
+        self.assertEqual(labels['stage'],'blocked_status')
+        self.assertEqual(labels['failure_type'],'RecoveryGuardStorageError')
+        detail=labels['storage_failure']
+        self.assertEqual(detail,{'operation':'directory','substage':'private_directory_policy',
+            'role':'private_parent','failure_type':'RecoveryGuardStorageError','errno':None,
+            'node_kind':'directory','owner_matches_uid':True,'mode_matches':False,'single_link':None})
+        value=controller.guard_export_observation({'exitcode':1,'signal':None,'truncated':False,
+            'stdout':stdout,'stderr':stderr},self.token)
+        self.assertEqual(value['helper_failure'],labels)
+        self.assertIsNone(transfer.parse_export_failure(stderr,'c'*32))
+        public=json.dumps(value)
+        self.assertNotIn(str(self.base),public);self.assertNotIn(self.token,public)
+        self.assertNotIn('Traceback',public)
+
+    def test_source_binding_failure_omits_detail_and_keeps_original_failure(self):
+        self.root.parent.chmod(0o755)
+        with patch.object(transfer,'SourceBinding',side_effect=ValueError('PRIVATE-CANARY')):
+            stdout,stderr=self.invoke()
+        self.assertEqual(stdout,b'')
+        self.assertEqual(transfer.parse_export_failure(stderr,self.token),
+            {'stage':'blocked_status','failure_type':'RecoveryGuardStorageError'})
+        self.assertNotIn(b'CANARY',stderr)
+
+    def test_observer_failure_omits_detail_and_keeps_original_failure(self):
+        self.root.parent.chmod(0o755)
+        with patch.object(transfer.SourceBinding,'observe',side_effect=AssertionError('PRIVATE-CANARY')):
+            stdout,stderr=self.invoke()
+        self.assertEqual(stdout,b'')
+        self.assertEqual(transfer.parse_export_failure(stderr,self.token),
+            {'stage':'blocked_status','failure_type':'RecoveryGuardStorageError'})
+        self.assertNotIn(b'CANARY',stderr)
+
+    def test_actual_success_stdout_and_private_guard_bytes_are_unchanged(self):
+        files=transfer.private_files(self.root)
+        expected=transfer.canonical({'schema':1,'files':{name:base64.b64encode(raw).decode()
+            for name,raw in files.items()}})+b'\n'
+        # Only the Linux-root entry gate is emulated on macOS. Preserve the
+        # actual private-file check against this temporary fixture's real UID.
+        original_private_files = transfer.private_files
+        real_uid = os.getuid()
+        def local_private_files(root):
+            with patch.object(transfer.os,'geteuid',return_value=real_uid):
+                return original_private_files(root)
+        with patch.object(transfer,'private_files',side_effect=local_private_files):
+            stdout,stderr=self.invoke(failed=False)
+        self.assertEqual(stdout,expected);self.assertEqual(stderr,b'')
+        self.assertEqual(transfer.private_files(self.root),files)
+        self.assertIsNone(transfer._export_storage_failure)
+
+    def test_optional_metadata_is_strictly_scoped_and_rejects_canaries_and_bool_coercion(self):
+        self.root.parent.chmod(0o755)
+        _,stderr=self.invoke()
+        labels=transfer.parse_export_failure(stderr,self.token)
+        for key,value in [('stage','private_files'),('failure_type','ValueError')]:
+            invalid=dict(labels,**{key:value})
+            self.assertIsNone(transfer.export_failure_labels(invalid))
+        for key,value in [('mode_matches',1),('owner_matches_uid',0),('role','PRIVATE-CANARY'),
+                          ('errno','PRIVATE-CANARY'),('failure_type','PRIVATE-CANARY')]:
+            invalid=dict(labels,storage_failure=dict(labels['storage_failure'],**{key:value}))
+            self.assertIsNone(transfer.export_failure_labels(invalid))
+        self.assertIsNone(transfer.export_failure_labels(dict(labels,private='PRIVATE-CANARY')))
+        body=json.loads(stderr)
+        duplicate=transfer.canonical(body).replace(b'"mode_matches":false',b'"mode_matches":false,"mode_matches":false')
+        self.assertIsNone(transfer.parse_export_failure(duplicate,self.token))
