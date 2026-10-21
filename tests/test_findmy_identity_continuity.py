@@ -1032,7 +1032,7 @@ async def test_explicit_disconnect_removes_only_confirmed_malformed_or_missing_o
     flow, provider, paused = fresh_flow(hass, metadata, items)
     flow.async_abort = Mock(return_value={"type": "abort", "reason": "findmy_storage_failed"})
     before = _account_tree_snapshot(base)
-    configuration = deepcopy((flow.config_entry.data, flow.config_entry.options, flow.draft))
+    configuration = deepcopy((dict(flow.config_entry.data), dict(flow.config_entry.options), flow.draft))
     read_bytes = type(vault.key_path).read_bytes
 
     def read(path):
@@ -1089,7 +1089,7 @@ async def test_explicit_disconnect_preserves_unsafe_or_legacy_store_and_metadata
     flow, provider, paused = fresh_flow(hass, metadata, items)
     flow.async_abort = Mock(return_value={"type": "abort", "reason": "findmy_storage_failed"})
     before = _account_tree_snapshot(base)
-    configuration = deepcopy((flow.config_entry.data, flow.config_entry.options, flow.draft))
+    configuration = deepcopy((dict(flow.config_entry.data), dict(flow.config_entry.options), flow.draft))
     assert (await flow.async_step_findmy_disconnect({"confirm": True}))["reason"] == "findmy_storage_failed"
     flow.async_abort.assert_called_once_with(reason="findmy_storage_failed")
     assert _account_tree_snapshot(base) == before
