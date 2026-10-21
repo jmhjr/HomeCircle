@@ -524,7 +524,8 @@ def test_consumed_code_abort_messages_exist_in_both_locales():
         value = json.loads((root/name).read_bytes())
         for scope in ("config","options"):
             assert _CONSUMED_CODE_RECOVERY_ERRORS <= set(value[scope]["abort"])
-            assert "limited" in value[scope]["abort"]["findmy_recovery_rate_limited"]
+            assert "HTTP 429" in value[scope]["abort"]["findmy_recovery_rate_limited"]
+            assert "cause is unconfirmed" in value[scope]["abort"]["findmy_recovery_rate_limited"]
             assert "do not reuse" in value[scope]["abort"]["findmy_recovery_rate_limited"]
 
 
