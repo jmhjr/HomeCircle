@@ -1,0 +1,208 @@
+{
+  "action_checks": {
+    "mutate": {
+      "clones_removed": false,
+      "deselected_commitments": 1,
+      "discriminating_mutation": true,
+      "guard_counter": 3,
+      "main_store_preserved": false,
+      "negative_cases": 0,
+      "no_op_pair_preserved": false,
+      "pair_matches_baseline": false,
+      "selected_items": 2
+    },
+    "seed": {
+      "clones_removed": false,
+      "deselected_commitments": 1,
+      "discriminating_mutation": false,
+      "guard_counter": 2,
+      "main_store_preserved": false,
+      "negative_cases": 0,
+      "no_op_pair_preserved": false,
+      "pair_matches_baseline": true,
+      "selected_items": 2
+    },
+    "validate_restart": {
+      "clones_removed": true,
+      "deselected_commitments": 1,
+      "discriminating_mutation": false,
+      "guard_counter": 3,
+      "main_store_preserved": true,
+      "negative_cases": 18,
+      "no_op_pair_preserved": true,
+      "pair_matches_baseline": true,
+      "selected_items": 2
+    },
+    "validate_restored": {
+      "clones_removed": true,
+      "deselected_commitments": 1,
+      "discriminating_mutation": false,
+      "guard_counter": 3,
+      "main_store_preserved": true,
+      "negative_cases": 18,
+      "no_op_pair_preserved": true,
+      "pair_matches_baseline": true,
+      "selected_items": 2
+    }
+  },
+  "actions": [
+    "seed",
+    "mutate",
+    "validate_restored",
+    "validate_restart"
+  ],
+  "check_keys": [
+    "actual_fernet",
+    "account_identity_bound",
+    "selection_and_ledger_bound",
+    "pair_private",
+    "passwordless_session",
+    "config_snapshots_equal",
+    "baseline_proof_preserved",
+    "pair_matches_baseline",
+    "discriminating_mutation",
+    "no_op_pair_preserved",
+    "main_store_preserved",
+    "clones_removed",
+    "negative_cases",
+    "selected_items",
+    "deselected_commitments",
+    "guard_counter"
+  ],
+  "cli": [
+    "action",
+    "token32",
+    "generation",
+    "branch40"
+  ],
+  "common_true_checks": [
+    "actual_fernet",
+    "account_identity_bound",
+    "selection_and_ledger_bound",
+    "pair_private",
+    "passwordless_session",
+    "config_snapshots_equal",
+    "baseline_proof_preserved"
+  ],
+  "control_root": "/data/homeassistant/homecircle-safe-restore-qa-control",
+  "entry_schema": {
+    "disabled_by": "user",
+    "domain": "homecircle",
+    "items": "two explicit Apple tracker entity IDs",
+    "outer_minor_version": 5,
+    "outer_version": 1,
+    "people": [],
+    "people_trackers": "two explicit Life360 tracker entity IDs",
+    "pets": [],
+    "record_minor_version": 1,
+    "record_version": 1
+  },
+  "failure_public_shape": {
+    "outcome": "failed",
+    "schema": 1,
+    "stage": "fixed allowlisted category"
+  },
+  "fingerprint_fields": [
+    "config_sha256",
+    "key_sha256",
+    "vault_sha256",
+    "payload_sha256",
+    "ledger_sha256",
+    "selection_sha256",
+    "credentials_sha256"
+  ],
+  "fingerprint_recipes": {
+    "config_sha256": "sha(canonical({'data':record['data'],'options':record['options']}))",
+    "credentials_sha256": "sha(canonical(record['options']['life360_account']))",
+    "key_sha256": "sha(raw session.key bytes)",
+    "ledger_sha256": "sha(canonical(actual Vault.load()['identity_state']))",
+    "payload_sha256": "sha(canonical(actual Vault.load()))",
+    "selection_sha256": "sha(canonical(whole storage-selection-private.json))",
+    "vault_sha256": "sha(raw session.vault bytes)"
+  },
+  "generations": {
+    "mutate": "before_restore",
+    "seed": "before_restore",
+    "validate_restart": "after_restore",
+    "validate_restored": "after_restore"
+  },
+  "job_file": "storage-job.json",
+  "job_keys": [
+    "schema",
+    "action",
+    "token",
+    "generation",
+    "branch_commit"
+  ],
+  "join_count": 4,
+  "join_keys": [
+    "entity_id",
+    "unique_id",
+    "config_entry_id",
+    "kind"
+  ],
+  "join_kinds": {
+    "item": 2,
+    "person": 2
+  },
+  "negative_case_ids": [
+    "missing_key",
+    "wrong_valid_key",
+    "invalid_base64_key",
+    "short_decoded_key",
+    "tampered_cipher",
+    "truncated_cipher",
+    "key_permissions",
+    "vault_permissions",
+    "key_symlink",
+    "vault_symlink",
+    "key_directory",
+    "vault_directory",
+    "foreign_ledger",
+    "metadata_identity",
+    "metadata_selection",
+    "data_options_divergence",
+    "registry_identity",
+    "duplicate_join"
+  ],
+  "private_expected_file": "storage-expected-private.json",
+  "private_proof_file": "storage-proof-private.json",
+  "private_proof_written_by_action": {
+    "mutate": true,
+    "seed": true,
+    "validate_restart": false,
+    "validate_restored": false
+  },
+  "private_result_file": "storage-result-private.json",
+  "private_result_shape": {
+    "action": "one allowed action",
+    "fingerprints": "seven fingerprint fields are flat top-level keys",
+    "schema": 1
+  },
+  "proof_keys": [
+    "schema",
+    "baseline",
+    "mutation"
+  ],
+  "proof_semantics": "baseline holds seven fingerprints; mutation is null in backup and seven different-state fingerprints after mutation. Validators require restored baseline, expected external baseline and discriminating external mutation; no raw material is exported. Validation writes only storage-result-private.json, leaving original pair/config/selection/proof/guard unchanged.",
+  "public_keys": [
+    "schema",
+    "action",
+    "outcome",
+    "entry_disabled",
+    "managed_candidate_imported",
+    "synthetic_only",
+    "source_files_verified",
+    "storage_checks",
+    "private_proof_written"
+  ],
+  "registry_validation": "seed only establishes explicit private join mapping; managed helper creates and checks actual HA registry joins. Both validators check saved raw HA registry entries against the restored explicit mapping, including unique_id and config_entry_id, and require source config and selection fingerprints to match the host-retained baseline. No name/order inference.",
+  "schema": 1,
+  "selection_file": "storage-selection-private.json",
+  "selection_keys": [
+    "schema",
+    "entry_id",
+    "joins"
+  ],
+  "source_commit": "91ae59106a661143b770d7a3564d363c7c11a7dd"
+}

@@ -1,0 +1,17 @@
+{
+  "codeowners": [],
+  "dependencies": [
+    "backup",
+    "frontend",
+    "http",
+    "lovelace",
+    "recorder",
+    "websocket_api",
+    "zone"
+  ],
+  "documentation": "https://github.com/jmhjr/HomeCircle",
+  "domain": "homecircle_safe_restore_qa",
+  "name": "HomeCircle synthetic saved storage QA",
+  "requirements": [],
+  "version": "0.0.0"
+}

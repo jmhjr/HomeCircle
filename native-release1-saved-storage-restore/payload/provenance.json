@@ -1,0 +1,20 @@
+{
+  "candidate_package_validation_head": "e2572b28812c1c152b40eb1a10e6d6e8d4cb8276",
+  "candidate_package_validation_run": 39683890536,
+  "candidate_package_validation_url": "https://github.com/jmhjr/HomeCircle/actions/runs/39683890536",
+  "candidate_source_commit": "91ae59106a661143b770d7a3564d363c7c11a7dd",
+  "candidate_zip_bytes": 617791,
+  "candidate_zip_sha256": "004c9bc4a968ad395e18033837cb42f5bd1d8719a8d90fc778fd20be4ff08f97",
+  "native_independent_report_sha256": "22c861632098c71d78b4f8051a3722579bacb8983d413931231ce867e2a2d27d",
+  "native_root_report_sha256": "1e12dc205f90505df5e9c0d275cda8fa60becbb4f91d497cd4cdb87e30b2be06",
+  "provider_or_owner_accounts_used": false,
+  "release_published": false,
+  "runtime_changed_files_vs_f4": [
+    "findmy_vault.py"
+  ],
+  "runtime_members": 113,
+  "saved_storage_restore_executed": false,
+  "schema": 1,
+  "source_archive_sha256": "ffac27457402e86ac8ffa6b6dc587304af20db3b443e9bc3b1555931e53a3144",
+  "source_inventory_sha256": "25874cd64372ec90a6ba955bb5b1e1e9892eeb5cfd52580dadb8955f07f503bd"
+}

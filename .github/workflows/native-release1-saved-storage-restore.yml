@@ -1,0 +1,100 @@
+name: HomeCircle disabled-entry synthetic saved-storage restore
+on:
+  push:
+    branches: [codex/native-amd64-validation]
+    paths:
+      - native-release1-saved-storage-restore/**
+      - .github/workflows/native-release1-saved-storage-restore.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: homecircle-saved-storage-restore-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  disabled-saved-storage:
+    if: github.ref == 'refs/heads/codex/native-amd64-validation'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 125
+    steps:
+      - name: Check out exact reviewed procedure and qualified preview
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Verify frozen fixture before imports
+        timeout-minutes: 3
+        shell: bash
+        run: |
+          python3 -I -B - <<'PY'
+          from pathlib import Path
+          import hashlib,subprocess,stat
+          root=Path('native-release1-saved-storage-restore')
+          expected={'README.md': '9c379b1dde2af97b523ef6951ba1572ed7ce13e5cd657ba1a3ba1fe1f4c921cc', 'accept_saved_storage.py': '9220757e4be5abd23ebb836372d14a4b24c42c90be26c53af1652e6c945c026d', 'baseline-controls.json': '40e7cfbeb72a16e44b16e294a8ad97d8798c786bf8633b900750997d9dd52942', 'controller.py': '9ebc6c1355a3a5d707d97e407eeb40d83e2ef61ddb77b9c64d3856e0262946c4', 'guard_context.py': '7d69de4b10ae725795c42a4089f61cb972a3d48c5f6032680eea26c935ef5922', 'guard_transfer.py': '590030e0c7eff81457e56c4cfc7b0d75ad0c079be3ede6e6da083d8fb4e95d84', 'guest_helper/homecircle_safe_restore_qa/__init__.py': '51f16b97b5a4d13327fb5040fe291ee948c79899b48c9aaaf307382116ed17e1', 'guest_helper/homecircle_safe_restore_qa/dependency_probe.py': '7ac8e79aa5aea1868801e9273d9d1300db525b51bd7fe70a0a03a836a506a8d6', 'guest_helper/homecircle_safe_restore_qa/manifest.json': '77be125912fe2d2a37fb4ea90746b85df8e72052b0cc567cf6505d401796e6e6', 'payload/homecircle.zip': '004c9bc4a968ad395e18033837cb42f5bd1d8719a8d90fc778fd20be4ff08f97', 'payload/inventory.json': 'd7e70cb639d77836fa2ac15b26f95e2f31ea599dbfff580cfae60a5a827cfe5b', 'payload/provenance.json': '64e5794f8a98c75a50fb67df829dfd484033fe1b07e7029e54c863e0d870c9e7', 'reset_fresh_config.py': 'df600d5695de2d09feabcded9e59d81dcc8149be2082b19b7931e0f11f12aa3c', 'run_host.sh': '19e047f20d970b1728b790fba65354335b6a957a74362f457379d40e2f55ac1f', 'storage_context.py': '4b828bbc5d00c37698ec892f8d24fbea736982d0b65c445efd1f9abc91f6da60', 'storage_protocol.json': '1fadf3843481d685aa0a691411b0c90283105388e786aac53e04355db6d56efc', 'storage_transfer.py': '6c56ce91f60f7893854c74aa4a258a1e6ad425bcbae15d5582e84e9104772d8f', 'test_guard_context.py': 'a7525d54f499de631ec183a30aa07c98b8bc454678d14f9dd4c30ae57d90a32d', 'test_saved_storage.py': '99e45a9ed444f93d3f45fc806cddb59fa5e5d0e996e3f322f3cb126bbc9b4022', 'test_storage_context.py': 'adb7a7a4594a385a581f03b873779300558776de6da1b73ba10d9b09a5062182', 'test_storage_transfer.py': '4a89b786c262755efbc442698a625839b297b03195776c36c6774dab2f099a5d'}
+          tracked=subprocess.check_output(['git','ls-files','-z','--',str(root)]).decode().split('\0')
+          assert {n for n in tracked if n}=={str(root/n) for n in expected},'tracked_members_refused'
+          assert root.is_dir() and not root.is_symlink()
+          nodes=list(root.rglob('*'))
+          assert all(not p.is_symlink() and (p.is_file() or p.is_dir()) for p in nodes)
+          assert {p.relative_to(root).as_posix() for p in nodes if p.is_file()}==set(expected)
+          assert len(expected)==21
+          for name,digest in expected.items():
+              path=root/name
+              assert stat.S_ISREG(path.lstat().st_mode) and hashlib.sha256(path.read_bytes()).hexdigest()==digest,'input_bytes_refused'
+          print('Verified all 21 frozen saved-storage inputs.')
+          PY
+      - name: Install native VM tools
+        timeout-minutes: 5
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq qemu-system-x86 qemu-utils ovmf
+          test -c /dev/kvm
+          sudo chown "$(id -u):$(id -g)" /dev/kvm
+          test -r /dev/kvm
+          test -w /dev/kvm
+          test -r /usr/share/OVMF/OVMF_CODE_4M.fd
+          test -r /usr/share/OVMF/OVMF_VARS_4M.fd
+      - name: Require all 87 zero-skip saved-storage contracts
+        timeout-minutes: 3
+        shell: bash
+        run: |
+          bash -n native-release1-saved-storage-restore/run_host.sh
+          unset HOMECIRCLE_STORAGE_IDENTITY_SOURCE
+          PYTHONDONTWRITEBYTECODE=1 python3 -B - <<'PY'
+          import unittest
+          suite=unittest.defaultTestLoader.discover('native-release1-saved-storage-restore',pattern='test_*.py')
+          assert suite.countTestCases()==87,'contract_count_refused'
+          result=unittest.TextTestRunner(verbosity=2).run(suite)
+          assert result.wasSuccessful() and not result.skipped,'contract_failure_or_skip'
+          PY
+      - name: Witness disabled-entry synthetic saved-storage restore
+        timeout-minutes: 103
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          timeout --signal=TERM --kill-after=150s 5900s bash native-release1-saved-storage-restore/run_host.sh \
+            --candidate-zip native-release1-saved-storage-restore/payload/homecircle.zip \
+            --branch-commit "$GITHUB_SHA" --output native-release1-saved-storage-results
+          receipts=native-release1-saved-storage-results/public-summary
+          python3 -I -B native-release1-saved-storage-restore/accept_saved_storage.py "$receipts"
+          python3 -I -B native-release1-saved-storage-restore/guard_context.py --accept-public "$receipts/host.json"
+          python3 -I -B native-release1-saved-storage-restore/storage_context.py --accept-public "$receipts/host.json"
+          actual=$(find "$receipts" -mindepth 1 -maxdepth 1 -type f -printf '%f\n' | LC_ALL=C sort)
+          expected=$(printf '%s\n' host.json baseline_disabled.json mutated_disabled.json automatic_restored_disabled.json repaired_storage_disabled.json restart_disabled.json | LC_ALL=C sort)
+          test "$actual" = "$expected"
+      - name: Retain only fixed synthetic saved-storage receipts
+        if: always()
+        timeout-minutes: 3
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: release1-disabled-synthetic-saved-storage-restore
+          path: |
+            native-release1-saved-storage-results/public-summary/host.json
+            native-release1-saved-storage-results/public-summary/baseline_disabled.json
+            native-release1-saved-storage-results/public-summary/mutated_disabled.json
+            native-release1-saved-storage-results/public-summary/automatic_restored_disabled.json
+            native-release1-saved-storage-results/public-summary/repaired_storage_disabled.json
+            native-release1-saved-storage-results/public-summary/restart_disabled.json
+          if-no-files-found: warn
+          retention-days: 7
+          include-hidden-files: false
