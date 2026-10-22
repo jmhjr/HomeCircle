@@ -160,4 +160,111 @@ class OrdinaryContracts(unittest.TestCase):
         ast.parse(program.replace('__BASELINE__','{}').replace('__JOINS__',"'a'"))
 
 
+class FailureDiagnosticContracts(unittest.TestCase):
+    def capture_probe_error(self,label):
+        path=ROOT/'guest_helper/homecircle_safe_restore_qa/dependency_probe.py'
+        tree=ast.parse(path.read_bytes())
+        node=next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name=='require')
+        values={}
+        exec(compile(ast.Module(body=[node],type_ignores=[]),str(path.resolve()),'exec'),values)
+        try:values['require'](False,label)
+        except ValueError as error:return error
+        raise AssertionError('probe_error_not_raised')
+
+    def test_known_probe_valueerror_retains_only_bound_code_and_frame(self):
+        error=self.capture_probe_error('qa_dependency_graph_version')
+        projected=c._DIAGNOSTICS.project(error,c._DIAGNOSTIC_ROOT,type('Refused',(RuntimeError,),{}))
+        self.assertEqual(projected['failure_type'],'ValueError')
+        self.assertEqual(projected['failure_code'],'qa_dependency_graph_version')
+        self.assertEqual(len(projected['frames']),1)
+        self.assertEqual(projected['frames'][0]['source'],'dependency_probe')
+        self.assertEqual(projected['frames'][0]['function'],'require')
+
+    def test_private_valueerror_text_is_discarded(self):
+        import json
+        secret='https://example.invalid/?password=QA-PRIVATE-DO-NOT-RETAIN'
+        error=self.capture_probe_error(secret)
+        projected=c._DIAGNOSTICS.project(error,c._DIAGNOSTIC_ROOT,type('Refused',(RuntimeError,),{}))
+        self.assertIsNone(projected['failure_code'])
+        self.assertNotIn(secret,json.dumps(projected))
+        self.assertNotIn('password',json.dumps(projected))
+        self.assertLessEqual(len(projected['frames']),8)
+
+    def test_unbound_frame_or_private_extra_is_refused(self):
+        value={'failure_type':'ValueError','failure_code':None,
+            'frames':[{'source':'dependency_probe','function':'private_unreviewed_name','line':1}]}
+        with self.assertRaises(ValueError):c._DIAGNOSTICS.checked(value,c._DIAGNOSTIC_ROOT)
+        with self.assertRaises(ValueError):c._DIAGNOSTICS.checked({**value,'secret':'private'},c._DIAGNOSTIC_ROOT)
+
+    def test_dependency_diagnostic_metadata_refuses_unknown_package_and_version(self):
+        rows={name:{'available':False,'version':None,'constraints_satisfied':False} for name in c.base.CLOSURE}
+        self.assertEqual(c._DIAGNOSTICS.checked_metadata(rows,c._DIAGNOSTIC_ROOT),rows)
+        with self.assertRaises(ValueError):
+            c._DIAGNOSTICS.checked_metadata({**rows,'private_unknown':rows['protobuf']},c._DIAGNOSTIC_ROOT)
+        rows['protobuf']={'available':True,'version':'https://example.invalid/?password=private','constraints_satisfied':False}
+        with self.assertRaises(ValueError):c._DIAGNOSTICS.checked_metadata(rows,c._DIAGNOSTIC_ROOT)
+
+    def test_dependency_diagnostic_version_redacts_unknown_input(self):
+        path=ROOT/'guest_helper/homecircle_safe_restore_qa/dependency_probe.py'
+        spec=importlib.util.spec_from_file_location('_ordinary_probe_contract',path)
+        probe=importlib.util.module_from_spec(spec);spec.loader.exec_module(probe)
+        self.assertEqual(probe.public_version('7.36.0'),'7.36.0')
+        for value in ('https://example.invalid/?secret=private','private',7.36,None):
+            self.assertIsNone(probe.public_version(value))
+
+    def test_failed_phase_is_projected_before_raising(self):
+        import json,tempfile
+        with tempfile.TemporaryDirectory() as folder:
+            control=c.Controller(types.SimpleNamespace(branch_commit='b'*40,output=Path(folder)/'unused'))
+            control.public=Path(folder);control.config_path='/synthetic'
+            control.assert_network_closed=lambda:None
+            control.guest_write=lambda *args:None
+            control.guest=lambda *args:b''
+            control.initial_managed_boot=lambda:None
+            control.grant_closed_boot=lambda *args:None
+            control.remaining=lambda maximum:1
+            receipt={'schema':1,'token':control.phase_token,'phase':'baseline_enabled',
+                'generation':'before_restore','branch_commit':'b'*40,'outcome':'failed',
+                'stage':'normal_dependencies','failure_type':'ValueError',
+                'failure_code':'qa_dependency_graph_version','frames':[],
+                'dependency_metadata':{name:{'available':False,'version':None,'constraints_satisfied':False}
+                    for name in c.base.CLOSURE},
+                'private_secret':'QA-PRIVATE-DO-NOT-RETAIN'}
+            control.guest_read=lambda *args:json.dumps(receipt).encode()
+            with self.assertRaisesRegex(c.Refused,'ordinary_guest_phase_failed'):
+                control.phase('baseline_enabled',start=True)
+            public=json.loads((Path(folder)/'baseline_enabled.json').read_bytes())
+            self.assertEqual(public['failure_code'],'qa_dependency_graph_version')
+            self.assertEqual(public['stage'],'normal_dependencies')
+            self.assertEqual(control.guest_failures,[public])
+            self.assertNotIn('private_secret',public)
+
+
+    def test_automatic_restored_failure_stops_after_one_bound_receipt(self):
+        import json,tempfile
+        with tempfile.TemporaryDirectory() as folder:
+            control=c.Controller(types.SimpleNamespace(branch_commit='b'*40,output=Path(folder)/'unused'))
+            control.public=Path(folder);control.config_path='/synthetic'
+            control.phases=[{'process':{'start_ticks':1}},{'process':{'start_ticks':2}}]
+            control.network_boundary={'link_closed':True}
+            control.remaining=lambda maximum:1
+            process={'pid':123,'start_ticks':3}
+            receipt={'schema':1,'token':control.phase_token,'phase':'automatic_restored_enabled',
+                'generation':'before_restore','branch_commit':'b'*40,'process':process,
+                'outcome':'failed','stage':'normal_dependencies','failure_type':'ValueError',
+                'failure_code':'qa_dependency_graph_version','frames':[],
+                'dependency_metadata':{name:{'available':False,'version':None,'constraints_satisfied':False}
+                    for name in c.base.CLOSURE}}
+            calls=[]
+            def read(*args):calls.append(1);return json.dumps(receipt).encode()
+            control.guest_read=read
+            with self.assertRaisesRegex(c.Refused,'ordinary_guest_automatic_phase_failed'):
+                control.restored_boot_barrier()
+            self.assertEqual(calls,[1])
+            public=json.loads((Path(folder)/'automatic_restored_enabled.json').read_bytes())
+            self.assertEqual(public['process'],process)
+            self.assertEqual(public['failure_code'],'qa_dependency_graph_version')
+            self.assertEqual(control.guest_failures,[public])
+
+
 if __name__=='__main__':unittest.main()

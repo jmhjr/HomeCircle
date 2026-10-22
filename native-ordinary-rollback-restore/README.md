@@ -39,3 +39,14 @@ The only successful qualification is ordinary unmodified-product enabled synthet
 The legacy controller module supplies the previously reviewed owned-guest/QEMU/CLI/default-condition/cleanup infrastructure only. The new Controller owns every product install, phase, storage action, restore barrier, run and finish path. Calls to prepared dependency installation, guard export or manual guard repair explicitly refuse. The old procedure and its evidence are preserved separately.
 
 Run local contracts by explicitly loading test_ordinary_contract, never by recursively importing guest_helper: the parent initializer intentionally refuses non-Linux startup. Run the host only from the frozen native workflow. Retain exactly five public synthetic receipts and remove the owned VM/private workspace on all completion paths.
+
+
+## Diagnostic revision R2
+
+The first native trial (39714666021) failed before its first accepted phase. Its private guest phase receipt was discarded by the host, so the underlying cause is unqualified. R2 preserves that failed run and the original fixture. It adds no success exceptions: a failed phase still stops the trial.
+
+Only finite qa_ codes literally present in the frozen observer/probe/boundary sources may be retained from exact Refused or ValueError arguments. At most eight source-bound frames contain a fixed source alias, declared function name and in-range source line; no paths, arguments, exception text, URLs or private values are retained. The host verifies the phase token/generation/branch identity before publishing that projection in the failed phase receipt and host guest_failures. Granular stages distinguish package bytes, normal dependencies, real recovery guard, saved configuration, selected storage, runtime and Recorder.
+
+If and only if the normal dependency stage fails, R2 additionally retains exactly the 24 known public closure package names. Each row contains available, a bounded numeric version or null, and constraints_satisfied. Unknown version text is redacted. No origin paths, URLs, environment variables, requests or error messages are included. The host independently checks the exact source-declared name set and strict scalar schema before retaining these diagnostics. These rows never relax a success check.
+
+Automatic-restored observer failures after the closed-network grant use the same fixed projection and are written to the restore barrier with the exact token, generation, branch and fresh process. The host checks those identities and stops immediately after one failed receipt instead of waiting for the success-barrier deadline. A successful automatic barrier now explicitly says outcome passed; all prior ordinary restore success assertions still apply.

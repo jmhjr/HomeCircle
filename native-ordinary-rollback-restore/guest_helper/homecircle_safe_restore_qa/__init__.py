@@ -9,7 +9,7 @@ import importlib.metadata as metadata
 import importlib.util
 
 import aiohttp
-from . import startup_boundary
+from . import startup_boundary, failure_diagnostics
 from functools import partial
 import hashlib
 import json
@@ -625,11 +625,16 @@ class Rehearsal:
             check(not any(not user.system_generated for user in users), "qa_no_owner_accounts")
             await ensure_entry_scope(hass, receipt)
             entry = current_entry(hass)
+            stage = "package_bytes"
             receipt.update(await hass.async_add_executor_job(package_at, directory, inputs))
+            stage = "normal_dependencies"
             receipt["normal_dependencies"] = await hass.async_add_executor_job(dependency_fixture_at, directory, inputs, hass.config.skip_pip)
+            stage = "recovery_guard"
             receipt["recovery_guard"] = await guard_receipt(hass, entry, restored=name == "restart_enabled")
             receipt["process"] = process()
+            stage = "saved_configuration"
             receipt["ha_config_entry_saved"] = await persist_verified_entry(hass, directory, entry, update=name == "baseline_enabled")
+            stage = "selected_storage"
             observed, joins = await self.raw_snapshot(entry)
             proof = await hass.async_add_executor_job(read_json, self.control / "storage-proof-private.json")
             expected = proof["mutation"] if name == "mutated_enabled" else proof["baseline"]
@@ -640,6 +645,7 @@ class Rehearsal:
             receipt["nonempty_options"] = bool(entry.options)
             receipt["nonempty_place"] = bool(entry.options.get("places"))
             selection = await hass.async_add_executor_job(selected_mapping, directory, entry)
+            stage = "runtime_details"
             receipt.update(await runtime_details(hass, entry, selection, inputs))
             receipt["provider_request_attempt_counts_measured"] = True
             receipt["recovery_proof_attempt_counts_measured"] = True
@@ -677,14 +683,17 @@ class Rehearsal:
             assert_enabled(hass, entry)
             receipt["outcome"] = "passed"
         except Exception as error:
-            receipt.update(outcome="failed", stage=stage, failure_type=type(error).__name__)
-            if isinstance(error, Refused):
-                receipt["failure_code"] = str(error)
+            details = await hass.async_add_executor_job(failure_diagnostics.project, error, Path(__file__).parent, Refused)
+            if stage == "normal_dependencies":
+                from .dependency_probe import diagnostic_metadata
+                details["dependency_metadata"] = await hass.async_add_executor_job(diagnostic_metadata)
+            receipt.update(outcome="failed", stage=stage, **details)
             _LOGGER.error("Disposable saved-storage phase failed at %s (%s)", stage, type(error).__name__)
         await hass.async_add_executor_job(write_json, directory / RESULTS / (name + ".json"), receipt)
 
     async def poll(self):
         seen, observed_boot, boot_request = set(), False, None
+        stage = "control"
         while self.hass.is_running:
             try:
                 inputs = await self.hass.async_add_executor_job(inputs_at, self.directory)
@@ -725,23 +734,29 @@ class Rehearsal:
                             baseline = await self.hass.async_add_executor_job(read_json, baseline_path)
                             observed, joins = await self.raw_snapshot(entry)
                             guard_sha = await self.hass.async_add_executor_job(guard_files, self.directory)
+                            stage = "package_bytes"
                             package = await self.hass.async_add_executor_job(package_at, self.directory, inputs)
+                            stage = "normal_dependencies"
                             dependencies = await self.hass.async_add_executor_job(dependency_fixture_at, self.directory, inputs, self.hass.config.skip_pip)
                             selection = await self.hass.async_add_executor_job(selected_mapping, self.directory, entry)
+                            stage = "runtime_details"
                             runtime = await runtime_details(self.hass, entry, selection, inputs)
                             check(observed == baseline["observed_storage"] and joins == baseline["joins_sha256"]
                                   and guard_sha == baseline["guard_sha256"], "qa_automatic_raw_baseline_changed")
+                            stage = "recovery_guard"
+                            recovery = await guard_receipt(self.hass, entry, restored=True)
+                            stage = "recorder"
                             postrestore = await record_window(self.hass, [], "after_restore_")
                             await self.hass.async_add_executor_job(write_json, self.control / "postrestore-history.json", postrestore)
                             history_inputs = {**inputs, 'generation': 'after_restore'}
                             recorder = await recorder_receipt(self.hass, baseline, history_inputs, postrestore)
                             await self.hass.async_add_executor_job(write_json, self.control / "restore-barrier.json",
                                 {"schema": 1, "token": token, "generation": generation, "branch_commit": inputs["branch_commit"],
-                                 "core_version": CORE_VERSION, "phase": "automatic_restored_enabled",
+                                 "core_version": CORE_VERSION, "phase": "automatic_restored_enabled", "outcome": "passed",
                                  "owner_accounts_used": False, "production_configuration_used": False,
                                  "process": process(), "entry_disabled": False, "entry_loaded": True, "candidate_imported": True,
                                  "ha_config_entry_saved": True, "closed_boot_grant_verified": True, "observed_storage": observed, "joins_sha256": joins, "guard_sha256": guard_sha,
-                                 **package, **runtime, "recorder": recorder, "normal_dependencies": dependencies, "recovery_guard": await guard_receipt(self.hass, entry, restored=True),
+                                 **package, **runtime, "recorder": recorder, "normal_dependencies": dependencies, "recovery_guard": recovery,
                                  "provider_request_attempt_counts_measured": True, "recovery_proof_attempt_counts_measured": True})
                             seen.add((generation, name))
                         observed_boot = True
@@ -755,6 +770,19 @@ class Rehearsal:
                         check(not result_path.exists(), "qa_phase_receipt_collision")
                         await self.run(phase, inputs)
             except Exception as error:
+                if (boot_request is not None and boot_request.get('purpose') == 'automatic_restore'
+                        and getattr(self, 'closed_boot_grant_verified', False) is True
+                        and boot_request.get('process') == process()):
+                    details = await self.hass.async_add_executor_job(
+                        failure_diagnostics.project, error, Path(__file__).parent, Refused)
+                    if stage == 'normal_dependencies':
+                        from .dependency_probe import diagnostic_metadata
+                        details['dependency_metadata'] = await self.hass.async_add_executor_job(diagnostic_metadata)
+                    await self.hass.async_add_executor_job(write_json, self.control / 'restore-barrier.json',
+                        {'schema':1,'phase':'automatic_restored_enabled','outcome':'failed',
+                         'token':boot_request['token'],'generation':boot_request['generation'],
+                         'branch_commit':boot_request['branch_commit'],'process':process(),
+                         'stage':stage,**details})
                 _LOGGER.error("Disposable saved-storage control refused (%s)", type(error).__name__)
                 return
             await asyncio.sleep(0.5)

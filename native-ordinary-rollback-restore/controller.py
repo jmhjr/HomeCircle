@@ -7,6 +7,7 @@ No recovery-guard export, import, owner acknowledgment or repair is permitted.
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -37,6 +38,22 @@ base.PHASES = PHASES
 base.SOURCE_COMMIT = SOURCE_COMMIT
 base.CANDIDATE_SHA = CANDIDATE_SHA
 base.ROOT = ROOT
+
+_DIAGNOSTIC_ROOT=ROOT/'guest_helper/homecircle_safe_restore_qa'
+_DIAGNOSTIC_SPEC=importlib.util.spec_from_file_location('_ordinary_fixed_failure',_DIAGNOSTIC_ROOT/'failure_diagnostics.py')
+_DIAGNOSTICS=importlib.util.module_from_spec(_DIAGNOSTIC_SPEC)
+_DIAGNOSTIC_SPEC.loader.exec_module(_DIAGNOSTICS)
+
+def guest_failure_projection(receipt,phase):
+    allowed=_DIAGNOSTICS.catalog(_DIAGNOSTIC_ROOT)
+    stage=receipt.get('stage')
+    stage=stage if type(stage) is str and stage in allowed['stages'] else 'unrecognized'
+    details=_DIAGNOSTICS.checked({k:receipt.get(k) for k in ('failure_type','failure_code','frames')},_DIAGNOSTIC_ROOT)
+    if stage=='normal_dependencies':
+        details['dependency_metadata']=_DIAGNOSTICS.checked_metadata(receipt.get('dependency_metadata'),_DIAGNOSTIC_ROOT)
+    else:
+        require('dependency_metadata' not in receipt,'ordinary_failed_phase_metadata_scope')
+    return {'schema':2,'phase':phase,'outcome':'failed','stage':stage,**details}
 
 
 def checked_binding(value):
@@ -96,6 +113,7 @@ class Controller(base.Controller):
     def __init__(self,args):
         super().__init__(args)
         self.normal_initial_window = None
+        self.guest_failures = []
 
     def prepare_dependencies(self):
         raise Refused('ordinary_prepared_dependency_install_forbidden')
@@ -201,6 +219,7 @@ class Controller(base.Controller):
     def phase(self,name,start=False):
         require(name in PHASES and name==PHASES[len(self.phases)] and name!='automatic_restored_enabled','ordinary_phase_order')
         self.assert_network_closed()
+        self.stage=name
         instruction={'schema':1,'token':self.phase_token,'phase':name,'generation':self.generation,'branch_commit':self.args.branch_commit}
         self.guest_write(self.config_path+'/'+CONTROL+'/phase.json',canonical(instruction))
         self.guest('chmod 600 '+self.config_path+'/'+CONTROL+'/phase.json',15)
@@ -211,9 +230,15 @@ class Controller(base.Controller):
         while time.monotonic()<limit:
             try:receipt=json.loads(self.guest_read(self.config_path+'/'+RESULTS+'/'+name+'.json'))
             except (Refused,OSError,ValueError):time.sleep(1);continue
-            require(receipt.get('token')==self.phase_token and receipt.get('phase')==name
-                and receipt.get('generation')==self.generation and receipt.get('branch_commit')==self.args.branch_commit
-                and receipt.get('outcome')=='passed','ordinary_phase_receipt_refused')
+            require(type(receipt) is dict and type(receipt.get('schema')) is int and receipt['schema']==1
+                and receipt.get('token')==self.phase_token and receipt.get('phase')==name
+                and receipt.get('generation')==self.generation and receipt.get('branch_commit')==self.args.branch_commit,
+                'ordinary_phase_receipt_identity_refused')
+            if receipt.get('outcome')!='passed':
+                public=guest_failure_projection(receipt,name)
+                self.guest_failures.append(public)
+                write_json(self.public/(name+'.json'),public)
+                raise Refused('ordinary_guest_phase_failed')
             public=self.accept_phase(name,receipt)
             self.raw_phase_receipts[name]=receipt
             write_json(self.public/(name+'.json'),public)
@@ -376,12 +401,24 @@ class Controller(base.Controller):
 
     def restored_boot_barrier(self):
         require(len(self.phases)==2 and self.network_boundary['link_closed'],'ordinary_first_restored_order')
+        self.stage='automatic_restored_enabled'
         limit=time.monotonic()+self.remaining(240)
         while time.monotonic()<limit:
             try:value=json.loads(self.guest_read(self.config_path+'/'+CONTROL+'/restore-barrier.json'))
             except (Refused,OSError,ValueError):time.sleep(1);continue
-            require(value.get('token')==self.phase_token and value.get('generation')=='before_restore'
+            require(type(value) is dict and type(value.get('schema')) is int and value['schema']==1
+                and value.get('token')==self.phase_token and value.get('phase')=='automatic_restored_enabled'
+                and value.get('generation')=='before_restore'
                 and value.get('branch_commit')==self.args.branch_commit,'ordinary_first_restored_identity')
+            process=value.get('process')
+            require(type(process) is dict and set(process)=={'pid','start_ticks'}
+                and all(type(v) is int and v>0 for v in process.values())
+                and process['start_ticks']>self.phases[-1]['process']['start_ticks'],'ordinary_first_restored_process_identity')
+            if value.get('outcome')!='passed':
+                public={**guest_failure_projection(value,'automatic_restored_enabled'),'process':dict(process)}
+                self.guest_failures.append(public)
+                write_json(self.public/'automatic_restored_enabled.json',public)
+                raise Refused('ordinary_guest_automatic_phase_failed')
             self.after_restore_barrier=True
             public=self.accept_phase('automatic_restored_enabled',value)
             self.raw_phase_receipts['automatic_restored_enabled']=value
@@ -522,6 +559,7 @@ class Controller(base.Controller):
             'phase_names':[p['phase'] for p in self.phases],'phases':len(self.phases),
             'failure_or_final_stage':self.stage,'failure_type':type(failure).__name__ if failure else None,
             'failure_code':str(failure) if type(failure) is Refused else None,'provenance':self.provenance,
+            'guest_failures':self.guest_failures,
             'actual_kvm_confirmed':self.kvm_confirmed,'actual_core':self.core_version_after,
             'actual_supervisor':self.supervisor_version_observed,'current_core_image':self.minimum_core_image,
             'fresh_owned_config':self.reset_receipt,'core_actions':self.core_actions,'backup_requests':self.backup_requests,

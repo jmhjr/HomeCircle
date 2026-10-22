@@ -30,6 +30,41 @@ def name_of(value):
     return re.sub(r'[-_.]+', '-', value).lower()
 
 
+def public_version(value):
+    """Only bounded numeric public package versions; never stringify inputs."""
+    return value if type(value) is str and re.fullmatch(
+        r'[0-9]{1,8}(?:\.[0-9]{1,8}){1,3}', value) else None
+
+
+def diagnostic_metadata():
+    """Fixed 24-package metadata; no provider imports, URLs or origins."""
+    constrained = {}
+    try:
+        from packaging.requirements import Requirement
+        spec = importlib.util.find_spec('homeassistant')
+        raw = (Path(spec.origin).parent / 'package_constraints.txt').read_bytes()
+        require(hashlib.sha256(raw).hexdigest() == CONSTRAINTS_SHA, 'qa_dependency_constraints')
+        for line in raw.decode().splitlines():
+            line = line.split('#', 1)[0].strip()
+            if line:
+                req = Requirement(line)
+                if req.marker is None or req.marker.evaluate({'extra': ''}):
+                    constrained.setdefault(name_of(req.name), []).append(req)
+        constraints_available = True
+    except Exception:
+        constraints_available = False
+    result = {}
+    for name in sorted(CLOSURE):
+        try:
+            version = public_version(metadata.version(name))
+            satisfied = bool(constraints_available and version is not None and all(
+                req.specifier.contains(version, prereleases=True) for req in constrained.get(name, ())))
+            result[name] = {'available': True, 'version': version, 'constraints_satisfied': satisfied}
+        except Exception:
+            result[name] = {'available': False, 'version': None, 'constraints_satisfied': False}
+    return result
+
+
 def observe():
     from packaging.requirements import Requirement
     from packaging.specifiers import SpecifierSet
