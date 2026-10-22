@@ -58,7 +58,7 @@ Infrastructure failures receive one bounded diagnosis before any reasoned retry.
 | 1. Freeze scope and support | Both direct providers selected October 20; platform/support proposal open | Maintainer, agent records | Signed-off feature/provider list, supported target matrix, upgrade baselines, exclusions and `1.0.0` naming |
 | 2. Consolidate release source and blockers | Clean source in draft PR #36; focused fixes independently reviewed; exact-source native suite passed | Agent; maintainer review | Clean canonical release branch, reviewed product-only diff, notices included, recorded defect dispositions |
 | 3. Close provenance and provider decisions | Open; inventory and notice preview complete; depends on stage 1 for final scope | Maintainer/specialist, agent supplies evidence | Exact-source/installed-dependency notices and obligations disposition; source/permission/service/name decisions for shipped scope |
-| 4. Enabled backup/restore safety | Recovery-guard fix and ordinary enabled synthetic partial restore passed; complete Person/activity-history and advertised backup variants remain open | Agent | Four actual enabled phases, automatic review/block after rollback and restart, unchanged product/normal requirements, preservation and independent replay; broader cases still required |
+| 4. Enabled backup/restore safety | Recovery-guard and scoped ordinary Person/activity partial restore passed; advertised backup variants remain open | Agent | Actual Person identities/links and product activity B/M/R preserved under normal requirements/default conditions; arrival-gap/pending-shutdown and broader variants remain unqualified |
 | 5. Cryptographic and format assurance | Synthetic independent source review complete; external assurance open if Find My ships | Specialist, agent fixes; owner only for controlled acceptance | Review disposition, independent format vectors, authenticated rejection/recovery cases and fixes rechecked |
 | 6. Advertised compatibility | Four native QA-container lifecycle cells and both scoped managed ARM endpoints passed; fresh consumer/RC support gates open | Agent | All advertised cells have candidate dependency/install/start/restart evidence; unsupported cells excluded explicitly |
 | 7. Real-account acceptance | Initial connections and saved-session restart witnessed; remaining lifecycle and stages 3/5 disposition open | Owner, agent guides/records | Controlled setup, discovery, selections, session lifecycle and successful recovery receipts without deliberately wrong passcodes |
@@ -185,9 +185,14 @@ configuration snapshot still requires an external monotonic anchor.
   disposable synthetic HAOS instance. Verify ordinary requirements, unchanged
   product bytes, four explicit tracker joins, settings/place/picture, encrypted
   storage, served frontend and Recorder continuity with no manual guard repair.
-- [ ] Complete full Home Assistant Person-association and HomeCircle activity-
-  history acceptance. Tracker-only person-kind members and Recorder continuity
-  in the scoped trial do not close these broader cases.
+- [x] Verify genuine HA Person associations and product-generated HomeCircle
+  activity through an ordinary synthetic partial restore and restart. The
+  [Person/activity record](RELEASE-1.0-PERSON-ACTIVITY-RESTORE.md) binds native
+  run 39777059627: one editable Person, two configured links versus one selected
+  tracker, distinct active source, baseline/mutation/restored cohorts and normal
+  durable stores. The original recovery, request, byte and cleanup gates passed.
+  Native arrival-gap and deliberately pending-on-shutdown writes remain
+  unqualified; other backup variants and real-account acceptance stay separate.
 - [x] Restore an older snapshot after a newer fictional recovery guard exists
   in the explicitly instrumented synthetic fixture. [Run 39708377110](RELEASE-1.0-ENABLED-RESTORE.md)
   bound older ledger restoration and counted denied startup requests without a
@@ -373,11 +378,12 @@ selection completion and the remaining mobile/display/access cases stay open.
 
 ## Work that can proceed now
 
-The scoped ordinary enabled partial restore and automatic recovery-guard block
-are complete, alongside the earlier initial account/saved-session restart and
-compatibility evidence. Both direct providers remain included. Continue full
-Person/activity-history and advertised backup-variant acceptance, provider
-lifecycle/renewal, assurance/provenance dispositions, remaining compatibility
-cells, finite field/mobile/display checks and real installed-state upgrade
-acceptance before freezing an RC. Earlier failed attempts and narrower passes
+The scoped ordinary Person/activity partial restore and automatic recovery-guard
+block are complete, alongside the earlier initial account/saved-session restart
+and compatibility evidence. Both direct providers remain included. Continue
+advertised backup-variant acceptance, provider lifecycle/renewal,
+assurance/provenance dispositions, remaining compatibility cells, finite
+field/mobile/display checks and real installed-state upgrade acceptance before
+freezing an RC. Arrival-gap and deliberately pending-on-shutdown writes are not
+qualified by the scoped restore. Earlier failed attempts and narrower passes
 retain their recorded outcomes. Stable release approval remains open.

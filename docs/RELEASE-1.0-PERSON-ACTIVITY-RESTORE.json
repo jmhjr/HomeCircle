@@ -1,0 +1,582 @@
+{
+  "acceptance_protocol": {
+    "activity_cohorts": {
+      "B": "Durable pre-backup product observations; the complete retained baseline returns after restore.",
+      "M": "Distinct product observations after backup; they must disappear when that older backup is restored.",
+      "R": "New product observations after restore; they must survive the later graceful restart."
+    },
+    "activity_generation": [
+      "Product state-change, normalization and ActivityLog.observe APIs generate the evidence.",
+      "Serialized event records are not inserted as a stand-in for product-generated history.",
+      "The actual .storage/homecircle.activity.<entry_id> store and its fingerprint are bound to the unchanged original saved configuration, including list order.",
+      "Raw stored source IDs and public source labels/reversed presentation are checked with their distinct formats."
+    ],
+    "normal_persistence": {
+      "activity_delay_seconds": 5,
+      "custom_homecircle_backup_flush_hook_present": false,
+      "exact_core_pending_store_final_write_path_present": true,
+      "fixture_only_activity_save_for_backup_acceptance": false,
+      "pending_on_shutdown_native_claim": false,
+      "person_collection_delay_seconds": 10,
+      "wait_for_actual_durable_store_observation": true
+    },
+    "person_identity": [
+      "Genuine Person collection item, real entity instance and registry unique ID survive restore and restart.",
+      "Configured HA tracker links, current HA active source, HomeCircle explicit tracker selection and chosen location evidence are checked separately.",
+      "A configured but nonselected active tracker discriminates implicit widening; no association is inferred from names.",
+      "Actual .storage/person bytes become durable through normal collection persistence and appear in the backup archive."
+    ],
+    "restart_semantics": [
+      "Valid started/current-state observations may append after each new runtime; exact equality of the complete postboot event list is not required.",
+      "No trip or event is reconstructed across a stopped observation gap.",
+      "Observations remain inside the product seven-day, 100-event and 25-freshness-event bounds."
+    ],
+    "retained_safeguards": [
+      "Actual archive and restored cache-witness omission; real account-bound recovery review/refusal before the attempt body, including restart.",
+      "No manual guard export/import/repair or post-restore owner acknowledgment.",
+      "Zero recovery command, before-dispatch and recovery transport dispatches.",
+      "All 113 product members and manifest unchanged; ordinary managed requirements, default Supervisor conditions and owned cleanup.",
+      "Recorder checks remain independent from HomeCircle activity checks."
+    ]
+  },
+  "actual_target": {
+    "architecture": "amd64",
+    "core": "2026.10.2",
+    "haos": "18.3",
+    "hardware_acceleration": "KVM",
+    "supervisor": "2026.10.3"
+  },
+  "candidate": {
+    "inventory_sha256": "370a0036f03bd2b7185afc7a9ddcf7d6545e41cfb6394f00fc699a2973db33aa",
+    "members": 113,
+    "runtime_source": "012a7e88d13970b2683b27d0824dac246c858179",
+    "source_with_docs_at_milestone_start": "08fd5cc65fa93318b211106e013b5b92f49d7f6a",
+    "zip_bytes": 620228,
+    "zip_sha256": "98a754ff2025761c2eb63d6422c9b17b76e2bdef2965c96fe353ab6c2c21fb20"
+  },
+  "fixture_preflight_correction": {
+    "corrected_before_native_R1": true,
+    "correction": "Separate Person GPS IDs before the first native freeze; original Recorder proof remains separate.",
+    "defect": "Person GPS IDs initially reused live Recorder marker IDs, causing HA registry suffixes.",
+    "native_failed_attempts_for_this_milestone": 0,
+    "product_fix_required": false
+  },
+  "independent_validation": {
+    "actual_committed_git_blobs_replayed": 43,
+    "actual_committed_replay_passed": true,
+    "collector_sha256": "1435f4c5c3fc6c968ef0a947d2ba5d3a84639498fda8816f04d5f180f1bcce17",
+    "committed_replay_sha256": "02fd0b81482dc729824b298f4f82be31607e02b3a2fc6f3a935a41db6a509f86",
+    "contracts_skipped": 0,
+    "fixture_code_imported_or_executed_by_consumer": false,
+    "fixture_contracts_passed": 45,
+    "frozen_input_files_verified": 30,
+    "frozen_inputs_sha256": "c40052fe14d65a7c68d9ed7ea546d8ffdf991b9c8d3491de0ac6061f08575fb3",
+    "independent_contracts_passed": 17,
+    "literal_runtime_members": 111,
+    "native_trial_repeated_by_consumer": false,
+    "prior_qualified_generated_frontend_members": 2,
+    "retained_public_evidence_commit": "07d50ada0f398c88dee322e5fd1f9c4a7ef9a86e",
+    "retained_public_evidence_files": 13,
+    "retained_public_evidence_index_url": "https://github.com/jmhjr/HomeCircle/blob/07d50ada0f398c88dee322e5fd1f9c4a7ef9a86e/native-person-activity-evidence/INDEX.md",
+    "retained_public_evidence_replay_url": "https://github.com/jmhjr/HomeCircle/blob/07d50ada0f398c88dee322e5fd1f9c4a7ef9a86e/native-person-activity-evidence/REPLAY.md",
+    "source_inventory_files": 371
+  },
+  "native_result": {
+    "artifact_bytes": 12091,
+    "artifact_id": 12426130015,
+    "artifact_sha256": "f7d401662e78a7fd39881ec91c5d181a7090a8a09244bcd4fed293f2998b86da",
+    "conclusion": "success",
+    "host_elapsed_seconds": 496.499,
+    "independent_review_sha256": "02fd0b81482dc729824b298f4f82be31607e02b3a2fc6f3a935a41db6a509f86",
+    "peer_audit_sha256": "1c85c5615c48c55ceb715bcf32cdd46443f290434d5e746a236270aa98d6c7f6",
+    "qa_head": "4b464723fe63bafc62f92e17e538e566278ee1c0",
+    "root_metadata_sha256": "062cba11ec90d6498bc096f07fb664c9af0851699d79dc03dea2596cd442bb40",
+    "run_attempt": 1,
+    "run_id": 39777059627,
+    "run_url": "https://github.com/jmhjr/HomeCircle/actions/runs/39777059627",
+    "status": "completed",
+    "workflow_path": ".github/workflows/native-person-activity-restore.yml",
+    "workflow_sha256": "299362dea2e4f5b7d474ebbc691780a4685ddc921b41da7aa26a1b412dc3eebd"
+  },
+  "observed": {
+    "B_preserved_after_restore": true,
+    "M_absent_after_restore": true,
+    "R_preserved_after_restart": true,
+    "active_and_selected_source_discriminator": true,
+    "activity_fingerprint_match": true,
+    "activity_public_projection": true,
+    "archive": {
+      "archive_bytes": 2969600,
+      "cache_witness_excluded": true,
+      "candidate_match": true,
+      "database_included": true,
+      "enabled_entry": true,
+      "guard_sha256": "e787528e69bd435980ce90a53c9eb4cdb57a48acd5ed03d7784e5058ef340033",
+      "no_prepared_dependency_bytes": true,
+      "product_manifest_unchanged": true,
+      "qa_startup_boundary_archive_verified": true,
+      "saved_config_included": true,
+      "saved_homecircle_activity_included": true,
+      "saved_pair_included": true,
+      "saved_person_configuration_included": true,
+      "saved_person_registry_joins_included": true,
+      "saved_photo_bytes_included": true,
+      "saved_registry_joins_included": true,
+      "saved_selection_included": true
+    },
+    "arrival_gap_semantics": {
+      "qualified": false,
+      "reason": "Source behavior only; no native arrival-gap assertion was included."
+    },
+    "backup_job": {
+      "done": true,
+      "error_count": 0,
+      "name": "backup_manager_partial_backup",
+      "nodes": 3
+    },
+    "cleanup": {
+      "cleanup_failed": false,
+      "private_workspace_removed": true,
+      "qemu_stopped": true
+    },
+    "default_supervisor_conditions": {
+      "cached_same_core_image_verified_after": true,
+      "cached_same_core_image_verified_before": true,
+      "candidate113_archive_verified": true,
+      "cleanup_failed": false,
+      "closed_boot_grant_written": true,
+      "enabled_instrumented_config_verified": true,
+      "final_effective_empty_observed": true,
+      "final_persisted_empty_or_absent": true,
+      "foreign_options_refused": false,
+      "global_persisted_override": false,
+      "jobs_option_mutation_requests": 0,
+      "maximum_cleanup_seconds": 90,
+      "maximum_network_readiness_seconds": 90,
+      "mode": "default_conditions_instrumented_enabled_saved_storage",
+      "network_close_acknowledged": true,
+      "network_close_requests": 1,
+      "network_closed_after": true,
+      "network_closed_before": true,
+      "network_info_requests": 1,
+      "network_open_acknowledged": true,
+      "network_open_positive_control": true,
+      "network_open_requests": 1,
+      "original_effective_empty": true,
+      "original_persisted_empty_or_absent": true,
+      "relevant_visible_jobs_idle_before": true,
+      "restore_completed": true,
+      "schema": 1,
+      "supervisor_host_internet_true": true,
+      "supervisor_internet_true": true,
+      "unsupported_conditions_override": false
+    },
+    "dependency_closure_count_by_phase": [
+      24,
+      24,
+      24,
+      24
+    ],
+    "genuine_person_identity_and_associations": true,
+    "guard_attempt_refused_before_body_after_restore": [
+      true,
+      true
+    ],
+    "guard_counter_sequence": [
+      2,
+      3,
+      2,
+      2
+    ],
+    "guard_identity_bound_to_saved_sdk_account": true,
+    "guard_review_required_sequence": [
+      false,
+      false,
+      true,
+      true
+    ],
+    "homecircle_activity_by_phase": {
+      "automatic_restored_enabled": {
+        "B_events": 25,
+        "B_preserved": true,
+        "B_sha256": "aedfabac30abc7535d8e55fd13438625d2b1bb7801da12fa81396c5d5a634aa0",
+        "B_transitions": 3,
+        "M_absent": true,
+        "M_events": 28,
+        "M_sha256": "70dcbabcb7204699e12120e78f53ae3cb1f79b1a138fa5e0da3325a04f7041b0",
+        "M_transitions": 3,
+        "R_events": 25,
+        "R_preserved": true,
+        "R_sha256": "078d5742425ca19f62d445ff334eff28fa8bdb8a428af1bc1b3ef8dbff25ab76",
+        "R_transitions": 3,
+        "actual_activity_log": true,
+        "api_projection_matches_raw": true,
+        "configuration_fingerprint_matches": true,
+        "direct_activity_appends": 0,
+        "manual_activity_store_writes": 0,
+        "normal_activity_store_persistence": true,
+        "startup_suffix_allowlisted": true,
+        "state_transition_events_generated": true
+      },
+      "baseline_enabled": {
+        "B_events": 25,
+        "B_preserved": true,
+        "B_sha256": "aedfabac30abc7535d8e55fd13438625d2b1bb7801da12fa81396c5d5a634aa0",
+        "B_transitions": 3,
+        "M_absent": true,
+        "M_events": 0,
+        "M_sha256": null,
+        "M_transitions": 0,
+        "R_events": 0,
+        "R_preserved": null,
+        "R_sha256": null,
+        "R_transitions": 0,
+        "actual_activity_log": true,
+        "api_projection_matches_raw": true,
+        "configuration_fingerprint_matches": true,
+        "direct_activity_appends": 0,
+        "manual_activity_store_writes": 0,
+        "normal_activity_store_persistence": true,
+        "startup_suffix_allowlisted": true,
+        "state_transition_events_generated": true
+      },
+      "mutated_enabled": {
+        "B_events": 25,
+        "B_preserved": false,
+        "B_sha256": "aedfabac30abc7535d8e55fd13438625d2b1bb7801da12fa81396c5d5a634aa0",
+        "B_transitions": 3,
+        "M_absent": false,
+        "M_events": 28,
+        "M_sha256": "70dcbabcb7204699e12120e78f53ae3cb1f79b1a138fa5e0da3325a04f7041b0",
+        "M_transitions": 3,
+        "R_events": 0,
+        "R_preserved": null,
+        "R_sha256": null,
+        "R_transitions": 0,
+        "actual_activity_log": true,
+        "api_projection_matches_raw": true,
+        "configuration_fingerprint_matches": true,
+        "direct_activity_appends": 0,
+        "manual_activity_store_writes": 0,
+        "normal_activity_store_persistence": true,
+        "startup_suffix_allowlisted": true,
+        "state_transition_events_generated": true
+      },
+      "restart_enabled": {
+        "B_events": 25,
+        "B_preserved": true,
+        "B_sha256": "aedfabac30abc7535d8e55fd13438625d2b1bb7801da12fa81396c5d5a634aa0",
+        "B_transitions": 3,
+        "M_absent": true,
+        "M_events": 28,
+        "M_sha256": "70dcbabcb7204699e12120e78f53ae3cb1f79b1a138fa5e0da3325a04f7041b0",
+        "M_transitions": 3,
+        "R_events": 25,
+        "R_preserved": true,
+        "R_sha256": "078d5742425ca19f62d445ff334eff28fa8bdb8a428af1bc1b3ef8dbff25ab76",
+        "R_transitions": 3,
+        "actual_activity_log": true,
+        "api_projection_matches_raw": true,
+        "configuration_fingerprint_matches": true,
+        "direct_activity_appends": 0,
+        "manual_activity_store_writes": 0,
+        "normal_activity_store_persistence": true,
+        "startup_suffix_allowlisted": true,
+        "state_transition_events_generated": true
+      }
+    },
+    "manifest_unchanged": true,
+    "manual_guard_exports": 0,
+    "manual_guard_imports": 0,
+    "normal_delayed_save_durability": true,
+    "normal_managed_requirements": true,
+    "normal_uv_installs_by_phase": [
+      2,
+      0,
+      2,
+      0
+    ],
+    "owner_acknowledgments_after_restore": 0,
+    "pending_on_shutdown_native": {
+      "qualified": false,
+      "reason": "The run observed ordinary durable saves; it did not force a pending write during shutdown."
+    },
+    "person_associations_by_phase": {
+      "automatic_restored_enabled": {
+        "actual_person_component": true,
+        "configured_active_selected_distinct": true,
+        "configured_tracker_links": 2,
+        "direct_person_state_writes": 0,
+        "editable_storage_person": true,
+        "homecircle_uses_only_selected_tracker": true,
+        "nonadmin_active_source_masked": true,
+        "normal_person_store_persistence": true,
+        "person_registry_join": true,
+        "persons": 1,
+        "postbackup_tracker_absent": true,
+        "saved_associations_sha256": "d3e9912eb20a22e45214e4db67af1c91c8305573004e711e5e4be11bc3864215",
+        "selected_tracker_links": 1,
+        "tracker_registry_joins": true,
+        "unselected_tracker_excluded_from_runtime": true
+      },
+      "baseline_enabled": {
+        "actual_person_component": true,
+        "configured_active_selected_distinct": true,
+        "configured_tracker_links": 2,
+        "direct_person_state_writes": 0,
+        "editable_storage_person": true,
+        "homecircle_uses_only_selected_tracker": true,
+        "nonadmin_active_source_masked": true,
+        "normal_person_store_persistence": true,
+        "person_registry_join": true,
+        "persons": 1,
+        "postbackup_tracker_absent": true,
+        "saved_associations_sha256": "d3e9912eb20a22e45214e4db67af1c91c8305573004e711e5e4be11bc3864215",
+        "selected_tracker_links": 1,
+        "tracker_registry_joins": true,
+        "unselected_tracker_excluded_from_runtime": true
+      },
+      "mutated_enabled": {
+        "actual_person_component": true,
+        "configured_active_selected_distinct": true,
+        "configured_tracker_links": 2,
+        "direct_person_state_writes": 0,
+        "editable_storage_person": true,
+        "homecircle_uses_only_selected_tracker": true,
+        "nonadmin_active_source_masked": true,
+        "normal_person_store_persistence": true,
+        "person_registry_join": true,
+        "persons": 1,
+        "postbackup_tracker_absent": false,
+        "saved_associations_sha256": "8f390aaee6365f8bff900c6626170d2391c2c64beeb5776e8134d28adeb7c067",
+        "selected_tracker_links": 1,
+        "tracker_registry_joins": true,
+        "unselected_tracker_excluded_from_runtime": true
+      },
+      "restart_enabled": {
+        "actual_person_component": true,
+        "configured_active_selected_distinct": true,
+        "configured_tracker_links": 2,
+        "direct_person_state_writes": 0,
+        "editable_storage_person": true,
+        "homecircle_uses_only_selected_tracker": true,
+        "nonadmin_active_source_masked": true,
+        "normal_person_store_persistence": true,
+        "person_registry_join": true,
+        "persons": 1,
+        "postbackup_tracker_absent": true,
+        "saved_associations_sha256": "d3e9912eb20a22e45214e4db67af1c91c8305573004e711e5e4be11bc3864215",
+        "selected_tracker_links": 1,
+        "tracker_registry_joins": true,
+        "unselected_tracker_excluded_from_runtime": true
+      }
+    },
+    "person_store_archive_and_restore_match": true,
+    "phase_count": 4,
+    "phase_names": [
+      "baseline_enabled",
+      "mutated_enabled",
+      "automatic_restored_enabled",
+      "restart_enabled"
+    ],
+    "product_members_unchanged": [
+      113,
+      113,
+      113,
+      113
+    ],
+    "provider_recovery_seam_counts": {
+      "automatic_restored_enabled": {
+        "recovery_before_dispatch_calls": 0,
+        "recovery_command_calls": 0,
+        "recovery_transport_attempts_denied": 0
+      },
+      "baseline_enabled": {
+        "recovery_before_dispatch_calls": 0,
+        "recovery_command_calls": 0,
+        "recovery_transport_attempts_denied": 0
+      },
+      "mutated_enabled": {
+        "recovery_before_dispatch_calls": 0,
+        "recovery_command_calls": 0,
+        "recovery_transport_attempts_denied": 0
+      },
+      "restart_enabled": {
+        "recovery_before_dispatch_calls": 0,
+        "recovery_command_calls": 0,
+        "recovery_transport_attempts_denied": 0
+      }
+    },
+    "recorder_by_phase": {
+      "automatic_restored_enabled": {
+        "backup_platform_registered": true,
+        "commit_proven": true,
+        "integrity_ok": true,
+        "no_backup_failure_issue": true,
+        "postbackup_marker_absent": true,
+        "postbackup_marker_rows": 0,
+        "postrestore_exact_match": true,
+        "postrestore_rows": 6,
+        "postrestore_sha256": "dc7103bb050295f26a4105b9c5a2f778d7f4f6d918538f20fe41fb2d1a0e78f5",
+        "prebackup_exact_match": true,
+        "prebackup_rows": 6,
+        "prebackup_sha256": "dc15bbddf1182f216f60d0eea2a0b606f2181aab9e1b502ec14cd0a86909a773",
+        "ready": true
+      },
+      "baseline_enabled": {
+        "backup_platform_registered": true,
+        "commit_proven": true,
+        "integrity_ok": true,
+        "no_backup_failure_issue": true,
+        "postbackup_marker_absent": true,
+        "postbackup_marker_rows": 0,
+        "postrestore_exact_match": null,
+        "postrestore_rows": null,
+        "postrestore_sha256": null,
+        "prebackup_exact_match": true,
+        "prebackup_rows": 6,
+        "prebackup_sha256": "dc15bbddf1182f216f60d0eea2a0b606f2181aab9e1b502ec14cd0a86909a773",
+        "ready": true
+      },
+      "mutated_enabled": {
+        "backup_platform_registered": true,
+        "commit_proven": true,
+        "integrity_ok": true,
+        "no_backup_failure_issue": true,
+        "postbackup_marker_absent": false,
+        "postbackup_marker_rows": 6,
+        "postrestore_exact_match": null,
+        "postrestore_rows": null,
+        "postrestore_sha256": null,
+        "prebackup_exact_match": true,
+        "prebackup_rows": 6,
+        "prebackup_sha256": "dc15bbddf1182f216f60d0eea2a0b606f2181aab9e1b502ec14cd0a86909a773",
+        "ready": true
+      },
+      "restart_enabled": {
+        "backup_platform_registered": true,
+        "commit_proven": true,
+        "integrity_ok": true,
+        "no_backup_failure_issue": true,
+        "postbackup_marker_absent": true,
+        "postbackup_marker_rows": 0,
+        "postrestore_exact_match": true,
+        "postrestore_rows": 6,
+        "postrestore_sha256": "dc7103bb050295f26a4105b9c5a2f778d7f4f6d918538f20fe41fb2d1a0e78f5",
+        "prebackup_exact_match": true,
+        "prebackup_rows": 6,
+        "prebackup_sha256": "dc15bbddf1182f216f60d0eea2a0b606f2181aab9e1b502ec14cd0a86909a773",
+        "ready": true
+      }
+    },
+    "restore_job": {
+      "done": true,
+      "error_count": 0,
+      "name": "backup_manager_partial_restore",
+      "nodes": 4
+    },
+    "startup_suffix_allowlisted": true,
+    "witness_absent_after_restore": [
+      true,
+      true
+    ]
+  },
+  "planned_phase_names": [
+    "baseline_enabled",
+    "mutated_enabled",
+    "automatic_restored_enabled",
+    "restart_enabled"
+  ],
+  "planned_target": {
+    "architecture": "amd64",
+    "core": "2026.10.2",
+    "haos": "18.3",
+    "hardware_acceleration": "KVM",
+    "supervisor": "2026.10.3"
+  },
+  "preservation_boundary": {
+    "owner_credentials_or_recovery_proofs_permitted": false,
+    "owner_credentials_used": false,
+    "owner_instance_actions": 0,
+    "owner_instance_changes_permitted": false,
+    "production_configuration_used": false,
+    "synthetic_accounts_and_locations_only": true,
+    "working_owner_instance_source": "91ae59106a661143b770d7a3564d363c7c11a7dd"
+  },
+  "prior_ordinary_restore": {
+    "artifact_sha256": "d87250aef1cb73fce9d5de778f005ec9e678732044b11c96c0890442469c956a",
+    "guard_counter_sequence": [
+      2,
+      3,
+      2,
+      2
+    ],
+    "guard_review_required_sequence": [
+      false,
+      false,
+      true,
+      true
+    ],
+    "qualification": "ordinary_unmodified_product_synthetic_partial_restore_passed",
+    "run_id": 39721983991,
+    "run_url": "https://github.com/jmhjr/HomeCircle/actions/runs/39721983991",
+    "scope_limit": "The accepted prior fixture used tracker-only person-kind members and separate Recorder rows; genuine HA Person associations and HomeCircle activity were not qualified.",
+    "status": "passed"
+  },
+  "qualification_flags": {
+    "HACS_delivery": false,
+    "arrival_gap_native_acceptance": false,
+    "encrypted_or_cloud_restore": false,
+    "external_cryptographic_or_provenance_assurance": false,
+    "fresh_machine_restore": false,
+    "full_system_or_addon_restore": false,
+    "live_provider_authentication_or_renewal": false,
+    "pending_write_shutdown_native_acceptance": false,
+    "person_and_activity_ordinary_partial_restore": true,
+    "stable_release": false
+  },
+  "raw_receipts": {
+    "automatic_restored_enabled.json": {
+      "bytes": 7902,
+      "sha256": "da031a81fac4721b5d726b0ed3652f5d0a67a859ecd5065f2af1fa1f1d3c46a1"
+    },
+    "baseline_enabled.json": {
+      "bytes": 7711,
+      "sha256": "01195fd157c0a170a3e735666da998c159655056777a86fdadf39eca8456d9cf"
+    },
+    "host.json": {
+      "bytes": 13610,
+      "sha256": "98fee12f5906404987d2a7a7f07a326b35c40a2cf7a92abdb07b98de515a89ae"
+    },
+    "mutated_enabled.json": {
+      "bytes": 7776,
+      "sha256": "dfcc7a356a9952cc68a3c00b473b878a65c0df98134a90d319c9375773223873"
+    },
+    "restart_enabled.json": {
+      "bytes": 7890,
+      "sha256": "6e11ebfd34faf4326f137480b86732d587ee57c66644d00f1141ed6d104217cc"
+    }
+  },
+  "recorded_local_date": "2026-10-22",
+  "schema": 1,
+  "scope": "ordinary_unmodified_product_synthetic_person_activity_partial_restore",
+  "scope_limits": [
+    "The accepted result is exactly the synthetic same-host ordinary partial restore in the bound native packet; fixture/source controls do not broaden that result.",
+    "Arrival-gap restoration and a deliberately pending write during shutdown were not native acceptance cases; only their source semantics are documented.",
+    "A full VM or complete configuration snapshot that restores both an old ledger and matching cache witness still needs an external monotonic anchor for rollback detection.",
+    "Pre-fix archives can restore old integration code; fixed code must be loaded before guarded recovery.",
+    "Other advertised backup variants, provider lifecycle/renewal, external assurance/provenance, compatibility, field/display, installed-state upgrade, HACS and stable release remain separate gates."
+  ],
+  "source_only_unqualified_semantics": [
+    "Loaded arrival checkpoints mark continuity unconfirmed; no native arrival-gap assertion was included.",
+    "Delayed Store writes register for graceful final write; no deliberately pending-on-shutdown native case was included."
+  ],
+  "source_review": {
+    "exact_core_version": "2026.10.2",
+    "pending_delayed_write_is_not_confirmed_backup_loss": true,
+    "product_edits_recommended_by_source_review": 0,
+    "runtime_modules_identical_between_sources": true,
+    "status": "no_confirmed_product_defect_found"
+  },
+  "status": "native_scoped_person_and_activity_partial_restore_passed"
+}
