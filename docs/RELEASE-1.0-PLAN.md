@@ -7,19 +7,24 @@ failed attempts and record any accepted scope change instead of deleting a gate.
 
 ## Current fixed candidate evidence
 
-Source `ad9b83676bdfafcfc3848cc9a974b63c8742a020` and package `f181e6300f15d8977817a552db90d35caf0edc869067ebeea815c7be1df0248e` include the activity initialization
-correction. The [private upgrade record](RELEASE-1.0-PRIVATE-UPGRADE.md) retains
-its scoped ARM64 installation-copy upgrade/restart and separate 35-test focused
-native result. [Fixed-candidate ordinary restore](RELEASE-1.0-FIXED-ORDINARY-RESTORE.md)
-now binds run 39824890930: 45 fixture contracts, four managed amd64 HAOS phases and
-17 independent consumer contracts passed for these exact bytes. Person links,
-explicit source selections, activity/Recorder cohorts and automatic guard
-review/refusal survived ordinary partial restore and restart.
+Source `3c33160c67e53956ab52298ffc10ccc9992132f0` and package `f181e6300f15d8977817a552db90d35caf0edc869067ebeea815c7be1df0248e` include the activity initialization
+correction. The [complete fixed-candidate package record](RELEASE-1.0-FIXED-PACKAGE-VALIDATION.md)
+binds native run 39865496620: current Core 2026.10.2, all 1,732 backend cases and 54
+required functions passed, exactly one named optional installer skip, 122 frontend
+cases, privacy over 381 canonical files, 42 harness contracts and 20 corrected independent
+consumer contracts (with the original consumer-only refusal retained). The original f181 candidate remained the tested/exported
+archive; the same-payload canonical level-9 acfc rebuild has a separate identity.
+All 113 candidate members were checked in the source/test tree with one additional
+Git-bound source-only README.
 
-Earlier source/package results below retain their original scopes. The full
-native package suite has not yet been repeated for f181; that is the next
-engineering gate. Advertised backup variants and other acceptance/disposition
-gates remain open. This evidence is not a stable release declaration.
+[Fixed-candidate ordinary restore](RELEASE-1.0-FIXED-ORDINARY-RESTORE.md) separately
+retains the four-phase amd64 HAOS Person/activity/Recorder and automatic guard
+review/refusal result. The [private upgrade record](RELEASE-1.0-PRIVATE-UPGRADE.md)
+retains its scoped ARM64 installation-copy upgrade/restart and focused setup
+result. Earlier minimum-Core full-suite evidence remains tied to old012a/98a;
+this current-Core run does not broaden it. These scopes do not close other
+advertised compatibility, provider/security/permission, real-account/field,
+HACS delivery, RC or stable-release gates.
 
 ## Starting point and support proposal
 
