@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "run_id": 39708377110,
+  "run_attempt": 1,
+  "head_sha": "9605b5fe280679c2b621973f862fdecadb4e8c53",
+  "branch": "codex/native-amd64-validation",
+  "event": "push",
+  "workflow_path": ".github/workflows/native-release1-enabled-saved-restore.yml",
+  "workflow_sha256": "4c8d41c10ce0c3845ef4009e6e743f10d3b5d9beeb31ad4dcfdffca9a4216c1a",
+  "artifact_id": 12396467363,
+  "artifact_name": "release1-instrumented-enabled-saved-restore",
+  "artifact_zip_sha256": "b6063a5f1632db51b5e2daebb5f779d114a177f97353174f7657daf625ac4856",
+  "github_digest_verified": true,
+  "status": "completed",
+  "conclusion": "success"
+}

@@ -1,0 +1,147 @@
+{
+  "base": "18cdbf68819608180289bcfff9723e3cd5754fe9",
+  "files": {
+    ".github/workflows/native-release1-enabled-saved-restore.yml": {
+      "bytes": 8835,
+      "mode": "100644",
+      "sha256": "4c8d41c10ce0c3845ef4009e6e743f10d3b5d9beeb31ad4dcfdffca9a4216c1a"
+    },
+    "native-release1-enabled-saved-restore/README.md": {
+      "bytes": 9115,
+      "mode": "100644",
+      "sha256": "259fcd94897c58d7ed5cc63eba8b34c64be3c7a637e3ce2e1253bf6d68b53140"
+    },
+    "native-release1-enabled-saved-restore/accept_saved_storage.py": {
+      "bytes": 15350,
+      "mode": "100644",
+      "sha256": "c501dadde40f4871cdc79f52c0ce9b4f34aa17637960eae1c38e6e167fe5ada5"
+    },
+    "native-release1-enabled-saved-restore/baseline-controls.json": {
+      "bytes": 3628,
+      "mode": "100644",
+      "sha256": "40e7cfbeb72a16e44b16e294a8ad97d8798c786bf8633b900750997d9dd52942"
+    },
+    "native-release1-enabled-saved-restore/controller.py": {
+      "bytes": 156446,
+      "mode": "100644",
+      "sha256": "ced996c5063613a8d93b0f5f54e7da014d6bf3c4d4dd7be98a13e9e9f363403c"
+    },
+    "native-release1-enabled-saved-restore/enabled_protocol.py": {
+      "bytes": 4206,
+      "mode": "100644",
+      "sha256": "20a1ef04e45af772bc83c87dd54fc613f462f97b697dcb6db1ee8d135c956915"
+    },
+    "native-release1-enabled-saved-restore/guard_context.py": {
+      "bytes": 10708,
+      "mode": "100644",
+      "sha256": "7d69de4b10ae725795c42a4089f61cb972a3d48c5f6032680eea26c935ef5922"
+    },
+    "native-release1-enabled-saved-restore/guard_transfer.py": {
+      "bytes": 24749,
+      "mode": "100644",
+      "sha256": "590030e0c7eff81457e56c4cfc7b0d75ad0c079be3ede6e6da083d8fb4e95d84"
+    },
+    "native-release1-enabled-saved-restore/guest_helper/homecircle_safe_restore_qa/__init__.py": {
+      "bytes": 51545,
+      "mode": "100644",
+      "sha256": "74e81116ab3fde35000877ac74fe2a923edf1be4f51594e69f9e1eaf4e3a99de"
+    },
+    "native-release1-enabled-saved-restore/guest_helper/homecircle_safe_restore_qa/dependency_probe.py": {
+      "bytes": 6259,
+      "mode": "100644",
+      "sha256": "7ac8e79aa5aea1868801e9273d9d1300db525b51bd7fe70a0a03a836a506a8d6"
+    },
+    "native-release1-enabled-saved-restore/guest_helper/homecircle_safe_restore_qa/manifest.json": {
+      "bytes": 377,
+      "mode": "100644",
+      "sha256": "c27acdd8393091d2d97a0334ee08ae3cf806929801a83f3a9d4033c35c35624e"
+    },
+    "native-release1-enabled-saved-restore/guest_helper/homecircle_safe_restore_qa/startup_boundary.py": {
+      "bytes": 9553,
+      "mode": "100644",
+      "sha256": "ad5fa5fea68d38a6d863e431cb2d7a075b2edfc62d0fd684a6c7d0707f875c86"
+    },
+    "native-release1-enabled-saved-restore/payload/homecircle.zip": {
+      "bytes": 617791,
+      "mode": "100644",
+      "sha256": "004c9bc4a968ad395e18033837cb42f5bd1d8719a8d90fc778fd20be4ff08f97"
+    },
+    "native-release1-enabled-saved-restore/payload/inventory.json": {
+      "bytes": 16823,
+      "mode": "100644",
+      "sha256": "d7e70cb639d77836fa2ac15b26f95e2f31ea599dbfff580cfae60a5a827cfe5b"
+    },
+    "native-release1-enabled-saved-restore/payload/provenance.json": {
+      "bytes": 1056,
+      "mode": "100644",
+      "sha256": "64e5794f8a98c75a50fb67df829dfd484033fe1b07e7029e54c863e0d870c9e7"
+    },
+    "native-release1-enabled-saved-restore/prepare_dependencies.py": {
+      "bytes": 6404,
+      "mode": "100644",
+      "sha256": "df492a082a8f668a2f175aaf39e3eaf4ae8205684e7c3495854591449fb11835"
+    },
+    "native-release1-enabled-saved-restore/reset_fresh_config.py": {
+      "bytes": 3814,
+      "mode": "100644",
+      "sha256": "df600d5695de2d09feabcded9e59d81dcc8149be2082b19b7931e0f11f12aa3c"
+    },
+    "native-release1-enabled-saved-restore/run_host.sh": {
+      "bytes": 656,
+      "mode": "100755",
+      "sha256": "19e047f20d970b1728b790fba65354335b6a957a74362f457379d40e2f55ac1f"
+    },
+    "native-release1-enabled-saved-restore/storage_context.py": {
+      "bytes": 10796,
+      "mode": "100644",
+      "sha256": "4b828bbc5d00c37698ec892f8d24fbea736982d0b65c445efd1f9abc91f6da60"
+    },
+    "native-release1-enabled-saved-restore/storage_protocol.json": {
+      "bytes": 6458,
+      "mode": "100644",
+      "sha256": "b73b35a2895a6db71d250d01da72c98f7c15cb14dc8e6c16872b772d36c654d3"
+    },
+    "native-release1-enabled-saved-restore/storage_transfer.py": {
+      "bytes": 43695,
+      "mode": "100644",
+      "sha256": "8ea5a1100aed6c43b9e98f6a14b76129b76ccd3abaf2d049bc3f7c02d673cdc1"
+    },
+    "native-release1-enabled-saved-restore/test_enabled_guest.py": {
+      "bytes": 20209,
+      "mode": "100644",
+      "sha256": "68f01a93ac6589a9862fad77c5e2b1f79fc582813b9b0f8e0bc7e1e69261fca5"
+    },
+    "native-release1-enabled-saved-restore/test_enabled_storage.py": {
+      "bytes": 15874,
+      "mode": "100644",
+      "sha256": "524a404a60d69a3bb3c1ae950cc6cc590e0a8667e316d04d0df5b92c45532cdc"
+    },
+    "native-release1-enabled-saved-restore/test_guard_context.py": {
+      "bytes": 12500,
+      "mode": "100644",
+      "sha256": "a7525d54f499de631ec183a30aa07c98b8bc454678d14f9dd4c30ae57d90a32d"
+    },
+    "native-release1-enabled-saved-restore/test_saved_storage.py": {
+      "bytes": 89196,
+      "mode": "100644",
+      "sha256": "824c123eefc26d740f8d78ac6e65b808cb9c5ade6aa8420fd11c95d933c3f52c"
+    },
+    "native-release1-enabled-saved-restore/test_startup_boundary.py": {
+      "bytes": 16175,
+      "mode": "100644",
+      "sha256": "ba75bbbc42e6ff6bb41309187fc566f897f5e8d10a1df305d0dde86a068823b0"
+    },
+    "native-release1-enabled-saved-restore/test_storage_context.py": {
+      "bytes": 12709,
+      "mode": "100644",
+      "sha256": "adb7a7a4594a385a581f03b873779300558776de6da1b73ba10d9b09a5062182"
+    },
+    "native-release1-enabled-saved-restore/test_storage_transfer.py": {
+      "bytes": 32740,
+      "mode": "100644",
+      "sha256": "925afdd54c8f452a961fe15cdaa351de71fc0d9058e53ac2fcbe9bc416effa4d"
+    }
+  },
+  "schema": 1,
+  "source": "91ae59106a661143b770d7a3564d363c7c11a7dd"
+}

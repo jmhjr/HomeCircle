@@ -1,0 +1,66 @@
+{
+  "artifact_id": 12396467363,
+  "artifact_name": "release1-instrumented-enabled-saved-restore",
+  "artifact_zip_sha256": "b6063a5f1632db51b5e2daebb5f779d114a177f97353174f7657daf625ac4856",
+  "candidate_source_commit": "91ae59106a661143b770d7a3564d363c7c11a7dd",
+  "collector_revision": 1,
+  "collector_sha256": "a8249d21777505f824f0a2e337c5a0cb6d5ea437909086be90eb076ac77ea3cb",
+  "exact_source_and_tool_provenance_checked": true,
+  "frozen_files_verified": 28,
+  "frozen_inputs_sha256": "f2694cd158c8c291499d9936e6faa0c3ae72d19e1e4fbb2b21baf4766ea4fc44",
+  "frozen_native_fixture_modified": false,
+  "head_sha": "9605b5fe280679c2b621973f862fdecadb4e8c53",
+  "native_trial_repeated_by_collector": false,
+  "outcome": "passed",
+  "receipts": {
+    "automatic_restored_enabled.json": {
+      "bytes": 1801,
+      "sha256": "6c61f4255b54d20c89a942f307841627e8663019b1889ae847bce4113b3e3b30"
+    },
+    "baseline_enabled.json": {
+      "bytes": 2417,
+      "sha256": "edba44f8e5d4b118132fb13657e95e24c28c4ae4d75644981403ecc51246ac45"
+    },
+    "host.json": {
+      "bytes": 16403,
+      "sha256": "69bed9ca1b757f51b777be67346e424338e708db647480a8c94d965a750a56ff"
+    },
+    "mutated_enabled.json": {
+      "bytes": 2417,
+      "sha256": "97450544e44b748e4dde18950251cb01f8c7b94420fbe9daf5097623cc8cff79"
+    },
+    "repaired_storage_enabled.json": {
+      "bytes": 2482,
+      "sha256": "69b8ebd470ded5a440db433a4a83cb77331598925d069dae2151ccc673e14f54"
+    },
+    "restart_enabled.json": {
+      "bytes": 2473,
+      "sha256": "e8a8fdcd2fbd201c4bdd456dd20fb182636278314cd53ae2b38d9cc82685474b"
+    }
+  },
+  "root_metadata_separate_from_artifact": true,
+  "run_attempt": 1,
+  "run_id": 39708377110,
+  "schema": 1,
+  "scoped_acceptance": {
+    "automatic_guard_antirollback": false,
+    "default_supervisor_conditions_used": true,
+    "full_encrypted_cloud_backup_tested": false,
+    "instrumented_enabled_synthetic_restore_qualified": true,
+    "manifest_only_qa_adaptation": true,
+    "manual_newest_guard_repair_required": true,
+    "ordinary_default_supervisor_restore_qualified": false,
+    "ordinary_enabled_restore_safety_accepted": false,
+    "ordinary_uninstrumented_restore_qualified": false,
+    "outcome": "passed",
+    "provider_authentication_after_restore_tested": false,
+    "schema": 1,
+    "stable_release_approval": false,
+    "temporary_global_offline_conditions": false,
+    "tested_default_conditions_instrumented_enabled_restore": true,
+    "tested_instrumented_enabled_saved_storage_restore": true,
+    "unsupported_conditions_override_used": false
+  },
+  "strict_nested_public_schema_checked": true,
+  "workflow_sha256": "4c8d41c10ce0c3845ef4009e6e743f10d3b5d9beeb31ad4dcfdffca9a4216c1a"
+}

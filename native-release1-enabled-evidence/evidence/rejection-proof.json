@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "artifact_zip_sha256": "b6063a5f1632db51b5e2daebb5f779d114a177f97353174f7657daf625ac4856",
+  "collector_sha256": "a8249d21777505f824f0a2e337c5a0cb6d5ea437909086be90eb076ac77ea3cb",
+  "actual_receipts_cloned_in_memory_only": true,
+  "cases": {
+    "original_manifest": {
+      "frozen_scoped_consumer_accepts": true,
+      "hardened_consumer_refuses": true,
+      "fixed_refusal": "exact_frozen_provenance_required"
+    },
+    "coordinated_manifest": {
+      "frozen_scoped_consumer_accepts": true,
+      "hardened_consumer_refuses": true,
+      "fixed_refusal": "exact_frozen_provenance_required"
+    },
+    "coordinated_payload": {
+      "frozen_scoped_consumer_accepts": true,
+      "hardened_consumer_refuses": true,
+      "fixed_refusal": "exact_frozen_provenance_required"
+    },
+    "float_provenance_count": {
+      "frozen_scoped_consumer_accepts": true,
+      "hardened_consumer_refuses": true,
+      "fixed_refusal": "exact_frozen_provenance_required"
+    },
+    "foreign_private_field": {
+      "frozen_scoped_consumer_accepts": true,
+      "hardened_consumer_refuses": true,
+      "fixed_refusal": "exact_frozen_provenance_required"
+    }
+  },
+  "original_native_artifact_preserved": true,
+  "new_native_execution": false,
+  "collector_contracts": 32
+}
