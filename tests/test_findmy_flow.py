@@ -10,6 +10,12 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 from custom_components.homecircle.findmy_setup import FindMySetup, FindMySetupError
 
 
+@pytest.fixture
+def hass_config_dir(hass_tmp_config_dir):
+    """Keep real guard files out of HA's shared test configuration directory."""
+    return hass_tmp_config_dir
+
+
 async def finish_background_progress(manager, result):
     """Durable recovery work may span several real progress notifications."""
     import asyncio
