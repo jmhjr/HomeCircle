@@ -302,8 +302,18 @@ def focused_diagnostic(xml, exit_code):
         if classname not in allowed or re.fullmatch(r"test_[A-Za-z0-9_]{1,180}", function) is None:
             result["unmapped_case_count"] += 1
             continue
+        details=[]
+        for node in [*case.findall('failure'),*case.findall('error')]:
+            frames=[]
+            for filename,line in re.findall(r'(tests/test_[A-Za-z0-9_]+[.]py):([0-9]{1,5})',node.text or ''):
+                if filename in SELECTORS:
+                    frame={'file':filename,'line':int(line)}
+                    if frame not in frames:frames.append(frame)
+            kind=node.attrib.get('type','')
+            details.append({'type':kind if re.fullmatch(r'[A-Za-z_][A-Za-z0-9_.]{0,100}',kind) else 'unclassified',
+                            'selected_source_frames':frames[:20]})
         result["cases"].append({"class": classname, "function": function,
-                                "failed": failed, "skipped": skipped})
+                                "failed": failed, "skipped": skipped,'failure_locations':details})
     return result
 
 
