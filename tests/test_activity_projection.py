@@ -116,8 +116,9 @@ async def test_setup_projects_new_item_before_loading_and_observing_activity(has
     hass.states.async_set(HOME, "0", {"latitude": 0.0, "longitude": 0.0, "radius": 100})
     for entity in (PHONE, item.entity_id):
         hass.states.async_set(entity, "home", {"source_type": "gps", "latitude": 0.0,
-            "longitude": 0.0, "last_seen": NOW.isoformat()})
-    hass.states.async_set(PERSON, "home", {"source": PHONE, "latitude": 0.0, "longitude": 0.0})
+            "longitude": 0.0, "last_seen": NOW.isoformat(), "in_zones": [HOME]})
+    hass.states.async_set(PERSON, "home", {"source": PHONE, "latitude": 0.0, "longitude": 0.0,
+        "in_zones": [HOME]})
     with (
         patch("custom_components.homecircle.findmy_migration.recover_pending", new=AsyncMock()),
         patch("custom_components.homecircle.findmy_storage.prune_orphans"),
