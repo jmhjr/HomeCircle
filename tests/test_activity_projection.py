@@ -13,6 +13,7 @@ PHONE = "device_tracker.example_phone"
 TAG = "device_tracker.example_tag"
 HOME = "zone.example_residence"
 NOW = datetime.now(UTC)
+EXAMPLE_POINT = (0.0, 0.0)
 SAVED = {
     "primary_home": HOME,
     "places": [],
@@ -113,11 +114,11 @@ async def test_setup_projects_new_item_before_loading_and_observing_activity(has
         "version": 1, "minor_version": 1,
         "key": "homecircle.activity." + entry.entry_id, "data": saved,
     }
-    hass.states.async_set(HOME, "0", {"latitude": 0.0, "longitude": 0.0, "radius": 100})
+    hass.states.async_set(HOME, "0", {"latitude": EXAMPLE_POINT[0], "longitude": EXAMPLE_POINT[1], "radius": 100})
     for entity in (PHONE, item.entity_id):
-        hass.states.async_set(entity, "home", {"source_type": "gps", "latitude": 0.0,
-            "longitude": 0.0, "last_seen": NOW.isoformat(), "in_zones": [HOME]})
-    hass.states.async_set(PERSON, "home", {"source": PHONE, "latitude": 0.0, "longitude": 0.0,
+        hass.states.async_set(entity, "home", {"source_type": "gps", "latitude": EXAMPLE_POINT[0],
+            "longitude": EXAMPLE_POINT[1], "last_seen": NOW.isoformat(), "in_zones": [HOME]})
+    hass.states.async_set(PERSON, "home", {"source": PHONE, "latitude": EXAMPLE_POINT[0], "longitude": EXAMPLE_POINT[1],
         "in_zones": [HOME]})
     with (
         patch("custom_components.homecircle.findmy_migration.recover_pending", new=AsyncMock()),
