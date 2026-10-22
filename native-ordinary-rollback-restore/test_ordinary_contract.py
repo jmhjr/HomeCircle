@@ -160,6 +160,55 @@ class OrdinaryContracts(unittest.TestCase):
         ast.parse(program.replace('__BASELINE__','{}').replace('__JOINS__',"'a'"))
 
 
+    def test_seed_stays_projection_equal_after_canonical_roundtrip(self):
+        import json,re,zipfile
+        from copy import deepcopy
+        from unittest.mock import patch
+        spec=importlib.util.spec_from_file_location('_ordinary_seed_contract',ROOT/'storage_transfer.py')
+        seed=importlib.util.module_from_spec(spec);spec.loader.exec_module(seed)
+        with zipfile.ZipFile(ROOT/'payload/homecircle.zip') as archive:
+            identity_source=archive.read('findmy_identity.py')
+            item_source=archive.read('findmy_items.py')
+            provider_source=archive.read('findmy_provider.py')
+            const_source=archive.read('const.py')
+        identity_values={}
+        exec(compile(identity_source,'<bound_pure_identity>','exec'),identity_values)
+        identity=types.SimpleNamespace(**identity_values)
+        real_token=seed.secrets.token_hex;calls=[]
+        def adversarial_token(size):
+            if size==16:
+                calls.append(1)
+                if len(calls) in (6,7,8):
+                    return ('b','a','c')[len(calls)-6]*32
+            return real_token(size)
+        with patch.object(seed.secrets,'token_hex',side_effect=adversarial_token):
+            record,selection,*_unused=seed.new_synthetic(identity)
+        saved=json.loads(json.dumps(record['options'],sort_keys=True))
+        account=next(iter(saved['findmy_accounts'].values()))
+        self.assertEqual(list(account['items']),['a'*32,'b'*32])
+        registry_rows={row['entity_id']:types.SimpleNamespace(platform='homecircle',unique_id=row['unique_id'])
+            for row in selection['joins']}
+        class Registry:
+            def async_get(self,entity):return registry_rows.get(entity)
+            def async_get_entity_id(self,domain,platform,unique):
+                return next((key for key,row in registry_rows.items() if row.unique_id==unique),None)
+        constants={}
+        for node in ast.parse(const_source).body:
+            if isinstance(node,ast.Assign):
+                for target in node.targets:
+                    if isinstance(target,ast.Name) and target.id.startswith('CONF_'):
+                        try:constants[target.id]=ast.literal_eval(node.value)
+                        except ValueError:pass
+        item_fn=next(n for n in ast.parse(item_source).body if isinstance(n,ast.FunctionDef) and n.name=='item_config')
+        tracker_fn=next(n for n in ast.parse(provider_source).body if isinstance(n,ast.FunctionDef) and n.name=='tracker_unique_id')
+        values={'deepcopy':deepcopy,'er':types.SimpleNamespace(async_get=lambda hass:Registry()),
+            'PREFIX':'homecircle_findmy_','re':re,'VaultError':ValueError,**constants}
+        exec(compile(ast.Module(body=[tracker_fn,item_fn],type_ignores=[]),'<bound_pure_item_projection>','exec'),values)
+        before=deepcopy(saved)
+        self.assertEqual(values['item_config'](None,saved),saved)
+        self.assertEqual(saved,before)
+
+
 class FailureDiagnosticContracts(unittest.TestCase):
     def capture_probe_error(self,label):
         path=ROOT/'guest_helper/homecircle_safe_restore_qa/dependency_probe.py'

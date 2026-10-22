@@ -404,7 +404,8 @@ def new_synthetic(identity):
         'login': {'state': 3, 'data': {'dsid': str(10**15 + secrets.randbelow(9 * 10**15)),
             'mobileme_data': {'tokens': {'searchPartyToken': 'QA-SESSION-' + secrets.token_hex(24),
                                        'otherGrant': 'QA-REMOVE'}}, 'profile': 'QA-REMOVE'}}}
-    identifiers = [secrets.token_hex(16) for _ in range(3)]
+    # Canonical JSON sorts account item keys; retain the same explicit selection order.
+    identifiers = sorted(secrets.token_hex(16) for _ in range(3))
     exported = {identifier: {'accessory': accessory(), 'report': {'latitude': 1.25, 'longitude': 2.5,
                     'last_seen': '2026-01-01T00:00:0' + str(index) + '+00:00', 'gps_accuracy': 10.0}}
                 for index, identifier in enumerate(identifiers)}
