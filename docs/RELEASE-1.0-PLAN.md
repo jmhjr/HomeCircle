@@ -58,10 +58,10 @@ Infrastructure failures receive one bounded diagnosis before any reasoned retry.
 | 1. Freeze scope and support | Both direct providers selected October 20; platform/support proposal open | Maintainer, agent records | Signed-off feature/provider list, supported target matrix, upgrade baselines, exclusions and `1.0.0` naming |
 | 2. Consolidate release source and blockers | Clean source in draft PR #36; focused fixes independently reviewed; exact-source native suite passed | Agent; maintainer review | Clean canonical release branch, reviewed product-only diff, notices included, recorded defect dispositions |
 | 3. Close provenance and provider decisions | Open; inventory and notice preview complete; depends on stage 1 for final scope | Maintainer/specialist, agent supplies evidence | Exact-source/installed-dependency notices and obligations disposition; source/permission/service/name decisions for shipped scope |
-| 4. Enabled backup/restore safety | Both published-beta and exact-development prepared investigations completed; operational/manual repair passed, automatic guard protection failed | Agent | Ordinary enabled startup after restore, restored data/identities, stale-backup safeguard result and bounded request evidence |
+| 4. Enabled backup/restore safety | Default-conditions disabled and instrumented enabled saved-account trials passed their scoped procedures; ordinary restore and automatic rollback protection remain open | Agent | Ordinary enabled startup after restore, restored data/identities, stale-backup safeguard result and bounded request evidence |
 | 5. Cryptographic and format assurance | Synthetic independent source review complete; external assurance open if Find My ships | Specialist, agent fixes; owner only for controlled acceptance | Review disposition, independent format vectors, authenticated rejection/recovery cases and fixes rechecked |
 | 6. Advertised compatibility | Four native QA-container lifecycle cells and both scoped managed ARM endpoints passed; fresh consumer/RC support gates open | Agent | All advertised cells have candidate dependency/install/start/restart evidence; unsupported cells excluded explicitly |
-| 7. Real-account acceptance | Open for included providers; requires stages 3/5 disposition and owner participation | Owner, agent guides/records | Controlled setup, discovery, selections, session lifecycle and successful recovery receipts without deliberately wrong passcodes |
+| 7. Real-account acceptance | Initial connections and saved-session restart witnessed; remaining lifecycle and stages 3/5 disposition open | Owner, agent guides/records | Controlled setup, discovery, selections, session lifecycle and successful recovery receipts without deliberately wrong passcodes |
 | 8. Sustained field acceptance | Earlier observations exist; final scope incomplete; depends on stages 6/7 as applicable | Owner observes, agent analyzes | Agreed observation window and movement/outage/renewal/staleness cases with genuine source-report times |
 | 9. Dashboard, access and privacy | Exact-source privacy and scoped desktop Safari picture checks passed; remaining final acceptance open | Agent plus owner for real displays | Desktop/mobile/physical display, admin/household permissions, privacy/deletion, real attribution/request checks |
 | 10. Real installed-state upgrade | Synthetic published-beta transport complete; fresh installed-state acceptance open | Agent, owner/maintainer for actual instance | Fresh baseline inspection/backup, upgrade/rollback/removal receipts, preserved storage/Recorder/resource identities |
@@ -140,13 +140,28 @@ portrait correction, then failed host-held newest-guard retention. Its cause
 remains unidentified; the full procedure is unaccepted at the October 21,
 01:02 UTC cutoff. No product defect is inferred.
 
+The October 21 [enabled saved-account investigation](RELEASE-1.0-ENABLED-RESTORE.md)
+completed five enabled managed phases using real SDK-restorable fictional
+sessions, a manifest-only QA dependency and prepared libraries. Four explicit
+tracker joins, settings/place/picture, encrypted storage and independent Recorder
+checks passed. Startup transport attempts were counted and denied; measured
+recovery seams stayed zero. Older ledger bytes still returned before manual
+external newest-guard repair. The ordinary unmodified/Person/activity-history
+and automatic rollback gates remain open.
+
+- [x] Complete and independently replay the exact-source instrumented enabled
+  saved-account trial, preserving default Supervisor conditions, original
+  artifact and explicit negative automatic-safety disposition. The standalone
+  evidence-consumer correction passed 32 contracts and the actual retained run.
+
 - [ ] Rehearse an ordinary Supervisor backup with HomeCircle enabled, restore
   it, and observe the first automatic startup in a disposable synthetic HAOS
   instance. Preserve entry/Person/tracker/settings/places/pictures/history and
   frontend-resource identities; compare Recorder contents where applicable.
-- [ ] Restore an older snapshot after a newer recovery submission guard exists.
-  Record guard rollback and attempted startup requests with a network-denying
-  synthetic fixture; do not submit a live recovery proof.
+- [x] Restore an older snapshot after a newer fictional recovery guard exists
+  in the explicitly instrumented synthetic fixture. [Run 39708377110](RELEASE-1.0-ENABLED-RESTORE.md)
+  bound older ledger restoration and counted denied startup requests without a
+  live recovery proof. Account-bound recovery authentication remains separate.
 - [ ] Fix any confirmed startup/recovery/request issue and repeat its cases.
   Either qualify stronger rollback protection or establish a tested explicit
   safe-restore procedure and disclose its limits.
@@ -220,6 +235,11 @@ Fresh online consumer and broader release gates remain open.
   distributions and future Core versions outside the claim until qualified.
 
 ### 7. Controlled owner account acceptance
+
+Current scoped account evidence is in the [enabled-candidate record](RELEASE-1.0-ENABLED-CANDIDATE.md):
+both initial connections and the selected saved-session restart were witnessed.
+Full lifecycle, renewal and account restore acceptance remain open. The following
+preparation cutoff is retained as dated history.
 
 The [controlled account protocol](RELEASE-1.0-ACCOUNT-ACCEPTANCE.md) is ready.
 The maintainer delegated target selection; a separate new dedicated test
@@ -322,12 +342,11 @@ selection completion and the remaining mobile/display/access cases stay open.
 
 ## Work that can proceed now
 
-Canonical source and confirmed fixes, the full exact-source qualification,
-four native QA-container endpoint cells, the minimum-Core amd64 managed witness,
-the exact-C managed restore investigation and scoped Safari checks are recorded.
-Both providers remain included. The unsuccessful consumer and ARM pilots retain
-their negative disposition. Next work is the remaining consumer entrypoint and
-ARM64 managed compatibility scope, intended
-installed-state inspection, owner account/field/display acceptance and the
-documented assurance/provenance dispositions, followed by an identified RC.
-No outstanding requirement is silently checked by these completed scoped runs.
+The linked records now include scoped initial account/saved-session restart
+evidence, default-conditions disabled restore and the instrumented enabled
+saved-account investigation. Both direct providers remain included. Continue
+ordinary restore safeguards, provider lifecycle/renewal, assurance/provenance
+dispositions, the advertised compatibility gaps and finite field/mobile/display
+acceptance before freezing an RC. Earlier failed attempts and narrower successful
+scopes retain their recorded outcomes. No stable-release gate is silently closed
+by these scoped passes.
