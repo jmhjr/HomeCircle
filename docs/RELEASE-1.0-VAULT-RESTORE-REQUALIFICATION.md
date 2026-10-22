@@ -123,3 +123,9 @@ backup, HACS/release-ZIP delivery, final RC and stable approval remain separate
 gates. Provider/proof attempt counts are unmeasured. Historical f4da650 evidence
 and earlier failures retain their outcomes.
 [Machine-readable evidence](RELEASE-1.0-VAULT-RESTORE-REQUALIFICATION.json).
+
+
+## Default-conditions restore follow-up
+
+See [the default-conditions disabled saved-account restore record](RELEASE-1.0-DEFAULT-RESTORE.md)
+for the separately reviewed procedure, its actual outcome when qualified, and the remaining release gates.
