@@ -1,0 +1,209 @@
+{
+  "cases": [
+    {
+      "class": "tests.test_activity_projection",
+      "function": "test_projected_item_observes_named_place_without_losing_saved_history",
+      "passed": true
+    },
+    {
+      "class": "tests.test_activity_projection",
+      "function": "test_projected_item_and_original_member_history_survive_next_restart",
+      "passed": true
+    },
+    {
+      "class": "tests.test_activity_projection",
+      "function": "test_changed_saved_selection_still_invalidates_prior_projected_history",
+      "passed": true
+    },
+    {
+      "class": "tests.test_activity_projection",
+      "function": "test_setup_projects_new_item_before_loading_and_observing_activity",
+      "passed": true
+    },
+    {
+      "class": "tests.test_activity",
+      "function": "test_changes_only_and_report_time_separate_from_observation",
+      "passed": true
+    },
+    {
+      "class": "tests.test_activity",
+      "function": "test_retention_cap_and_source_projection",
+      "passed": true
+    },
+    {
+      "class": "tests.test_activity",
+      "function": "test_reload_keeps_history_but_starts_new_observation_boundary",
+      "passed": true
+    },
+    {
+      "class": "tests.test_activity",
+      "function": "test_load_allowlists_fields_members_and_values",
+      "passed": true
+    },
+    {
+      "class": "tests.test_activity",
+      "function": "test_failed_load_disables_persistence_without_overwrite",
+      "passed": true
+    },
+    {
+      "class": "tests.test_activity",
+      "function": "test_withheld_position_clears_map_source_and_does_not_publish_coordinates",
+      "passed": true
+    },
+    {
+      "class": "tests.test_activity",
+      "function": "test_quiet_retention_cleanup_is_scheduled_without_new_events",
+      "passed": true
+    },
+    {
+      "class": "tests.test_activity",
+      "function": "test_close_ignores_late_request_results_and_state_callbacks",
+      "passed": true
+    },
+    {
+      "class": "tests.test_activity",
+      "function": "test_freshness_churn_preserves_arrivals_requests_and_reload",
+      "passed": true
+    },
+    {
+      "class": "tests.test_activity",
+      "function": "test_total_cap_evicts_freshness_before_significant_events",
+      "passed": true
+    },
+    {
+      "class": "tests.test_activity",
+      "function": "test_arrival_survives_reload_retention_and_detects_gap_changes",
+      "passed": true
+    },
+    {
+      "class": "tests.test_activity",
+      "function": "test_arrival_unknown_initial_place_and_changed_place_during_restart",
+      "passed": true
+    },
+    {
+      "class": "tests.test_activity",
+      "function": "test_arrival_load_allowlists_private_fields_and_rejects_invalid_state",
+      "passed": true
+    },
+    {
+      "class": "tests.test_activity",
+      "function": "test_unavailable_gap_preserves_checkpoint_but_does_not_invent_new_arrival",
+      "passed": true
+    },
+    {
+      "class": "tests.test_activity",
+      "function": "test_reload_away_baseline_allows_the_next_observed_arrival",
+      "passed": true
+    },
+    {
+      "class": "tests.test_activity",
+      "function": "test_unversioned_startup_checkpoints_are_not_treated_as_arrivals",
+      "passed": true
+    },
+    {
+      "class": "tests.test_tracker_providers",
+      "function": "test_provider_first_setup_uses_registry_not_life360_key",
+      "passed": true
+    },
+    {
+      "class": "tests.test_tracker_providers",
+      "function": "test_reauth_selects_only_the_failing_registered_provider",
+      "passed": true
+    },
+    {
+      "class": "tests.test_tracker_providers",
+      "function": "test_multiple_managed_trackers_start_and_disconnect_independently",
+      "passed": true
+    },
+    {
+      "class": "tests.test_tracker_providers",
+      "function": "test_provider_account_steps_run_before_member_setup",
+      "passed": true
+    },
+    {
+      "class": "tests.test_tracker_providers",
+      "function": "test_setup_warns_when_external_life360_trackers_already_exist",
+      "passed": true
+    },
+    {
+      "class": "tests.test_tracker_providers",
+      "function": "test_ready_trackers_prompt_until_one_owned_tracker_is_explicitly_selected",
+      "passed": true
+    },
+    {
+      "class": "tests.test_tracker_provider_startup_isolation",
+      "function": "test_real_findmy_sdk_import_failure_preserves_life360_and_later_provider",
+      "passed": true
+    },
+    {
+      "class": "tests.test_tracker_provider_startup_isolation",
+      "function": "test_factory_failure_does_not_prevent_later_provider_start",
+      "passed": true
+    },
+    {
+      "class": "tests.test_tracker_provider_startup_isolation",
+      "function": "test_partial_start_is_cleaned_and_cleanup_failure_does_not_stop_siblings[None]",
+      "passed": true
+    },
+    {
+      "class": "tests.test_tracker_provider_startup_isolation",
+      "function": "test_partial_start_is_cleaned_and_cleanup_failure_does_not_stop_siblings[RuntimeError]",
+      "passed": true
+    },
+    {
+      "class": "tests.test_tracker_provider_startup_isolation",
+      "function": "test_partial_start_is_cleaned_and_cleanup_failure_does_not_stop_siblings[CancelledError]",
+      "passed": true
+    },
+    {
+      "class": "tests.test_tracker_provider_startup_isolation",
+      "function": "test_cancellation_is_terminal_and_cleans_current_and_newly_started_clients",
+      "passed": true
+    },
+    {
+      "class": "tests.test_tracker_provider_startup_isolation",
+      "function": "test_success_clears_stale_startup_issue_and_unload_clears_current_issue",
+      "passed": true
+    },
+    {
+      "class": "tests.test_tracker_provider_startup_isolation",
+      "function": "test_repeated_cancellation_drains_cleanup_before_releasing_started_clients[False]",
+      "passed": true
+    },
+    {
+      "class": "tests.test_tracker_provider_startup_isolation",
+      "function": "test_repeated_cancellation_drains_cleanup_before_releasing_started_clients[True]",
+      "passed": true
+    }
+  ],
+  "completed": true,
+  "core": "2026.10.2",
+  "failed": 0,
+  "full_backend_suite_repeated": false,
+  "kvm_used": false,
+  "outcome": "passed",
+  "owner_accounts_used": false,
+  "package_sha256": "f181e6300f15d8977817a552db90d35caf0edc869067ebeea815c7be1df0248e",
+  "passed": 35,
+  "production_configuration_used": false,
+  "real_async_setup_entry_test_passed": true,
+  "required_projection_tests": [
+    "test_changed_saved_selection_still_invalidates_prior_projected_history",
+    "test_projected_item_and_original_member_history_survive_next_restart",
+    "test_projected_item_observes_named_place_without_losing_saved_history",
+    "test_setup_projects_new_item_before_loading_and_observing_activity"
+  ],
+  "schema": 1,
+  "scope": "native_current_core_focused_pytest_only",
+  "selected_modules": [
+    "tests/test_activity_projection.py",
+    "tests/test_activity.py",
+    "tests/test_tracker_providers.py",
+    "tests/test_tracker_provider_startup_isolation.py"
+  ],
+  "skipped": 0,
+  "source_commit": "90cd91cb30d0291c422d554183c664717daa7832",
+  "source_sha256": "da7f1a7ef042fa8b38365acbb2a8f3f5103fc7aaab26c59822ab6c13814bccf1",
+  "source_unchanged": true,
+  "upgrade_validated": false
+}

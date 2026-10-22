@@ -1,0 +1,16 @@
+{
+  "core": "2026.10.2",
+  "full_backend_suite_repeated": false,
+  "kvm_used": false,
+  "outcome": "passed",
+  "owner_accounts_used": false,
+  "package_sha256": "f181e6300f15d8977817a552db90d35caf0edc869067ebeea815c7be1df0248e",
+  "production_configuration_used": false,
+  "schema": 1,
+  "scope": "native_current_core_focused_pytest_only",
+  "source_commit": "90cd91cb30d0291c422d554183c664717daa7832",
+  "source_files": 378,
+  "source_git_verified": true,
+  "source_sha256": "da7f1a7ef042fa8b38365acbb2a8f3f5103fc7aaab26c59822ab6c13814bccf1",
+  "upgrade_validated": false
+}
