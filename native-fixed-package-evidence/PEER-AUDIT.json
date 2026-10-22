@@ -1,0 +1,262 @@
+{
+  "candidate_identity": {
+    "all111literal_source_members_verified": true,
+    "all113member_inventory_hashes_verified": true,
+    "canonical_level9_rebuild_reported_separately": true,
+    "compression_reproduced_independently_without_writes": {
+      "6": {
+        "bytes": 623447,
+        "sha256": "f181e6300f15d8977817a552db90d35caf0edc869067ebeea815c7be1df0248e"
+      },
+      "9": {
+        "bytes": 620358,
+        "sha256": "acfcda419a817032c38a463505f686b0f6ab49e69a8f1603d9b2ff43f24e442b"
+      }
+    },
+    "identical_uncompressed_payload": true,
+    "input_replaced_or_rebuilt_for_testing": false,
+    "original_input_zip": {
+      "bytes": 623447,
+      "sha256": "f181e6300f15d8977817a552db90d35caf0edc869067ebeea815c7be1df0248e"
+    },
+    "original_inventory": {
+      "bytes": 16823,
+      "sha256": "8ea456beb9b2eaaf4ba50639532b8dafabe0e02d1e13a77a59525f1c249c7447"
+    },
+    "two_frontend_assets_match_two_reproducible_native_builds": true
+  },
+  "corrected_review": {
+    "bytes": 3204,
+    "sha256": "42a224af229744c220c0f5145e46896ccfffd73deaa11fb9daa9cfcb7fcbd4a0"
+  },
+  "corrective_protocol": {
+    "bytes": 3187,
+    "sha256": "ae64ee8724a0883f5bd2e9ae6f8416e235902832f681b9914f96aaa66f4bf138"
+  },
+  "created_at": "2026-10-22T22:44:31.906918+00:00",
+  "event": "push",
+  "github_metadata": {
+    "all_recorded_steps_completed_success": true,
+    "artifacts": {
+      "fixed-package-validation-receipts": {
+        "archive": {
+          "bytes": 10512,
+          "sha256": "ab2a5e8089c1036b4ce26b7a8dfd3569ed2f7183acc4489a5e23caeea52746ea"
+        },
+        "artifact_id": 12463951940,
+        "github_digest_verified": true,
+        "member_count": 6,
+        "metadata": {
+          "bytes": 604,
+          "sha256": "913b1c844803b4e96e125da50ae833889b6ed2f4c2e68fc53508f3bcfaaca1e3"
+        }
+      },
+      "unreleased-fixed-candidate": {
+        "archive": {
+          "bytes": 601034,
+          "sha256": "bd97e246e345df5174277245b90cb75574954207193a3a3dc6707dc5cd047714"
+        },
+        "artifact_id": 12464092121,
+        "github_digest_verified": true,
+        "member_count": 2,
+        "metadata": {
+          "bytes": 597,
+          "sha256": "232ee0bac4beee6db051f975db0c945d72903f3cd0c26155532491f10a5a6602"
+        }
+      }
+    },
+    "created_at": "2026-10-22T22:30:44Z",
+    "download_verification": {
+      "bytes": 548,
+      "sha256": "9dea0978e8383ac0fdd11bd41e24e0ea5831cdd44a2f3ec2f2221b47db052e71"
+    },
+    "jobs": {
+      "bytes": 4242,
+      "sha256": "0731af5ba2e05c9803d069c2e39fa501eaed2432ed6a96057319de0db823546f"
+    },
+    "one_completed_success_job": true,
+    "run": {
+      "bytes": 13199,
+      "sha256": "0637545059105eef9eb83a5368918e43961ec980a94cce66c853394b1556671b"
+    },
+    "started_at": "2026-10-22T22:30:44Z",
+    "updated_at": "2026-10-22T22:34:24Z"
+  },
+  "native_observations": {
+    "all_junit_case_records": 1733,
+    "ambiguous_duplicate_error_or_failure_records": 0,
+    "backend_failed": 0,
+    "backend_passed": 1732,
+    "backend_skipped": 1,
+    "baseline_private_copy_removed": true,
+    "baseline_source_commit": "fc0bba472cd60a06dac6bab30b7d011fd533624b",
+    "baseline_vault_sha256": "7c6a846cefba6a34647d84b7738a93d85738a948da32fbf752a96c4e1cf4c0f2",
+    "cause_verified_old_vault_red_cases": 14,
+    "constraint_sha256": "7baa9a8f39ddeb9c5bb60a1036f6d5e33f4b84267f151f53cc2b95ef031a21b5",
+    "core": "2026.10.2",
+    "core_and_default_auth_requirement_graph_matches_frozen_expected": true,
+    "frontend_failed": 0,
+    "frontend_passed": 122,
+    "frontend_reproducible": true,
+    "host_elapsed_seconds": 196.49,
+    "image_registry_digest": "sha256:45f009d6ff1061971102e81f0802cf2762bdd5c5007231c938bd36030cbd0a12",
+    "installed_dependency_closure": {
+      "aiohappyeyeballs": "2.7.1",
+      "aiohttp": "3.14.5",
+      "aiosignal": "1.4.0",
+      "anisette": "1.2.4",
+      "appdirs": "1.4.4",
+      "attrs": "26.1.0",
+      "beautifulsoup4": "4.13.3",
+      "certifi": "2026.7.22",
+      "frozenlist": "1.8.0",
+      "fs": "2.4.16",
+      "idna": "3.20",
+      "life360": "7.2.0",
+      "multidict": "6.9.1",
+      "propcache": "0.5.4",
+      "protobuf": "7.36.0",
+      "pyelftools": "0.33",
+      "setuptools": "84.0.0",
+      "six": "1.17.0",
+      "soupsieve": "3.0.3",
+      "srp": "1.0.22",
+      "typing-extensions": "4.16.0",
+      "unicorn": "2.1.4",
+      "urllib3": "2.8.0",
+      "yarl": "1.25.1"
+    },
+    "installed_dependency_closure_names": 24,
+    "leaflet_notice_matches_dependency": true,
+    "local_image_id": "sha256:e1acee126eee45b3007494ad7f806d12535dc7d733624b681ed29a505f8c2b98",
+    "machine": "x86_64",
+    "numeric_closure_constraints_checked_by_frozen_consumer": true,
+    "optional_skip_identity": {
+      "class": "tests.test_findmy_runtime_bootstrap",
+      "function": "test_retained_public_apple_dmg_fixed_ranges"
+    },
+    "privacy_shape_is_files_checked_without_source_files": true,
+    "pytest_homeassistant_custom_component": "0.13.373",
+    "python": "3.14.6",
+    "required_functions_passed": 54,
+    "setup_and_package_closure_identical": true,
+    "source_privacy_checker_exit": 0,
+    "source_privacy_files_checked": 381,
+    "source_privacy_flags": 0,
+    "startup_requirement_versions_match_frozen_expected": true
+  },
+  "native_run_url": "https://github.com/jmhjr/HomeCircle/actions/runs/39865496620",
+  "offline_cleanup": {
+    "acceptance_exit": 0,
+    "backend_network_disconnected": true,
+    "cleanup_failed": false,
+    "owned_container_removed": true,
+    "owned_container_stopped": true,
+    "owner_accounts_used": false,
+    "owner_instance_actions_in_download_record": 0,
+    "private_workspace_removed": true,
+    "production_configuration_used": false,
+    "runner_exit": 0
+  },
+  "outcome": "passed",
+  "qa_head": "69be6211e24609fc3f020dd8407acb25b99c175a",
+  "r1_retained": {
+    "all_10_frozen_files_unchanged": true,
+    "disposition": "R1 incorrectly expected source_files in privacy objects although the pre-frozen producer emits files_checked only. R2 changes only privacy_expected, preserves strict count381/hash/zero-flag gates, and transparently records that this source-justified consumer correction occurred after artifact review. Native run, product and harness were not repeated or changed.",
+    "failure_code": "privacy_receipt_refused",
+    "peer_refusal": {
+      "bytes": 87,
+      "sha256": "6e4fc0f6b7b6aeeb314bbd9b5b346d91f331082d40acdfe1ff5320ee2e567ab8"
+    },
+    "protocol": {
+      "bytes": 2901,
+      "sha256": "4820fbac492ed4a93c9834fa5bb6d100775ee2a2d86adf43d2eb45a485ad4529"
+    },
+    "root_refusal": {
+      "bytes": 87,
+      "sha256": "6e4fc0f6b7b6aeeb314bbd9b5b346d91f331082d40acdfe1ff5320ee2e567ab8"
+    }
+  },
+  "r2_frozen": {
+    "all_11_files_unchanged": true,
+    "all_other_consumer_ast_identical": true,
+    "independent_contracts_passed": 20,
+    "only_consumer_function_changed": "privacy_expected",
+    "producer_schema_contract_uses_pre_frozen_literal_AST": true,
+    "top_and_embedded_privacy_schema_mutations_refused": true
+  },
+  "receipts": {
+    "frontend-summary.json": {
+      "bytes": 1367,
+      "sha256": "ae4cff4ef0bd863fc6ba156fe1c3c17e84a5cb141921ec01d23172184506016f"
+    },
+    "host.json": {
+      "bytes": 1746,
+      "sha256": "5196d6d2057792f6073f894a2350a0decd7ebbd73e824b3b4493bbabb7c0c7fe"
+    },
+    "package-summary.json": {
+      "bytes": 18524,
+      "sha256": "c6b45d6ef76ed2209a3008fb8b890d4b7ee88ffaf53f7aaeaebd2a6d5fb73394"
+    },
+    "privacy-summary.json": {
+      "bytes": 456,
+      "sha256": "c63a5f95a66fffa9e65acbd428e1a380867eb82cedbd64a6df1c1e8dba4f32c2"
+    },
+    "setup-summary.json": {
+      "bytes": 7157,
+      "sha256": "27d0aa371a530740f6dcc841d1cca06e506805ada130e06ae22ca08ac40cb431"
+    },
+    "source-summary.json": {
+      "bytes": 435,
+      "sha256": "bfdba8ca52387e255c2948286d0ffa4a835fa60de8f5a4f8d2f94d4798a9dfab"
+    }
+  },
+  "reviewer": "independent_peer",
+  "root_and_peer_corrected_reviews_byte_identical": true,
+  "run_attempt": 1,
+  "run_id": 39865496620,
+  "schema": 1,
+  "schema_amendment": {
+    "bytes": 1323,
+    "sha256": "50debc4a0e0fcc4bbfc6eba18c3803b2fb6f524de7c5e39fa706aa02a3027721"
+  },
+  "scope": "native_current_core_full_package_suite_only",
+  "scope_limits": [
+    "Current Core2026.10.2 full package suite only; this does not rerun a minimum-Core suite.",
+    "One named pre-existing optional retained public DMG test is skipped; all54 required functions passed.",
+    "No managed Core lifecycle, ordinary restore, upgrade, provider authentication, HACS delivery or stable release qualification is conferred by this run.",
+    "Source/test tree retains only the exact nonruntime README outside the113 immutable candidate members.",
+    "Native private JUnit/log workspaces were cleaned; this is an independent source-bound receipt and archive audit, not local reexecution of native tests.",
+    "Independent audit used standard-library reads only and performed no product, harness, Git, VM, owner-data or provider changes."
+  ],
+  "source_bindings": {
+    "candidate_members": 113,
+    "canonical_commit": "3c33160c67e53956ab52298ffc10ccc9992132f0",
+    "canonical_commit_blobs_verified_by_source_bound_native_receipt": 381,
+    "frozen_harness_and_workflow_inputs": 14,
+    "frozen_input_map": {
+      "bytes": 2116,
+      "sha256": "da559866a520672101f701759545e3f38ed1432f68be54b4a3e71295b30f8836"
+    },
+    "generated_frontend_members": 2,
+    "literal_source_product_members": 111,
+    "pure_candidate_archive_has_no_README_exception_member": true,
+    "sole_source_test_tree_nonruntime_extra": {
+      "README.md": {
+        "bytes": 1044,
+        "sha256": "0ad333f01ddc698e4de34c6360d8589bc4c2dfcc32ccd5deafaf2d28518f5180"
+      }
+    },
+    "source_archive": {
+      "bytes": 1366248,
+      "sha256": "34ab4a93b7e7883540da757b04bf80221f7bd75270c5a3503cf2103f3d761ce7"
+    },
+    "source_catalog": {
+      "bytes": 58203,
+      "sha256": "cde46764cb35999081519197d5ab8db582c7a6e6fd36cb6c10a6a65b12becd95"
+    },
+    "source_tar_members_exact_catalog": true,
+    "tracked_regular_files": 381
+  },
+  "workflow_sha256": "bf076fd90a4690b7c571ff6c102aa61af45bb660685047c3eac65fc01e0fa6f0"
+}

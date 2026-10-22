@@ -1,0 +1,22 @@
+{
+  "all14_committed_input_blobs_verified": true,
+  "consumer_schema_corrective_revision": 2,
+  "core_constraints_sha256": "7baa9a8f39ddeb9c5bb60a1036f6d5e33f4b84267f151f53cc2b95ef031a21b5",
+  "core_constraints_source_url": "https://raw.githubusercontent.com/home-assistant/core/2026.10.2/homeassistant/package_constraints.txt",
+  "core_graph_source_receipt_sha256": "785db92ddf370e05ad4558db2777f8e8ee78e459d200009ac657c0fa4e011215",
+  "event": "push",
+  "generation": "Read every regular tracked blob using git ls-tree -rz --full-tree and git cat-file blob; no working-tree bytes",
+  "git_ref_or_index_writes": 0,
+  "native_artifacts_examined": true,
+  "native_imports_or_jobs": 0,
+  "qa_head": "69be6211e24609fc3f020dd8407acb25b99c175a",
+  "r1_before_artifact_protocol_sha256": "4820fbac492ed4a93c9834fa5bb6d100775ee2a2d86adf43d2eb45a485ad4529",
+  "required_functions": 54,
+  "run_attempt": 1,
+  "run_id": 39865496620,
+  "runtime_evidence_claimed": false,
+  "schema": 1,
+  "source_commit": "3c33160c67e53956ab52298ffc10ccc9992132f0",
+  "source_files": 381,
+  "source_inventory_sha256": "cde46764cb35999081519197d5ab8db582c7a6e6fd36cb6c10a6a65b12becd95"
+}

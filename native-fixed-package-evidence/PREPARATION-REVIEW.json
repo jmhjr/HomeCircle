@@ -1,0 +1,15 @@
+{
+  "expected_core_graph_source_receipt_sha256": "785db92ddf370e05ad4558db2777f8e8ee78e459d200009ac657c0fa4e011215",
+  "independent_contracts_passed": 20,
+  "native_artifacts_already_examined": true,
+  "native_qualification_claimed": false,
+  "official_constraints_sha256": "7baa9a8f39ddeb9c5bb60a1036f6d5e33f4b84267f151f53cc2b95ef031a21b5",
+  "official_constraints_url": "https://raw.githubusercontent.com/home-assistant/core/2026.10.2/homeassistant/package_constraints.txt",
+  "outcome": "corrective_consumer_shapes_match_pre_frozen_producer",
+  "schema": 1,
+  "strict_key_counts": {
+    "host_keys": 36,
+    "package_keys": 46,
+    "setup_keys": 37
+  }
+}

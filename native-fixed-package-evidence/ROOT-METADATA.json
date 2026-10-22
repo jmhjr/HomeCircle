@@ -1,0 +1,16 @@
+{
+  "artifact_id": 12463951940,
+  "artifact_name": "fixed-package-validation-receipts",
+  "artifact_zip_sha256": "ab2a5e8089c1036b4ce26b7a8dfd3569ed2f7183acc4489a5e23caeea52746ea",
+  "branch": "codex/native-amd64-validation",
+  "conclusion": "success",
+  "event": "push",
+  "github_digest_verified": true,
+  "head_sha": "69be6211e24609fc3f020dd8407acb25b99c175a",
+  "run_attempt": 1,
+  "run_id": 39865496620,
+  "schema": 1,
+  "status": "completed",
+  "workflow_path": ".github/workflows/native-fixed-package.yml",
+  "workflow_sha256": "bf076fd90a4690b7c571ff6c102aa61af45bb660685047c3eac65fc01e0fa6f0"
+}

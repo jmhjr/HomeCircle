@@ -1,0 +1,79 @@
+{
+  "artifact_id": 12463951940,
+  "artifact_zip_sha256": "ab2a5e8089c1036b4ce26b7a8dfd3569ed2f7183acc4489a5e23caeea52746ea",
+  "candidate_artifact_id": 12464092121,
+  "candidate_artifact_zip_sha256": "bd97e246e345df5174277245b90cb75574954207193a3a3dc6707dc5cd047714",
+  "candidate_inventory_sha256": "8ea456beb9b2eaaf4ba50639532b8dafabe0e02d1e13a77a59525f1c249c7447",
+  "candidate_source_commit": "3c33160c67e53956ab52298ffc10ccc9992132f0",
+  "candidate_zip_sha256": "f181e6300f15d8977817a552db90d35caf0edc869067ebeea815c7be1df0248e",
+  "canonical_rebuild_sha256": "acfcda419a817032c38a463505f686b0f6ab49e69a8f1603d9b2ff43f24e442b",
+  "collector_sha256": "d8df410f3c8350a4ee7e8a6404ea12faf49fa4d803d43f15b6c6bbaa3d549ce3",
+  "event": "push",
+  "fixture_or_provider_modules_imported": false,
+  "frozen_inputs_sha256": "da559866a520672101f701759545e3f38ed1432f68be54b4a3e71295b30f8836",
+  "frozen_inputs_verified": 14,
+  "head_sha": "69be6211e24609fc3f020dd8407acb25b99c175a",
+  "literal_source_members": 111,
+  "outcome": "passed",
+  "product_files": 113,
+  "receipts": {
+    "frontend-summary.json": {
+      "bytes": 1367,
+      "sha256": "ae4cff4ef0bd863fc6ba156fe1c3c17e84a5cb141921ec01d23172184506016f"
+    },
+    "host.json": {
+      "bytes": 1746,
+      "sha256": "5196d6d2057792f6073f894a2350a0decd7ebbd73e824b3b4493bbabb7c0c7fe"
+    },
+    "package-summary.json": {
+      "bytes": 18524,
+      "sha256": "c6b45d6ef76ed2209a3008fb8b890d4b7ee88ffaf53f7aaeaebd2a6d5fb73394"
+    },
+    "privacy-summary.json": {
+      "bytes": 456,
+      "sha256": "c63a5f95a66fffa9e65acbd428e1a380867eb82cedbd64a6df1c1e8dba4f32c2"
+    },
+    "setup-summary.json": {
+      "bytes": 7157,
+      "sha256": "27d0aa371a530740f6dcc841d1cca06e506805ada130e06ae22ca08ac40cb431"
+    },
+    "source-summary.json": {
+      "bytes": 435,
+      "sha256": "bfdba8ca52387e255c2948286d0ffa4a835fa60de8f5a4f8d2f94d4798a9dfab"
+    }
+  },
+  "root_metadata_separate_from_artifacts": true,
+  "run_attempt": 1,
+  "run_id": 39865496620,
+  "schema": 1,
+  "scoped_acceptance": {
+    "backend_failed": 0,
+    "backend_offline": true,
+    "backend_only_named_optional_skip": true,
+    "backend_passed": 1732,
+    "canonical_rebuild_reported_separately": true,
+    "canonical_source_files_verified": 381,
+    "cause_verified_old_vault_red_cases": 14,
+    "cleanup_verified": true,
+    "dependency_and_core_graph_verified": true,
+    "exact_input_candidate_verified": true,
+    "frontend_passed": 122,
+    "hacs_delivery_qualified": false,
+    "input_candidate_replaced_or_rebuilt": false,
+    "nonruntime_source_only_files": [
+      "README.md"
+    ],
+    "ordinary_restore_qualified_by_this_run": false,
+    "outcome": "passed",
+    "provider_authentication_qualified": false,
+    "required_functions_passed": 54,
+    "scope": "native_current_core_full_package_suite_only",
+    "source_privacy_flags": 0,
+    "stable_release_approval": false,
+    "upgrade_qualified_by_this_run": false
+  },
+  "source_catalog_sha256": "cde46764cb35999081519197d5ab8db582c7a6e6fd36cb6c10a6a65b12becd95",
+  "source_files": 381,
+  "unchanged_generated_frontend_members": 2,
+  "workflow_sha256": "bf076fd90a4690b7c571ff6c102aa61af45bb660685047c3eac65fc01e0fa6f0"
+}
