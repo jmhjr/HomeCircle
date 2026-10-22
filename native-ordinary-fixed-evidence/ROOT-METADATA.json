@@ -1,0 +1,16 @@
+{
+  "artifact_id": 12447125775,
+  "artifact_name": "ordinary-fixed-restore-receipts",
+  "artifact_zip_sha256": "b9a63633b5f1e3af02d2e841a331dced9658a6a33b4f18aa479c21771e85404f",
+  "branch": "codex/native-amd64-validation",
+  "conclusion": "success",
+  "event": "workflow_dispatch",
+  "github_digest_verified": true,
+  "head_sha": "3c0091e17e3e1283b609d7a484dc4e20128436a0",
+  "run_attempt": 1,
+  "run_id": 39824890930,
+  "schema": 1,
+  "status": "completed",
+  "workflow_path": ".github/workflows/native-ordinary-fixed-restore.yml",
+  "workflow_sha256": "b01011c168bbfb009cae24e0b6f2b1534adfa01df8ef3eb95ca9801687bd2a3f"
+}

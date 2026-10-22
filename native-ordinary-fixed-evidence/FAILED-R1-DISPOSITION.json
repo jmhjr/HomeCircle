@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "run": 39823525784,
+  "head": "1be904a0f19ede8db52b00f3fff32a032b211ac8",
+  "outcome": "infrastructure_setup_timeout",
+  "failed_step": "Install native VM tools",
+  "timeout_minutes": 5,
+  "native_fixture_executed": false,
+  "product_imported": false,
+  "native_qualification": false,
+  "root_cause": "undetermined within combined quiet apt update/install block",
+  "one_bounded_retry": "normal tools only; progress output, network timeouts, no recommended extras; candidate and fixture unchanged",
+  "log_sha256": "f5e454e7fc06ab23e4b0f7bae61e809e8a675237da77ba1dfa3f894c7b4336d4"
+}

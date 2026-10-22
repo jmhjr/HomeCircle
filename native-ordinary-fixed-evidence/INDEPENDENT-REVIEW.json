@@ -1,0 +1,71 @@
+{
+  "artifact_id": 12447125775,
+  "artifact_name": "ordinary-fixed-restore-receipts",
+  "artifact_zip_sha256": "b9a63633b5f1e3af02d2e841a331dced9658a6a33b4f18aa479c21771e85404f",
+  "candidate_source_commit": "ad9b83676bdfafcfc3848cc9a974b63c8742a020",
+  "candidate_zip_sha256": "f181e6300f15d8977817a552db90d35caf0edc869067ebeea815c7be1df0248e",
+  "collector_sha256": "8d6108a5b3ec3c4d764148ae017acea0e14a35e929e1ac8a51f8675b1ff0aeb5",
+  "fixture_code_executed_or_imported": false,
+  "frozen_input_files_verified": 30,
+  "frozen_inputs_sha256": "deecc423f80dd260afed28d36d2c59a35281cff2f5ae5ba0d59e5a24daaece76",
+  "head_sha": "3c0091e17e3e1283b609d7a484dc4e20128436a0",
+  "literal_source_members": 111,
+  "native_trial_repeated_by_collector": false,
+  "outcome": "passed",
+  "previously_qualified_generated_frontend_members": 2,
+  "product_files": 113,
+  "receipts": {
+    "automatic_restored_enabled.json": {
+      "bytes": 7902,
+      "sha256": "903258c39cdf4fd8907422dfd037a52c0be15c8ac8693fbcf4d8bab7632c43aa"
+    },
+    "baseline_enabled.json": {
+      "bytes": 7711,
+      "sha256": "1b9a87d3d8b0024cc89e71d8934c9c25a5522d2f71a4392b6a638d5f769ae5a9"
+    },
+    "host.json": {
+      "bytes": 13610,
+      "sha256": "18d2e4ad99a1853005f1484b8f4319f6bc7099991c82344bd276b48f674fd5b4"
+    },
+    "mutated_enabled.json": {
+      "bytes": 7776,
+      "sha256": "917bc0018dc44727229101398ec76dfc615a4a5be1764360a8c811e78b5fb02f"
+    },
+    "restart_enabled.json": {
+      "bytes": 7890,
+      "sha256": "937ed0815a5ee3655fc4d548d922e55f5f07178ed33fa786dfb74559d450e29f"
+    }
+  },
+  "root_metadata_separate_from_artifact": true,
+  "run_attempt": 1,
+  "run_id": 39824890930,
+  "schema": 1,
+  "scoped_acceptance": {
+    "all_113_product_bytes_unchanged": true,
+    "automatic_restore_guard_block_verified": true,
+    "environmental_transport_instrumentation": true,
+    "full_VM_snapshot_rollback_qualified": false,
+    "full_encrypted_cloud_backup_qualified": false,
+    "guard_counters": [
+      2,
+      3,
+      2,
+      2
+    ],
+    "homecircle_activity_continuity_verified": true,
+    "manual_guard_repair_used": false,
+    "normal_managed_requirements_verified": true,
+    "outcome": "passed",
+    "owner_acknowledgments_after_restore": 0,
+    "real_ha_person_associations_verified": true,
+    "real_provider_authentication_qualified": false,
+    "recorder_continuity_verified": true,
+    "schema": 1,
+    "scope": "ordinary_unmodified_product_synthetic_person_activity_partial_restore",
+    "stable_release_approval": false
+  },
+  "source_inventory_files": 380,
+  "source_inventory_sha256": "d593a2df6cafbe2a8bcd8f4e2b5e9ddd2fc9654ce7746031f2c21972ba2c74a5",
+  "strict_nested_public_schema_checked": true,
+  "workflow_sha256": "b01011c168bbfb009cae24e0b6f2b1534adfa01df8ef3eb95ca9801687bd2a3f"
+}

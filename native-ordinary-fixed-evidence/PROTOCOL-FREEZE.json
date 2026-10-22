@@ -1,0 +1,54 @@
+{
+  "all_29_fixture_files_unchanged_from_r1": true,
+  "candidate_inventory_sha256": "8ea456beb9b2eaaf4ba50639532b8dafabe0e02d1e13a77a59525f1c249c7447",
+  "candidate_zip_sha256": "f181e6300f15d8977817a552db90d35caf0edc869067ebeea815c7be1df0248e",
+  "event": "workflow_dispatch",
+  "files": {
+    "INPUTS.json": {
+      "bytes": 4696,
+      "sha256": "deecc423f80dd260afed28d36d2c59a35281cff2f5ae5ba0d59e5a24daaece76"
+    },
+    "README.md": {
+      "bytes": 3438,
+      "sha256": "5a5a236a778304c002a9ffd826bb2350809362bbcbb3000e60aad8eae6724e08"
+    },
+    "SOURCE-INVENTORY.json": {
+      "bytes": 58048,
+      "sha256": "d593a2df6cafbe2a8bcd8f4e2b5e9ddd2fc9654ce7746031f2c21972ba2c74a5"
+    },
+    "SOURCE-PROVENANCE.json": {
+      "bytes": 1148,
+      "sha256": "d7a716901bdcc0167f35dadfd0f30b30d1340f7441489a05319b75ccc4cdb294"
+    },
+    "independent_ordinary.py": {
+      "bytes": 44261,
+      "sha256": "8d6108a5b3ec3c4d764148ae017acea0e14a35e929e1ac8a51f8675b1ff0aeb5"
+    },
+    "test_independent_ordinary.py": {
+      "bytes": 15776,
+      "sha256": "590af340be74e98ed5a5c4ea5480bf24c4147c541622356b63cb6583f5d4c296"
+    },
+    "test_person_activity.py": {
+      "bytes": 4868,
+      "sha256": "2f96cab4a4fadcae31962969c703191092ab6c3df3144ff90eced1eb58ff6534"
+    }
+  },
+  "fixture_imports_by_consumer": false,
+  "frozen_at": "2026-10-22T17:42:35.071555+00:00",
+  "frozen_input_count": 30,
+  "independent_contracts_passed": 17,
+  "inputs_sha256": "deecc423f80dd260afed28d36d2c59a35281cff2f5ae5ba0d59e5a24daaece76",
+  "native_artifact_examined": false,
+  "native_qualification_claimed": false,
+  "protocol_changes": "R1 to R2 exact workflow/input/QA/run/event bindings and local workflow filename only; strict nested acceptance and B/M/R criteria unchanged",
+  "qa_head": "3c0091e17e3e1283b609d7a484dc4e20128436a0",
+  "r1_failed_record_modified": false,
+  "run_attempt": 1,
+  "run_id": 39824890930,
+  "schema": 1,
+  "source_commit": "ad9b83676bdfafcfc3848cc9a974b63c8742a020",
+  "source_inventory_files": 380,
+  "source_inventory_sha256": "d593a2df6cafbe2a8bcd8f4e2b5e9ddd2fc9654ce7746031f2c21972ba2c74a5",
+  "status": "frozen_before_native_artifact_review",
+  "workflow_sha256": "b01011c168bbfb009cae24e0b6f2b1534adfa01df8ef3eb95ca9801687bd2a3f"
+}
