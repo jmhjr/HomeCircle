@@ -2,6 +2,7 @@
 
 import asyncio
 from pathlib import Path
+import shutil
 
 import pytest
 
@@ -16,10 +17,12 @@ from custom_components.homecircle._vendor_findmy.keychain.recovery import (
 from tests.test_findmy_setup import setup
 
 
-def guarded_setup(tmp_path):
+async def guarded_setup(tmp_path):
     value, account, client = setup()
     value.recovery_guard = RecoveryGuard(Path(tmp_path) / "guard")
     value.recovery_guard_required = True
+    if not value.recovery_guard.root.exists():
+        await value.recovery_guard.reset(authenticated_identity(account.to_json()))
     return value, account, client
 
 
@@ -50,7 +53,7 @@ async def submit(value, expected):
 async def test_preproof_failure_consumes_no_local_submission(
     tmp_path, failure, expected, caplog
 ):
-    value, account, client = guarded_setup(tmp_path)
+    value, account, client = await guarded_setup(tmp_path)
     client.unlock.side_effect = failure
     try:
         await submit(value, expected)
@@ -68,7 +71,7 @@ async def test_preproof_failure_consumes_no_local_submission(
 async def test_new_setups_share_limit_and_local_reset_does_not_submit(tmp_path):
     calls = 0
     for _ in range(3):
-        value, account, client = guarded_setup(tmp_path)
+        value, account, client = await guarded_setup(tmp_path)
 
         async def refused(*_args):
             nonlocal calls
@@ -82,7 +85,7 @@ async def test_new_setups_share_limit_and_local_reset_does_not_submit(tmp_path):
         client.unlock.side_effect = refused
         await submit(value, "findmy_recovery_refused")
         await value.close()
-    value, account, client = guarded_setup(tmp_path)
+    value, account, client = await guarded_setup(tmp_path)
     identity = authenticated_identity(account.to_json())
     await value.open_recovery()
 
@@ -119,7 +122,7 @@ async def test_new_setups_share_limit_and_local_reset_does_not_submit(tmp_path):
 
 
 async def test_account_mismatch_prevents_guarded_unlock(tmp_path):
-    value, _, client = guarded_setup(tmp_path)
+    value, _, client = await guarded_setup(tmp_path)
     value.account_guard = lambda _: False
     await submit(value, "findmy_account_mismatch")
     client.unlock.assert_not_awaited()
@@ -135,7 +138,7 @@ async def test_product_setup_without_guard_fails_closed():
 
 
 async def test_outer_timeout_after_dispatch_retains_uncertainty(tmp_path, monkeypatch):
-    value, account, client = guarded_setup(tmp_path)
+    value, account, client = await guarded_setup(tmp_path)
 
     async def lost_response(*_args):
         await account._homecircle_recovery_attempt.before_dispatch()
@@ -155,7 +158,7 @@ async def test_outer_timeout_after_dispatch_retains_uncertainty(tmp_path, monkey
 
 
 async def test_verified_material_retry_and_accessory_retry_send_no_new_proof(tmp_path):
-    value, account, client = guarded_setup(tmp_path)
+    value, account, client = await guarded_setup(tmp_path)
     calls = 0
     record = None
 
@@ -195,7 +198,7 @@ def test_unknown_pet_reason_stays_fixed(reason):
 
 
 async def test_reset_refuses_active_other_flow(tmp_path):
-    value, account, _ = guarded_setup(tmp_path)
+    value, account, _ = await guarded_setup(tmp_path)
     identity = authenticated_identity(account.to_json())
 
     class UI(FindMyFlow):
@@ -211,7 +214,7 @@ async def test_reset_refuses_active_other_flow(tmp_path):
 
 
 async def test_empty_keys_after_verified_peer_routes_to_safe_resume(tmp_path):
-    value, account, client = guarded_setup(tmp_path)
+    value, account, client = await guarded_setup(tmp_path)
 
     async def empty_keys(*_args):
         attempt = account._homecircle_recovery_attempt
@@ -230,7 +233,7 @@ async def test_empty_keys_after_verified_peer_routes_to_safe_resume(tmp_path):
 
 
 async def test_accessory_timeout_keeps_verified_keys_for_discovery(tmp_path):
-    value, account, client = guarded_setup(tmp_path)
+    value, account, client = await guarded_setup(tmp_path)
 
     async def verified_keys(*_args):
         attempt = account._homecircle_recovery_attempt
@@ -255,7 +258,7 @@ async def test_accessory_timeout_keeps_verified_keys_for_discovery(tmp_path):
 async def test_outer_timeout_after_verified_material_routes_to_resume(
     tmp_path, monkeypatch
 ):
-    value, account, client = guarded_setup(tmp_path)
+    value, account, client = await guarded_setup(tmp_path)
     real_timeout = asyncio.timeout
     outer = real_timeout(None)
     monkeypatch.setattr(asyncio, "timeout", lambda _seconds: outer)
@@ -287,3 +290,63 @@ async def test_outer_timeout_after_verified_material_routes_to_resume(
 ])
 def test_recovery_rate_limit_requires_exact_preproof_transient_status(reason, status, expected):
     assert recovery_error(RecoveryPETError(reason, http_status=status)) == expected
+
+
+@pytest.mark.parametrize("acknowledge", [False, None, "true", "1", 1, {}, []])
+async def test_restore_review_requires_exact_consent_without_unlock(tmp_path, acknowledge):
+    value, account, client = await guarded_setup(tmp_path)
+    identity = authenticated_identity(account.to_json())
+    shutil.rmtree(value.recovery_guard.witness_root)
+
+    class UI(FindMyFlow):
+        def async_show_form(self, **kwargs):
+            return {"type": "form", **kwargs}
+
+    ui = UI()
+    ui.findmy_setup, ui.findmy_device = value, "0"
+    result = await ui.async_step_findmy_passcode()
+    assert result["step_id"] == "findmy_recovery_review"
+    result = await ui.async_step_findmy_recovery_review({"acknowledge": acknowledge})
+    assert result["step_id"] == "findmy_recovery_review"
+    assert result["errors"]["base"] == "findmy_recovery_acknowledge"
+    assert (await value.recovery_guard.status(identity))["review_required"]
+    client.unlock.assert_not_awaited()
+    await value.close()
+
+
+async def test_restore_review_acknowledges_only_authenticated_account_without_proof(tmp_path):
+    value, account, client = await guarded_setup(tmp_path)
+    identity = authenticated_identity(account.to_json())
+    other = "b" * 64
+    await value.recovery_guard.reset(other)
+    shutil.rmtree(value.recovery_guard.witness_root)
+
+    class UI(FindMyFlow):
+        def async_show_form(self, **kwargs):
+            return {"type": "form", **kwargs}
+
+    ui = UI()
+    ui.findmy_setup, ui.findmy_device = value, "0"
+    result = await ui.async_step_findmy_recovery_review({"acknowledge": True})
+    assert result["step_id"] == "findmy_passcode"
+    assert not (await value.recovery_guard.status(identity))["blocked"]
+    assert (await value.recovery_guard.status(other))["review_required"]
+    client.unlock.assert_not_awaited()
+    await value.close()
+
+
+async def test_rolled_back_ledger_refuses_before_sdk_unlock(tmp_path):
+    value, account, client = await guarded_setup(tmp_path)
+    identity = authenticated_identity(account.to_json())
+    ledger = value.recovery_guard.root / "ledger.json"
+    older = ledger.read_bytes()
+    async with value.recovery_guard.attempt(identity) as attempt:
+        await attempt.before_dispatch()
+        await attempt.refused()
+    ledger.write_bytes(older)
+    await submit(value, "findmy_recovery_review")
+    client.unlock.assert_not_awaited()
+    status = await value.recovery_guard.status(identity)
+    assert status["blocked"] and status["review_required"] and status["unresolved"] == 0
+    assert ledger.read_bytes() == older
+    await value.close()

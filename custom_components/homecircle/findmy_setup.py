@@ -162,11 +162,17 @@ def recovery_error(error):
     """Use structured outcomes, never a provider message or old diagnostics."""
     from aiohttp import ClientError
     from .findmy_identity import IdentityError
-    from .findmy_recovery_guard import RecoveryGuardBlocked, RecoveryGuardStorageError
+    from .findmy_recovery_guard import (
+        RecoveryGuardBlocked,
+        RecoveryGuardReviewRequired,
+        RecoveryGuardStorageError,
+    )
     from ._findmy_runtime.onboarding import RecoveryPETError
     from ._vendor_findmy.errors import UnauthorizedError
     from ._vendor_findmy.keychain.recovery import RecoveryProtocolError
 
+    if isinstance(error, RecoveryGuardReviewRequired):
+        return "findmy_recovery_review"
     if isinstance(error, RecoveryGuardBlocked):
         return "findmy_recovery_limit"
     if isinstance(error, RecoveryGuardStorageError):

@@ -8,7 +8,9 @@ shutdown and its native cause remains unattributed. This extension starts Core
 normally and drives its synthetic provider separately, rather than loading the
 full HomeCircle integration. This is not Apple acceptance or a repair tool.
 An account backup deliberately excludes the independent recovery guard. Manually
-restoring an older guard ledger cannot be detected by this local-only safeguard.
+restoring an older guard ledger is detected when its independent cache witness
+is missing or newer. Restoring both files together, such as a full VM snapshot,
+cannot be detected without an external anchor.
 """
 
 from __future__ import annotations
@@ -119,7 +121,10 @@ async def _guard_phase(directory, phase, counts):
         RecoveryGuardStorageError,
     )
 
-    guard = RecoveryGuard(_guard_path(directory))
+    guard = RecoveryGuard(
+        _guard_path(directory),
+        directory / "config/.cache/homecircle_findmy/recovery_guard",
+    )
 
     async def proof(outcome, identity=IDENTITY):
         async with guard.attempt(identity) as attempt:
@@ -136,6 +141,8 @@ async def _guard_phase(directory, phase, counts):
                 await asyncio.Event().wait()
 
     if phase == "guard_verified":
+        await guard.reset(IDENTITY)
+        await guard.reset(OTHER)
         await proof("verified")
     elif phase == "guard_crash":
         await proof("crash")
@@ -798,7 +805,8 @@ def _finish(receipts, receipt_path, *, storage=False, smoke=False):
         "apple_requests": 0,
         "account_backup_repair_completed": storage and not smoke,
         "manual_account_backup_excludes_recovery_guard": storage and not smoke,
-        "restoring_stale_guard_ledger_is_undetectable": True,
+        "restoring_stale_guard_ledger_is_undetectable": False,
+        "restoring_ledger_and_witness_together_is_undetectable": True,
         "receipts": receipts,
     }
     if receipt_path is not None:

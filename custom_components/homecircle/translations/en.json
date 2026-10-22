@@ -343,6 +343,13 @@
       "findmy_recovery_resume": {
         "title": "Finish recovering item keys",
         "description": "The recovery exchange was verified and its material is still held in this setup. Continue to retry the remaining key download without another device-passcode proof."
+      },
+      "findmy_recovery_review": {
+        "title": "Review recovery after setup or restore",
+        "description": "HomeCircle cannot verify the continuity of this Apple account’s local recovery safeguard. This can happen on first setup, after an upgrade from an older safeguard, after restoring a backup, or if local cache files were removed. The saved record shows {rejected} refused exchanges and {uncertain} uncertain submissions, but an older backup may omit newer submissions. New device-passcode submissions are blocked. Review the device and passcode before acknowledging. This clears only this account’s local safeguard; it does not reset Apple’s allowance, sign in or submit a passcode. Saved item tracking can continue.",
+        "data": {
+          "acknowledge": "I have reviewed the device and passcode and understand the local safeguard may be incomplete"
+        }
       }
     },
     "error": {
@@ -428,7 +435,8 @@
       "findmy_identity_unavailable": "HomeCircle could not safely verify the saved item identities. The existing selection was not replaced.",
       "findmy_duplicate_item": "More than one item matched the same saved identity. The existing selection was not replaced.",
       "findmy_missing_item_identity": "This item has no usable identity. The existing selection was not replaced.",
-      "findmy_recovery_rate_limited": "Apple refused recovery authentication with HTTP 429. The cause is unconfirmed. This sign-in has ended; do not reuse the verification code. No device-passcode submission was sent."
+      "findmy_recovery_rate_limited": "Apple refused recovery authentication with HTTP 429. The cause is unconfirmed. This sign-in has ended; do not reuse the verification code. No device-passcode submission was sent.",
+      "findmy_recovery_review": "HomeCircle could not verify local recovery continuity. No new device-passcode submission was sent. Review the recovery safeguard before continuing."
     },
     "abort": {
       "already_configured": "HomeCircle is already configured. Use Options to edit the household.",
@@ -461,7 +469,8 @@
       "findmy_recovery_refused": "Apple refused the recovery exchange. This does not establish that the device passcode was wrong. Check the chosen device and diagnostics before another deliberate attempt. This sign-in has ended; do not reuse the verification code.",
       "findmy_recovery_transient": "A temporary connection or service problem interrupted recovery preparation. No automatic passcode retry was sent. This sign-in has ended; do not reuse the verification code.",
       "findmy_recovery_uncertain": "The recovery submission outcome could not be verified. It is retained as uncertain by the local safeguard; no automatic retry was sent. This sign-in has ended; do not reuse the verification code.",
-      "findmy_no_recovery_device": "Apple did not provide a recoverable trusted device. This sign-in has ended; do not reuse the verification code."
+      "findmy_no_recovery_device": "Apple did not provide a recoverable trusted device. This sign-in has ended; do not reuse the verification code.",
+      "findmy_recovery_review": "HomeCircle could not verify local recovery continuity. No new device-passcode submission was sent. Review the recovery safeguard before continuing."
     },
     "progress": {
       "findmy_connecting": "Connecting to Apple. Keep this window open; you may cancel to discard this setup."
@@ -913,6 +922,13 @@
       "findmy_recovery_resume": {
         "title": "Finish recovering item keys",
         "description": "The recovery exchange was verified and its material is still held in this setup. Continue to retry the remaining key download without another device-passcode proof."
+      },
+      "findmy_recovery_review": {
+        "title": "Review recovery after setup or restore",
+        "description": "HomeCircle cannot verify the continuity of this Apple account’s local recovery safeguard. This can happen on first setup, after an upgrade from an older safeguard, after restoring a backup, or if local cache files were removed. The saved record shows {rejected} refused exchanges and {uncertain} uncertain submissions, but an older backup may omit newer submissions. New device-passcode submissions are blocked. Review the device and passcode before acknowledging. This clears only this account’s local safeguard; it does not reset Apple’s allowance, sign in or submit a passcode. Saved item tracking can continue.",
+        "data": {
+          "acknowledge": "I have reviewed the device and passcode and understand the local safeguard may be incomplete"
+        }
       }
     },
     "error": {
@@ -1005,7 +1021,8 @@
       "findmy_identity_unavailable": "HomeCircle could not safely verify the saved item identities. The existing selection was not replaced.",
       "findmy_duplicate_item": "More than one item matched the same saved identity. The existing selection was not replaced.",
       "findmy_missing_item_identity": "This item has no usable identity. The existing selection was not replaced.",
-      "findmy_recovery_rate_limited": "Apple refused recovery authentication with HTTP 429. The cause is unconfirmed. This sign-in has ended; do not reuse the verification code. No device-passcode submission was sent."
+      "findmy_recovery_rate_limited": "Apple refused recovery authentication with HTTP 429. The cause is unconfirmed. This sign-in has ended; do not reuse the verification code. No device-passcode submission was sent.",
+      "findmy_recovery_review": "HomeCircle could not verify local recovery continuity. No new device-passcode submission was sent. Review the recovery safeguard before continuing."
     },
     "abort": {
       "place_import_no_account": "No saved Life360 connection is available. Connect Life360 first, then try again.",
@@ -1036,7 +1053,8 @@
       "findmy_recovery_refused": "Apple refused the recovery exchange. This does not establish that the device passcode was wrong. Check the chosen device and diagnostics before another deliberate attempt. This sign-in has ended; do not reuse the verification code.",
       "findmy_recovery_transient": "A temporary connection or service problem interrupted recovery preparation. No automatic passcode retry was sent. This sign-in has ended; do not reuse the verification code.",
       "findmy_recovery_uncertain": "The recovery submission outcome could not be verified. It is retained as uncertain by the local safeguard; no automatic retry was sent. This sign-in has ended; do not reuse the verification code.",
-      "findmy_no_recovery_device": "Apple did not provide a recoverable trusted device. This sign-in has ended; do not reuse the verification code."
+      "findmy_no_recovery_device": "Apple did not provide a recoverable trusted device. This sign-in has ended; do not reuse the verification code.",
+      "findmy_recovery_review": "HomeCircle could not verify local recovery continuity. No new device-passcode submission was sent. Review the recovery safeguard before continuing."
     },
     "progress": {
       "findmy_connecting": "Connecting to Apple. Keep this window open; you may cancel to discard this setup."

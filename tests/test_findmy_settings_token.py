@@ -311,6 +311,8 @@ async def test_item_recovery_failure_logs_only_safe_phase_metadata(tmp_path, cap
     flow = FindMySetup.create(tmp_path / 'unused.bin', onboarding=False)
     flow.recovery_guard = RecoveryGuard(tmp_path / 'guard')
     flow.account._set_login_state(LoginState.LOGGED_IN, {'dsid': 'synthetic-dsid'})
+    from custom_components.homecircle.findmy_identity import authenticated_identity
+    await flow.recovery_guard.reset(authenticated_identity(flow.account.to_json()))
     flow.records = [object()]
     async def failed_unlock(*args):
         flow.account._recovery_diagnostics.update({

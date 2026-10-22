@@ -196,6 +196,8 @@ async def test_native_progress_device_selection_and_explicit_selected_store(hass
         )
         assert result["step_id"] == "findmy_device"
         result = await manager.async_configure(result["flow_id"], {"device": "0"})
+        assert result["step_id"] == "findmy_recovery_review"
+        result = await manager.async_configure(result["flow_id"], {"acknowledge": True})
         result = await manager.async_configure(
             result["flow_id"], {"passcode": "synthetic-passcode"}
         )
@@ -270,6 +272,8 @@ async def test_findmy_in_household_flow_continues_member_setup_and_abort_leaves_
             manager, await manager.async_configure(result["flow_id"])
         )
         result = await manager.async_configure(result["flow_id"], {"device": "0"})
+        assert result["step_id"] == "findmy_recovery_review"
+        result = await manager.async_configure(result["flow_id"], {"acknowledge": True})
         result = await manager.async_configure(
             result["flow_id"], {"passcode": "synthetic-passcode"}
         )
@@ -388,6 +392,8 @@ async def test_discovery_error_routes_to_retry_without_another_passcode(hass):
             manager, await manager.async_configure(result["flow_id"])
         )
         result = await manager.async_configure(result['flow_id'], {'device': '0'})
+        assert result["step_id"] == "findmy_recovery_review"
+        result = await manager.async_configure(result["flow_id"], {"acknowledge": True})
         fake.client.accessories.side_effect = RuntimeError('synthetic-private-response')
         result = await manager.async_configure(result['flow_id'], {'passcode': 'synthetic'})
         await hass.async_block_till_done()
@@ -544,6 +550,8 @@ async def test_later_passcode_transient_keeps_its_retry_stage(hass):
         result = await finish_background_progress(manager,result)
         assert result["step_id"] == "findmy_device"
         result = await manager.async_configure(flow_id,{"device":"0"})
+        assert result["step_id"] == "findmy_recovery_review"
+        result = await manager.async_configure(flow_id,{"acknowledge":True})
         assert result["step_id"] == "findmy_passcode"
         result = await manager.async_configure(flow_id,{"passcode":"synthetic-passcode"})
         result = await finish_background_progress(manager,result)

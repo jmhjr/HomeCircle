@@ -48,6 +48,24 @@ administrator can explicitly acknowledge and clear the local safeguard after
 reviewing the intended trusted device and passcode. This neither resets Apple's
 allowance nor submits another passcode. Active recovery must finish before reset.
 
+The candidate also opens **Review recovery after setup or restore** when local
+continuity cannot be verified. The first use and upgrade from an older safeguard
+require this explicit review. Normal restarts retain a separate, account-bound
+continuity witness; ordinary Home Assistant configuration backups exclude it.
+Restoring a backup therefore blocks new device-passcode submissions even when
+its saved count is below three. Removing cache files or copying only an older
+ledger has the same safe result. Saved item tracking can continue. Acknowledging
+one account clears only its local unresolved counts and establishes its current
+continuity; it never signs in, submits a passcode or acknowledges other accounts.
+The counts shown after restore may omit later submissions, and HomeCircle cannot
+reconstruct them without an independently retained newer record.
+
+This protection applies to backups containing the fixed candidate. A restore of
+an older package can replace that code: reinstall the fixed candidate before
+starting recovery. Whole-filesystem or VM snapshots that restore both ledger and
+continuity witness are outside this ordinary-backup protection. No local file
+can establish an external, rollback-proof counter.
+
 A missing password or another required factor ends the attempt with a request to
 sign in again. A transport failure after potential proof dispatch stays uncertain.
 A verified exchange followed by a resumable material/key-download failure offers

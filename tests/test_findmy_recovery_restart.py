@@ -132,4 +132,5 @@ def test_guard_accounting_survives_process_restart_and_explicit_acknowledgment(
             "unresolved": 2,
             "limit": 3,
             "blocked": False,
+            "review_required": False,
         }

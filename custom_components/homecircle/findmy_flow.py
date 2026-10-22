@@ -442,6 +442,10 @@ class FindMyFlow:
                 return self.async_show_progress_done(
                     next_step_id="findmy_recovery_reset"
                 )
+            if self.findmy_error == "findmy_recovery_review":
+                return self.async_show_progress_done(
+                    next_step_id="findmy_recovery_review"
+                )
             if self.findmy_error == "findmy_recovery_resume":
                 return self.async_show_progress_done(
                     next_step_id="findmy_recovery_resume"
@@ -650,8 +654,9 @@ class FindMyFlow:
         guard = self.findmy_setup.recovery_guard
         errors = {}
         try:
+            status = await guard.status(identity)
             if user_input is not None:
-                if not user_input.get("acknowledge"):
+                if user_input.get("acknowledge") is not True:
                     errors["base"] = "findmy_recovery_acknowledge"
                 else:
                     await guard.reset(identity)
@@ -668,7 +673,11 @@ class FindMyFlow:
         except RecoveryGuardStorageError:
             return self.async_abort(reason="findmy_recovery_storage")
         return self.async_show_form(
-            step_id="findmy_recovery_reset",
+            step_id=(
+                "findmy_recovery_review"
+                if status.get("review_required")
+                else "findmy_recovery_reset"
+            ),
             data_schema=vol.Schema(
                 {vol.Required("acknowledge", default=False): selector.BooleanSelector()}
             ),
@@ -678,6 +687,10 @@ class FindMyFlow:
                 "uncertain": str(status["uncertain"] + status["pending"]),
             },
         )
+
+    async def async_step_findmy_recovery_review(self, user_input=None):
+        """Review missing continuity without automatically resubmitting proof."""
+        return await self.async_step_findmy_recovery_reset(user_input)
 
     async def async_step_findmy_select(self, user_input=None):
         errors = {}

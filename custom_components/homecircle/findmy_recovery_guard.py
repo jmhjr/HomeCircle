@@ -2,6 +2,10 @@
 
 These counters describe only this installation's observations. They do not describe
 or reset an Apple server allowance. No owner credential or recovery key is stored.
+Each account has an independently retained cache witness. Ordinary Home Assistant
+backups exclude that cache, so restored ledgers require explicit owner review.
+Rolling back both the ledger and witness, as in a full VM snapshot, needs an
+external anchor and is outside this local safeguard's protection.
 """
 
 from __future__ import annotations
@@ -9,14 +13,17 @@ from __future__ import annotations
 import asyncio
 from contextlib import asynccontextmanager
 import fcntl
+import hashlib
 import json
 import os
 from pathlib import Path
 import re
 import stat
+import sys
 from uuid import uuid4
 
 _LIMIT = 3
+_MAX_COUNT = 2**63 - 1
 _IDENTITY = re.compile(r"[0-9a-f]{64}")
 _TOKEN = re.compile(r"[0-9a-f]{32}")
 _SERVICE = "homecircle_findmy_recovery_guard"
@@ -30,6 +37,12 @@ class RecoveryGuardBlocked(RecoveryGuardError):
     """Local unresolved submissions or an active attempt prevent this action."""
 
     code = "recovery_guard_blocked"
+
+
+class RecoveryGuardReviewRequired(RecoveryGuardBlocked):
+    """The local ledger has no independently retained continuity witness."""
+
+    code = "recovery_guard_review"
 
 
 class RecoveryGuardStorageError(RecoveryGuardError):
@@ -80,24 +93,36 @@ async def _execute(function, *args, cleanup=None):
 class RecoveryGuard:
     """Serialize each account's unlock and reserve submissions before dispatch."""
 
-    def __init__(self, root: Path):
+    def __init__(self, root: Path, witness_root: Path | None = None):
         self.root = Path(os.path.abspath(root))
+        self.witness_root = Path(os.path.abspath(
+            witness_root if witness_root is not None
+            else self.root.parent / f".{self.root.name}-continuity"
+        ))
+        if (
+            self.root == self.witness_root
+            or self.root in self.witness_root.parents
+            or self.witness_root in self.root.parents
+        ):
+            raise ValueError("Independent local recovery storage is required")
         self._locks: dict[str, asyncio.Lock] = {}
 
-    def _root_fd(self):
+    def _root_fd(self, path=None, *, create=True):
         """Walk directory descriptors without following links, including parents."""
-        private = {self.root}
-        creatable = {self.root}
+        path = self.root if path is None else path
+        private = {path}
+        creatable = {path} if create else set()
         if (
-            self.root.name == "recovery_guard"
-            and self.root.parent.name == "homecircle_findmy"
+            path.name == "recovery_guard"
+            and path.parent.name == "homecircle_findmy"
         ):
-            private.add(self.root.parent)
-            creatable.update((self.root.parent, self.root.parent.parent))
-        current = Path(self.root.anchor)
+            private.add(path.parent)
+            if create:
+                creatable.update((path.parent, path.parent.parent))
+        current = Path(path.anchor)
         descriptor = os.open(current, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
         try:
-            for part in self.root.parts[1:]:
+            for part in path.parts[1:]:
                 current /= part
                 try:
                     child = os.open(
@@ -209,18 +234,21 @@ class RecoveryGuard:
                 payload = json.load(stream, object_pairs_hook=_unique_object)
             if not isinstance(payload, dict) or set(payload) != {"version", "accounts"}:
                 raise ValueError
-            if type(payload["version"]) is not int or payload["version"] != 1:
+            if type(payload["version"]) is not int or payload["version"] not in (1, 2):
                 raise ValueError
             if not isinstance(payload["accounts"], dict):
                 raise ValueError
             for identity, entry in payload["accounts"].items():
                 _identity(identity)
-                if not isinstance(entry, dict) or set(entry) != {
+                keys = {
                     "rejected",
                     "uncertain",
                     "verified",
                     "pending",
-                }:
+                }
+                if payload["version"] == 2:
+                    keys.add("generation")
+                if not isinstance(entry, dict) or set(entry) != keys:
                     raise ValueError
                 if any(
                     type(entry[key]) is not int or not 0 <= entry[key] < 2**63
@@ -230,6 +258,11 @@ class RecoveryGuard:
                 if entry["pending"] is not None and (
                     not isinstance(entry["pending"], str)
                     or _TOKEN.fullmatch(entry["pending"]) is None
+                ):
+                    raise ValueError
+                if payload["version"] == 2 and entry["generation"] is not None and (
+                    not isinstance(entry["generation"], str)
+                    or _TOKEN.fullmatch(entry["generation"]) is None
                 ):
                     raise ValueError
             return payload
@@ -262,6 +295,120 @@ class RecoveryGuard:
             except FileNotFoundError:
                 pass
 
+    @staticmethod
+    def _entry_digest(identity, entry):
+        encoded = json.dumps(
+            {"identity": identity, "entry": entry},
+            sort_keys=True,
+            separators=(",", ":"),
+        ).encode("utf-8")
+        return hashlib.sha256(encoded).hexdigest()
+
+    def _witness_matches(self, identity, entry):
+        """Read without enrolling an account or repairing its witness."""
+        if not entry.get("generation"):
+            return False
+        root = descriptor = None
+        try:
+            try:
+                root = self._root_fd(self.witness_root, create=False)
+                descriptor = os.open(
+                    f"account-{identity}.json",
+                    os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK,
+                    dir_fd=root,
+                )
+            except FileNotFoundError:
+                return False
+            self._check_file(descriptor)
+            if os.fstat(descriptor).st_size > 512:
+                raise ValueError
+            with os.fdopen(descriptor, "r", encoding="utf-8") as stream:
+                descriptor = None
+                payload = json.load(stream, object_pairs_hook=_unique_object)
+            if (
+                not isinstance(payload, dict)
+                or set(payload) != {"version", "digest"}
+                or type(payload["version"]) is not int
+                or payload["version"] != 1
+                or not isinstance(payload["digest"], str)
+                or _IDENTITY.fullmatch(payload["digest"]) is None
+            ):
+                raise ValueError
+            return payload["digest"] == self._entry_digest(identity, entry)
+        finally:
+            for opened in (descriptor, root):
+                if opened is not None:
+                    os.close(opened)
+
+    def _write_witness(self, identity, entry):
+        """Commit only one account after its new ledger bytes are durable."""
+        root = descriptor = None
+        temporary = f".witness-{uuid4().hex}"
+        try:
+            root = self._root_fd(self.witness_root)
+            # Refuse existing unsafe destinations, even though replace itself
+            # would not follow a symlink. An acknowledgement does not grant
+            # permission to repair filesystem ownership or link violations.
+            try:
+                descriptor = os.open(
+                    f"account-{identity}.json",
+                    os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK,
+                    dir_fd=root,
+                )
+            except FileNotFoundError:
+                pass
+            else:
+                self._check_file(descriptor)
+                os.close(descriptor)
+                descriptor = None
+            descriptor = os.open(
+                temporary,
+                os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
+                0o600,
+                dir_fd=root,
+            )
+            self._check_file(descriptor)
+            with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
+                descriptor = None
+                json.dump(
+                    {"version": 1, "digest": self._entry_digest(identity, entry)},
+                    stream,
+                    sort_keys=True,
+                    separators=(",", ":"),
+                )
+                stream.flush()
+                os.fsync(stream.fileno())
+            os.replace(
+                temporary, f"account-{identity}.json", src_dir_fd=root, dst_dir_fd=root
+            )
+            os.fsync(root)
+        finally:
+            if descriptor is not None:
+                os.close(descriptor)
+            if root is not None:
+                try:
+                    os.unlink(temporary, dir_fd=root)
+                except FileNotFoundError:
+                    pass
+                os.close(root)
+
+    @staticmethod
+    def _status(entry, trusted):
+        unresolved = (
+            entry["rejected"] + entry["uncertain"]
+            + int(entry["pending"] is not None)
+        )
+        return {
+            "rejected": entry["rejected"],
+            "uncertain": entry["uncertain"],
+            "pending": int(entry["pending"] is not None),
+            "verified": entry["verified"],
+            "unresolved": unresolved,
+            "limit": _LIMIT,
+            "blocked": not trusted or unresolved >= _LIMIT,
+            "review_required": not trusted,
+        }
+
     def _transaction(self, identity, action, token=None, owns_account=False):
         root = ledger_lock = account_lock = None
         try:
@@ -271,8 +418,18 @@ class RecoveryGuard:
             payload = self._read(root)
             entry = payload["accounts"].get(
                 identity,
-                {"rejected": 0, "uncertain": 0, "verified": 0, "pending": None},
+                {
+                    "rejected": 0, "uncertain": 0, "verified": 0,
+                    "pending": None, "generation": None,
+                },
             )
+            trusted = payload["version"] == 2 and self._witness_matches(identity, entry)
+            if not trusted and action != "reset":
+                if action == "status":
+                    return self._status(entry, False)
+                raise RecoveryGuardReviewRequired(
+                    "Local recovery history requires explicit review"
+                )
             changed = False
             # A pending reservation whose account lock is free survived a crash.
             # Never reclassify another live attempt's reservation.
@@ -280,7 +437,7 @@ class RecoveryGuard:
                 if not owns_account:
                     account_lock = self._try_account_lock(identity)
                 if owns_account or account_lock is not None:
-                    entry["uncertain"] += 1
+                    entry["uncertain"] = min(entry["uncertain"] + 1, _MAX_COUNT)
                     entry["pending"] = None
                     changed = True
             unresolved = (
@@ -288,18 +445,19 @@ class RecoveryGuard:
                 + entry["uncertain"]
                 + int(entry["pending"] is not None)
             )
-            if action == "reserve":
+            if action in ("begin", "reserve"):
                 if unresolved >= _LIMIT:
                     raise RecoveryGuardBlocked(
                         "Local recovery submissions require acknowledgement"
                     )
                 if entry["pending"] is not None:
                     raise RecoveryGuardBlocked("Local recovery is already active")
-                entry["pending"] = token
-                changed = True
+                if action == "reserve":
+                    entry["pending"] = token
+                    changed = True
             elif action in ("rejected", "verified", "uncertain"):
                 if entry["pending"] == token:
-                    entry[action] += 1
+                    entry[action] = min(entry[action] + 1, _MAX_COUNT)
                     entry["pending"] = None
                     changed = True
             elif action == "abandon":
@@ -311,22 +469,16 @@ class RecoveryGuard:
                 entry["pending"] = None
                 changed = True
             if changed:
+                if payload["version"] == 1:
+                    for saved in payload["accounts"].values():
+                        saved["generation"] = None
+                    payload["version"] = 2
+                entry["generation"] = uuid4().hex
                 payload["accounts"][identity] = entry
                 self._write(root, payload)
-            unresolved = (
-                entry["rejected"]
-                + entry["uncertain"]
-                + int(entry["pending"] is not None)
-            )
-            return {
-                "rejected": entry["rejected"],
-                "uncertain": entry["uncertain"],
-                "pending": int(entry["pending"] is not None),
-                "verified": entry["verified"],
-                "unresolved": unresolved,
-                "limit": _LIMIT,
-                "blocked": unresolved >= _LIMIT,
-            }
+                self._write_witness(identity, entry)
+                trusted = True
+            return self._status(entry, trusted)
         except RecoveryGuardError:
             raise
         except (OSError, ValueError, TypeError, KeyError, UnicodeError):
@@ -357,6 +509,7 @@ class RecoveryGuard:
                 attempt = RecoveryAttempt(self, identity)
                 yield attempt
             finally:
+                unwinding = sys.exception()
                 try:
                     if attempt is not None:
                         attempt.active = False
@@ -365,9 +518,16 @@ class RecoveryGuard:
                         and attempt.token is not None
                         and not attempt.finished
                     ):
-                        await attempt._record(
-                            "uncertain" if attempt.ready else "abandon"
-                        )
+                        try:
+                            await attempt._record(
+                                "uncertain" if attempt.ready else "abandon"
+                            )
+                        except RecoveryGuardReviewRequired:
+                            # A failed dual-file commit leaves a deliberate
+                            # mismatch. Never repair it during unwinding or
+                            # obscure the original storage/cancellation failure.
+                            if unwinding is None:
+                                raise
                 finally:
                     if descriptor is not None:
                         await _execute(self._release, descriptor)
@@ -443,6 +603,7 @@ def get_recovery_guard(hass):
     """Keep the service independent of integration unload and account deletion."""
     if _SERVICE not in hass.data:
         hass.data[_SERVICE] = RecoveryGuard(
-            Path(hass.config.path(".storage", "homecircle_findmy", "recovery_guard"))
+            Path(hass.config.path(".storage", "homecircle_findmy", "recovery_guard")),
+            Path(hass.config.path(".cache", "homecircle_findmy", "recovery_guard")),
         )
     return hass.data[_SERVICE]

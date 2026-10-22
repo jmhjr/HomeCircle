@@ -3,6 +3,7 @@
 import asyncio
 import json
 import os
+import shutil
 import subprocess
 import sys
 import threading
@@ -12,6 +13,7 @@ import pytest
 from custom_components.homecircle.findmy_recovery_guard import (
     RecoveryGuard,
     RecoveryGuardBlocked,
+    RecoveryGuardReviewRequired,
     RecoveryGuardStorageError,
     get_recovery_guard,
 )
@@ -20,8 +22,11 @@ IDENTITY = "a" * 64
 OTHER = "b" * 64
 
 
-def guard(tmp_path):
-    return RecoveryGuard(tmp_path / "guard")
+async def guard(tmp_path):
+    service = RecoveryGuard(tmp_path / "guard")
+    await service.reset(IDENTITY)
+    await service.reset(OTHER)
+    return service
 
 
 async def reject(service, identity=IDENTITY):
@@ -33,18 +38,19 @@ async def reject(service, identity=IDENTITY):
 
 
 async def test_pre_proof_failure_and_context_entry_do_not_reserve(tmp_path):
-    service = guard(tmp_path)
+    service = await guard(tmp_path)
+    before = (service.root / "ledger.json").read_bytes()
     async with service.attempt(IDENTITY):
         assert (await service.status(IDENTITY))["unresolved"] == 0
     with pytest.raises(TimeoutError):
         async with service.attempt(IDENTITY):
             raise TimeoutError
     assert (await service.status(IDENTITY))["unresolved"] == 0
-    assert not (service.root / "ledger.json").exists()
+    assert (service.root / "ledger.json").read_bytes() == before
 
 
 async def test_attempt_callbacks_cannot_reserve_after_context_releases_lock(tmp_path):
-    service = guard(tmp_path)
+    service = await guard(tmp_path)
     async with service.attempt(IDENTITY) as attempt:
         pass
     with pytest.raises(RuntimeError):
@@ -53,7 +59,7 @@ async def test_attempt_callbacks_cannot_reserve_after_context_releases_lock(tmp_
 
 
 async def test_new_storage_directory_creation_must_be_durable(tmp_path, monkeypatch):
-    service = guard(tmp_path)
+    service = RecoveryGuard(tmp_path / "guard")
     monkeypatch.setattr(
         os,
         "fsync",
@@ -66,7 +72,7 @@ async def test_new_storage_directory_creation_must_be_durable(tmp_path, monkeypa
 
 
 async def test_verified_submission_does_not_clear_prior_unresolved(tmp_path):
-    service = guard(tmp_path)
+    service = await guard(tmp_path)
     await reject(service)
     async with service.attempt(IDENTITY) as attempt:
         await attempt.before_dispatch()
@@ -82,6 +88,7 @@ async def test_verified_submission_does_not_clear_prior_unresolved(tmp_path):
         "unresolved": 1,
         "limit": 3,
         "blocked": False,
+        "review_required": False,
     }
     assert "a" * 64 in (service.root / "ledger.json").read_text()
     assert set(
@@ -91,11 +98,12 @@ async def test_verified_submission_does_not_clear_prior_unresolved(tmp_path):
         "uncertain",
         "pending",
         "verified",
+        "generation",
     }
 
 
 async def test_refusal_unknown_outcome_limit_and_explicit_reset(tmp_path):
-    service = guard(tmp_path)
+    service = await guard(tmp_path)
     await reject(service)
     with pytest.raises(TimeoutError):
         async with service.attempt(IDENTITY) as attempt:
@@ -113,6 +121,7 @@ async def test_refusal_unknown_outcome_limit_and_explicit_reset(tmp_path):
         "unresolved": 3,
         "limit": 3,
         "blocked": True,
+        "review_required": False,
     }
     assert await service.status(IDENTITY) == expected
     with pytest.raises(RecoveryGuardBlocked) as blocked:
@@ -129,7 +138,7 @@ async def test_refusal_unknown_outcome_limit_and_explicit_reset(tmp_path):
 async def test_separate_process_reads_counts_and_crash_pending_becomes_uncertain(
     tmp_path,
 ):
-    service = guard(tmp_path)
+    service = await guard(tmp_path)
     await reject(service)
     code = """
 import asyncio, json, os, sys
@@ -163,7 +172,8 @@ asyncio.run(run())
 async def test_same_account_serializes_across_guard_instances_other_account_runs(
     tmp_path,
 ):
-    first, second = guard(tmp_path), guard(tmp_path)
+    first = await guard(tmp_path)
+    second = RecoveryGuard(first.root)
     entered, release, same_entered, other_entered = [asyncio.Event() for _ in range(4)]
 
     async def holding():
@@ -201,7 +211,7 @@ async def test_same_account_serializes_across_guard_instances_other_account_runs
 
 
 async def test_separate_process_cannot_enter_or_reset_held_account(tmp_path):
-    service = guard(tmp_path)
+    service = await guard(tmp_path)
     async with service.attempt(IDENTITY):
         code = """
 import asyncio, json, sys
@@ -239,7 +249,8 @@ asyncio.run(run())
 
 @pytest.mark.parametrize("_iteration", range(5))
 async def test_concurrent_submissions_cannot_oversubscribe(tmp_path, _iteration):
-    services = [guard(tmp_path) for _ in range(7)]
+    first = await guard(tmp_path)
+    services = [first, *(RecoveryGuard(first.root) for _ in range(6))]
     results = await asyncio.gather(
         *(reject(service) for service in services), return_exceptions=True
     )
@@ -253,7 +264,7 @@ async def test_concurrent_submissions_cannot_oversubscribe(tmp_path, _iteration)
 async def test_cancelled_reservation_drains_and_clears_proven_undispatched_submission(
     tmp_path, monkeypatch
 ):
-    service = guard(tmp_path)
+    service = await guard(tmp_path)
     started, finish = threading.Event(), threading.Event()
     original = service._write
     attempts = []
@@ -288,7 +299,7 @@ async def test_cancelled_reservation_drains_and_clears_proven_undispatched_submi
 async def test_cancellation_after_process_lock_acquisition_does_not_strand_lock(
     tmp_path, monkeypatch
 ):
-    service = guard(tmp_path)
+    service = await guard(tmp_path)
     acquired, finish = threading.Event(), threading.Event()
     original = service._try_account_lock
 
@@ -316,7 +327,7 @@ async def test_cancellation_after_process_lock_acquisition_does_not_strand_lock(
 async def test_cancelled_failed_reservation_never_logs_executor_failure(
     tmp_path, monkeypatch, caplog
 ):
-    service = guard(tmp_path)
+    service = await guard(tmp_path)
     entered, release = threading.Event(), threading.Event()
 
     def fail_write(*args):
@@ -345,7 +356,7 @@ async def test_cancelled_failed_reservation_never_logs_executor_failure(
 
 
 async def test_cancellation_after_dispatch_hook_returns_is_uncertain(tmp_path):
-    service = guard(tmp_path)
+    service = await guard(tmp_path)
     dispatched = asyncio.Event()
     attempts = []
 
@@ -369,7 +380,7 @@ async def test_cancellation_after_dispatch_hook_returns_is_uncertain(tmp_path):
 async def test_cancelled_verified_write_publishes_durable_outcome_before_reraising(
     tmp_path, monkeypatch
 ):
-    service = guard(tmp_path)
+    service = await guard(tmp_path)
     started, finish = threading.Event(), threading.Event()
     original = service._transaction
 
@@ -397,7 +408,7 @@ async def test_cancelled_verified_write_publishes_durable_outcome_before_reraisi
 async def test_storage_failure_prevents_dispatch_and_preserves_conservative_counts(
     tmp_path, monkeypatch, fault
 ):
-    service = guard(tmp_path)
+    service = await guard(tmp_path)
     await reject(service)
     original_fsync = os.fsync
     calls = []
@@ -454,7 +465,7 @@ async def test_storage_failure_prevents_dispatch_and_preserves_conservative_coun
     ],
 )
 async def test_unsafe_storage_fails_closed_without_overwriting(tmp_path, fault):
-    service = guard(tmp_path)
+    service = await guard(tmp_path)
     await reject(service)
     ledger = service.root / "ledger.json"
     if fault == "corrupt":
@@ -491,7 +502,7 @@ async def test_unsafe_storage_fails_closed_without_overwriting(tmp_path, fault):
     "identity", ["A" * 64, "a" * 63, "g" * 64, "synthetic@example.invalid", None, 123]
 )
 async def test_identity_must_be_validated_hash_no_username_fallback(tmp_path, identity):
-    service = guard(tmp_path)
+    service = RecoveryGuard(tmp_path / "guard")
     with pytest.raises(ValueError):
         await service.status(identity)
     with pytest.raises(ValueError):
@@ -511,9 +522,239 @@ async def test_hass_service_is_shared_outside_account_namespace(
     assert (
         service.root == tmp_path / ".storage" / "homecircle_findmy" / "recovery_guard"
     )
+    assert service.witness_root == tmp_path / ".cache/homecircle_findmy/recovery_guard"
+    await service.reset(IDENTITY)
     await reject(service)
-    for path in (service.root.parent, service.root):
+    for path in (service.root.parent, service.root, service.witness_root.parent, service.witness_root):
         assert path.stat().st_mode & 0o777 == 0o700
     for path in service.root.iterdir():
         assert path.stat().st_mode & 0o777 == 0o600
-    assert (await RecoveryGuard(service.root).status(IDENTITY))["rejected"] == 1
+    assert (await RecoveryGuard(service.root, service.witness_root).status(IDENTITY))["rejected"] == 1
+
+
+async def test_fresh_storage_needs_explicit_review_before_unlock(tmp_path):
+    service = RecoveryGuard(tmp_path / "guard")
+    status = await service.status(IDENTITY)
+    assert status["blocked"] and status["review_required"]
+    assert status["unresolved"] == 0
+    assert not (service.root / "ledger.json").exists()
+    assert not service.witness_root.exists()
+    with pytest.raises(RecoveryGuardReviewRequired) as failure:
+        async with service.attempt(IDENTITY):
+            pytest.fail("Unreviewed account entered SDK unlock")
+    assert failure.value.code == "recovery_guard_review"
+    status = await service.reset(IDENTITY)
+    assert not status["blocked"] and not status["review_required"]
+    await reject(service)
+
+
+async def test_ordinary_backup_restore_fails_closed_and_review_is_per_account(tmp_path):
+    service = await guard(tmp_path)
+    await reject(service)
+    await reject(service)
+    await reject(service, OTHER)
+    older = (service.root / "ledger.json").read_bytes()
+    await reject(service)
+    await reject(service, OTHER)
+    (service.root / "ledger.json").write_bytes(older)
+    shutil.rmtree(service.witness_root)
+    restored = RecoveryGuard(service.root)
+    for identity, count in ((IDENTITY, 2), (OTHER, 1)):
+        status = await restored.status(identity)
+        assert status["unresolved"] == count
+        assert status["blocked"] and status["review_required"]
+        with pytest.raises(RecoveryGuardReviewRequired):
+            async with restored.attempt(identity):
+                pytest.fail("Restored history entered SDK unlock")
+    assert (service.root / "ledger.json").read_bytes() == older
+    assert not service.witness_root.exists()
+    await restored.reset(IDENTITY)
+    assert not (await restored.status(IDENTITY))["review_required"]
+    assert (await restored.status(OTHER))["review_required"]
+    assert not (service.witness_root / f"account-{OTHER}.json").exists()
+    await reject(restored)
+    restarted = RecoveryGuard(service.root)
+    assert (await restarted.status(IDENTITY))["unresolved"] == 1
+    assert not (await restarted.status(IDENTITY))["review_required"]
+    assert (await restarted.status(OTHER))["review_required"]
+
+
+async def test_rollback_with_retained_witness_and_same_counter_aba_is_detected(tmp_path):
+    service = await guard(tmp_path)
+    await reject(service)
+    older = (service.root / "ledger.json").read_bytes()
+    older_entry = json.loads(older)["accounts"][IDENTITY]
+    await service.reset(IDENTITY)
+    await reject(service)
+    current = json.loads((service.root / "ledger.json").read_bytes())["accounts"][IDENTITY]
+    assert current["rejected"] == older_entry["rejected"] == 1
+    assert current["generation"] != older_entry["generation"]
+    (service.root / "ledger.json").write_bytes(older)
+    status = await RecoveryGuard(service.root).status(IDENTITY)
+    assert status["blocked"] and status["review_required"]
+    assert (await service.status(OTHER))["review_required"] is False
+    with pytest.raises(RecoveryGuardReviewRequired):
+        await reject(service)
+
+
+async def test_legacy_ledger_reset_does_not_enroll_another_account(tmp_path):
+    service = await guard(tmp_path)
+    await reject(service)
+    await reject(service, OTHER)
+    ledger = service.root / "ledger.json"
+    payload = json.loads(ledger.read_bytes())
+    payload["version"] = 1
+    for entry in payload["accounts"].values():
+        del entry["generation"]
+    ledger.write_text(json.dumps(payload))
+    before = ledger.read_bytes()
+    assert (await service.status(IDENTITY))["review_required"]
+    assert ledger.read_bytes() == before
+    await service.reset(IDENTITY)
+    upgraded = json.loads(ledger.read_bytes())
+    assert upgraded["version"] == 2
+    assert upgraded["accounts"][OTHER]["generation"] is None
+    assert (await service.status(OTHER))["review_required"]
+    with pytest.raises(RecoveryGuardReviewRequired):
+        await reject(service, OTHER)
+
+
+async def test_missing_witness_does_not_reclassify_pending_or_finish_old_attempt(tmp_path):
+    service = await guard(tmp_path)
+    with pytest.raises(RecoveryGuardReviewRequired):
+        async with service.attempt(IDENTITY) as attempt:
+            await attempt.before_dispatch()
+            before = (service.root / "ledger.json").read_bytes()
+            shutil.rmtree(service.witness_root)
+            status = await service.status(IDENTITY)
+            assert status["pending"] == 1 and status["uncertain"] == 0
+            assert status["review_required"]
+            assert (service.root / "ledger.json").read_bytes() == before
+            await attempt.verified()
+    assert not attempt.finished and attempt.outcome is None
+    assert (service.root / "ledger.json").read_bytes() == before
+    assert not service.witness_root.exists()
+
+
+@pytest.mark.parametrize("fault", ["write", "replace", "file_fsync", "directory_fsync"])
+async def test_witness_commit_failure_never_permits_dispatch(tmp_path, monkeypatch, fault):
+    service = await guard(tmp_path)
+    original = service._write_witness
+
+    def fail_witness(identity, entry):
+        with monkeypatch.context() as patch:
+            if fault == "write":
+                patch.setattr(json, "dump", lambda *a, **k: (_ for _ in ()).throw(OSError()))
+            elif fault == "replace":
+                patch.setattr(os, "replace", lambda *a, **k: (_ for _ in ()).throw(OSError()))
+            else:
+                original_fsync = os.fsync
+                count = 0
+
+                def fsync(descriptor):
+                    nonlocal count
+                    count += 1
+                    if count == (1 if fault == "file_fsync" else 2):
+                        raise OSError("Synthetic witness durability failure")
+                    return original_fsync(descriptor)
+
+                patch.setattr(os, "fsync", fsync)
+            return original(identity, entry)
+
+    monkeypatch.setattr(service, "_write_witness", fail_witness)
+    with pytest.raises(RecoveryGuardStorageError):
+        async with service.attempt(IDENTITY) as attempt:
+            await attempt.before_dispatch()
+            pytest.fail("Uncommitted witness dispatched proof")
+    status = await RecoveryGuard(service.root).status(IDENTITY)
+    assert not attempt.ready
+    if fault == "directory_fsync":
+        # The replace can succeed before the directory fsync fails. Cleanup
+        # still knows the callback did not return and durably abandons the
+        # undispatched reservation; no allowance was spent or restored.
+        assert status["unresolved"] == 0
+    else:
+        assert status["review_required"] and status["pending"] == 1
+    assert not list(service.witness_root.glob(".witness-*"))
+
+
+@pytest.mark.parametrize("fault", ["file_symlink", "parent_symlink", "hardlink", "permissions", "root_permissions", "corrupt", "schema"])
+async def test_unsafe_witness_never_allows_unlock_or_changes_ledger(tmp_path, fault):
+    service = await guard(tmp_path)
+    witness = service.witness_root / f"account-{IDENTITY}.json"
+    if fault == "file_symlink":
+        target = tmp_path / "saved-witness"
+        witness.rename(target)
+        witness.symlink_to(target)
+    elif fault == "parent_symlink":
+        target = tmp_path / "saved-continuity"
+        service.witness_root.rename(target)
+        service.witness_root.symlink_to(target, target_is_directory=True)
+    elif fault == "hardlink":
+        os.link(witness, tmp_path / "linked-witness")
+    elif fault == "permissions":
+        witness.chmod(0o644)
+    elif fault == "root_permissions":
+        service.witness_root.chmod(0o755)
+    elif fault == "corrupt":
+        witness.write_bytes(b"invalid synthetic json")
+    else:
+        witness.write_text('{"version":true,"digest":"' + "a" * 64 + '"}')
+    before = (service.root / "ledger.json").read_bytes()
+    with pytest.raises(RecoveryGuardStorageError):
+        async with service.attempt(IDENTITY):
+            pytest.fail("Unsafe witness entered SDK unlock")
+    assert (service.root / "ledger.json").read_bytes() == before
+
+
+async def test_witness_from_another_identity_cannot_authorize_account(tmp_path):
+    service = await guard(tmp_path)
+    destination = service.witness_root / f"account-{IDENTITY}.json"
+    source = service.witness_root / f"account-{OTHER}.json"
+    destination.write_bytes(source.read_bytes())
+    assert (await service.status(IDENTITY))["review_required"]
+    assert not (await service.status(OTHER))["review_required"]
+
+
+def test_witness_must_be_outside_ledger_tree(tmp_path):
+    for witness in (tmp_path / "guard", tmp_path / "guard/cache", tmp_path):
+        with pytest.raises(ValueError):
+            RecoveryGuard(tmp_path / "guard", witness)
+
+
+@pytest.mark.parametrize("version", [1, 2])
+async def test_zero_account_ledger_does_not_reuse_retained_witness(tmp_path, version):
+    service = await guard(tmp_path)
+    ledger = service.root / "ledger.json"
+    ledger.write_text(json.dumps({"version": version, "accounts": {}}))
+    before = ledger.read_bytes()
+    status = await service.status(IDENTITY)
+    assert status["review_required"] and status["blocked"]
+    with pytest.raises(RecoveryGuardReviewRequired):
+        await reject(service)
+    assert ledger.read_bytes() == before
+    await service.reset(IDENTITY)
+    assert not (await service.status(IDENTITY))["review_required"]
+    assert (await service.status(OTHER))["review_required"]
+
+
+async def test_maximum_counter_crash_conversion_is_bounded_and_stays_blocked(tmp_path):
+    service = await guard(tmp_path)
+    ledger = service.root / "ledger.json"
+    payload = json.loads(ledger.read_bytes())
+    entry = payload["accounts"][IDENTITY]
+    entry["uncertain"] = 2**63 - 1
+    entry["pending"] = "c" * 32
+    # A synthetic, coherently paired maximum-count record checks arithmetic;
+    # it does not bypass continuity enrollment through the public API.
+    ledger.write_text(json.dumps(payload))
+    service._write_witness(IDENTITY, entry)
+    status = await service.status(IDENTITY)
+    assert status["uncertain"] == 2**63 - 1
+    assert status["pending"] == 0
+    assert status["blocked"] and not status["review_required"]
+    persisted = json.loads(ledger.read_bytes())["accounts"][IDENTITY]
+    assert persisted["uncertain"] == 2**63 - 1
+    assert (await RecoveryGuard(service.root).status(IDENTITY)) == status
+    await service.reset(IDENTITY)
+    assert (await service.status(IDENTITY))["unresolved"] == 0
