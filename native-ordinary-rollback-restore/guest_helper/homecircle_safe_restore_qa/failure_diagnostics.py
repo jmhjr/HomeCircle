@@ -4,7 +4,7 @@ from pathlib import Path
 import re
 
 ERROR_TYPES=frozenset(('Refused','ValueError','TypeError','KeyError','AttributeError',
-    'NameError','RuntimeError','ImportError','ModuleNotFoundError','AssertionError',
+    'NameError','JSONDecodeError','RuntimeError','ImportError','ModuleNotFoundError','AssertionError',
     'OSError','TimeoutError','StartupBoundaryRefused','IdentityError','VaultError',
     'RecoveryGuardBlocked','RecoveryGuardReviewRequired','unrecognized'))
 

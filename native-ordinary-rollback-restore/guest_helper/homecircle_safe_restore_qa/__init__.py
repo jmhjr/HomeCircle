@@ -727,8 +727,9 @@ class Rehearsal:
                         if not await self.hass.async_add_executor_job(consume_closed_boot_grant, self.control, boot_request):
                             await asyncio.sleep(0.5)
                             continue
-                        assert_enabled(self.hass, entry)
                         self.closed_boot_grant_verified = True
+                        inputs = await reload_granted_inputs(self.hass, self.directory, boot_request, phase)
+                        assert_enabled(self.hass, entry)
                         if generation == "before_restore" and name == "baseline_enabled" and baseline_path.exists():
                             entry = current_entry(self.hass)
                             baseline = await self.hass.async_add_executor_job(read_json, baseline_path)
@@ -771,7 +772,6 @@ class Rehearsal:
                         await self.run(phase, inputs)
             except Exception as error:
                 if (boot_request is not None and boot_request.get('purpose') == 'automatic_restore'
-                        and getattr(self, 'closed_boot_grant_verified', False) is True
                         and boot_request.get('process') == process()):
                     details = await self.hass.async_add_executor_job(
                         failure_diagnostics.project, error, Path(__file__).parent, Refused)
@@ -782,10 +782,27 @@ class Rehearsal:
                         {'schema':1,'phase':'automatic_restored_enabled','outcome':'failed',
                          'token':boot_request['token'],'generation':boot_request['generation'],
                          'branch_commit':boot_request['branch_commit'],'process':process(),
+                         'closed_boot_grant_verified':getattr(self,'closed_boot_grant_verified',False) is True,
                          'stage':stage,**details})
                 _LOGGER.error("Disposable saved-storage control refused (%s)", type(error).__name__)
                 return
             await asyncio.sleep(0.5)
+
+
+async def reload_granted_inputs(hass, directory, request, phase):
+    # The host commits complete inputs before publishing its grant. Re-read after
+    # consuming that grant so no earlier local snapshot can omit external proof.
+    value = await hass.async_add_executor_job(inputs_at, directory)
+    current_phase = await hass.async_add_executor_job(read_json, directory / CONTROL / 'phase.json')
+    check(current_phase == phase and request['process'] == process(), 'qa_granted_control_changed')
+    check(all(value.get(key) == request[key] for key in
+        ('source_commit','candidate_sha256','branch_commit','generation')), 'qa_granted_inputs_changed')
+    check(phase['token'] == request['token'] and phase['phase'] == request['phase']
+        and phase['generation'] == request['generation'] and phase['branch_commit'] == request['branch_commit'],
+        'qa_granted_phase_changed')
+    if request['purpose'] == 'automatic_restore':
+        check(type(value.get('external_proof')) is dict, 'qa_granted_external_proof_missing')
+    return value
 
 
 def closed_boot_request(phase, inputs, automatic):

@@ -22,6 +22,7 @@ import time
 import zipfile
 
 import legacy_controller as base
+import control_publication
 from legacy_controller import (CORE, HAOS_XZ_SHA, GUEST_ROOT, CONTROL, RESULTS,
     Refused, canonical, check_archive, digest_value, guest_staging_owner,
     project_default_receipt, project_recorder, require, sha, write_json,
@@ -171,6 +172,22 @@ class Controller(base.Controller):
         for name,digest in self.provenance['helper_files_sha256'].items():
             require(sha(self.guest_read(self.config_path+'/custom_components/'+name))==digest,'ordinary_environment_helper_bytes')
         self.direct_installs=1
+
+    def publish_inputs(self):
+        self.assert_network_closed()
+        control=self.config_path+'/'+CONTROL
+        temporary_name='.inputs-atomic-'+secrets.token_hex(16)
+        temporary=control+'/'+temporary_name
+        self.guest('test ! -e '+temporary+' && test ! -L '+temporary,15)
+        raw=canonical(self.inputs)
+        self.guest_write(temporary,raw)
+        self.guest('chmod 600 '+temporary,15)
+        program=(ROOT/'control_publication.py').read_bytes()
+        self.guest_write(GUEST_ROOT+'/publish-inputs.py',program)
+        require(self.guest_read(GUEST_ROOT+'/publish-inputs.py')==program,'ordinary_atomic_input_program_binding')
+        result=json.loads(self.guest('/usr/bin/docker exec -i hassio_supervisor python3 -B - '
+            +temporary_name+' '+sha(raw)+' < '+GUEST_ROOT+'/publish-inputs.py',30))
+        require(result==control_publication.RESULT,'ordinary_atomic_input_publication_refused')
 
     def boot_request_ready(self, previous, maximum=660):
         limit=time.monotonic()+self.remaining(maximum)
@@ -386,8 +403,7 @@ class Controller(base.Controller):
         record['cached_same_core_image_verified_after'] = True
         self.verify_candidate()
         self.inputs.update(external_proof=self.external_proof,backup_guard_sha256=self.backup_guard_sha256,latest_guard_sha256=self.latest_guard_sha256,expected_joins_sha256=self.joins_sha256)
-        self.guest_write(self.config_path+'/'+CONTROL+'/inputs.json',canonical(self.inputs))
-        self.guest('chmod 600 '+self.config_path+'/'+CONTROL+'/inputs.json',15)
+        self.publish_inputs()
         self.grant_closed_boot('automatic_restored_enabled')
         record['closed_boot_grant_written'] = True
         project_default_receipt(record,complete=True)
@@ -415,7 +431,9 @@ class Controller(base.Controller):
                 and all(type(v) is int and v>0 for v in process.values())
                 and process['start_ticks']>self.phases[-1]['process']['start_ticks'],'ordinary_first_restored_process_identity')
             if value.get('outcome')!='passed':
-                public={**guest_failure_projection(value,'automatic_restored_enabled'),'process':dict(process)}
+                require(type(value.get('closed_boot_grant_verified')) is bool,'ordinary_failed_automatic_grant_type')
+                public={**guest_failure_projection(value,'automatic_restored_enabled'),'process':dict(process),
+                    'closed_boot_grant_verified':value['closed_boot_grant_verified']}
                 self.guest_failures.append(public)
                 write_json(self.public/'automatic_restored_enabled.json',public)
                 raise Refused('ordinary_guest_automatic_phase_failed')
@@ -499,7 +517,7 @@ class Controller(base.Controller):
             backup_guard_sha256=self.backup_guard_sha256,latest_guard_sha256=self.latest_guard_sha256,
             expected_joins_sha256=self.joins_sha256)
         control=self.config_path+'/'+CONTROL
-        self.guest_write(control+'/inputs.json',canonical(self.inputs))
+        self.publish_inputs()
         self.guest_write(control+'/storage-expected-private.json',canonical(self.storage_proof))
         self.guest('chmod 600 '+control+'/inputs.json '+control+'/storage-expected-private.json; rm -f '
             +control+'/phase.json '+control+'/job-nonce.json; rm -f '+self.config_path+'/'+RESULTS+'/*.json',30)

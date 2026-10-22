@@ -300,7 +300,7 @@ class FailureDiagnosticContracts(unittest.TestCase):
             process={'pid':123,'start_ticks':3}
             receipt={'schema':1,'token':control.phase_token,'phase':'automatic_restored_enabled',
                 'generation':'before_restore','branch_commit':'b'*40,'process':process,
-                'outcome':'failed','stage':'normal_dependencies','failure_type':'ValueError',
+                'outcome':'failed','closed_boot_grant_verified':False,'stage':'normal_dependencies','failure_type':'ValueError',
                 'failure_code':'qa_dependency_graph_version','frames':[],
                 'dependency_metadata':{name:{'available':False,'version':None,'constraints_satisfied':False}
                     for name in c.base.CLOSURE}}
@@ -312,8 +312,147 @@ class FailureDiagnosticContracts(unittest.TestCase):
             self.assertEqual(calls,[1])
             public=json.loads((Path(folder)/'automatic_restored_enabled.json').read_bytes())
             self.assertEqual(public['process'],process)
+            self.assertIs(public['closed_boot_grant_verified'],False)
             self.assertEqual(public['failure_code'],'qa_dependency_graph_version')
             self.assertEqual(control.guest_failures,[public])
+
+
+class AtomicHandshakeContracts(unittest.TestCase):
+    def publication_files(self,folder):
+        import json,hashlib
+        root=Path(folder).resolve()
+        old=json.dumps({'schema':1,'proof':'old'},sort_keys=True).encode()
+        new=json.dumps({'schema':1,'proof':'new-complete'},sort_keys=True).encode()
+        target=root/'inputs.json';target.write_bytes(old);target.chmod(0o600)
+        name='.inputs-atomic-'+'a'*32
+        temporary=root/name;temporary.write_bytes(new);temporary.chmod(0o600)
+        return root,target,temporary,old,new,hashlib.sha256(new).hexdigest()
+
+    def test_old_guest_writer_exposes_a_truncate_gap(self):
+        import base64,json,tempfile
+        with tempfile.TemporaryDirectory() as folder:
+            path=Path(folder)/'inputs.json';path.write_bytes(b'{"schema":1,"proof":"old"}');path.chmod(0o600)
+            gap=[];handles={}
+            class QGA:
+                def call(self,name,args):
+                    if name=='guest-file-open':
+                        handles[1]=path.open('wb')
+                        try:json.loads(path.read_bytes())
+                        except json.JSONDecodeError:gap.append(True)
+                        return 1
+                    if name=='guest-file-write':
+                        raw=base64.b64decode(args['buf-b64']);handles[1].write(raw);return {'count':len(raw)}
+                    if name=='guest-file-flush':handles[1].flush();return {}
+                    if name=='guest-file-close':handles[1].close();return {}
+                    raise AssertionError('unexpected_qga_call')
+            control=object.__new__(c.Controller);control.qga=QGA();control.remaining=lambda maximum:1
+            c.base.Controller.guest_write(control,str(path),b'{"schema":1,"proof":"new"}')
+            self.assertEqual(gap,[True])
+            self.assertEqual(json.loads(path.read_bytes())['proof'],'new')
+
+    def test_atomic_publication_preserves_complete_old_and_new_json(self):
+        import json,tempfile
+        with tempfile.TemporaryDirectory() as folder:
+            root,target,temporary,old,new,digest=self.publication_files(folder)
+            with target.open('rb') as reader:
+                self.assertEqual(c.control_publication.publish(root,temporary.name,digest),c.control_publication.RESULT)
+                self.assertEqual(reader.read(),old)
+            self.assertEqual(target.read_bytes(),new)
+            self.assertEqual(json.loads(target.read_bytes())['proof'],'new-complete')
+            self.assertFalse(temporary.exists())
+
+    def test_atomic_publication_refuses_wrong_hash_without_replacement(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as folder:
+            root,target,temporary,old,_new,_digest=self.publication_files(folder)
+            with self.assertRaises(ValueError):c.control_publication.publish(root,temporary.name,'0'*64)
+            self.assertEqual(target.read_bytes(),old)
+            self.assertTrue(temporary.exists())
+
+    def test_post_grant_reload_uses_new_snapshot_and_checks_identity(self):
+        source=ast.parse((ROOT/'guest_helper/homecircle_safe_restore_qa/__init__.py').read_bytes())
+        fn=next(n for n in source.body if isinstance(n,ast.AsyncFunctionDef) and n.name=='reload_granted_inputs')
+        process={'pid':123,'start_ticks':4}
+        old={'source_commit':'a'*40,'candidate_sha256':'c'*64,'branch_commit':'b'*40,'generation':'before_restore'}
+        new={**old,'external_proof':{'postbackup_window':{'rows':6}}}
+        phase={'schema':1,'token':'d'*32,'phase':'baseline_enabled','generation':'before_restore','branch_commit':'b'*40}
+        request={**old,**{k:phase[k] for k in ('token','phase')},'purpose':'automatic_restore','process':process}
+        class Hass:
+            async def async_add_executor_job(self,function,*args):return function(*args)
+        def check(ok,label):
+            if not ok:raise ValueError(label)
+        values={'inputs_at':lambda directory:new,'read_json':lambda path:dict(phase),
+            'CONTROL':'control','process':lambda:dict(process),'check':check}
+        exec(compile(ast.Module(body=[fn],type_ignores=[]),'<bound_reload_after_grant>','exec'),values)
+        actual=asyncio.run(values['reload_granted_inputs'](Hass(),Path('/synthetic'),request,phase))
+        self.assertIs(actual,new)
+        self.assertNotIn('external_proof',old)
+        new['branch_commit']='e'*40
+        with self.assertRaisesRegex(ValueError,'qa_granted_inputs_changed'):
+            asyncio.run(values['reload_granted_inputs'](Hass(),Path('/synthetic'),request,phase))
+
+    def test_observer_projects_malformed_pregrant_and_stops(self):
+        import json,os,re,secrets,stat,tempfile
+        source_path=ROOT/'guest_helper/homecircle_safe_restore_qa/__init__.py'
+        tree=ast.parse(source_path.read_bytes())
+        cls=next(n for n in tree.body if isinstance(n,ast.ClassDef) and n.name=='Rehearsal')
+        poll=next(n for n in cls.body if isinstance(n,ast.AsyncFunctionDef) and n.name=='poll')
+        functions=[n for n in tree.body if isinstance(n,ast.FunctionDef)
+            and n.name in {'closed_boot_request','consume_closed_boot_grant'}]
+        with tempfile.TemporaryDirectory() as folder:
+            directory=Path(folder).resolve();control=directory/c.CONTROL;control.mkdir(mode=0o700)
+            phase={'schema':1,'token':'d'*32,'phase':'baseline_enabled',
+                'generation':'before_restore','branch_commit':'b'*40}
+            inputs={'source_commit':'a'*40,'candidate_sha256':c.CANDIDATE_SHA,
+                'branch_commit':'b'*40,'generation':'before_restore'}
+            process={'pid':123,'start_ticks':4}
+            (control/'phase.json').write_text(json.dumps(phase))
+            (control/'baseline.json').write_text('{}')
+            grant=control/'closed-boot-grant.json';grant.write_bytes(b'{');grant.chmod(0o600)
+            def write(path,value):path.write_text(json.dumps(value))
+            def check(ok,label):
+                if not ok:raise c.Refused(label)
+            class Hass:
+                is_running=True
+                async def async_add_executor_job(self,function,*args):return function(*args)
+            values={'inputs_at':lambda directory:dict(inputs),'read_json':lambda path:json.loads(path.read_bytes()),
+                'write_json':write,'CONTROL':c.CONTROL,'PHASES':c.PHASES,
+                'CANDIDATE':c.CANDIDATE_SHA,'process':lambda:dict(process),'current_entry':lambda hass:object(),
+                'assert_enabled':lambda hass,entry:None,'check':check,'Refused':c.Refused,
+                'failure_diagnostics':c._DIAGNOSTICS,'Path':Path,'__file__':str(source_path),
+                '_LOGGER':types.SimpleNamespace(error=lambda *args:None),'asyncio':asyncio,
+                'json':json,'os':os,'re':re,'secrets':secrets,'stat':stat}
+            exec(compile(ast.Module(body=[*functions,poll],type_ignores=[]),str(source_path),'exec'),values)
+            observer=types.SimpleNamespace(hass=Hass(),directory=directory,control=control)
+            asyncio.run(values['poll'](observer))
+            request=json.loads((control/'boot-request.json').read_bytes())
+            failure=json.loads((control/'restore-barrier.json').read_bytes())
+            self.assertEqual(request['purpose'],'automatic_restore')
+            self.assertEqual(failure['outcome'],'failed')
+            self.assertIs(failure['closed_boot_grant_verified'],False)
+            self.assertEqual(failure['process'],process)
+            self.assertEqual(failure['failure_type'],'JSONDecodeError')
+            self.assertIsNone(failure['failure_code'])
+            self.assertEqual(failure['stage'],'control')
+            self.assertNotIn('message',failure)
+            self.assertTrue(grant.exists())
+
+    def test_pregrant_automatic_failure_rejects_stale_process(self):
+        import json,tempfile
+        with tempfile.TemporaryDirectory() as folder:
+            control=c.Controller(types.SimpleNamespace(branch_commit='b'*40,output=Path(folder)/'unused'))
+            control.public=Path(folder);control.config_path='/synthetic'
+            control.phases=[{'process':{'start_ticks':1}},{'process':{'start_ticks':2}}]
+            control.network_boundary={'link_closed':True};control.remaining=lambda maximum:1
+            receipt={'schema':1,'token':control.phase_token,'phase':'automatic_restored_enabled',
+                'generation':'before_restore','branch_commit':'b'*40,'process':{'pid':123,'start_ticks':2},
+                'outcome':'failed','closed_boot_grant_verified':False,'stage':'control',
+                'failure_type':'JSONDecodeError','failure_code':None,'frames':[]}
+            control.guest_read=lambda path:json.dumps(receipt).encode()
+            with self.assertRaisesRegex(c.Refused,'ordinary_first_restored_process_identity'):
+                control.restored_boot_barrier()
+            self.assertFalse((Path(folder)/'automatic_restored_enabled.json').exists())
+            self.assertEqual(control.guest_failures,[])
 
 
 if __name__=='__main__':unittest.main()
