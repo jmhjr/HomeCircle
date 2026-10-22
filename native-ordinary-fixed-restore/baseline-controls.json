@@ -1,0 +1,56 @@
+{
+  "controller_methods": {
+    "actual_core_image": "ebd720bfd0914bfb9ea7b2a22fcf08224f15a3c20d0c6c09ff76cc8775a224a7",
+    "assert_network_closed": "10612cbd44707fa2a8fe15191f4623696f631a9585a429331775c798cd2235c8",
+    "backup_cli_capabilities": "3dcb1d3d3458597ae6dd885666c0c61fc45e9c070271763e752c7179023846bd",
+    "backup_operation": "7e3ffcf55575031455d130e5659d006ae4ad1404facbaca3311a49085429953b",
+    "capture_backup_failure": "219311bda8b5182a8b4359569741a447c85f858dc0fe8964306fc16dc6ceee74",
+    "cleanup_vm": "2cf4b100902fe9305833cce08c0c67cf07014efdd41e71d5eda361629ce0b06d",
+    "command": "691767a132d5a48abc33777807eb464b00e42a067a0a5b086c7f67f8f4130c3e",
+    "connectivity_probe": "b737141c09df6761a5eef813c13da9443c58923488a5eb1759a2864366d28760",
+    "core_action": "f7ed3054ad5f0f624927da889bba4b4437007fb2c4a064d0fbc23e26ad538452",
+    "core_container_state": "413fa4994c0c88b45deba942ae2e0829d28df51f7281a5d1d36acefe379039ac",
+    "core_running": "8ce2a44a0b5389e6a5c44bb3c0e92512fd5315a72bc5a4ef28e73bc06ca4a7ea",
+    "disconnect_external_network": "afaaa9c541f9efad03c09a3225d5622aa9962dd837ab2554143532aca91c57e3",
+    "download_haos": "75365ba37117727f6755da7eeb7ac104ef65147032899f159e33839b78d1014d",
+    "guard_fingerprint": "25d41f957bb59ef94dcf6a3218d05865ef62b1297a26192fedb5c669d2e3e621",
+    "guest": "e876a68ec30ed28acf92640592ded3bde9d07b65192d460b2978073927863a46",
+    "guest_read": "ddb3c1c2378dbb6dc3a5b9d51210a3314ba8a780d78ed041ff86e1b3d5b7f146",
+    "guest_write": "8805e5036b604129da87de7c37680620f050e6e371e48e2fce6528c661451375",
+    "managed_core": "92f99d99b5171954bce7b2499f2b33517b01a04021020d604726f9c2196172ec",
+    "management_ready": "586077c8dda3c9c9d562c5691243a9c15cb00968ab33cf4611f1cbc00098e042",
+    "observe_dependencies": "d5fc989971d9d169d0c7222b2f79c18a5cc60750eb6e25e914798336e9d3d037",
+    "observe_initial_supervisor": "5617d6fd005585e2717479b7adca4d3b7266b89ab38bde549edb9fa82fc648ee",
+    "real_container_version": "49ff20bf769c4ac576cb80541c1807106c94ac58f6a2e72b7681b26fae853db4",
+    "remaining": "de375953daffbaa813d9db492623bf0f52a2ede6c939e8ac0d316ef86372b608",
+    "reopen_after_repaired_disabled": "1815c1b7ea644f579749d020b2e76c5b98ed5255f094e69f8d410e266a7b93b9",
+    "run_guard_transfer": "a6da94ceda648d19aef9117023c255c85c2da468ef16f79556ff04808a0aac91",
+    "start_core": "eb6af929c0da482152bf58ab25071eafd01526a8c85ce63b686cb69e8f93ff24",
+    "start_vm": "11750ccd0bba3b9311c6347f19d97a1f3e91d64b4f3218ca5dfc9bf34c8b5d5d",
+    "stop_core": "5d8ee48485854e763229802230d108b0fdbeb90fe221d2ab60f230cf5672d023",
+    "verify_candidate": "bedff350158b925d586c78afa420cde748ab61f8b97daf47912e70cb356328fa",
+    "verify_cli": "47f77a3f1e2adab66dc7a296cbab1bffce2e957a08c4719046184e8b85a7b7c6",
+    "wait_backup_job": "cfe2f4ec5fb35fc5433a87ad8988914dc72674e7dc35218c7dc7a59e06af65f0",
+    "wait_initial_managed": "f2539fa448a057baa13ac29926d1f22b66d43a96efaab4b195f58a676bac3ad3"
+  },
+  "infrastructure_files": {
+    "guard_context.py": {
+      "bytes": 10708,
+      "sha256": "7d69de4b10ae725795c42a4089f61cb972a3d48c5f6032680eea26c935ef5922"
+    },
+    "guard_transfer.py": {
+      "bytes": 24749,
+      "sha256": "590030e0c7eff81457e56c4cfc7b0d75ad0c079be3ede6e6da083d8fb4e95d84"
+    },
+    "reset_fresh_config.py": {
+      "bytes": 3814,
+      "sha256": "df600d5695de2d09feabcded9e59d81dcc8149be2082b19b7931e0f11f12aa3c"
+    },
+    "run_host.sh": {
+      "bytes": 656,
+      "sha256": "19e047f20d970b1728b790fba65354335b6a957a74362f457379d40e2f55ac1f"
+    }
+  },
+  "prior_qa_commit": "2d7fcbb40b021d84a21de7457222ef8f7191197d",
+  "schema": 1
+}

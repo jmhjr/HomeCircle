@@ -1,0 +1,17 @@
+{
+  "all_nonfrontend_members_bound_to_canonical_git": true,
+  "changed_members": [
+    "__init__.py",
+    "activity.py"
+  ],
+  "existing_two_frontend_build_assets_reused": true,
+  "files": 113,
+  "new_frontend_build_claimed": false,
+  "new_package_sha256": "f181e6300f15d8977817a552db90d35caf0edc869067ebeea815c7be1df0248e",
+  "old_package_sha256": "98a754ff2025761c2eb63d6422c9b17b76e2bdef2965c96fe353ab6c2c21fb20",
+  "release_published": false,
+  "root_license_mapped_explicitly": true,
+  "schema": 1,
+  "source_commit": "96a4175f18782ef27d4c05c656f6759ffe132088",
+  "unchanged_members": 111
+}
