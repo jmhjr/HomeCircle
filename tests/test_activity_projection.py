@@ -131,12 +131,17 @@ async def test_setup_projects_new_item_before_loading_and_observing_activity(has
     ):
         assert await async_setup_entry(hass, entry)
     runtime = entry.runtime_data
-    assert set(runtime.activity.members) == {PERSON, item.entity_id}
-    assert runtime.activity.fingerprint == original.fingerprint
-    assert runtime.activity.events[PERSON][:len(saved["events"][PERSON])] == saved["events"][PERSON]
-    assert [event["kind"] for event in runtime.activity.events[item.entity_id]] == [
-        "started", "presence", "source", "freshness",
-    ]
-    assert runtime.activity.arrivals[item.entity_id]["place"] == HOME
-    assert entry.data == config
-    await runtime.activity.close()
+    try:
+        assert set(runtime.activity.members) == {PERSON, item.entity_id}
+        assert runtime.activity.fingerprint == original.fingerprint
+        assert runtime.activity.events[PERSON][:len(saved["events"][PERSON])] == saved["events"][PERSON]
+        assert [event["kind"] for event in runtime.activity.events[item.entity_id]] == [
+            "started", "presence", "source", "freshness",
+        ]
+        assert runtime.activity.arrivals[item.entity_id]["place"] == HOME
+        assert entry.data == config
+    finally:
+        # Direct setup bypasses the framework that normally runs these callbacks.
+        await entry._async_process_on_unload(hass)
+        await runtime.activity.close()
+        await runtime.city_lookup.close()
