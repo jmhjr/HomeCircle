@@ -1,0 +1,32 @@
+{
+  "files": {
+    "INPUTS.json": {
+      "bytes": 4698,
+      "sha256": "c40052fe14d65a7c68d9ed7ea546d8ffdf991b9c8d3491de0ac6061f08575fb3"
+    },
+    "README.md": {
+      "bytes": 3956,
+      "sha256": "70fa127e4eadaa1617ae4cf78169d6c9288c91ecde5aec57ed0f5414ff814d72"
+    },
+    "SOURCE-INVENTORY.json": {
+      "bytes": 56679,
+      "sha256": "915f96349ff66e272843bab0c4a57c4698da352fea8a3de372588549ad590652"
+    },
+    "independent_ordinary.py": {
+      "bytes": 44185,
+      "sha256": "1435f4c5c3fc6c968ef0a947d2ba5d3a84639498fda8816f04d5f180f1bcce17"
+    },
+    "test_independent_ordinary.py": {
+      "bytes": 15070,
+      "sha256": "fa0199700f2575ea2c83dc8de317467becac0c8838ec7d8506af3f9275fcbcdb"
+    },
+    "test_person_activity.py": {
+      "bytes": 4868,
+      "sha256": "2f96cab4a4fadcae31962969c703191092ab6c3df3144ff90eced1eb58ff6534"
+    }
+  },
+  "head_sha": "4b464723fe63bafc62f92e17e538e566278ee1c0",
+  "immutable": true,
+  "run_id": 39777059627,
+  "schema": 1
+}

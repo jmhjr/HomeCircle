@@ -1,0 +1,154 @@
+{
+  "activity_cohorts": {
+    "B": {
+      "events": 25,
+      "presence_transitions": 3,
+      "sha256": "aedfabac30abc7535d8e55fd13438625d2b1bb7801da12fa81396c5d5a634aa0"
+    },
+    "M": {
+      "events": 28,
+      "presence_transitions": 3,
+      "sha256": "70dcbabcb7204699e12120e78f53ae3cb1f79b1a138fa5e0da3325a04f7041b0"
+    },
+    "R": {
+      "events": 25,
+      "presence_transitions": 3,
+      "sha256": "078d5742425ca19f62d445ff334eff28fa8bdb8a428af1bc1b3ef8dbff25ab76"
+    }
+  },
+  "all_nine_job_steps_successful": true,
+  "artifact_download_bytes": 12091,
+  "artifact_id": 12426130015,
+  "artifact_zip_sha256": "f7d401662e78a7fd39881ec91c5d181a7090a8a09244bcd4fed293f2998b86da",
+  "backup_restore_jobs_completed_without_errors": true,
+  "baseline_and_new_restored_activity_exact_prefixes_survive_restart": true,
+  "candidate_zip_sha256": "98a754ff2025761c2eb63d6422c9b17b76e2bdef2965c96fe353ab6c2c21fb20",
+  "cleanup": {
+    "cleanup_failed": false,
+    "private_workspace_removed": true,
+    "qemu_stopped": true
+  },
+  "configured_active_and_selected_sources_distinguished": true,
+  "configured_person_tracker_links": 2,
+  "consumer_protocol_unchanged_after_run": true,
+  "direct_activity_appends": 0,
+  "direct_person_state_writes": 0,
+  "docs_source_commit": "08fd5cc65fa93318b211106e013b5b92f49d7f6a",
+  "explicit_selected_homecircle_tracker_links": 1,
+  "fixture_code_imported_or_executed_for_artifact_review": false,
+  "fixture_contracts_zero_skip_passed": 45,
+  "frozen_collector_unchanged": true,
+  "frozen_input_files_verified": 30,
+  "full_encrypted_cloud_backup_qualified": false,
+  "full_vm_snapshot_rollback_qualified": false,
+  "git_network_vm_actions": 0,
+  "global_helper_entity_absence_independently_claimed": false,
+  "guard_counters": [
+    2,
+    3,
+    2,
+    2
+  ],
+  "head_sha": "4b464723fe63bafc62f92e17e538e566278ee1c0",
+  "independent_contracts_pre_run_passed": 17,
+  "independent_review_sha256": "02fd0b81482dc729824b298f4f82be31607e02b3a2fc6f3a935a41db6a509f86",
+  "job_id": 119818570910,
+  "manual_activity_store_writes": 0,
+  "manual_guard_exports": 0,
+  "manual_guard_imports": 0,
+  "mutation_activity_absent_after_restore": true,
+  "native_trial_repeated": false,
+  "new_recorder_postrestore_rows_preserved_across_restart": 6,
+  "normal_delayed_store_and_archive_inclusion_verified": true,
+  "normal_dependency_closure_per_phase": 24,
+  "ordinary_uv_installs_by_phase": [
+    2,
+    0,
+    2,
+    0
+  ],
+  "original_github_run_job_artifact_records_match": true,
+  "outcome": "passed",
+  "owned_offline_storage_contexts_passed": 4,
+  "owner_acknowledgments_after_restore": 0,
+  "person_association_sha256_by_phase": [
+    "d3e9912eb20a22e45214e4db67af1c91c8305573004e711e5e4be11bc3864215",
+    "8f390aaee6365f8bff900c6626170d2391c2c64beeb5776e8134d28adeb7c067",
+    "d3e9912eb20a22e45214e4db67af1c91c8305573004e711e5e4be11bc3864215",
+    "d3e9912eb20a22e45214e4db67af1c91c8305573004e711e5e4be11bc3864215"
+  ],
+  "postbackup_link_mutation_rolled_back": true,
+  "provider_denial_observations": [
+    {
+      "apple_requests_denied": 2,
+      "life360_requests_denied": 1,
+      "phase": "baseline_enabled",
+      "recovery_before_dispatch_calls": 0,
+      "recovery_command_calls": 0,
+      "recovery_transport_attempts_denied": 0
+    },
+    {
+      "apple_requests_denied": 2,
+      "life360_requests_denied": 1,
+      "phase": "mutated_enabled",
+      "recovery_before_dispatch_calls": 0,
+      "recovery_command_calls": 0,
+      "recovery_transport_attempts_denied": 0
+    },
+    {
+      "apple_requests_denied": 2,
+      "life360_requests_denied": 1,
+      "phase": "automatic_restored_enabled",
+      "recovery_before_dispatch_calls": 0,
+      "recovery_command_calls": 0,
+      "recovery_transport_attempts_denied": 0
+    },
+    {
+      "apple_requests_denied": 2,
+      "life360_requests_denied": 1,
+      "phase": "restart_enabled",
+      "recovery_before_dispatch_calls": 0,
+      "recovery_command_calls": 0,
+      "recovery_transport_attempts_denied": 0
+    }
+  ],
+  "real_editable_ha_persons": 1,
+  "real_provider_authentication_qualified": false,
+  "receipts": {
+    "automatic_restored_enabled.json": {
+      "bytes": 7902,
+      "sha256": "da031a81fac4721b5d726b0ed3652f5d0a67a859ecd5065f2af1fa1f1d3c46a1"
+    },
+    "baseline_enabled.json": {
+      "bytes": 7711,
+      "sha256": "01195fd157c0a170a3e735666da998c159655056777a86fdadf39eca8456d9cf"
+    },
+    "host.json": {
+      "bytes": 13610,
+      "sha256": "98fee12f5906404987d2a7a7f07a326b35c40a2cf7a92abdb07b98de515a89ae"
+    },
+    "mutated_enabled.json": {
+      "bytes": 7776,
+      "sha256": "dfcc7a356a9952cc68a3c00b473b878a65c0df98134a90d319c9375773223873"
+    },
+    "restart_enabled.json": {
+      "bytes": 7890,
+      "sha256": "6e11ebfd34faf4326f137480b86732d587ee57c66644d00f1141ed6d104217cc"
+    }
+  },
+  "recorder_postbackup_mutation_rows_removed": 6,
+  "recorder_prebackup_synthetic_tracker_rows": 6,
+  "restored_guard_review_and_attempt_refusal_before_body": true,
+  "root_metadata_separate_from_artifact": true,
+  "run_attempt": 1,
+  "run_id": 39777059627,
+  "runtime_source_commit": "012a7e88d13970b2683b27d0824dac246c858179",
+  "schema": 1,
+  "scope": "ordinary_unmodified_product_synthetic_person_activity_partial_restore",
+  "stable_release_approval": false,
+  "startup_suffix_observation_kind_order_and_selected_sources_checked": true,
+  "unchanged_product_files": 113,
+  "unselected_active_source_masked_and_excluded": true,
+  "whole_config_fingerprint_reset_during_mutation_respected": true,
+  "workflow_sha256": "299362dea2e4f5b7d474ebbc691780a4685ddc921b41da7aa26a1b412dc3eebd"
+}

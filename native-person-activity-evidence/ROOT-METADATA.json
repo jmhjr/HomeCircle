@@ -1,0 +1,16 @@
+{
+  "artifact_id": 12426130015,
+  "artifact_name": "person-activity-restore-receipts",
+  "artifact_zip_sha256": "f7d401662e78a7fd39881ec91c5d181a7090a8a09244bcd4fed293f2998b86da",
+  "branch": "codex/native-amd64-validation",
+  "conclusion": "success",
+  "event": "push",
+  "github_digest_verified": true,
+  "head_sha": "4b464723fe63bafc62f92e17e538e566278ee1c0",
+  "run_attempt": 1,
+  "run_id": 39777059627,
+  "schema": 1,
+  "status": "completed",
+  "workflow_path": ".github/workflows/native-person-activity-restore.yml",
+  "workflow_sha256": "299362dea2e4f5b7d474ebbc691780a4685ddc921b41da7aa26a1b412dc3eebd"
+}
