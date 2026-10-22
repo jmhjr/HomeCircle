@@ -58,7 +58,7 @@ Infrastructure failures receive one bounded diagnosis before any reasoned retry.
 | 1. Freeze scope and support | Both direct providers selected October 20; platform/support proposal open | Maintainer, agent records | Signed-off feature/provider list, supported target matrix, upgrade baselines, exclusions and `1.0.0` naming |
 | 2. Consolidate release source and blockers | Clean source in draft PR #36; focused fixes independently reviewed; exact-source native suite passed | Agent; maintainer review | Clean canonical release branch, reviewed product-only diff, notices included, recorded defect dispositions |
 | 3. Close provenance and provider decisions | Open; inventory and notice preview complete; depends on stage 1 for final scope | Maintainer/specialist, agent supplies evidence | Exact-source/installed-dependency notices and obligations disposition; source/permission/service/name decisions for shipped scope |
-| 4. Enabled backup/restore safety | Default-conditions disabled and instrumented enabled saved-account trials passed their scoped procedures; ordinary restore and automatic rollback protection remain open | Agent | Ordinary enabled startup after restore, restored data/identities, stale-backup safeguard result and bounded request evidence |
+| 4. Enabled backup/restore safety | Recovery-guard fix and ordinary enabled synthetic partial restore passed; complete Person/activity-history and advertised backup variants remain open | Agent | Four actual enabled phases, automatic review/block after rollback and restart, unchanged product/normal requirements, preservation and independent replay; broader cases still required |
 | 5. Cryptographic and format assurance | Synthetic independent source review complete; external assurance open if Find My ships | Specialist, agent fixes; owner only for controlled acceptance | Review disposition, independent format vectors, authenticated rejection/recovery cases and fixes rechecked |
 | 6. Advertised compatibility | Four native QA-container lifecycle cells and both scoped managed ARM endpoints passed; fresh consumer/RC support gates open | Agent | All advertised cells have candidate dependency/install/start/restart evidence; unsupported cells excluded explicitly |
 | 7. Real-account acceptance | Initial connections and saved-session restart witnessed; remaining lifecycle and stages 3/5 disposition open | Owner, agent guides/records | Controlled setup, discovery, selections, session lifecycle and successful recovery receipts without deliberately wrong passcodes |
@@ -146,25 +146,56 @@ sessions, a manifest-only QA dependency and prepared libraries. Four explicit
 tracker joins, settings/place/picture, encrypted storage and independent Recorder
 checks passed. Startup transport attempts were counted and denied; measured
 recovery seams stayed zero. Older ledger bytes still returned before manual
-external newest-guard repair. The ordinary unmodified/Person/activity-history
-and automatic rollback gates remain open.
+external newest-guard repair. At that pre-fix checkpoint, the ordinary
+unmodified/Person/activity-history and automatic rollback gates remained open.
 
 - [x] Complete and independently replay the exact-source instrumented enabled
   saved-account trial, preserving default Supervisor conditions, original
   artifact and explicit negative automatic-safety disposition. The standalone
   evidence-consumer correction passed 32 contracts and the actual retained run.
 
-- [ ] Rehearse an ordinary Supervisor backup with HomeCircle enabled, restore
-  it, and observe the first automatic startup in a disposable synthetic HAOS
-  instance. Preserve entry/Person/tracker/settings/places/pictures/history and
-  frontend-resource identities; compare Recorder contents where applicable.
+The [recovery-guard correction](RELEASE-1.0-ROLLBACK-PROTECTION.md) records
+per-account cache witnesses and fresh ledger generations. Missing or mismatched
+continuity blocks guarded unlock until explicit account-specific review; normal
+restart preserves a matching witness. Exact-source native run 39715519894 passed
+1,728 backend tests (one existing optional skip), all 50 required functions and
+122 frontend tests. Its 113-file runtime package is identical across source
+`012a7e8` and tests-only isolation revision `57b0aaa`.
+
+The [ordinary restore record](RELEASE-1.0-ORDINARY-RESTORE.md) retains R1–R4
+failures and their bounded fixture investigations. [R5 run 39721983991](https://github.com/jmhjr/HomeCircle/actions/runs/39721983991)
+passed all four enabled phases on amd64 HAOS/Core 2026.10.2/Supervisor 2026.10.3,
+with the unchanged product and manifest, normal requirements and default
+Supervisor conditions. Actual guard counts two, three, two, two did not regain
+allowance: missing witnesses required review and both restored attempts were
+refused before their bodies, including after restart. No manual guard repair,
+post-restore acknowledgment or recovery dispatch occurred. Four explicit tracker
+joins, settings/place/picture, encrypted storage, frontend bytes and Recorder
+rollback/new recording survived. Independent frozen-consumer and peer audits
+accepted the actual five-receipt packet; [public evidence and portable replay](https://github.com/jmhjr/HomeCircle/blob/8f28d5da33b7094355e84d5c8a23ee78463cecf3/native-ordinary-rollback-evidence/INDEX.md)
+retain its bytes. All owned cleanup passed. A joint ledger/cache VM or complete
+configuration snapshot still requires an external monotonic anchor.
+
+- [x] Implement and independently verify the per-account continuity correction
+  and native guard/review-flow regressions. Preserve the old rollback evidence
+  and disclose the joint-snapshot limit; the linked ordinary trial now validates
+  automatic restored review and refusal.
+- [x] Rehearse an ordinary Supervisor partial backup with HomeCircle enabled,
+  restore it and observe its first automatic startup and later restart in the
+  disposable synthetic HAOS instance. Verify ordinary requirements, unchanged
+  product bytes, four explicit tracker joins, settings/place/picture, encrypted
+  storage, served frontend and Recorder continuity with no manual guard repair.
+- [ ] Complete full Home Assistant Person-association and HomeCircle activity-
+  history acceptance. Tracker-only person-kind members and Recorder continuity
+  in the scoped trial do not close these broader cases.
 - [x] Restore an older snapshot after a newer fictional recovery guard exists
   in the explicitly instrumented synthetic fixture. [Run 39708377110](RELEASE-1.0-ENABLED-RESTORE.md)
   bound older ledger restoration and counted denied startup requests without a
   live recovery proof. Account-bound recovery authentication remains separate.
-- [ ] Fix any confirmed startup/recovery/request issue and repeat its cases.
-  Either qualify stronger rollback protection or establish a tested explicit
-  safe-restore procedure and disclose its limits.
+- [x] Fix the confirmed recovery-guard rollback issue and repeat its affected
+  native and ordinary restore cases. The local continuity safeguard now refuses
+  recovery after ordinary rollback; documented explicit review does not infer
+  lost newer counts or reset Apple's allowance.
 - [ ] Validate full-system/add-on/encrypted/cloud backup variants only where
   advertised, or record the exact unsupported variants. Existing prepared
   disabled-entry partial-restore evidence remains separate.
@@ -342,11 +373,11 @@ selection completion and the remaining mobile/display/access cases stay open.
 
 ## Work that can proceed now
 
-The linked records now include scoped initial account/saved-session restart
-evidence, default-conditions disabled restore and the instrumented enabled
-saved-account investigation. Both direct providers remain included. Continue
-ordinary restore safeguards, provider lifecycle/renewal, assurance/provenance
-dispositions, the advertised compatibility gaps and finite field/mobile/display
-acceptance before freezing an RC. Earlier failed attempts and narrower successful
-scopes retain their recorded outcomes. No stable-release gate is silently closed
-by these scoped passes.
+The scoped ordinary enabled partial restore and automatic recovery-guard block
+are complete, alongside the earlier initial account/saved-session restart and
+compatibility evidence. Both direct providers remain included. Continue full
+Person/activity-history and advertised backup-variant acceptance, provider
+lifecycle/renewal, assurance/provenance dispositions, remaining compatibility
+cells, finite field/mobile/display checks and real installed-state upgrade
+acceptance before freezing an RC. Earlier failed attempts and narrower passes
+retain their recorded outcomes. Stable release approval remains open.

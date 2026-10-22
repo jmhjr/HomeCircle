@@ -1,0 +1,453 @@
+{
+  "candidate_inventory_sha256": "370a0036f03bd2b7185afc7a9ddcf7d6545e41cfb6394f00fc699a2973db33aa",
+  "candidate_source": "57b0aaa5c2c4b1a022e547347640173412e840f5",
+  "candidate_zip_bytes": 620228,
+  "candidate_zip_sha256": "98a754ff2025761c2eb63d6422c9b17b76e2bdef2965c96fe353ab6c2c21fb20",
+  "confirmed_old_rollback": {
+    "counter_after_restore_before_manual_repair": 2,
+    "counter_before_backup": 2,
+    "historical_guard_identity_separate_from_sdk_account": true,
+    "newer_counter": 3,
+    "older_ledger_restored": true,
+    "run_id": 39708377110,
+    "run_url": "https://github.com/jmhjr/HomeCircle/actions/runs/39708377110"
+  },
+  "guard_source_sha256": "8e30539172c7f0d9606be8adab77bfefa52d7e5547ed4daca42f1374fb1c0957",
+  "implemented_behavior": {
+    "acknowledgment_resets_apple_server_allowance": false,
+    "acknowledgment_sends_no_proof_or_authentication_request": true,
+    "attempt_entry_and_before_dispatch_check_continuity": true,
+    "digest_binds_authenticated_identity_and_canonical_account_entry": true,
+    "exact_external_monotonic_counter_recovered": false,
+    "explicit_acknowledgment_affects_only_authenticated_account": true,
+    "fresh_or_legacy_unwitnessed_account_requires_explicit_review": true,
+    "joint_ledger_and_witness_rollback_detected": false,
+    "ledger_schema": 2,
+    "missing_or_mismatched_witness_requires_explicit_review": true,
+    "normal_restart_retains_matching_witness": true,
+    "ordinary_archive_exclusion_actual_validation": "passed_R5",
+    "outcome_callbacks_do_not_automatically_reenroll": true,
+    "per_account_generation_changes_on_each_mutation": true,
+    "untrusted_status_does_not_repair_or_reclassify_pending": true,
+    "witness_root": "config/.cache/homecircle_findmy/recovery_guard"
+  },
+  "native_package_validation": {
+    "all_required_functions_passed": true,
+    "architecture": "x86_64",
+    "artifact_id": 12398936727,
+    "artifact_zip_sha256": "f9008e8894a7a0ea2d656254527e0fd18c7504978620f19c1cd520a7f19167fa",
+    "backend_failed": 0,
+    "backend_passed": 1728,
+    "backend_skipped": 1,
+    "built_frontend_outputs_bound_to_native_receipt": 2,
+    "canonical_privacy_flags": 0,
+    "canonical_source_files": 371,
+    "canonical_source_git_blobs_verified": 371,
+    "cleanup_passed": true,
+    "core": "2026.9.4",
+    "existing_optional_skip": "tests.test_findmy_runtime_bootstrap.test_retained_public_apple_dmg_fixed_ranges",
+    "frontend_failed": 0,
+    "frontend_passed": 122,
+    "host_system": "Linux",
+    "native_pre_existing_vault_baseline_cause_verified": true,
+    "native_pre_existing_vault_causal_baseline_cases": 14,
+    "native_pre_existing_vault_causal_baseline_scope": "earlier vault failure/redaction/disconnect fixes; separate from the new rollback regressions",
+    "outcome": "passed",
+    "peer_backend_audit_sha256": "8dfcacc4ff08823381e3e2d5b4eb73404908f96403c88898bb3534a8ca6bf728",
+    "provider_authentication_or_ordinary_restore_qualified_by_package_suite": false,
+    "python": "3.14.6",
+    "reproducible_release_archive": true,
+    "required_backend_functions": 50,
+    "run_head": "72eb5ed641226567c41e712aa078e30763a73378",
+    "run_id": 39715519894,
+    "run_url": "https://github.com/jmhjr/HomeCircle/actions/runs/39715519894",
+    "runtime_members_bound_to_both_source_commits": 111
+  },
+  "ordinary_restore_validation": {
+    "artifact_bytes": 10038,
+    "artifact_id": 12401877265,
+    "artifact_sha256": "d87250aef1cb73fce9d5de778f005ec9e678732044b11c96c0890442469c956a",
+    "automatic_guard_rollback_block_qualified": true,
+    "conclusion": "success",
+    "fixture_causal_replay": {
+      "canonical_source": "012a7e88d13970b2683b27d0824dac246c858179",
+      "correction_scope": "R3 synthetic fixture sorts accessory identifiers before constructing account metadata, joins and settings; the strict runtime equality and raw-storage fingerprints remain.",
+      "exact_deleted_R2_guest_order_proven": false,
+      "forced_reversed_seed_strict_check_passed": false,
+      "members_and_picture_unchanged": true,
+      "negative_controls_rejected": [
+        "display_name",
+        "picture",
+        "item_selection",
+        "member"
+      ],
+      "old_runtime_changed_keys": [
+        "items"
+      ],
+      "outcome": "passed",
+      "product_edits": 0,
+      "projection_idempotent": true,
+      "raw_input_bytes_preserved": true,
+      "receipt_sha256": "a92d371b83444b6c44b991dc91be53d0eb4b91508db7f72088900b4ae4ab7a64",
+      "selected_item_set_unchanged": true,
+      "sorted_seed_strict_check_passed": true
+    },
+    "fixture_handshake_correction": {
+      "actual_R3_native_cause_determined": false,
+      "deadlines_changed": false,
+      "fix_scope": [
+        "same-parent atomic controller input publication",
+        "reload and bind input identity after consumed closed-boot grant",
+        "bounded fixed-field fresh-process pregrant failure receipt"
+      ],
+      "fixture_contracts_passed": 33,
+      "frozen_consumer_contracts_passed": 8,
+      "frozen_consumer_manifest_sha256": "b87fd9aaa6a57943859b7abf762b417ecbf2098c364abfab034b6745b925fa46",
+      "frozen_consumer_sha256": "945fbec82d36ef5372f467ebf523c456eedb1162c9e90090a528b73428caec60",
+      "frozen_inputs_including_workflow": 27,
+      "native_R4_outcome_claimed": false,
+      "peer_three_schedule_replay_outcome": "three_r4_handshake_schedules_passed",
+      "peer_three_schedule_replay_sha256": "77852de937fad81474ea9767d59872f017d04826906808ae7bc36f8ac261d3df",
+      "product_bytes_changed": false,
+      "source_interleaving_outcome": "confirmed_source_interleaving_and_diagnostic_blind_spot",
+      "source_interleaving_replay_sha256": "38c6252de73b3e0a00c04a582d9e355c695485434eb184a84c095488af34538e",
+      "success_gates_changed": false
+    },
+    "fixture_lazy_guard_import_order_correction": {
+      "actual_boundary_finder_used": true,
+      "actual_guard_import_discriminator_sha256": "72c61743b2d23564a484eb385fb411895d6ba8a4c71ed931e3f5a0f17a79a2d1",
+      "actual_guard_source_imported": true,
+      "actual_native_failed_loaded_kind_snapshot_available": false,
+      "classification": "Pure-source schedules and a real stdlib guard import discriminator; separate from native restore acceptance.",
+      "fixture_contracts_passed": 34,
+      "fixture_fix_scope": "Run the existing real restored guard receipt after grant/raw-baseline checks and before runtime_details; observer call order, regression contract and README only.",
+      "frozen_consumer_contracts_passed": 8,
+      "frozen_consumer_manifest_sha256": "0389cd8bf05ad7f4e8831456aa5974c00b27b223384dc59c21c8a3f3c6caabc4",
+      "frozen_consumer_sha256": "71e10bc211f6ed954b956e3165048865ddaace6d7e9fe00d09ab329093494a1f",
+      "frozen_inputs_including_workflow": 27,
+      "independent_source_boundary_order_replay_outcome": "confirmed_observer_import_order_defect",
+      "independent_source_boundary_order_replay_sha256": "c70cb5e5f5654d3978bc8231f4e25ee42a06afe2044054e93b0063ceecbeb46e",
+      "missing_guard_strict_shape_refused": true,
+      "native_R5_outcome_claimed": true,
+      "product_bytes_changed": false,
+      "real_before_dispatch_wrapper_installed": true,
+      "same_six_target_shape_accepted_after_real_guard_import": true,
+      "success_gates_weakened": false
+    },
+    "github_metadata_sha256": "3fae3d51b2bdbc8a6d0c21d82ecc812d013c1a4cc1e7511c0c59eeb9db1aabbf",
+    "host_elapsed_seconds": 461.542,
+    "independent_review_sha256": "a0ba3a1340c72e9a7add31bf472a0cf63caadd48e8620e53eafa96369cd32209",
+    "observed": {
+      "actual_archive_cache_witness_excluded": true,
+      "actual_restored_cache_witness_absent": true,
+      "actual_saved_sdk_identity_binding": true,
+      "backup_and_restore_jobs_completed_without_errors": true,
+      "default_supervisor_conditions": true,
+      "guard_attempt_refused_before_body": [
+        true,
+        true
+      ],
+      "guard_counter_sequence": [
+        2,
+        3,
+        2,
+        2
+      ],
+      "guard_exports": 0,
+      "guard_review_required_sequence": [
+        false,
+        false,
+        true,
+        true
+      ],
+      "jobs_options_mutations": 0,
+      "manifest_unchanged": true,
+      "manual_guard_imports": 0,
+      "mutation_rows_removed_after_restore": 6,
+      "new_postrestore_rows_preserved_across_restart": 6,
+      "normal_dependency_closure_per_phase": 24,
+      "normal_managed_requirements": true,
+      "ordinary_requirement_installs_by_phase": [
+        2,
+        0,
+        2,
+        0
+      ],
+      "owned_cleanup_passed": true,
+      "owned_offline_storage_contexts_passed": 4,
+      "owner_acknowledgments_after_restore": 0,
+      "phase_count": 4,
+      "phase_names": [
+        "baseline_enabled",
+        "mutated_enabled",
+        "automatic_restored_enabled",
+        "restart_enabled"
+      ],
+      "picture_and_frontend_bytes": true,
+      "prepared_dependency_preload": false,
+      "product_members_unchanged": true,
+      "provider_recovery_seam_counts": [
+        {
+          "apple_requests_denied": 2,
+          "life360_requests_denied": 1,
+          "phase": "baseline_enabled",
+          "recovery_before_dispatch_calls": 0,
+          "recovery_command_calls": 0,
+          "recovery_transport_attempts_denied": 0
+        },
+        {
+          "apple_requests_denied": 2,
+          "life360_requests_denied": 1,
+          "phase": "mutated_enabled",
+          "recovery_before_dispatch_calls": 0,
+          "recovery_command_calls": 0,
+          "recovery_transport_attempts_denied": 0
+        },
+        {
+          "apple_requests_denied": 2,
+          "life360_requests_denied": 1,
+          "phase": "automatic_restored_enabled",
+          "recovery_before_dispatch_calls": 0,
+          "recovery_command_calls": 0,
+          "recovery_transport_attempts_denied": 0
+        },
+        {
+          "apple_requests_denied": 2,
+          "life360_requests_denied": 1,
+          "phase": "restart_enabled",
+          "recovery_before_dispatch_calls": 0,
+          "recovery_command_calls": 0,
+          "recovery_transport_attempts_denied": 0
+        }
+      ],
+      "recorder_history_continuity": true,
+      "recorder_prebackup_rows": 6,
+      "saved_data_and_registry_identity": true,
+      "selected_registry_joins_per_phase": [
+        4,
+        4,
+        4,
+        4
+      ]
+    },
+    "observed_counter_sequence": [
+      2,
+      3,
+      2,
+      2
+    ],
+    "observed_phase_count": 4,
+    "observed_review_required_sequence": [
+      false,
+      false,
+      true,
+      true
+    ],
+    "ordinary_unmodified_product_partial_restore_qualified": true,
+    "peer_audit_sha256": "f7e8857f449ba36a8a4ca08fe5915e9891e512f9f4a51034cf2851c68cc10b1c",
+    "planned_target": {
+      "architecture": "amd64",
+      "core": "2026.10.2",
+      "haos": "18.3",
+      "supervisor": "2026.10.3"
+    },
+    "prior_trials": [
+      {
+        "accepted_phases": 0,
+        "artifact_sha256": "bec9061505cea78ac3f5500b7a53980471b28389bce44956ddb324f7c94da258",
+        "backup_requests": 0,
+        "cause_disposition": "Original phase refusal retained; the narrow R1 record does not identify the guest cause.",
+        "failure_code": "ordinary_phase_receipt_refused",
+        "failure_stage": "close_owned_vm_external_network",
+        "guest_diagnostic": null,
+        "host_elapsed_seconds": 239.854,
+        "host_receipt_sha256": "fb682f985649bd327cf70b51115623e70a4556b6dfa743babb01f0e5a4b7b32a",
+        "ordinary_restore_qualified": false,
+        "outcome": "failed_or_incomplete",
+        "owned_cleanup_passed": true,
+        "provider_or_owner_account_actions": 0,
+        "qa_head": "6045b75979a55b58d5579aa7cb685f038898a251",
+        "run_id": 39714666021,
+        "run_url": "https://github.com/jmhjr/HomeCircle/actions/runs/39714666021",
+        "trial": "R1",
+        "workflow_sha256": "648ae36f6ac1cb613fe6304d6939d4d6dddea21d37c9a950c8aa02e76c37e49c"
+      },
+      {
+        "accepted_phases": 0,
+        "artifact_sha256": "540d3ac32fed92aad08b18c2b9c4746895cfa5fdd0e55aef2fdb9c4c8011c0cb",
+        "backup_requests": 0,
+        "cause_disposition": "The R2 record identifies a runtime settings mismatch. A separate controlled replay confirms a sufficient fixture-order defect; exact random guest ordering was removed during cleanup and is not inferred.",
+        "failure_code": "ordinary_guest_phase_failed",
+        "failure_stage": "baseline_enabled",
+        "guest_diagnostic": {
+          "failure_code": "qa_enabled_runtime_settings",
+          "observer_line": 532,
+          "phase": "baseline_enabled",
+          "stage": "runtime_details"
+        },
+        "host_elapsed_seconds": 231.943,
+        "host_receipt_sha256": "a8ed126f9faf8beec3827d706702267803fe525c0f7ec412ad7f5a4febb148c8",
+        "ordinary_restore_qualified": false,
+        "outcome": "failed_or_incomplete",
+        "owned_cleanup_passed": true,
+        "provider_or_owner_account_actions": 0,
+        "qa_head": "fe8cac9a4ef9f576abb5354453d948d77eee7756",
+        "run_id": 39716881615,
+        "run_url": "https://github.com/jmhjr/HomeCircle/actions/runs/39716881615",
+        "trial": "R2",
+        "workflow_sha256": "1420695f595378f70364fe8e70beda9ef337b187c96bc576eea6e321c97cdce9"
+      },
+      {
+        "accepted_phases": 2,
+        "actual_backup_cache_witness_excluded": true,
+        "actual_native_failure_cause_determined": false,
+        "artifact_sha256": "20289b54ec5a2db7a483dbaa78c868d9dafc5abf438335a53d5598bea761059b",
+        "automatic_restored_receipt_available": false,
+        "backup_creation_requests": 1,
+        "backup_job_completed": true,
+        "backup_job_error_count": 0,
+        "backup_requests": 2,
+        "backup_restore_requests": 1,
+        "cause_disposition": "Successful pre-restore phases, backup/restore jobs and archive omission are retained. Restored observation timed out without a receipt. Separate source-level interleaving and pregrant diagnostic gaps were reproduced; deleted guest state does not identify the actual native failure cause.",
+        "closed_boot_grant_written": true,
+        "default_supervisor_conditions_verified": true,
+        "failure_code": "ordinary_automatic_restored_receipt_deadline",
+        "failure_stage": "automatic_restored_enabled",
+        "guest_failures": [],
+        "host_elapsed_seconds": 666.251,
+        "host_receipt_sha256": "2480d3c5279aeedf2ab163e239b17857218ba5f05c3ba7e566df43e2bae934c1",
+        "independent_failed_run_audit_sha256": "46ca18466afa36e13c9c508868b2fc6d8ce541a90ea5af488253f7aef0d8020d",
+        "jobs_options_mutations": 0,
+        "observed_pre_restore_guard_counters": [
+          2,
+          3
+        ],
+        "ordinary_restore_qualified": false,
+        "outcome": "failed_or_incomplete",
+        "owned_cleanup_passed": true,
+        "phase_names": [
+          "baseline_enabled",
+          "mutated_enabled"
+        ],
+        "provider_or_owner_account_actions": 0,
+        "qa_head": "0abfc5f3827a43e7563691b592391ab6a1d30ba6",
+        "restart_receipt_available": false,
+        "restore_job_completed": true,
+        "restore_job_error_count": 0,
+        "restore_network_closed_after": true,
+        "restored_guard_admission_verified": false,
+        "run_id": 39717938959,
+        "run_url": "https://github.com/jmhjr/HomeCircle/actions/runs/39717938959",
+        "trial": "R3",
+        "workflow_sha256": "2d6995adbaaf633c105c00a7c5fcdf3893ccffca2c8af7bc8c61c916a1289799"
+      },
+      {
+        "accepted_phases": 2,
+        "actual_backup_cache_witness_excluded": true,
+        "actual_native_missing_hook_snapshot_recovered": false,
+        "artifact_sha256": "cca1fdb7d0786b59a8f0c7c1a87389fb6f35989da8133bbe61c9ec696c819a2f",
+        "automatic_restored_success_receipt_available": false,
+        "backup_creation_requests": 1,
+        "backup_job_completed": true,
+        "backup_job_error_count": 0,
+        "backup_requests": 2,
+        "backup_restore_requests": 1,
+        "cause_disposition": "Actual fresh automatic observer failure qa_startup_boundary_shape followed a verified closed-boot grant. Verified source and independent replays narrow a lazy guard-import order defect; the removed native loaded-kind snapshot is unavailable. R5 reorders the real guard receipt before the unchanged six-target startup check.",
+        "closed_boot_grant_verified": true,
+        "default_supervisor_conditions_verified": true,
+        "failure_code": "ordinary_guest_automatic_phase_failed",
+        "failure_stage": "automatic_restored_enabled",
+        "fresh_automatic_failure_receipt_available": true,
+        "guest_failure_code": "qa_startup_boundary_shape",
+        "guest_failure_frames": [
+          {
+            "function": "poll",
+            "line": 744,
+            "source": "observer"
+          },
+          {
+            "function": "runtime_details",
+            "line": 597,
+            "source": "observer"
+          },
+          {
+            "function": "startup_receipt",
+            "line": 509,
+            "source": "observer"
+          },
+          {
+            "function": "check",
+            "line": 49,
+            "source": "observer"
+          }
+        ],
+        "guest_failure_stage": "runtime_details",
+        "host_elapsed_seconds": 408.465,
+        "host_receipt_sha256": "de1b71f5219f2a114b972021e9fa74acc692d9aa09877064c9300ff649351943",
+        "jobs_options_mutations": 0,
+        "observed_pre_restore_guard_counters": [
+          2,
+          3
+        ],
+        "ordinary_restore_qualified": false,
+        "outcome": "failed_or_incomplete",
+        "owned_cleanup_passed": true,
+        "phase_names": [
+          "baseline_enabled",
+          "mutated_enabled"
+        ],
+        "provider_or_owner_account_actions": 0,
+        "qa_head": "cf0ba6c88cadf7127e4abe8da460468686580c6e",
+        "restart_receipt_available": false,
+        "restore_job_completed": true,
+        "restore_job_error_count": 0,
+        "restore_network_closed_after": true,
+        "restored_guard_admission_verified": false,
+        "run_id": 39720944024,
+        "run_url": "https://github.com/jmhjr/HomeCircle/actions/runs/39720944024",
+        "trial": "R4",
+        "workflow_sha256": "d05c1b6ef958e3b965b7b17ec15da3607f5d44a422a42d404b4d15a2b0ca428c"
+      }
+    ],
+    "qa_head": "4957b3f44e84837e01af731286c0728a4127aea3",
+    "record": "RELEASE-1.0-ORDINARY-RESTORE.json",
+    "result_artifact_sha256": "d87250aef1cb73fce9d5de778f005ec9e678732044b11c96c0890442469c956a",
+    "run_id": 39721983991,
+    "run_url": "https://github.com/jmhjr/HomeCircle/actions/runs/39721983991",
+    "source_commit": "012a7e88d13970b2683b27d0824dac246c858179",
+    "status": "passed",
+    "workflow_path": ".github/workflows/native-ordinary-rollback-restore.yml",
+    "workflow_sha256": "277104fa67c7ff6e321cb0e7de5182dc13a89c9be4822d1de691e963694926e7"
+  },
+  "preservation": {
+    "owner_credentials_or_recovery_proofs_used": false,
+    "owner_instance_actions": 0,
+    "production_configuration_used": false,
+    "refresh_setting_changed": false,
+    "remote_access_reopened": false,
+    "working_owner_instance_source": "91ae59106a661143b770d7a3564d363c7c11a7dd",
+    "working_owner_instance_updated": false
+  },
+  "recorded_local_date": "2026-10-21",
+  "release_published": false,
+  "remaining_scope_limits": [
+    "A full VM or configuration snapshot that captures both ledger and cache witness can restore the matching old pair; an independent external monotonic anchor is needed to detect that rollback.",
+    "Cache eviction safely requires owner review and does not reveal the missing newer local counter.",
+    "Restoring a pre-fix backup can restore pre-fix integration code; the new guard behavior requires the patched candidate to be installed before recovery.",
+    "The scoped ordinary partial restore passed separately from the package suite. Neither qualifies provider authentication/renewal, fresh-machine/full-system/encrypted-cloud variants, complete Person/activity history, HACS delivery or stable release."
+  ],
+  "retained_public_evidence": {
+    "commit": "8f28d5da33b7094355e84d5c8a23ee78463cecf3",
+    "files": 20,
+    "independent_review_sha256": "a0ba3a1340c72e9a7add31bf472a0cf63caadd48e8620e53eafa96369cd32209",
+    "index_url": "https://github.com/jmhjr/HomeCircle/blob/8f28d5da33b7094355e84d5c8a23ee78463cecf3/native-ordinary-rollback-evidence/INDEX.md",
+    "portable_replay_passed": true,
+    "replay_url": "https://github.com/jmhjr/HomeCircle/blob/8f28d5da33b7094355e84d5c8a23ee78463cecf3/native-ordinary-rollback-evidence/REPLAY.md"
+  },
+  "runtime_members": 113,
+  "runtime_source_parent": "012a7e88d13970b2683b27d0824dac246c858179",
+  "schema": 1,
+  "stable_release_approval": false,
+  "status": "product_fix_native_package_and_ordinary_partial_restore_validated",
+  "test_only_source_delta": "tests/test_findmy_flow.py: isolate each test with hass_tmp_config_dir"
+}
