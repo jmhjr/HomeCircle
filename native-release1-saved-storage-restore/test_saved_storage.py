@@ -323,6 +323,61 @@ def execute_preopen(fault=None):
         return json.loads(output.getvalue())
 
 
+
+def emitted_supervisor_grant():
+    host=c.Controller.__new__(c.Controller);host.config_path='/mnt/data/supervisor/homeassistant';host.phase_token='a'*32;host.generation='before_restore';host.args=SimpleNamespace(branch_commit='b'*40)
+    host.phases=[];host.deadline=1000.;host.assert_network_closed=lambda:None;host.remaining=lambda n:n
+    ns=grant_functions();request=request_fixture(ns);request['purpose']='phase'
+    scripts=[];commands=[];reads=[]
+    def read(path):reads.append(path);return c.canonical(request)
+    def guest(command,timeout):
+        commands.append(command)
+        return c.canonical({'schema':1,'grant_written':True}) if 'grant-closed-boot.py' in command else b''
+    host.guest_read=read;host.guest_write=lambda name,data:scripts.append(data);host.guest=guest
+    host.grant_closed_boot('baseline_disabled')
+    assert len(scripts)==1
+    return scripts[0],request,commands,reads,host.config_path
+
+def execute_supervisor_grant(program,request,old_host_destination=False):
+    # Map absolute paths beneath a local container-root model WITHOUT collapsing
+    # host /mnt/data/... and Supervisor /data/... into the same directory.
+    container_control='/data/homeassistant/'+c.CONTROL
+    host_control='/mnt/data/supervisor/homeassistant/'+c.CONTROL
+    tree=ast.parse(program)
+    target=next(n.value.args[0] for n in tree.body if isinstance(n,ast.Assign) and any(isinstance(x,ast.Name) and x.id=='p' for x in n.targets))
+    assert target.value==container_control+'/closed-boot-grant.json'
+    if old_host_destination:target.value=host_control+'/closed-boot-grant.json'
+    with tempfile.TemporaryDirectory(prefix='hc-supervisor-view-') as raw:
+        root=Path(raw);control=root/container_control.lstrip('/');control.mkdir(parents=True,mode=0o700)
+        assert not (root/host_control.lstrip('/')).exists()
+        class Localize(ast.NodeTransformer):
+            def visit_Call(self,node):
+                self.generic_visit(node)
+                if isinstance(node.func,ast.Name) and node.func.id=='Path' and len(node.args)==1 and isinstance(node.args[0],ast.Constant) and type(node.args[0].value)is str and node.args[0].value.startswith('/'):
+                    node.args[0]=ast.Constant(str(root/node.args[0].value.lstrip('/')))
+                return node
+            def visit_Compare(self,node):
+                self.generic_visit(node)
+                # The owned Mac temp file models container uid0; all namespace,
+                # type, mode, link, bytes, fsync and atomic-publish checks remain.
+                if isinstance(node.left,ast.Attribute) and node.left.attr=='st_uid' and len(node.comparators)==1 and isinstance(node.comparators[0],ast.Constant) and node.comparators[0].value==0:
+                    node.comparators[0]=ast.Constant(os.geteuid())
+                return node
+        output=io.StringIO()
+        try:
+            with redirect_stdout(output):exec(compile(ast.fix_missing_locations(Localize().visit(tree)),'<actual-writer-separated-supervisor-namespace>','exec'),{})
+        except FileNotFoundError:
+            assert old_host_destination and list(control.iterdir())==[]
+            raise
+        assert json.loads(output.getvalue())=={'schema':1,'grant_written':True}
+        grant=control/'closed-boot-grant.json'
+        assert grant.stat().st_nlink==1 and stat.S_IMODE(grant.stat().st_mode)==0o600
+        assert json.loads(grant.read_bytes())=={**request,'external_network_closed':True,'default_conditions_verified':False}
+        assert grant_functions()['consume_closed_boot_grant'](control,request) is True
+        assert not grant.exists() and not (control/'closed-boot-grant.tmp').exists()
+        return {'schema':1,'namespace_correct':True,'grant_consumed':True}
+
+
 class Contracts(unittest.TestCase):
     def accept(self,host,phases):
         with patch.object(a,"CANDIDATE_SHA",PIN):return a.accept(host,phases)
@@ -852,19 +907,8 @@ class Contracts(unittest.TestCase):
         self.assertIn('refused',events)
 
     def test_actual_grant_writer_atomic_publish_has_no_two_link_window_or_consumer_readback_race(self):
-        host=c.Controller.__new__(c.Controller);host.config_path='/mnt/data/supervisor/homeassistant';host.phase_token='a'*32;host.generation='before_restore';host.args=SimpleNamespace(branch_commit='b'*40)
-        host.phases=[];host.deadline=1000.;host.assert_network_closed=lambda:None;host.remaining=lambda n:n
-        ns=grant_functions();request=request_fixture(ns);request['purpose']='phase';scripts=[]
-        host.guest_read=lambda _:c.canonical(request);host.guest_write=lambda name,data:scripts.append(data)
-        host.guest=lambda command,timeout:c.canonical({'schema':1,'grant_written':True}) if 'grant-closed-boot.py' in command else b''
-        host.grant_closed_boot('baseline_disabled')
-        with tempfile.TemporaryDirectory() as raw:
-            control=Path(raw);program=scripts[0].decode().replace(host.config_path+'/'+c.CONTROL,raw).replace('s.st_uid==0','s.st_uid=='+str(os.geteuid()))
-            output=io.StringIO()
-            with redirect_stdout(output):exec(compile(program,'<actual-exclusive-grant-writer>','exec'),{})
-            self.assertEqual(json.loads(output.getvalue()),{'schema':1,'grant_written':True})
-            path=control/'closed-boot-grant.json';self.assertEqual(path.stat().st_nlink,1);self.assertEqual(stat.S_IMODE(path.stat().st_mode),0o600)
-            self.assertIs(ns['consume_closed_boot_grant'](control,request),True);self.assertFalse(path.exists())
+        program,request,_,_,_=emitted_supervisor_grant()
+        self.assertEqual(execute_supervisor_grant(program,request),{'schema':1,'namespace_correct':True,'grant_consumed':True})
 
 
     def test_actual_preopen_program_requires_disabled_exact_config_and_selection_without_pair_or_guard_reads(self):
@@ -878,6 +922,23 @@ class Contracts(unittest.TestCase):
     def test_actual_archive_excludes_consumable_grant_and_temp_not_only_old_restore_barrier(self):
         for fault in ('grant','grant_temp'):
             with self.subTest(fault=fault),self.assertRaises(Exception):execute_archive(fault)
+
+
+    def test_exact_old_host_destination_regression_refuses_in_supervisor_view_without_aliasing_namespaces(self):
+        program,request,_,_,_=emitted_supervisor_grant()
+        with self.assertRaises(FileNotFoundError):execute_supervisor_grant(program,request,old_host_destination=True)
+        self.assertIs(execute_supervisor_grant(program,request)['grant_consumed'],True)
+
+    def test_actual_dispatch_uses_container_writer_destination_but_host_QGA_prechecks_and_request_paths(self):
+        program,_,commands,reads,host_root=emitted_supervisor_grant()
+        host_control=host_root+'/'+c.CONTROL
+        self.assertEqual(reads,[host_control+'/boot-request.json'])
+        self.assertEqual(len(commands),3)
+        self.assertTrue(all(host_control in command for command in commands[:2]))
+        self.assertTrue(commands[-1].startswith('/usr/bin/docker exec -i --user=0:0 hassio_supervisor python3 -B - < '))
+        tree=ast.parse(program);destination=next(n.value.args[0].value for n in tree.body if isinstance(n,ast.Assign) and any(isinstance(x,ast.Name) and x.id=='p' for x in n.targets))
+        self.assertEqual(destination,'/data/homeassistant/'+c.CONTROL+'/closed-boot-grant.json')
+        self.assertNotIn(host_root,program.decode())
 
 
 if __name__=="__main__":unittest.main()

@@ -157,3 +157,31 @@ partial restore with explicit newest-guard repair. The precise accepted flag is
 `default_supervisor_conditions_used` and `manual_newest_guard_repair_required`.
 Generic enabled/provider/automatic rollback/full-system/cloud/HACS/stable gates
 remain false. Preparation and contracts are not an actual R5 result.
+
+
+## Supervisor grant destination correction
+
+The first default-conditions trial, run 39696526162 at controls e163bf4f, passed
+the stopped synthetic seed and actual Fernet checks, then failed before its
+first managed phase with the fixed host label `guest_command_failed`. No backup
+or restore request, guard export/import, or external-network opening occurred.
+The NIC remained closed, and guest/private-workspace cleanup passed. Its
+negative audit 839d616e… remains a negative result. The inner command failure
+was not retained, so the exact runtime failing site remains unproven.
+
+An independent source reproduction confirms a fixture namespace defect: the
+new grant writer embedded the VM-host configuration path while executing inside
+`hassio_supervisor`, whose configuration view is `/data/homeassistant`. The old
+local test collapsed those two namespaces into one temporary directory and
+masked that mismatch. This child changes only the writer's container destination.
+Host-side prechecks and boot-request reads keep their host paths.
+
+The corrected tests preserve separate host and Supervisor views and execute
+the actual emitted writer. The old destination refuses without creating a
+grant; the corrected destination publishes the exact private one-link 0600
+grant, and the actual helper consumes it. All 116 prior contract identities
+remain applicable, with the masking test corrected and two namespace/dispatch
+cases added: 118 zero-skip contracts are required. Product/package bytes, all 32
+protected operations, grant identities/consumption, network/cleanup boundaries,
+six contexts and 18 negative cases are unchanged. This preparation does not
+reclassify the failed run or establish a successful default-conditions restore.
