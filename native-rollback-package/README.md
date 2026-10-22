@@ -71,3 +71,10 @@ class/function labels per failure/duplicate kind. Parameter values, XML bodies,
 exception text and unknown test identities are never exported. This changes no
 product source, backend test, dependency, original-vault cause gate or success
 criterion. The earlier failed run remains separate evidence.
+
+The R3 source revision changes only `tests/test_findmy_flow.py` to use the Home
+Assistant plugin's disposable `hass_tmp_config_dir` for each flow test. Durable
+local recovery state can otherwise survive between tests when the plugin uses a
+shared physical configuration directory. Product integration bytes and the
+113-member ZIP remain unchanged. The R2 failed full-suite diagnostics remain
+separate evidence; no test outcome or duplicate-identity gate is relaxed.

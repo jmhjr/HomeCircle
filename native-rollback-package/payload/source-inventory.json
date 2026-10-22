@@ -1220,8 +1220,8 @@
     "sha256": "adb28ae80ef860153e130b43f31faebfc71a9f9e7c75fb2da00b9ce08076dd19"
   },
   "tests/test_findmy_flow.py": {
-    "bytes": 27113,
-    "sha256": "ec0742d8c138e92a35f437b1cd252b429dba0990db3ae41a0594aba50fe8bd9e"
+    "bytes": 27285,
+    "sha256": "80647aae89cc7dd7190efac17da78377dee46e65a0ba656338f05672a8bef833"
   },
   "tests/test_findmy_gsa_client.py": {
     "bytes": 3694,

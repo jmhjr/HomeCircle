@@ -42,7 +42,7 @@ jobs:
         run: |
           timeout --signal=TERM --kill-after=150s 3500s bash native-rollback-package/run_host.sh \
             --payload native-rollback-package/payload \
-            --pins-sha 9b8b4256e780ee6e130b77f79a5695e7a1ad9ef05ee36f5d653aa47aa704afc3 \
+            --pins-sha 8e1b200ad371d15fd5b16e4c5b3f1b159e2d72b839308938bad1c300d2f84f55 \
             --source-repository "$GITHUB_WORKSPACE" \
             --output native-rollback-package-results
           jq -e '.outcome=="passed" and .container_stopped==true and .container_removed==true and

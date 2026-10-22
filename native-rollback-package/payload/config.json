@@ -1,5 +1,5 @@
 {
-  "candidate_source_commit": "012a7e88d13970b2683b27d0824dac246c858179",
+  "candidate_source_commit": "57b0aaa5c2c4b1a022e547347640173412e840f5",
   "candidate_source_prefix": "",
   "checker_sha256": "216331d16af8fb2ec636e1466303923ecfe32c76f78ea72f89d373c80c9713d2",
   "driver_sha256": "3e5908a69cdc504d557894f6d562968469bd5286cab66de1fc1eaa8833562c75",
@@ -210,7 +210,7 @@
   ],
   "schema": 1,
   "source_files": 371,
-  "source_inventory_sha256": "915f96349ff66e272843bab0c4a57c4698da352fea8a3de372588549ad590652",
-  "source_sha256": "7644ccc29095dad6603fb1a44afcdc03ef3abec2c8ce1f8d377cbdcd69d32165",
+  "source_inventory_sha256": "a76c902b3489c296f28dd9c62cd88e33d28308518093c79a533ebfb8bb0b4639",
+  "source_sha256": "69ab1c08cadd7e9d7a0adcb1ec41678fc1e77462d2e831035964e80badf5ba7b",
   "version": "0.1.0-beta.20"
 }
