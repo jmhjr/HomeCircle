@@ -23,3 +23,5 @@ collecting only fixed-label JSON receipts and proving owned container cleanup.
 
 This does not repeat the complete backend suite, run a managed Core lifecycle,
 exercise KVM, validate an upgrade, use owner accounts or publish a release.
+
+The second source revision corrects only the synthetic setup fixture to provide explicit selected residence IDs. Product files and the f181 package are unchanged. Original failed runs remain separate evidence.

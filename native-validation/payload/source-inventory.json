@@ -1192,8 +1192,8 @@
     "sha256": "75b6ca1b058f2d3fe010653e1d85b70ea6cfd45ba1e8c46604b24e150b2facaf"
   },
   "tests/test_activity_projection.py": {
-    "bytes": 6881,
-    "sha256": "010ff183c0d79b88f2369d32ef414a000242121f30f9f860c87b86e6b7eefe02"
+    "bytes": 6929,
+    "sha256": "e42613e8ff3a0b09be5e6b054478f5085bd6cbf1da1a24213f6c6e2c363612b4"
   },
   "tests/test_addresses.py": {
     "bytes": 4081,

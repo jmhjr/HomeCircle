@@ -1,48 +1,11 @@
 {
+  "schema": 1,
+  "source_commit": "a219179e73e3f9bfff058c52e82342ee854bb92d",
+  "runtime_unchanged_from": "96a4175f18782ef27d4c05c656f6759ffe132088",
   "files": {
-    "CONFIG.sha256": {
-      "bytes": 65,
-      "sha256": "e6881f98adca5a3b58cfd72f5237b4c35c81035b0da019b07e6131ea45a1002f"
-    },
-    "PREPARATION.json": {
-      "bytes": 745,
-      "sha256": "03a143c24a0f4c4add4052d9ec3b113453fde7f7ea3ecbec2279c7972ac8d40e"
-    },
-    "README.md": {
-      "bytes": 1696,
-      "sha256": "9a642df697cf563c037d1566ccd8e284937b75543c038eabf1c27f9d048c8436"
-    },
     "driver.py": {
-      "bytes": 15956,
-      "sha256": "75cc6deb3e2f5050b97366923efd4f3cbb1882f337d15eb338c2d345ea2b9b11"
-    },
-    "payload/config.example.json": {
-      "bytes": 338,
-      "sha256": "717311ab302f5e4bec4e97dafd12a7fc280c85883fd2b759e55c26e8f47a3100"
-    },
-    "payload/config.json": {
-      "bytes": 538,
-      "sha256": "c37ee17c2ff858ef671318e9b818f979b7af54b5c8c3092d1285cd09564794a6"
-    },
-    "payload/homecircle.zip": {
-      "bytes": 623447,
-      "sha256": "f181e6300f15d8977817a552db90d35caf0edc869067ebeea815c7be1df0248e"
-    },
-    "payload/inventory.json": {
-      "bytes": 16823,
-      "sha256": "8ea456beb9b2eaaf4ba50639532b8dafabe0e02d1e13a77a59525f1c249c7447"
-    },
-    "payload/source-inventory.json": {
-      "bytes": 57750,
-      "sha256": "a89c0cbde19144b39d050be39d3dfe63973baa5aa1c6e1be1b676014d7e07855"
-    },
-    "payload/source.tgz": {
-      "bytes": 1361475,
-      "sha256": "6c55d1fdcbdcebed7bc55f09bc2076c6f814c8d32ba1c41fa6732d56471d51fb"
-    },
-    "prepare_inputs.py": {
-      "bytes": 4982,
-      "sha256": "24daf807e06fa0beba11a01993255ded3c0171c9fa0910b2fb02c318a539013b"
+      "bytes": 16600,
+      "sha256": "7dfbdbcb0ec0e5ef86d5b1e6486b4317f97c2da93ee4fb0fee012fc871c8ef91"
     },
     "requirements_support.py": {
       "bytes": 9191,
@@ -52,12 +15,37 @@
       "bytes": 8156,
       "sha256": "0e568fec206debdf2869aab3362d530383771d1dc27852799571780719e26c90"
     },
+    "CONFIG.sha256": {
+      "bytes": 65,
+      "sha256": "31144f9a98da964588168f097de778c3e8063a543f4b3c2568ccbad7279a4612"
+    },
+    "README.md": {
+      "bytes": 1907,
+      "sha256": "a084fcb4218a83e25806f17c17e2e9fcdf9a9483e263766274c352668d4020d4"
+    },
     "test_driver.py": {
       "bytes": 4390,
       "sha256": "c44deee96ec1abae0b7286aa5e6e08b38ac46acce7d5258d6b06794fa269be81"
+    },
+    "payload/config.json": {
+      "bytes": 538,
+      "sha256": "ca16f129356ef50107d2d1ec04d9ab5d04d529c44eaf0870b64e634454c2f895"
+    },
+    "payload/source.tgz": {
+      "bytes": 1361486,
+      "sha256": "7a6ac55048f67fdaed65dbfe87d64748285d7515d38b771895ee09726dcd4027"
+    },
+    "payload/source-inventory.json": {
+      "bytes": 57750,
+      "sha256": "d8ecabc638f23fb31bf888e26705ec3d01ded1504650179dc8750940c7deff65"
+    },
+    "payload/homecircle.zip": {
+      "bytes": 623447,
+      "sha256": "f181e6300f15d8977817a552db90d35caf0edc869067ebeea815c7be1df0248e"
+    },
+    "payload/inventory.json": {
+      "bytes": 16823,
+      "sha256": "8ea456beb9b2eaaf4ba50639532b8dafabe0e02d1e13a77a59525f1c249c7447"
     }
-  },
-  "native_execution_performed": false,
-  "schema": 1,
-  "scope": "focused_runner_preparation_only"
+  }
 }
