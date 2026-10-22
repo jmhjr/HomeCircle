@@ -1,0 +1,9 @@
+{
+  "driver_sha256": "75cc6deb3e2f5050b97366923efd4f3cbb1882f337d15eb338c2d345ea2b9b11",
+  "package_inventory_sha256": "8ea456beb9b2eaaf4ba50639532b8dafabe0e02d1e13a77a59525f1c249c7447",
+  "package_sha256": "f181e6300f15d8977817a552db90d35caf0edc869067ebeea815c7be1df0248e",
+  "schema": 1,
+  "source_commit": "96a4175f18782ef27d4c05c656f6759ffe132088",
+  "source_inventory_sha256": "a89c0cbde19144b39d050be39d3dfe63973baa5aa1c6e1be1b676014d7e07855",
+  "source_sha256": "6c55d1fdcbdcebed7bc55f09bc2076c6f814c8d32ba1c41fa6732d56471d51fb"
+}

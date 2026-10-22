@@ -1,53 +1,25 @@
-# Native AMD64 validation handoff
+# Native current Core focused checks
 
-Status: prepared locally; native execution has not started. The earlier emulated
-AMD64 upgrade and recovery attempts remain failed and unqualified.
+This preparation adapts the already installed `native-amd64-validation.yml` workflow
+without changing its YAML or requesting workflow permissions. Publish this directory
+as `native-validation/` on the QA branch after reviewing and filling every input pin.
+The existing push path filter starts it. The old workflow display name is historical;
+all receipts explicitly qualify only focused pytest execution on native Linux AMD64.
 
-The payload contains the unchanged 112-file candidate, immutable published beta19
-baseline, reconstructed retained-patch baseline, inventory, five transitively
-required validation scripts and the frozen bounded Linux driver. It contains no
-owner account, production configuration, location record or live authentication
-material. `build_bundle.rb` verifies all ten fixed input hashes before copying.
-The retained patch is a reconstructed baseline, not a current production snapshot.
+Inputs are a canonical source tarball and per-file inventory, the matching development
+package and inventory, and `payload/config.json` filled from the example. Set
+`CONFIG.sha256` to the final configuration digest after pinning `driver.py` and all
+payload bytes. Any pending template value fails closed before a container is created.
+The source commit is verified by exact Git blob readback; a shallow checkout fetches
+only the pinned public commit if needed. No credentials or owner state enter the guest.
 
-Candidate ZIP SHA-256:
-`f0477a91e78181fe1f8d80ada176a1739e10a7502abe7ee6ee2240571280d1f5`.
-The candidate remains unpublished with manifest version `0.1.0-beta.19`.
+The pinned Core 2026.10.2 image and exact Core constraints prepare the matching
+pytest-homeassistant-custom-component 0.13.373 package and declared dependencies.
+The container has no host mounts or published ports. Networking is disconnected and
+checked before pytest. All four new projection tests and the existing activity,
+provider setup and startup-isolation modules must pass with no skips or errors.
+Receipts name every observed passing case. Private test output is deleted after
+collecting only fixed-label JSON receipts and proving owned container cleanup.
 
-## Execution options
-
-Use an existing native x86_64 Linux machine with Docker, Bash, jq and GNU coreutils, or
-the staged GitHub Actions workflow on Ubuntu 24.04 x64. The host and container
-architecture checks refuse the ARM Mac. All Python executes inside the Linux
-Core container. The container has a fresh disposable workspace and receives no
-production mounts, Docker socket or owner credentials. Dependency downloads run
-before the container is disconnected from networking for acceptance.
-
-The unchanged driver runs both ten-phase upgrade/rollback sequences followed by
-the full twenty-process recovery sequence. Original child deadlines remain
-180 seconds for upgrade and 45 seconds for recovery; aggregate job bounds remain
-2,100 / 2,100 / 1,200 seconds. A separate host deadline and owned-container cleanup
-bound execution. Failure or missing receipts cannot produce acceptance.
-
-For GitHub, stage `workflow.yml` as
-`.github/workflows/native-amd64-validation.yml` and the runner files plus payload
-as `native-validation/` on `codex/native-amd64-validation`. The job receives read
-access to repository contents and publishes only its sanitized summary artifact.
-No release, tag, production deployment, PR or merge is part of the job.
-
-**The repository is public. Creating that test branch uploads the currently
-unpublished candidate and its test inputs. No branch, commit or upload has been
-created for this handoff.** The alternative is an existing private Linux runner
-reachable through a user-supplied SSH destination.
-
-## Scope
-
-A passing native container run would qualify the frozen synthetic Core 2026.10.2
-upgrade/rollback and recovery scenarios on native AMD64 Linux. It would not
-establish native AMD64 HAOS-managed installation, Core 2026.9.4, glibc execution
-of the integration, current production/HACS upgrades, live Apple recovery,
-long-running provider acceptance or the remaining licensing/service-use gates.
-
-Raw synthetic configurations remain in the disposable local workspace and are
-excluded from the public artifact. Input pin receipts and safe summaries preserve
-the distinction between a prepared job and an actual passing result.
+This does not repeat the complete backend suite, run a managed Core lifecycle,
+exercise KVM, validate an upgrade, use owner accounts or publish a release.

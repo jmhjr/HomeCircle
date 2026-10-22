@@ -1,0 +1,63 @@
+{
+  "files": {
+    "CONFIG.sha256": {
+      "bytes": 65,
+      "sha256": "e6881f98adca5a3b58cfd72f5237b4c35c81035b0da019b07e6131ea45a1002f"
+    },
+    "PREPARATION.json": {
+      "bytes": 745,
+      "sha256": "03a143c24a0f4c4add4052d9ec3b113453fde7f7ea3ecbec2279c7972ac8d40e"
+    },
+    "README.md": {
+      "bytes": 1696,
+      "sha256": "9a642df697cf563c037d1566ccd8e284937b75543c038eabf1c27f9d048c8436"
+    },
+    "driver.py": {
+      "bytes": 15956,
+      "sha256": "75cc6deb3e2f5050b97366923efd4f3cbb1882f337d15eb338c2d345ea2b9b11"
+    },
+    "payload/config.example.json": {
+      "bytes": 338,
+      "sha256": "717311ab302f5e4bec4e97dafd12a7fc280c85883fd2b759e55c26e8f47a3100"
+    },
+    "payload/config.json": {
+      "bytes": 538,
+      "sha256": "c37ee17c2ff858ef671318e9b818f979b7af54b5c8c3092d1285cd09564794a6"
+    },
+    "payload/homecircle.zip": {
+      "bytes": 623447,
+      "sha256": "f181e6300f15d8977817a552db90d35caf0edc869067ebeea815c7be1df0248e"
+    },
+    "payload/inventory.json": {
+      "bytes": 16823,
+      "sha256": "8ea456beb9b2eaaf4ba50639532b8dafabe0e02d1e13a77a59525f1c249c7447"
+    },
+    "payload/source-inventory.json": {
+      "bytes": 57750,
+      "sha256": "a89c0cbde19144b39d050be39d3dfe63973baa5aa1c6e1be1b676014d7e07855"
+    },
+    "payload/source.tgz": {
+      "bytes": 1361475,
+      "sha256": "6c55d1fdcbdcebed7bc55f09bc2076c6f814c8d32ba1c41fa6732d56471d51fb"
+    },
+    "prepare_inputs.py": {
+      "bytes": 4982,
+      "sha256": "24daf807e06fa0beba11a01993255ded3c0171c9fa0910b2fb02c318a539013b"
+    },
+    "requirements_support.py": {
+      "bytes": 9191,
+      "sha256": "91bb0d92bfeef8021184275369d8923e8b951d2cb7b85a31bd34414101e3a513"
+    },
+    "run_native.sh": {
+      "bytes": 8156,
+      "sha256": "0e568fec206debdf2869aab3362d530383771d1dc27852799571780719e26c90"
+    },
+    "test_driver.py": {
+      "bytes": 4390,
+      "sha256": "c44deee96ec1abae0b7286aa5e6e08b38ac46acce7d5258d6b06794fa269be81"
+    }
+  },
+  "native_execution_performed": false,
+  "schema": 1,
+  "scope": "focused_runner_preparation_only"
+}
