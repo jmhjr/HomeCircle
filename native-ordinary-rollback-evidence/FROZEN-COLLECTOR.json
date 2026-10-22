@@ -1,0 +1,28 @@
+{
+  "files": {
+    "INPUTS.json": {
+      "bytes": 4187,
+      "sha256": "9be711b6da7fa3c61326865da4d7cd997f6d429956fa538d49ad8b7063a1dd6d"
+    },
+    "README.md": {
+      "bytes": 3682,
+      "sha256": "654b2c270dd24c593909843f2c8f36f74afaa642a80b92af73817e3bbfb79580"
+    },
+    "SOURCE-INVENTORY.json": {
+      "bytes": 56679,
+      "sha256": "915f96349ff66e272843bab0c4a57c4698da352fea8a3de372588549ad590652"
+    },
+    "independent_ordinary.py": {
+      "bytes": 37934,
+      "sha256": "71e10bc211f6ed954b956e3165048865ddaace6d7e9fe00d09ab329093494a1f"
+    },
+    "test_independent_ordinary.py": {
+      "bytes": 14008,
+      "sha256": "3f6f56a9de342945033e72f7aae20b16233152d690cd45a165445a2d11accfe6"
+    }
+  },
+  "head_sha": "4957b3f44e84837e01af731286c0728a4127aea3",
+  "immutable": true,
+  "run_id": 39721983991,
+  "schema": 1
+}

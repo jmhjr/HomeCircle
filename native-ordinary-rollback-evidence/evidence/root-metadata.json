@@ -1,0 +1,16 @@
+{
+  "artifact_id": 12401877265,
+  "artifact_name": "ordinary-rollback-restore-receipts",
+  "artifact_zip_sha256": "d87250aef1cb73fce9d5de778f005ec9e678732044b11c96c0890442469c956a",
+  "branch": "codex/native-amd64-validation",
+  "conclusion": "success",
+  "event": "push",
+  "github_digest_verified": true,
+  "head_sha": "4957b3f44e84837e01af731286c0728a4127aea3",
+  "run_attempt": 1,
+  "run_id": 39721983991,
+  "schema": 1,
+  "status": "completed",
+  "workflow_path": ".github/workflows/native-ordinary-rollback-restore.yml",
+  "workflow_sha256": "277104fa67c7ff6e321cb0e7de5182dc13a89c9be4822d1de691e963694926e7"
+}

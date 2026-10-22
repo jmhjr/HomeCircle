@@ -1,0 +1,62 @@
+{
+  "artifact_digest_matches_github_snapshot": true,
+  "artifact_sha256": "f9008e8894a7a0ea2d656254527e0fd18c7504978620f19c1cd520a7f19167fa",
+  "audited_at_utc": "2026-10-22T03:23:42.470136+00:00",
+  "backend": {
+    "baseline_payload_matches_canonical_old_git_blob": true,
+    "existing_optional_skip": "tests.test_findmy_runtime_bootstrap.test_retained_public_apple_dmg_fixed_ranges",
+    "failed": 0,
+    "native_baseline_red_cases_cause_verified": 14,
+    "passed": 1728,
+    "required_functions_passed": 50,
+    "skip_identity_enforced_by_bound_driver": true,
+    "skipped": 1
+  },
+  "candidate_source_commit": "57b0aaa5c2c4b1a022e547347640173412e840f5",
+  "canonical_source_git_blobs_independently_checked": 371,
+  "canonical_source_privacy_files": 371,
+  "canonical_source_privacy_flags": 0,
+  "cleanup_passed": true,
+  "frontend_passed": 122,
+  "frozen_QA_input_blobs_independently_checked": 10,
+  "git_mutations": 0,
+  "github_snapshot_metadata_cross_checked": true,
+  "isolation_change_exact_fixture_insertion_only": true,
+  "limits": [
+    "Offline audit of downloaded GitHub metadata; no new network read performed",
+    "Native pytest uses Core2026.9.4; ordinary HAOS restore evidence is separate",
+    "One pre-existing optional public Apple DMG fixed-range fixture skip remains; bound native driver enforces its identity",
+    "Private JUnit is removed by native cleanup; tests and causal baseline results are source-bound native receipts rather than independently rerun here",
+    "No HACS delivery, provider authentication, full managed lifecycle, upgrade or ordinary restore qualification from this package audit"
+  ],
+  "native_release_bytes": 620228,
+  "native_release_files": 113,
+  "native_release_inventory_sha256": "370a0036f03bd2b7185afc7a9ddcf7d6545e41cfb6394f00fc699a2973db33aa",
+  "native_release_sha256": "98a754ff2025761c2eb63d6422c9b17b76e2bdef2965c96fe353ab6c2c21fb20",
+  "network_mutations": 0,
+  "ordinary_payload_byte_identical": true,
+  "ordinary_restore_execution_qualified_by_this_audit": false,
+  "outcome": "passed",
+  "provider_or_owner_account_actions": 0,
+  "public_receipt_privacy_files": 6,
+  "public_receipt_privacy_flags": 0,
+  "receipt_hashes": {
+    "frontend-summary.json": "d8f023a83332bc938d9d4946515fda4bd274d11d55cbee3d1c85f048f953689a",
+    "host.json": "f2a48bed099888cad74d8bee6ae9121d4809059f22bd5633de55d5ad8a6891a0",
+    "package-summary.json": "4f43d72c9dc333b8378e2afb10d8938d11e444cdfb470e5745d7ff475d3e5011",
+    "privacy-summary.json": "ee47e8cb771c6da08c88a818e013c82b8bcb5aa2fde12d177e182cfd1f33d778",
+    "setup-summary.json": "154522829a72839e79b2fa6bc553674e5736210692bd6996ab4431d220c9855b",
+    "source-summary.json": "54c51e5e1474866023cc66bb1da92a92cc57706a7960e2d289be90f32dae37fa"
+  },
+  "run_head": "72eb5ed641226567c41e712aa078e30763a73378",
+  "run_id": 39715519894,
+  "runtime_build_outputs_bound_to_native_frontend_receipt": 2,
+  "runtime_members_bound_to_both_source_commits": 111,
+  "schema": 1,
+  "source_archive_members": 371,
+  "source_parent": "012a7e88d13970b2683b27d0824dac246c858179",
+  "source_test_only_delta": [
+    "tests/test_findmy_flow.py"
+  ],
+  "vm_actions": 0
+}

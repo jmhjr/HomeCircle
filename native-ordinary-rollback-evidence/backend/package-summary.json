@@ -1,0 +1,356 @@
+{
+  "backend": {
+    "failed": 0,
+    "failure_labels": [],
+    "passed": 1728,
+    "required_regressions": [
+      {
+        "class": "tests.test_normalize",
+        "function": "test_legacy_pending_gps_skips_passive_residence_but_keeps_explicit_person_state",
+        "passed": true
+      },
+      {
+        "class": "tests.test_city_lookup",
+        "function": "test_close_waits_for_inflight_disk_save",
+        "passed": true
+      },
+      {
+        "class": "tests.test_city_lookup",
+        "function": "test_close_handles_independently_cancelled_disk_save",
+        "passed": true
+      },
+      {
+        "class": "tests.test_city_lookup",
+        "function": "test_close_preserves_caller_cancellation_after_draining",
+        "passed": true
+      },
+      {
+        "class": "tests.test_city_lookup",
+        "function": "test_close_preserves_failed_save_cleanup_disposition",
+        "passed": true
+      },
+      {
+        "class": "tests.test_city_lookup",
+        "function": "test_cancelled_city_save_failure_has_no_raw_loop_diagnostic",
+        "passed": true
+      },
+      {
+        "class": "tests.test_privacy_guard.PrivacyGuardTests",
+        "function": "test_reviewed_public_license_requires_exact_bytes_and_path",
+        "passed": true
+      },
+      {
+        "class": "tests.test_findmy_setup",
+        "function": "test_recovery_credential_failure_after_verification_keeps_actionable_error",
+        "passed": true
+      },
+      {
+        "class": "tests.test_findmy_setup",
+        "function": "test_recovery_bootstrap_logs_only_fixed_credential_reason_and_status",
+        "passed": true
+      },
+      {
+        "class": "tests.test_findmy_setup",
+        "function": "test_recovery_bootstrap_rejects_unknown_credential_metadata",
+        "passed": true
+      },
+      {
+        "class": "tests.test_findmy_recovery_integration",
+        "function": "test_recovery_rate_limit_requires_exact_preproof_transient_status",
+        "passed": true
+      },
+      {
+        "class": "tests.test_findmy_flow",
+        "function": "test_recovery_bootstrap_after_consumed_code_closes_real_flow_without_replay",
+        "passed": true
+      },
+      {
+        "class": "tests.test_findmy_flow",
+        "function": "test_consumed_code_recovery_routing_is_finite_and_stage_specific",
+        "passed": true
+      },
+      {
+        "class": "tests.test_findmy_flow",
+        "function": "test_consumed_code_abort_messages_exist_in_both_locales",
+        "passed": true
+      },
+      {
+        "class": "tests.test_findmy_flow",
+        "function": "test_later_passcode_transient_keeps_its_retry_stage",
+        "passed": true
+      },
+      {
+        "class": "tests.test_findmy_flow",
+        "function": "test_empty_recovery_devices_after_consumed_code_ends_without_replay",
+        "passed": true
+      },
+      {
+        "class": "tests.test_findmy_recovery_protocol",
+        "function": "test_pet_service_failure_preserves_only_current_response_context",
+        "passed": true
+      },
+      {
+        "class": "tests.test_findmy_recovery_protocol",
+        "function": "test_pet_error_context_accepts_only_exact_bounded_metadata",
+        "passed": true
+      },
+      {
+        "class": "tests.test_findmy_recovery_protocol",
+        "function": "test_pet_transport_error_does_not_inherit_preceding_response_context",
+        "passed": true
+      },
+      {
+        "class": "tests.test_findmy_recovery_protocol",
+        "function": "test_pet_cancellation_still_propagates_and_cleans_clone",
+        "passed": true
+      },
+      {
+        "class": "tests.test_findmy_setup",
+        "function": "test_recovery_bootstrap_logs_current_pet_phase_and_bounded_retry_only",
+        "passed": true
+      },
+      {
+        "class": "tests.test_findmy_setup",
+        "function": "test_recovery_bootstrap_revalidates_mutated_pet_error_context",
+        "passed": true
+      },
+      {
+        "class": "tests.test_findmy_setup",
+        "function": "test_discovery_error_site_reports_only_bound_own_source",
+        "passed": true
+      },
+      {
+        "class": "tests.test_findmy_setup",
+        "function": "test_discovery_error_site_rejects_unbound_or_oversized_sites",
+        "passed": true
+      },
+      {
+        "class": "tests.test_findmy_setup",
+        "function": "test_discovery_error_site_prefers_innermost_allowlisted_frame",
+        "passed": true
+      },
+      {
+        "class": "tests.test_findmy_setup",
+        "function": "test_discovery_logs_fixed_pcs_subclass_and_site_without_retry",
+        "passed": true
+      },
+      {
+        "class": "tests.test_findmy_pcs_hardening",
+        "function": "test_strict_outer_auth_failure_exposes_fixed_reason_before_key_unwrap",
+        "passed": true
+      },
+      {
+        "class": "tests.test_findmy_setup",
+        "function": "test_outer_auth_reason_sanitizer_accepts_only_exact_pcs_codes",
+        "passed": true
+      },
+      {
+        "class": "tests.test_findmy_setup",
+        "function": "test_outer_auth_reason_sanitizer_redacts_mutated_or_spoofed_metadata",
+        "passed": true
+      },
+      {
+        "class": "tests.test_findmy_setup",
+        "function": "test_discovery_logs_only_fixed_outer_auth_reason_without_reproof",
+        "passed": true
+      },
+      {
+        "class": "tests.test_findmy_setup",
+        "function": "test_outer_auth_import_failure_preserves_original_discovery_failure",
+        "passed": true
+      },
+      {
+        "class": "tests.test_findmy_pcs_hardening",
+        "function": "test_signature_key_identifiers_accept_only_exact_trusted_p256_encodings",
+        "passed": true
+      },
+      {
+        "class": "tests.test_findmy_vault_hardening",
+        "function": "test_malformed_key_refuses_load_and_save_without_replacement",
+        "passed": true
+      },
+      {
+        "class": "tests.test_findmy_vault_hardening",
+        "function": "test_missing_or_unreadable_store_load_is_redacted_without_creating_files",
+        "passed": true
+      },
+      {
+        "class": "tests.test_findmy_identity_continuity",
+        "function": "test_explicit_disconnect_removes_only_confirmed_malformed_or_missing_owned_store",
+        "passed": true
+      },
+      {
+        "class": "tests.test_findmy_identity_continuity",
+        "function": "test_explicit_disconnect_preserves_unsafe_or_legacy_store_and_metadata",
+        "passed": true
+      },
+      {
+        "class": "tests.test_findmy_recovery_guard",
+        "function": "test_fresh_storage_needs_explicit_review_before_unlock",
+        "passed": true
+      },
+      {
+        "class": "tests.test_findmy_recovery_guard",
+        "function": "test_legacy_ledger_reset_does_not_enroll_another_account",
+        "passed": true
+      },
+      {
+        "class": "tests.test_findmy_recovery_guard",
+        "function": "test_maximum_counter_crash_conversion_is_bounded_and_stays_blocked",
+        "passed": true
+      },
+      {
+        "class": "tests.test_findmy_recovery_guard",
+        "function": "test_missing_witness_does_not_reclassify_pending_or_finish_old_attempt",
+        "passed": true
+      },
+      {
+        "class": "tests.test_findmy_recovery_guard",
+        "function": "test_ordinary_backup_restore_fails_closed_and_review_is_per_account",
+        "passed": true
+      },
+      {
+        "class": "tests.test_findmy_recovery_guard",
+        "function": "test_rollback_with_retained_witness_and_same_counter_aba_is_detected",
+        "passed": true
+      },
+      {
+        "class": "tests.test_findmy_recovery_guard",
+        "function": "test_unsafe_witness_never_allows_unlock_or_changes_ledger",
+        "passed": true
+      },
+      {
+        "class": "tests.test_findmy_recovery_guard",
+        "function": "test_witness_commit_failure_never_permits_dispatch",
+        "passed": true
+      },
+      {
+        "class": "tests.test_findmy_recovery_guard",
+        "function": "test_witness_from_another_identity_cannot_authorize_account",
+        "passed": true
+      },
+      {
+        "class": "tests.test_findmy_recovery_guard",
+        "function": "test_witness_must_be_outside_ledger_tree",
+        "passed": true
+      },
+      {
+        "class": "tests.test_findmy_recovery_guard",
+        "function": "test_zero_account_ledger_does_not_reuse_retained_witness",
+        "passed": true
+      },
+      {
+        "class": "tests.test_findmy_recovery_integration",
+        "function": "test_restore_review_acknowledges_only_authenticated_account_without_proof",
+        "passed": true
+      },
+      {
+        "class": "tests.test_findmy_recovery_integration",
+        "function": "test_restore_review_requires_exact_consent_without_unlock",
+        "passed": true
+      },
+      {
+        "class": "tests.test_findmy_recovery_integration",
+        "function": "test_rolled_back_ledger_refuses_before_sdk_unlock",
+        "passed": true
+      }
+    ],
+    "skipped": 1
+  },
+  "backend_diagnostics": {
+    "acceptance_qualified": false,
+    "ambiguous_outcome_records": 0,
+    "case_records": 1729,
+    "duplicate_identities": 0,
+    "duplicate_label_functions": 0,
+    "duplicate_labels": [],
+    "duplicate_records": 0,
+    "error_records": 0,
+    "failed": 0,
+    "failure_label_functions": 0,
+    "failure_labels": [],
+    "failure_records": 0,
+    "maximum_label_functions_per_kind": 12,
+    "passed": 1728,
+    "public_source_bound_labels": true,
+    "raw_failure_text_exported": false,
+    "raw_test_parameters_exported": false,
+    "schema": 1,
+    "scope": "unaccepted_junit_record_diagnostics",
+    "skipped": 1,
+    "unclassified_duplicate_identities": 0,
+    "unclassified_failure_records": 0
+  },
+  "backend_network_disconnected_required": true,
+  "baseline_red": {
+    "all_expected_regressions_observed": true,
+    "baseline_source_commit": "fc0bba472cd60a06dac6bab30b7d011fd533624b",
+    "baseline_vault_sha256": "7c6a846cefba6a34647d84b7738a93d85738a948da32fbf752a96c4e1cf4c0f2",
+    "cause_verified": true,
+    "collection_errors": 0,
+    "combined_red_green_deadline_seconds": 900,
+    "expected_failure_cases": 14,
+    "fixed_source_unchanged": true,
+    "outcome": "passed",
+    "private_copy_removed": true,
+    "provider_or_owner_accounts_used": false,
+    "public_files_only_copy": true,
+    "schema": 1,
+    "skipped": 0
+  },
+  "candidate_source_commit": "57b0aaa5c2c4b1a022e547347640173412e840f5",
+  "completed": true,
+  "constraints_sha256": "962c9ccaf398e0b92b10ac9f765ac0f17e22238adc4e768deebc051ee8b60651",
+  "core": "2026.9.4",
+  "full_managed_core_lifecycle": false,
+  "hacs_delivery_tested": false,
+  "installed_dependency_closure": {
+    "aiohappyeyeballs": "2.7.1",
+    "aiohttp": "3.14.3",
+    "aiosignal": "1.4.0",
+    "anisette": "1.2.4",
+    "appdirs": "1.4.4",
+    "attrs": "26.1.0",
+    "beautifulsoup4": "4.13.3",
+    "certifi": "2026.7.22",
+    "frozenlist": "1.8.0",
+    "fs": "2.4.16",
+    "idna": "3.20",
+    "life360": "7.2.0",
+    "multidict": "6.9.1",
+    "propcache": "0.5.2",
+    "protobuf": "6.32.0",
+    "pyelftools": "0.33",
+    "setuptools": "81.0.0",
+    "six": "1.17.0",
+    "soupsieve": "2.10",
+    "srp": "1.0.22",
+    "typing-extensions": "4.16.0",
+    "unicorn": "2.1.4",
+    "urllib3": "2.8.0",
+    "yarl": "1.24.5"
+  },
+  "machine": "x86_64",
+  "minimum_backend_passed": 1698,
+  "outcome": "passed",
+  "owner_accounts_used": false,
+  "package_matches_exact_source_and_built_frontend": true,
+  "production_configuration_used": false,
+  "python": "3.14.6",
+  "release_bytes": 620228,
+  "release_files": 113,
+  "release_inventory_sha256": "370a0036f03bd2b7185afc7a9ddcf7d6545e41cfb6394f00fc699a2973db33aa",
+  "release_published": false,
+  "release_sha256": "98a754ff2025761c2eb63d6422c9b17b76e2bdef2965c96fe353ab6c2c21fb20",
+  "release_version": "0.1.0-beta.20",
+  "reproducible_archive": true,
+  "same_version_unreleased_development_preview": true,
+  "schema": 1,
+  "source_files": 371,
+  "source_inventory_sha256": "a76c902b3489c296f28dd9c62cd88e33d28308518093c79a533ebfb8bb0b4639",
+  "source_sha256": "69ab1c08cadd7e9d7a0adcb1ec41678fc1e77462d2e831035964e80badf5ba7b",
+  "unchanged_builder_sha256": "0c1ac7f979817bd5fc2cd4a4101571931488d6972bc6f181a26ac21edcf8c7d0",
+  "unchanged_validator_sha256": "20c0466b4fa70a83c5f282bfcd07b0d2e6f5a3a1a09bf90072649441b2ad7f37",
+  "upgrade_recovery_repeated": false,
+  "version_substitutions_performed": false
+}

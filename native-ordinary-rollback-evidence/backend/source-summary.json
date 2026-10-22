@@ -1,0 +1,11 @@
+{
+  "candidate_source_commit": "57b0aaa5c2c4b1a022e547347640173412e840f5",
+  "candidate_source_prefix": "",
+  "canonical_commit_blobs_verified": 371,
+  "outcome": "passed",
+  "public_inventory_scope_only": true,
+  "schema": 1,
+  "source_files": 371,
+  "source_inventory_sha256": "a76c902b3489c296f28dd9c62cd88e33d28308518093c79a533ebfb8bb0b4639",
+  "source_sha256": "69ab1c08cadd7e9d7a0adcb1ec41678fc1e77462d2e831035964e80badf5ba7b"
+}

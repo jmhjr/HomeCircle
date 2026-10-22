@@ -1,0 +1,115 @@
+{
+  "files": {
+    ".github/workflows/native-ordinary-rollback-restore.yml": {
+      "bytes": 8363,
+      "sha256": "277104fa67c7ff6e321cb0e7de5182dc13a89c9be4822d1de691e963694926e7"
+    },
+    "README.md": {
+      "bytes": 13717,
+      "sha256": "4f8c444588be04b933490964d5c14f664e9d81156764d34a7da4596d2c0e57da"
+    },
+    "accept_saved_storage.py": {
+      "bytes": 5761,
+      "sha256": "ee502a99f72ef9c2fb61e91898df9d56fea4fc68d44489ad357656069ba02a6a"
+    },
+    "baseline-controls.json": {
+      "bytes": 3628,
+      "sha256": "40e7cfbeb72a16e44b16e294a8ad97d8798c786bf8633b900750997d9dd52942"
+    },
+    "candidate_binding.json": {
+      "bytes": 217,
+      "sha256": "256d097e1b73e3bf67cd38c3f2409a082b675c610f8ce2847e37739ab1c6f3cd"
+    },
+    "control_publication.py": {
+      "bytes": 3408,
+      "sha256": "2303106d0d2eed2c23dc594a1a323dbde87b4e76b7a2ffd90f0d75934321e571"
+    },
+    "controller.py": {
+      "bytes": 50123,
+      "sha256": "a73959b9366cc734065218b09898271292cd937b9b29851db2fa19e02cd8c42e"
+    },
+    "enabled_protocol.py": {
+      "bytes": 4206,
+      "sha256": "20a1ef04e45af772bc83c87dd54fc613f462f97b697dcb6db1ee8d135c956915"
+    },
+    "guard_context.py": {
+      "bytes": 10708,
+      "sha256": "7d69de4b10ae725795c42a4089f61cb972a3d48c5f6032680eea26c935ef5922"
+    },
+    "guard_transfer.py": {
+      "bytes": 24749,
+      "sha256": "590030e0c7eff81457e56c4cfc7b0d75ad0c079be3ede6e6da083d8fb4e95d84"
+    },
+    "guest_helper/__init__.py": {
+      "bytes": 368,
+      "sha256": "0893350b7137e8a97d45c3213d56aa874da7626fe23e0fbedeffacc8b4035609"
+    },
+    "guest_helper/_ordinary_boundary.py": {
+      "bytes": 9722,
+      "sha256": "5a823ac966469c2c41fabf9296d6a32936129d5bfee44de5ff215dbf19289d05"
+    },
+    "guest_helper/homecircle_safe_restore_qa/__init__.py": {
+      "bytes": 54960,
+      "sha256": "da5f54da351a9ff7c3c5048c729b257d0d7a67ecd0716eda18e08c76271996cf"
+    },
+    "guest_helper/homecircle_safe_restore_qa/dependency_probe.py": {
+      "bytes": 7876,
+      "sha256": "61e4abebeaaca38b9ea316d80a9503b8cf271b774771e28d84d9ab87479427dc"
+    },
+    "guest_helper/homecircle_safe_restore_qa/failure_diagnostics.py": {
+      "bytes": 5435,
+      "sha256": "1a6dbb1d5d7703c262574653ce9334dcd72bab049796000482253f5789ef48d4"
+    },
+    "guest_helper/homecircle_safe_restore_qa/manifest.json": {
+      "bytes": 396,
+      "sha256": "c2fca85fb64c4e7bfcea9f38289e6f118f6e0ddb4063a52f0c43736eee926983"
+    },
+    "guest_helper/homecircle_safe_restore_qa/startup_boundary.py": {
+      "bytes": 298,
+      "sha256": "affec5605c56268923a514e25cd35a8b3d9cc02953ab37ecb651dc127635b207"
+    },
+    "legacy_controller.py": {
+      "bytes": 156446,
+      "sha256": "ced996c5063613a8d93b0f5f54e7da014d6bf3c4d4dd7be98a13e9e9f363403c"
+    },
+    "payload/homecircle.zip": {
+      "bytes": 620228,
+      "sha256": "98a754ff2025761c2eb63d6422c9b17b76e2bdef2965c96fe353ab6c2c21fb20"
+    },
+    "payload/inventory.json": {
+      "bytes": 16823,
+      "sha256": "370a0036f03bd2b7185afc7a9ddcf7d6545e41cfb6394f00fc699a2973db33aa"
+    },
+    "payload/provenance.json": {
+      "bytes": 606,
+      "sha256": "db0368d1377bf39d1371c43e554774a61d319235cc4a5a5589fbb12997340029"
+    },
+    "reset_fresh_config.py": {
+      "bytes": 3814,
+      "sha256": "df600d5695de2d09feabcded9e59d81dcc8149be2082b19b7931e0f11f12aa3c"
+    },
+    "run_host.sh": {
+      "bytes": 656,
+      "sha256": "19e047f20d970b1728b790fba65354335b6a957a74362f457379d40e2f55ac1f"
+    },
+    "storage_context.py": {
+      "bytes": 10796,
+      "sha256": "4b828bbc5d00c37698ec892f8d24fbea736982d0b65c445efd1f9abc91f6da60"
+    },
+    "storage_protocol.json": {
+      "bytes": 6458,
+      "sha256": "b73b35a2895a6db71d250d01da72c98f7c15cb14dc8e6c16872b772d36c654d3"
+    },
+    "storage_transfer.py": {
+      "bytes": 44771,
+      "sha256": "03d22866016b63b1bd1394be65f6ff5133af2f8b157ee79c6165cf7d8fd579c9"
+    },
+    "test_ordinary_contract.py": {
+      "bytes": 31095,
+      "sha256": "87d7b0044b3bca1398617e3a7f12cec48177e40299b43acba2da09dea380acda"
+    }
+  },
+  "fixture_name": "native-ordinary-rollback-restore",
+  "schema": 1,
+  "source_commit": "012a7e88d13970b2683b27d0824dac246c858179"
+}

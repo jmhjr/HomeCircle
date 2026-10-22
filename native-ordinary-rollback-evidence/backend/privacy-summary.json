@@ -1,0 +1,11 @@
+{
+  "candidate_source_commit": "57b0aaa5c2c4b1a022e547347640173412e840f5",
+  "checker_exit": 0,
+  "checker_sha256": "216331d16af8fb2ec636e1466303923ecfe32c76f78ea72f89d373c80c9713d2",
+  "files_checked": 371,
+  "flagged_patterns": 0,
+  "outcome": "passed",
+  "schema": 1,
+  "source_inventory_sha256": "a76c902b3489c296f28dd9c62cd88e33d28308518093c79a533ebfb8bb0b4639",
+  "source_sha256": "69ab1c08cadd7e9d7a0adcb1ec41678fc1e77462d2e831035964e80badf5ba7b"
+}

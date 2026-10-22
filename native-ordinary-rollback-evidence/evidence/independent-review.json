@@ -1,0 +1,69 @@
+{
+  "artifact_id": 12401877265,
+  "artifact_name": "ordinary-rollback-restore-receipts",
+  "artifact_zip_sha256": "d87250aef1cb73fce9d5de778f005ec9e678732044b11c96c0890442469c956a",
+  "candidate_source_commit": "012a7e88d13970b2683b27d0824dac246c858179",
+  "candidate_zip_sha256": "98a754ff2025761c2eb63d6422c9b17b76e2bdef2965c96fe353ab6c2c21fb20",
+  "collector_sha256": "71e10bc211f6ed954b956e3165048865ddaace6d7e9fe00d09ab329093494a1f",
+  "fixture_code_executed_or_imported": false,
+  "frozen_input_files_verified": 27,
+  "frozen_inputs_sha256": "9be711b6da7fa3c61326865da4d7cd997f6d429956fa538d49ad8b7063a1dd6d",
+  "head_sha": "4957b3f44e84837e01af731286c0728a4127aea3",
+  "literal_source_members": 111,
+  "native_trial_repeated_by_collector": false,
+  "outcome": "passed",
+  "previously_qualified_generated_frontend_members": 2,
+  "product_files": 113,
+  "receipts": {
+    "automatic_restored_enabled.json": {
+      "bytes": 6632,
+      "sha256": "b35df40be82a964ca3ada248dd615d6ac6013764f2a93262cdd200548afee5d6"
+    },
+    "baseline_enabled.json": {
+      "bytes": 6567,
+      "sha256": "d61eec5d1bcfd6404133c5b504dd180e60f56d6354a47a710fb895408aa30b1e"
+    },
+    "host.json": {
+      "bytes": 13148,
+      "sha256": "d19669d69131fdc66cb51f31be3b520bf847723744bc93c71f26287b3469af3f"
+    },
+    "mutated_enabled.json": {
+      "bytes": 6566,
+      "sha256": "3158d6f61b0fc11b278fd9a6b7a4fe416e90704aa6a3e5c1b1310d4fe866112b"
+    },
+    "restart_enabled.json": {
+      "bytes": 6620,
+      "sha256": "fcd0110e1f4cdeb1ceba092280e6cdcfd183622d8e4529d5264fe13e4c1ce454"
+    }
+  },
+  "root_metadata_separate_from_artifact": true,
+  "run_attempt": 1,
+  "run_id": 39721983991,
+  "schema": 1,
+  "scoped_acceptance": {
+    "all_113_product_bytes_unchanged": true,
+    "automatic_restore_guard_block_verified": true,
+    "environmental_transport_instrumentation": true,
+    "full_VM_snapshot_rollback_qualified": false,
+    "full_encrypted_cloud_backup_qualified": false,
+    "guard_counters": [
+      2,
+      3,
+      2,
+      2
+    ],
+    "manual_guard_repair_used": false,
+    "normal_managed_requirements_verified": true,
+    "outcome": "passed",
+    "owner_acknowledgments_after_restore": 0,
+    "real_provider_authentication_qualified": false,
+    "recorder_continuity_verified": true,
+    "schema": 1,
+    "scope": "ordinary_unmodified_product_synthetic_partial_restore",
+    "stable_release_approval": false
+  },
+  "source_inventory_files": 371,
+  "source_inventory_sha256": "915f96349ff66e272843bab0c4a57c4698da352fea8a3de372588549ad590652",
+  "strict_nested_public_schema_checked": true,
+  "workflow_sha256": "277104fa67c7ff6e321cb0e7de5182dc13a89c9be4822d1de691e963694926e7"
+}

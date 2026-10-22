@@ -1,0 +1,16 @@
+{
+  "artifact_id": 12398936727,
+  "artifact_name": "rollback-package-validation-receipts",
+  "artifact_zip_sha256": "f9008e8894a7a0ea2d656254527e0fd18c7504978620f19c1cd520a7f19167fa",
+  "branch": "codex/native-amd64-validation",
+  "conclusion": "success",
+  "event": "push",
+  "github_digest_verified": true,
+  "head_sha": "72eb5ed641226567c41e712aa078e30763a73378",
+  "run_attempt": 1,
+  "run_id": 39715519894,
+  "schema": 1,
+  "status": "completed",
+  "workflow_path": ".github/workflows/native-rollback-package.yml",
+  "workflow_sha256": "16feb26b049dcb90370c127f3ac36ef6983d9acd8a219002a9085a69494477bf"
+}

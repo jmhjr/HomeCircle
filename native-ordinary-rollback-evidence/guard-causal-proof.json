@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "checked": "2026-10-22T02:50:09.330442+00:00",
+  "old_source": "91ae59106a661143b770d7a3564d363c7c11a7dd",
+  "new_source": "012a7e88d13970b2683b27d0824dac246c858179",
+  "new_guard_sha256": "8e30539172c7f0d9606be8adab77bfefa52d7e5547ed4daca42f1374fb1c0957",
+  "baseline": {
+    "older_counter": 2,
+    "post_backup_counter": 3,
+    "restored_counter": 2,
+    "additional_proof_reservation_allowed": true,
+    "cause": "ledger_only_restore_replenished_local_allowance"
+  },
+  "fixed": {
+    "older_counter": 2,
+    "post_backup_counter": 3,
+    "restored_counter": 2,
+    "retained_witness_rollback_blocked": true,
+    "missing_witness_restore_blocked": true,
+    "restart_remains_blocked": true,
+    "status_did_not_repair_ledger": true,
+    "explicit_review_is_account_scoped": true,
+    "automatic_proof_reservations_after_restore": 0
+  },
+  "synthetic_only": true,
+  "provider_calls": 0,
+  "owner_instance_actions": 0,
+  "temporary_copy_removed": true
+}

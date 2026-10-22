@@ -1,0 +1,36 @@
+{
+  "candidate_source_commit": "57b0aaa5c2c4b1a022e547347640173412e840f5",
+  "completed": true,
+  "frontend_bundle": {
+    "LEAFLET-LICENSE.txt": {
+      "bytes": 1395,
+      "sha256": "53e8dc25862014e4324741ca18fbe3611e11d42ef69f59f86ea8c5389647d4cb"
+    },
+    "homecircle-card.js": {
+      "bytes": 276650,
+      "sha256": "77f429fb1908acc21cde2c89614f05f12c60a09bb37fa6ca78a1830ec07c6f91"
+    }
+  },
+  "frontend_reproducible": true,
+  "frontend_tests_failed": 0,
+  "frontend_tests_passed": 122,
+  "leaflet_notice_matches_dependency": true,
+  "outcome": "passed",
+  "owner_accounts_used": false,
+  "privacy": {
+    "candidate_source_commit": "57b0aaa5c2c4b1a022e547347640173412e840f5",
+    "checker_exit": 0,
+    "checker_sha256": "216331d16af8fb2ec636e1466303923ecfe32c76f78ea72f89d373c80c9713d2",
+    "files_checked": 371,
+    "flagged_patterns": 0,
+    "outcome": "passed",
+    "schema": 1,
+    "source_inventory_sha256": "a76c902b3489c296f28dd9c62cd88e33d28308518093c79a533ebfb8bb0b4639",
+    "source_sha256": "69ab1c08cadd7e9d7a0adcb1ec41678fc1e77462d2e831035964e80badf5ba7b"
+  },
+  "same_version_unreleased_development_preview": true,
+  "schema": 1,
+  "source_files": 371,
+  "source_inventory_sha256": "a76c902b3489c296f28dd9c62cd88e33d28308518093c79a533ebfb8bb0b4639",
+  "source_sha256": "69ab1c08cadd7e9d7a0adcb1ec41678fc1e77462d2e831035964e80badf5ba7b"
+}
