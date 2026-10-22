@@ -1,29 +1,7 @@
-# Native current Core focused checks
+# Focused native activity regression validation
 
-This preparation adapts the already installed `native-amd64-validation.yml` workflow
-without changing its YAML or requesting workflow permissions. Publish this directory
-as `native-validation/` on the QA branch after reviewing and filling every input pin.
-The existing push path filter starts it. The old workflow display name is historical;
-all receipts explicitly qualify only focused pytest execution on native Linux AMD64.
+Canonical test source: 90cd91cb30d0291c422d554183c664717daa7832. Product runtime is unchanged from96a4175f18782ef27d4c05c656f6759ffe132088; package f181e6300f15d8977817a552db90d35caf0edc869067ebeea815c7be1df0248e.
 
-Inputs are a canonical source tarball and per-file inventory, the matching development
-package and inventory, and `payload/config.json` filled from the example. Set
-`CONFIG.sha256` to the final configuration digest after pinning `driver.py` and all
-payload bytes. Any pending template value fails closed before a container is created.
-The source commit is verified by exact Git blob readback; a shallow checkout fetches
-only the pinned public commit if needed. No credentials or owner state enter the guest.
+The four new regressions cover projected item activity, retained history, restart and real setup ordering. Existing activity/provider setup/isolation tests also run. Core2026.10.2 dependencies are prepared online without owner state, then container networking is removed for pytest. This is focused pytest evidence only; it is not an HAOS upgrade/ordinary restore or full-suite result.
 
-The pinned Core 2026.10.2 image and exact Core constraints prepare the matching
-pytest-homeassistant-custom-component 0.13.373 package and declared dependencies.
-The container has no host mounts or published ports. Networking is disconnected and
-checked before pytest. All four new projection tests and the existing activity,
-provider setup and startup-isolation modules must pass with no skips or errors.
-Receipts name every observed passing case. Private test output is deleted after
-collecting only fixed-label JSON receipts and proving owned container cleanup.
-
-This does not repeat the complete backend suite, run a managed Core lifecycle,
-exercise KVM, validate an upgrade, use owner accounts or publish a release.
-
-The second source revision corrects only the synthetic setup fixture to provide explicit selected residence IDs. Product files and the f181 package are unchanged. Original failed runs remain separate evidence.
-
-Final fixture source also labels its unchanged synthetic coordinate tuple explicitly for the content guard. No product bytes changed.
+Source bytes and package members are checked before and after tests. Failure diagnostics contain only bounded public function/module identities, source line numbers and allowlisted exception classes. Cleanup is required.

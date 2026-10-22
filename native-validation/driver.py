@@ -311,7 +311,9 @@ def focused_diagnostic(xml, exit_code):
                     if frame not in frames:frames.append(frame)
             kind=node.attrib.get('type','')
             details.append({'type':kind if re.fullmatch(r'[A-Za-z_][A-Za-z0-9_.]{0,100}',kind) else 'unclassified',
-                            'selected_source_frames':frames[:20]})
+                            'selected_source_frames':frames[:20],
+                            'exception_kinds':sorted(set(re.findall(r'\b(?:ExceptionGroup|AssertionError|RuntimeError|TimeoutError|TypeError|KeyError|Failed|CancelledError)\b',(node.text or '')+' '+node.attrib.get('message','')))),
+                            'fixture_source_frames':[{'file':name,'line':int(line)} for name,line in re.findall(r'(pytest_homeassistant_custom_component/[A-Za-z_]+[.]py):([0-9]{1,5})',node.text or '')][:20]})
         result["cases"].append({"class": classname, "function": function,
                                 "failed": failed, "skipped": skipped,'failure_locations':details})
     return result
