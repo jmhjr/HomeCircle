@@ -85,3 +85,12 @@ household still works, and recording the recovery endpoint. Retain the latest
 recovery guard and protected backups according to the chosen restore plan.
 Reconcile failures before beginning another account attempt. The final RC,
 genuine HACS delivery and stable publication remain separate identified stages.
+
+## Enabled-candidate restart follow-up
+
+The [enabled-candidate restart and passive observation](RELEASE-1.0-ENABLED-CANDIDATE.md)
+records the normal restart and bounded observation of the existing test selection.
+It keeps startup polling, cached availability and newer source reports separate.
+The first window's Find My selection-coverage gap is retained alongside the
+corrected observation. This does not qualify enabled backup restoration,
+credential renewal or broad provider acceptance.

@@ -1,0 +1,132 @@
+{
+  "candidate": {
+    "backend_failed": 0,
+    "backend_passed": 1698,
+    "changed_runtime_members": [
+      "findmy_vault.py"
+    ],
+    "existing_optional_fixture_skipped": 1,
+    "frontend_passed": 122,
+    "inventory_sha256": "d7e70cb639d77836fa2ac15b26f95e2f31ea599dbfff580cfae60a5a827cfe5b",
+    "native_run_id": 39683890536,
+    "required_regression_functions_passed": 36,
+    "runtime_members": 113,
+    "zip_sha256": "004c9bc4a968ad395e18033837cb42f5bd1d8719a8d90fc778fd20be4ff08f97"
+  },
+  "display_observation": {
+    "manual_browser_reload_needed": false,
+    "same_signed_in_dashboard_retained_two_selected_cards_after_restart": true,
+    "scope": "existing_test_selection_only"
+  },
+  "first_window_preserved": {
+    "both_API_success_after_Core_start": true,
+    "completed": true,
+    "corrected_window_uses_actual_stable_tracker_identity": true,
+    "coverage_gap": "generic_items_omitted_saved_FindMy_item_join",
+    "findmy_selected_entity_coverage": false,
+    "findmy_source_timestamp_advancement_measured": false,
+    "product_or_configuration_change_for_observer_correction": false
+  },
+  "installation": {
+    "all_checks_passed_at_each_of_four_readbacks": true,
+    "continuity_checks": 14,
+    "credential_or_proof_submission": false,
+    "duration_seconds": 35,
+    "exact_installed_package_verified": true,
+    "guard_reset_or_recovery_needed": false,
+    "guest_calls": 12,
+    "newest_ledger_retained_outside_entire_vm_and_equal": true,
+    "normal_managed_stop_check_start": true,
+    "remote_exposure_remained_closed": true,
+    "saved_accounts_selection_key_household_and_guard_preserved": true,
+    "stopped_protected_files": 9,
+    "stopped_protected_files_unchanged": true
+  },
+  "manual_newest_guard_retention_and_repair_before_enabling_older_restore_required": true,
+  "outcome": "normal_enabled_restart_and_finite_passive_observation_recorded",
+  "passive_observation": {
+    "attention_required": false,
+    "automatic_retries": 0,
+    "both_connected_and_API_success_after_Core_start_all_four_samples": true,
+    "candidate_members_and_saved_explicit_joins_verified": true,
+    "closed": true,
+    "configured_people_present_all_four_samples": 1,
+    "family_refresh_enabled": false,
+    "findmy": {
+      "API_success_after_observation_start": false,
+      "accounts": 1,
+      "decoded_reports_in_latest_poll": 14,
+      "items_with_returned_valid_reports": 1,
+      "latest_account_poll_status": "success",
+      "logical_SDK_fetch_calls_in_latest_poll": 5,
+      "selected_item_type": "airtag",
+      "selected_items": 1,
+      "source_timestamp_advanced_within_window": false,
+      "source_timestamp_at_least_five_minutes_old_all_samples": true
+    },
+    "guest_calls": 1,
+    "host_maximum_seconds": 150,
+    "life360": {
+      "API_success_after_observation_start_by_sample": [
+        false,
+        true,
+        true,
+        true
+      ],
+      "HA_state_write_time_advanced_by_sample": [
+        false,
+        true,
+        true,
+        true
+      ],
+      "source_timestamp_advanced_by_sample": [
+        false,
+        false,
+        false,
+        true
+      ],
+      "source_timestamp_less_than_five_minutes_old_final_sample": true
+    },
+    "local_api_GET_calls": 21,
+    "manual_provider_calls_forced": 0,
+    "minimum_sample_spacing_seconds": 30,
+    "normal_background_provider_traffic_allowed": true,
+    "observation_maximum_seconds": 120,
+    "observer_contracts_passed": 32,
+    "observer_contracts_skipped": 0,
+    "original_and_owned_registry_preserved": true,
+    "outcome": "observed",
+    "raw_HTTP_request_totals_measured": false,
+    "registered_life360_trackers": 5,
+    "same_owned_Core_process": true,
+    "samples": 4,
+    "selected_present_available_and_source_time_present_all_four_samples": true,
+    "selected_trackers_per_provider": 1
+  },
+  "previous_installed_source_commit": "f4da650e6e460382c6ee1f70827bddac43bf2780",
+  "private_receipt_digests_identities_paths_keys_or_location_values_included": false,
+  "qualified": {
+    "automatic_guard_rollback_safety": false,
+    "broad_provider_account_acceptance": false,
+    "credential_renewal": false,
+    "enabled_provider_vault_restore": false,
+    "final_RC_HACS_and_stable_release": false,
+    "finite_passive_read_completed": true,
+    "fresh_authentication": false,
+    "full_system_encrypted_or_cloud_backup": false,
+    "long_term_operation": false,
+    "movement_or_physical_location_parity": false,
+    "normal_enabled_restart_witness": true
+  },
+  "recorded_on": "2026-10-21",
+  "schema": 1,
+  "separate_restore_witness": {
+    "default_conditions_disabled_synthetic_restore_qualified": true,
+    "enabled_provider_restore_qualified": false,
+    "ordinary_default_supervisor_restore_qualified": false,
+    "restore_performed_during_enabled_restart_observation": false,
+    "run_id": 39697883468,
+    "scope": "default_conditions_disabled_synthetic_saved_storage_with_manual_newest_guard_repair"
+  },
+  "source_commit": "91ae59106a661143b770d7a3564d363c7c11a7dd"
+}
