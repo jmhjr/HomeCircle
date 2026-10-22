@@ -317,6 +317,52 @@ class FailureDiagnosticContracts(unittest.TestCase):
             self.assertEqual(control.guest_failures,[public])
 
 
+class StartupImportOrderContracts(unittest.TestCase):
+    def test_actual_guard_lazy_import_discriminates_strict_startup_shape(self):
+        import importlib,json,sys,tempfile,zipfile
+        from unittest.mock import patch
+        boundary=boundary_module()
+        finder=boundary.BoundaryFinder()
+        boundary._state.update(finder=finder,loaded=set(boundary.TARGETS.values())-{'guard'})
+        boundary._state['counts'].update(life360_sessions_created=1,life360_requests_denied=1,
+            apple_legacy_requests_denied=1)
+        source_path=ROOT/'guest_helper/homecircle_safe_restore_qa/__init__.py'
+        source=ast.parse(source_path.read_bytes())
+        fn=next(n for n in source.body if isinstance(n,ast.FunctionDef) and n.name=='startup_receipt')
+        def check(ok,label):
+            if not ok:raise c.Refused(label)
+        values={'startup_boundary':types.SimpleNamespace(snapshot=boundary.snapshot),'check':check}
+        exec(compile(ast.Module(body=[fn],type_ignores=[]),str(source_path),'exec'),values)
+        with tempfile.TemporaryDirectory() as folder:
+            package=Path(folder).resolve()/'homecircle';package.mkdir(mode=0o700)
+            with zipfile.ZipFile(ROOT/'payload/homecircle.zip') as archive:
+                source=archive.read('findmy_recovery_guard.py')
+            import hashlib
+            inventory=json.loads((ROOT/'payload/inventory.json').read_bytes())['files']
+            self.assertEqual(hashlib.sha256(source).hexdigest(),inventory['findmy_recovery_guard.py']['sha256'])
+            (package/'findmy_recovery_guard.py').write_bytes(source)
+            parent=types.ModuleType('custom_components');parent.__path__=[str(package.parent)]
+            child=types.ModuleType('custom_components.homecircle');child.__path__=[str(package)]
+            with patch.dict(sys.modules,{'custom_components':parent,'custom_components.homecircle':child,
+                    'custom_components._ordinary_boundary':boundary}):
+                sys.modules.pop('custom_components.homecircle.findmy_recovery_guard',None)
+                sys.meta_path.insert(0,finder)
+                try:
+                    before=boundary.snapshot()
+                    self.assertEqual(before['loaded_target_kinds'],sorted(set(boundary.TARGETS.values())-{'guard'}))
+                    with self.assertRaisesRegex(c.Refused,'qa_startup_boundary_shape'):
+                        values['startup_receipt']()
+                    guard=importlib.import_module('custom_components.homecircle.findmy_recovery_guard')
+                    self.assertEqual(Path(guard.__file__).resolve(),package/'findmy_recovery_guard.py')
+                    after=values['startup_receipt']()
+                    self.assertEqual(after['loaded_target_kinds'],sorted(boundary.TARGETS.values()))
+                    self.assertEqual({k:v for k,v in before.items() if k!='loaded_target_kinds'},
+                        {k:v for k,v in after.items() if k!='loaded_target_kinds'})
+                    self.assertEqual(len(boundary._state['patches']),1)
+                    self.assertEqual(boundary._state['patches'][0][1],'before_dispatch')
+                finally:sys.meta_path.remove(finder)
+
+
 class AtomicHandshakeContracts(unittest.TestCase):
     def publication_files(self,folder):
         import json,hashlib

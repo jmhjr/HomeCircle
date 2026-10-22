@@ -740,12 +740,14 @@ class Rehearsal:
                             stage = "normal_dependencies"
                             dependencies = await self.hass.async_add_executor_job(dependency_fixture_at, self.directory, inputs, self.hass.config.skip_pip)
                             selection = await self.hass.async_add_executor_job(selected_mapping, self.directory, entry)
-                            stage = "runtime_details"
-                            runtime = await runtime_details(self.hass, entry, selection, inputs)
                             check(observed == baseline["observed_storage"] and joins == baseline["joins_sha256"]
                                   and guard_sha == baseline["guard_sha256"], "qa_automatic_raw_baseline_changed")
+                            # Match every other phase: inspect the real local guard
+                            # before requiring its lazy import observer in the fence.
                             stage = "recovery_guard"
                             recovery = await guard_receipt(self.hass, entry, restored=True)
+                            stage = "runtime_details"
+                            runtime = await runtime_details(self.hass, entry, selection, inputs)
                             stage = "recorder"
                             postrestore = await record_window(self.hass, [], "after_restore_")
                             await self.hass.async_add_executor_job(write_json, self.control / "postrestore-history.json", postrestore)
