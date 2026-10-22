@@ -1,0 +1,112 @@
+name: HomeCircle Person and activity ordinary restore
+on:
+  push:
+    branches: [codex/native-amd64-validation]
+    paths:
+      - native-person-activity-restore/**
+      - .github/workflows/native-person-activity-restore.yml
+permissions:
+  contents: read
+concurrency:
+  group: homecircle-person-activity-restore-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  person-activity-restore:
+    if: github.ref == 'refs/heads/codex/native-amd64-validation'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 125
+    steps:
+      - name: Check out exact reviewed procedure and qualified preview
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Verify every frozen fixture file before imports
+        timeout-minutes: 3
+        shell: bash
+        run: |
+          python3 -I -B - <<'PY'
+          from pathlib import Path, PurePosixPath
+          import hashlib, re, stat, subprocess
+          root = Path('native-person-activity-restore')
+          expected = {'README.md': 'c68dbccb9495fca407b758ab662b2fcc4e861dbdf34493b21de36da06495c31b', 'accept_saved_storage.py': '98800f7b9b8ebe2d7239dbfd641b9f1fea26246be7810b5b1972170eb71c4e19', 'archive_person_activity.py': '1a1b964d25c8bca58f215ef00279adc5abc64547b35d5496b94eaa3170484d9f', 'baseline-controls.json': '40e7cfbeb72a16e44b16e294a8ad97d8798c786bf8633b900750997d9dd52942', 'candidate_binding.json': '256d097e1b73e3bf67cd38c3f2409a082b675c610f8ce2847e37739ab1c6f3cd', 'control_publication.py': '2303106d0d2eed2c23dc594a1a323dbde87b4e76b7a2ffd90f0d75934321e571', 'controller.py': '8f4b424331007f93cc91a9247fc81d200c97301f6c759847ae5000e137d00a3c', 'enabled_protocol.py': '20a1ef04e45af772bc83c87dd54fc613f462f97b697dcb6db1ee8d135c956915', 'guard_context.py': '7d69de4b10ae725795c42a4089f61cb972a3d48c5f6032680eea26c935ef5922', 'guard_transfer.py': '590030e0c7eff81457e56c4cfc7b0d75ad0c079be3ede6e6da083d8fb4e95d84', 'guest_helper/__init__.py': '0893350b7137e8a97d45c3213d56aa874da7626fe23e0fbedeffacc8b4035609', 'guest_helper/_ordinary_boundary.py': '5a823ac966469c2c41fabf9296d6a32936129d5bfee44de5ff215dbf19289d05', 'guest_helper/homecircle_safe_restore_qa/__init__.py': 'b876e3abda2eace57623a5494624715ad386d0c92a62a3a502bf7249c1465993', 'guest_helper/homecircle_safe_restore_qa/dependency_probe.py': '61e4abebeaaca38b9ea316d80a9503b8cf271b774771e28d84d9ab87479427dc', 'guest_helper/homecircle_safe_restore_qa/failure_diagnostics.py': '8c61f11e80214eaf0985c74412c200fe6629303c922a295dc65d8673694dfc9b', 'guest_helper/homecircle_safe_restore_qa/manifest.json': '9755d37aaa67d709e7d78509b65d81ef60c79a52768fa5af637ac6209c9958c4', 'guest_helper/homecircle_safe_restore_qa/person_activity.py': 'eb816a79efb23acebfe0b14556eeed3c6114d9def976e4b76b92511112a8773c', 'guest_helper/homecircle_safe_restore_qa/person_activity_protocol.py': '273ecb794f62d5f0f9dd964fcdf6098a4280bcd6cedbeed972b6535fbc7b13a4', 'guest_helper/homecircle_safe_restore_qa/startup_boundary.py': 'affec5605c56268923a514e25cd35a8b3d9cc02953ab37ecb651dc127635b207', 'legacy_controller.py': 'ced996c5063613a8d93b0f5f54e7da014d6bf3c4d4dd7be98a13e9e9f363403c', 'payload/homecircle.zip': '98a754ff2025761c2eb63d6422c9b17b76e2bdef2965c96fe353ab6c2c21fb20', 'payload/inventory.json': '370a0036f03bd2b7185afc7a9ddcf7d6545e41cfb6394f00fc699a2973db33aa', 'payload/provenance.json': 'db0368d1377bf39d1371c43e554774a61d319235cc4a5a5589fbb12997340029', 'reset_fresh_config.py': 'df600d5695de2d09feabcded9e59d81dcc8149be2082b19b7931e0f11f12aa3c', 'run_host.sh': '19e047f20d970b1728b790fba65354335b6a957a74362f457379d40e2f55ac1f', 'storage_context.py': '4b828bbc5d00c37698ec892f8d24fbea736982d0b65c445efd1f9abc91f6da60', 'storage_protocol.json': 'b73b35a2895a6db71d250d01da72c98f7c15cb14dc8e6c16872b772d36c654d3', 'storage_transfer.py': 'e97cead5b57eec522f0434ec7be50db1ed0148f49afba15c093cb22bfef2448c', 'test_ordinary_contract.py': 'ef8e3cebf057bf0903eab9711fc411861cce26c95a10d060a2c3859dbba5de39'}
+          assert type(expected) is dict and expected, 'frozen_map_refused'
+          assert root.is_dir() and not root.is_symlink(), 'fixture_root_refused'
+          tracked = subprocess.check_output(['git', 'ls-files', '-z', '--', str(root)]).decode().split('\0')
+          assert {name for name in tracked if name} == {str(root / name) for name in expected}, 'tracked_members_refused'
+          nodes = list(root.rglob('*'))
+          assert all(not path.is_symlink() and (path.is_file() or path.is_dir()) for path in nodes), 'fixture_node_refused'
+          assert {path.relative_to(root).as_posix() for path in nodes if path.is_file()} == set(expected), 'fixture_members_refused'
+          for name, digest in expected.items():
+              relative = PurePosixPath(name)
+              assert type(name) is str and name == relative.as_posix() and not relative.is_absolute() and '..' not in relative.parts
+              assert type(digest) is str and re.fullmatch('[0-9a-f]{64}', digest), 'frozen_hash_refused'
+              path = root / name
+              assert stat.S_ISREG(path.lstat().st_mode) and hashlib.sha256(path.read_bytes()).hexdigest() == digest, 'input_bytes_refused'
+          print('Verified all', len(expected), 'frozen enabled-restore inputs.')
+          PY
+      - name: Install native VM tools
+        timeout-minutes: 5
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq qemu-system-x86 qemu-utils ovmf
+          test -c /dev/kvm
+          sudo chown "$(id -u):$(id -g)" /dev/kvm
+          test -r /dev/kvm
+          test -w /dev/kvm
+          test -r /usr/share/OVMF/OVMF_CODE_4M.fd
+          test -r /usr/share/OVMF/OVMF_VARS_4M.fd
+      - name: Require all 45 zero-skip Person/activity restore contracts
+        timeout-minutes: 3
+        shell: bash
+        run: |
+          bash -n native-person-activity-restore/run_host.sh
+          unset HOMECIRCLE_STORAGE_IDENTITY_SOURCE
+          PYTHONDONTWRITEBYTECODE=1 python3 -B - <<'PY'
+          import sys, unittest
+          sys.path.insert(0, 'native-person-activity-restore')
+          suite = unittest.defaultTestLoader.loadTestsFromName('test_ordinary_contract')
+          assert suite.countTestCases() == 45, 'contract_count_refused'
+          result = unittest.TextTestRunner(verbosity=2).run(suite)
+          assert result.wasSuccessful() and not result.skipped, 'contract_failure_or_skip'
+          PY
+      - name: Witness Person, activity and recovery-guard continuity through ordinary restore
+        timeout-minutes: 103
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          timeout --signal=TERM --kill-after=150s 5900s bash native-person-activity-restore/run_host.sh \
+            --candidate-zip native-person-activity-restore/payload/homecircle.zip \
+            --branch-commit "$GITHUB_SHA" --output native-person-activity-results
+          receipts=native-person-activity-results/public-summary
+          python3 -I -B native-person-activity-restore/accept_saved_storage.py "$receipts"
+          python3 -I -B - <<'PY'
+          from pathlib import Path
+          import json, stat
+          root = Path('native-person-activity-results/public-summary')
+          expected = {'host.json', 'baseline_enabled.json', 'mutated_enabled.json',
+                      'automatic_restored_enabled.json', 'restart_enabled.json'}
+          assert root.is_dir() and not root.is_symlink(), 'receipt_root_refused'
+          nodes = list(root.iterdir())
+          assert {path.name for path in nodes} == expected, 'five_receipts_required'
+          for path in nodes:
+              info = path.lstat()
+              assert stat.S_ISREG(info.st_mode) and not path.is_symlink() and 0 < info.st_size <= 1024**2, 'receipt_file_refused'
+              assert type(json.loads(path.read_bytes())) is dict, 'receipt_json_refused'
+          PY
+      - name: Retain only five fixed synthetic ordinary-restore receipts
+        if: always()
+        timeout-minutes: 3
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: person-activity-restore-receipts
+          path: |
+            native-person-activity-results/public-summary/host.json
+            native-person-activity-results/public-summary/baseline_enabled.json
+            native-person-activity-results/public-summary/mutated_enabled.json
+            native-person-activity-results/public-summary/automatic_restored_enabled.json
+            native-person-activity-results/public-summary/restart_enabled.json
+          if-no-files-found: warn
+          retention-days: 7
+          include-hidden-files: false

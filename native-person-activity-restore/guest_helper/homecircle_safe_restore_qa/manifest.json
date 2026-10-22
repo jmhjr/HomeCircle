@@ -1,0 +1,20 @@
+{
+  "codeowners": [],
+  "dependencies": [
+    "backup",
+    "frontend",
+    "http",
+    "lovelace",
+    "recorder",
+    "websocket_api",
+    "zone",
+    "image_upload",
+    "homecircle",
+    "person"
+  ],
+  "documentation": "https://github.com/jmhjr/HomeCircle",
+  "domain": "homecircle_safe_restore_qa",
+  "name": "HomeCircle ordinary synthetic restore observer",
+  "requirements": [],
+  "version": "0.0.0"
+}
