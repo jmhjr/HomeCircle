@@ -137,10 +137,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeCircleEntry) -> bool
         hass, Store(hass, 1, f"{DOMAIN}.city_lookup.{entry.entry_id}")
     )
     await runtime.city_lookup.load()
-    runtime.activity = ActivityLog(
-        runtime.config, Store(hass, 1, f"{DOMAIN}.activity.{entry.entry_id}")
-    )
-    await runtime.activity.load()
     runtime.location_request_store = Store(
         hass, 1, f"{DOMAIN}.location_requests.{entry.entry_id}"
     )
@@ -182,7 +178,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeCircleEntry) -> bool
     )
     if platforms:
         await hass.config_entries.async_forward_entry_setups(entry, platforms)
+    activity_fingerprint_config = runtime.config
     runtime.config = item_config(hass, runtime.config)
+    runtime.activity = ActivityLog(
+        runtime.config,
+        Store(hass, 1, f"{DOMAIN}.activity.{entry.entry_id}"),
+        fingerprint_config=activity_fingerprint_config,
+    )
+    await runtime.activity.load()
     entity_ids = selected_entities(runtime.config)
     issue_id = f"missing_entities_{entry.entry_id}"
 

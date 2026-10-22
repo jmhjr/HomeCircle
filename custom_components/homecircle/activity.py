@@ -36,13 +36,19 @@ VALUES = {
 class ActivityLog:
     """Retain only allowlisted observations for the current input configuration."""
 
-    def __init__(self, config, store=None):
+    def __init__(self, config, store=None, *, fingerprint_config=None):
         self.store = store
         self.closed = False
         self.members = set(config.get("members", {}))
         self.sources = selected_entities(config)
+        # Runtime item projection expands members after provider registration.
+        # Keep the saved household identity so existing history still loads.
         self.fingerprint = sha256(
-            json.dumps(config, sort_keys=True, default=str).encode()
+            json.dumps(
+                config if fingerprint_config is None else fingerprint_config,
+                sort_keys=True,
+                default=str,
+            ).encode()
         ).hexdigest()
         self.events = {member: [] for member in self.members}
         self.previous = {}
