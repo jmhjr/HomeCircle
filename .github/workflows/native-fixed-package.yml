@@ -1,0 +1,95 @@
+name: HomeCircle exact fixed candidate full native package suite
+
+on:
+  push:
+    branches: [codex/native-amd64-validation]
+    paths:
+      - native-fixed-package/**
+      - .github/workflows/native-fixed-package.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: homecircle-fixed-package-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  exact-fixed-package:
+    if: github.ref == 'refs/heads/codex/native-amd64-validation'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    steps:
+      - name: Check out reviewed harness and canonical history
+        timeout-minutes: 3
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Verify every frozen harness input before helper imports
+        timeout-minutes: 2
+        run: |
+          python3 -I -B - <<'PYCODE'
+          import hashlib, pathlib, stat
+          root = pathlib.Path('native-fixed-package')
+          expected = {'CONFIG.sha256': 'bb910dcec4fd2e83f6d23e655732ae135d3e8e8320c9929e326c3266ff44e314', 'README.md': '3d920c0648c74d85b75120ce322d863a4a4c3e1dc1a613b0a64280862704491c', 'driver.py': 'c5de1aed4d346fc7016ae7f6a8d1fad4a8b108574f7b14b70ff4e95513636446', 'payload/baseline-vault.py': '7c6a846cefba6a34647d84b7738a93d85738a948da32fbf752a96c4e1cf4c0f2', 'payload/config.json': '3f162e8e0fcef32ecd4c321dec58774ae47dafd1022dee19faef13ce04ec9dad', 'payload/homecircle.zip': 'f181e6300f15d8977817a552db90d35caf0edc869067ebeea815c7be1df0248e', 'payload/inventory.json': '8ea456beb9b2eaaf4ba50639532b8dafabe0e02d1e13a77a59525f1c249c7447', 'payload/source-inventory.json': 'cde46764cb35999081519197d5ab8db582c7a6e6fd36cb6c10a6a65b12becd95', 'payload/source.tgz': '34ab4a93b7e7883540da757b04bf80221f7bd75270c5a3503cf2103f3d761ce7', 'prepare_payload.py': '8d2297ed580094b81ed44e662e0b57aa051fdceaa96e851ddac16bcbc962402a', 'requirements_support.py': '91bb0d92bfeef8021184275369d8923e8b951d2cb7b85a31bd34414101e3a513', 'run_host.sh': '61cffde05276f1f650be90212ca6c50308cf4e8ca4c31af3f602160414b1ae99', 'test_driver.py': '13681c882485bd924ca52a825729e7d204bcbf21d3299deba2b38d1c6e331f46'}
+          actual = {p.relative_to(root).as_posix() for p in root.rglob('*') if p.is_file() or p.is_symlink()}
+          assert actual == set(expected), 'frozen_input_members_refused'
+          assert not any(p.is_symlink() for p in root.rglob('*')), 'frozen_input_symlink_refused'
+          for name, digest in expected.items():
+              path = root / name
+              assert stat.S_ISREG(path.lstat().st_mode) and hashlib.sha256(path.read_bytes()).hexdigest() == digest, 'frozen_input_bytes_refused'
+          print('Verified all', len(expected), 'frozen full-package inputs.')
+          PYCODE
+      - name: Use the reviewed frontend toolchain
+        timeout-minutes: 3
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: 23.7.0
+      - name: Check all safe standalone harness contracts
+        timeout-minutes: 3
+        run: |
+          bash -n native-fixed-package/run_host.sh
+          python3 -I -B - <<'PYCODE'
+          import sys, unittest
+          sys.path.insert(0, 'native-fixed-package')
+          suite = unittest.defaultTestLoader.loadTestsFromName('test_driver')
+          assert suite.countTestCases() == 42, 'host_contract_count_refused'
+          result = unittest.TextTestRunner(verbosity=2).run(suite)
+          assert result.wasSuccessful() and result.testsRun == 42 and not result.skipped, 'host_contract_result_refused'
+          PYCODE
+      - name: Validate exact candidate bytes and complete native package suite
+        timeout-minutes: 62
+        shell: bash
+        run: |
+          timeout --signal=TERM --kill-after=150s 3500s bash native-fixed-package/run_host.sh \
+            --payload native-fixed-package/payload \
+            --pins-sha 3f162e8e0fcef32ecd4c321dec58774ae47dafd1022dee19faef13ce04ec9dad \
+            --source-repository "$GITHUB_WORKSPACE" \
+            --output native-fixed-package-results
+          jq -e '.outcome=="passed" and .container_stopped==true and .container_removed==true and
+            .cleanup_failed==false and .private_workspace_removed==true and .release_assets_checked==true and
+            .candidate_zip_sha256=="f181e6300f15d8977817a552db90d35caf0edc869067ebeea815c7be1df0248e" and
+            .canonical_rebuild_sha256=="acfcda419a817032c38a463505f686b0f6ab49e69a8f1603d9b2ff43f24e442b"' \
+            native-fixed-package-results/public-summary/host.json
+      - name: Retain six narrow validation summaries and bounded failure disposition
+        timeout-minutes: 3
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: fixed-package-validation-receipts
+          path: native-fixed-package-results/public-summary/*.json
+          if-no-files-found: warn
+          retention-days: 7
+          include-hidden-files: false
+      - name: Retain the original explicitly unreleased fixed candidate
+        timeout-minutes: 3
+        if: success()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: unreleased-fixed-candidate
+          path: native-fixed-package-results/release-assets/*
+          if-no-files-found: error
+          retention-days: 7
+          include-hidden-files: false
