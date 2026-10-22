@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "candidate_source": "012a7e88d13970b2683b27d0824dac246c858179",
+  "zip_sha256": "98a754ff2025761c2eb63d6422c9b17b76e2bdef2965c96fe353ab6c2c21fb20",
+  "inventory_sha256": "370a0036f03bd2b7185afc7a9ddcf7d6545e41cfb6394f00fc699a2973db33aa",
+  "files": 113,
+  "changed_members": [
+    "findmy_flow.py",
+    "findmy_recovery_guard.py",
+    "findmy_setup.py",
+    "strings.json",
+    "translations/en.json"
+  ],
+  "manifest_unchanged": true,
+  "frontend_unchanged": true,
+  "built_frontend_from_prior_qualified_package": true,
+  "package_version": "0.1.0-beta.20",
+  "stable_release": false
+}
