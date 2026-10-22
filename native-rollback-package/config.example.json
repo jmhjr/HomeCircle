@@ -2,7 +2,7 @@
   "candidate_source_commit": "FILL_CANONICAL_40_HEX_COMMIT",
   "candidate_source_prefix": "",
   "checker_sha256": "216331d16af8fb2ec636e1466303923ecfe32c76f78ea72f89d373c80c9713d2",
-  "driver_sha256": "aeb8c027d2e624241b61ab4ff5b6f8851759aa334bfdcfe49f1aa1abc80b57ab",
+  "driver_sha256": "3e5908a69cdc504d557894f6d562968469bd5286cab66de1fc1eaa8833562c75",
   "expected_release_files": 113,
   "frontend_tests": 122,
   "minimum_backend_passed": 1698,

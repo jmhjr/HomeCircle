@@ -375,5 +375,66 @@ class CauseContracts(unittest.TestCase):
                          {"spec_from_file_location", "module_from_spec", "exec_module", "baseline_pytest"})
 
 
+class DiagnosticContracts(unittest.TestCase):
+    setUp = DriverContracts.setUp
+    xml = DriverContracts.xml
+
+    def test_duplicate_teardown_error_is_reported_before_unchanged_refusal(self):
+        source = {"tests/test_public.py": b"async def test_break(): pass\n"}
+        path = self.xml('<testcase classname="tests.test_public" name="test_break[PRIVATE-CANARY]"/>'
+                        '<testcase classname="tests.test_public" name="test_break[PRIVATE-CANARY]">'
+                        '<error>PRIVATE-TRACE-CANARY</error></testcase>')
+        output = self.root / "package-summary.json"
+        result = {"schema": 1, "outcome": "failed", "completed": False}
+        with self.assertRaisesRegex(driver.Refused, "duplicate_backend_case_refused"):
+            driver.backend_with_diagnostics(path, source, result, output)
+        actual = json.loads(output.read_bytes())
+        diagnostic = actual["backend_diagnostics"]
+        self.assertEqual({key: diagnostic[key] for key in
+                         ("case_records", "passed", "failed", "skipped", "error_records",
+                          "failure_records", "duplicate_records", "duplicate_identities")},
+                         {"case_records": 2, "passed": 1, "failed": 1, "skipped": 0,
+                          "error_records": 1, "failure_records": 0,
+                          "duplicate_records": 1, "duplicate_identities": 1})
+        self.assertEqual(diagnostic["failure_labels"],
+                         [{"class": "tests.test_public", "function": "test_break", "case_records": 1}])
+        self.assertEqual(diagnostic["duplicate_labels"],
+                         [{"class": "tests.test_public", "function": "test_break", "case_records": 2}])
+        self.assertFalse(diagnostic["acceptance_qualified"])
+        self.assertNotIn("PRIVATE", output.read_text())
+
+    def test_unknown_junit_names_and_trace_text_never_become_public_labels(self):
+        path = self.xml('<testcase classname="tests.PRIVATE_CANARY" name="test_PRIVATE_CANARY">'
+                        '<failure>PRIVATE-TRACE-CANARY</failure></testcase>' * 2)
+        diagnostic = driver.backend_diagnostics(path, {("tests.test_public", "test_known")})
+        self.assertEqual(diagnostic["unclassified_failure_records"], 2)
+        self.assertEqual(diagnostic["unclassified_duplicate_identities"], 1)
+        self.assertEqual(diagnostic["failure_labels"], [])
+        self.assertEqual(diagnostic["duplicate_labels"], [])
+        self.assertNotIn("PRIVATE", json.dumps(diagnostic))
+
+    def test_catalog_uses_only_source_test_functions_and_class_methods(self):
+        source = {"tests/test_public.py": b"""async def test_direct(): pass
+class PublicTests:
+    def test_method(self): pass
+def helper():
+    def test_private_nested(): pass
+""", "work/test_private.py": b"def test_not_public(): pass\n"}
+        self.assertEqual(driver.public_test_catalog(source),
+                         {("tests.test_public", "test_direct"),
+                          ("tests.test_public.PublicTests", "test_method")})
+
+    def test_ambiguous_outcomes_counted_but_still_refused(self):
+        path = self.xml('<testcase classname="tests.test_public" name="test_known">'
+                        '<error>PRIVATE-TRACE-CANARY</error><skipped/></testcase>')
+        diagnostic = driver.backend_diagnostics(path, {("tests.test_public", "test_known")})
+        self.assertEqual(diagnostic["ambiguous_outcome_records"], 1)
+        self.assertEqual(diagnostic["failed"], 1)
+        self.assertEqual(diagnostic["skipped"], 1)
+        with patch.object(driver, "PINS", self.config), self.assertRaisesRegex(
+                driver.Refused, "ambiguous_backend_outcome_refused"):
+            driver.backend_result(path)
+
+
 if __name__ == "__main__":
     unittest.main()

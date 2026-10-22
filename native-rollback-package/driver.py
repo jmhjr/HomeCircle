@@ -445,6 +445,84 @@ def setup(args, files):
     atomic_json(args.results / "setup-summary.json", result)
 
 
+def public_test_catalog(files):
+    """Permit diagnostic names only when present in the bound public source."""
+    catalog = set()
+    for path, raw in files.items():
+        if not re.fullmatch(r"tests/(?:[A-Za-z0-9_]+/)*test_[A-Za-z0-9_]+[.]py", path):
+            continue
+        module = path[:-3].replace("/", ".")
+        tree = ast.parse(raw)
+        pending = [(tree.body, module)]
+        while pending:
+            nodes, classname = pending.pop()
+            for node in nodes:
+                if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and re.fullmatch(
+                        r"test_[A-Za-z0-9_]{1,115}", node.name):
+                    catalog.add((classname, node.name))
+                elif isinstance(node, ast.ClassDef) and re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]{0,79}", node.name):
+                    pending.append((node.body, classname + "." + node.name))
+    check(1 <= len(catalog) <= 5000, "diagnostic_public_test_catalog_refused")
+    return catalog
+
+
+def backend_diagnostics(path, catalog):
+    """Count rejected JUnit records without exporting parameters or trace text."""
+    check(path.is_file() and not path.is_symlink() and path.stat().st_size <= 16 * 1024**2,
+          "backend_xml_refused")
+    root = ET.fromstring(path.read_bytes())
+    cases = root.findall(".//testcase")
+    check(1 <= len(cases) <= 5000, "backend_diagnostic_case_bound_refused")
+    counts = {"case_records": len(cases), "passed": 0, "failed": 0, "skipped": 0,
+              "error_records": 0, "failure_records": 0, "ambiguous_outcome_records": 0,
+              "duplicate_records": 0, "duplicate_identities": 0,
+              "unclassified_failure_records": 0, "unclassified_duplicate_identities": 0}
+    identities, failures, duplicates = {}, {}, {}
+    for case in cases:
+        identity = (case.attrib.get("classname"), case.attrib.get("name"))
+        identities[identity] = identities.get(identity, 0) + 1
+        error = case.find("error") is not None
+        failure = case.find("failure") is not None
+        skipped = case.find("skipped") is not None
+        counts["error_records"] += int(error)
+        counts["failure_records"] += int(failure)
+        counts["failed"] += int(error or failure)
+        counts["skipped"] += int(skipped)
+        counts["passed"] += int(not (error or failure or skipped))
+        counts["ambiguous_outcome_records"] += int(int(error) + int(failure) + int(skipped) > 1)
+        if error or failure:
+            label = (identity[0], (identity[1] or "").split("[", 1)[0])
+            if label in catalog:
+                failures[label] = failures.get(label, 0) + 1
+            else:
+                counts["unclassified_failure_records"] += 1
+    for identity, occurrences in identities.items():
+        if occurrences < 2:
+            continue
+        counts["duplicate_records"] += occurrences - 1
+        counts["duplicate_identities"] += 1
+        label = (identity[0], (identity[1] or "").split("[", 1)[0])
+        if label in catalog:
+            duplicates[label] = duplicates.get(label, 0) + occurrences
+        else:
+            counts["unclassified_duplicate_identities"] += 1
+    def labels(values):
+        return [{"class": classname, "function": function, "case_records": count}
+                for (classname, function), count in sorted(values.items())[:12]]
+    return {"schema": 1, "scope": "unaccepted_junit_record_diagnostics", "acceptance_qualified": False,
+            **counts, "failure_labels": labels(failures), "duplicate_labels": labels(duplicates),
+            "failure_label_functions": len(failures), "duplicate_label_functions": len(duplicates),
+            "maximum_label_functions_per_kind": 12, "raw_test_parameters_exported": False,
+            "raw_failure_text_exported": False, "public_source_bound_labels": True}
+
+
+def backend_with_diagnostics(path, files, result, destination):
+    """Save a failed aggregate before strict outcome/uniqueness acceptance."""
+    result["backend_diagnostics"] = backend_diagnostics(path, public_test_catalog(files))
+    atomic_json(destination, result)
+    return backend_result(path)
+
+
 def backend_result(path):
     check(path.is_file() and path.stat().st_size <= 16 * 1024**2, "backend_xml_refused")
     root = ET.fromstring(path.read_bytes())
@@ -681,7 +759,10 @@ def acceptance(args, files):
     code = run_owned([sys.executable, "-B", "-m", "pytest", "--junitxml", str(xml)],
                      cwd=args.tree, log=args.results / "backend-private.log", limit=backend_budget(deadline))
     backend_budget(deadline)
-    backend, skipped = backend_result(xml)
+    # Pytest may append a second case record after a teardown error. Keep its
+    # bounded public identity/counts before the unchanged duplicate refusal.
+    result.update({"schema": 1, "outcome": "failed", "completed": False, "baseline_red": red})
+    backend, skipped = backend_with_diagnostics(xml, files, result, args.results / "package-summary.json")
     result.update({"schema": 1, "outcome": "failed", "completed": False, "backend": backend, "baseline_red": red})
     atomic_json(args.results / "package-summary.json", result)
     check(code == 0 and backend["passed"] >= PINS["minimum_backend_passed"]

@@ -62,3 +62,12 @@ counts, hashes, versions, public required-test identities and safe failure label
 are exported; private test logs, XML bodies, environment data, account state and
 exception text remain inside the disposable private workspace and are removed.
 Preparation contracts alone are not native runtime qualification.
+
+The reporting-only R2 revision preserves a bounded failed package summary before
+strict JUnit uniqueness/outcome acceptance. Pytest teardown failures can create a
+second record for the same test identity; that still fails acceptance, while the
+summary now retains complete record counts and up to twelve source-bound public
+class/function labels per failure/duplicate kind. Parameter values, XML bodies,
+exception text and unknown test identities are never exported. This changes no
+product source, backend test, dependency, original-vault cause gate or success
+criterion. The earlier failed run remains separate evidence.
