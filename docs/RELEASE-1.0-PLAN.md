@@ -5,6 +5,22 @@ remains experimental `v0.1.0-beta.20`. This is an execution tracker, not a stabl
 release declaration. Check a task only after linking its exact evidence. Retain
 failed attempts and record any accepted scope change instead of deleting a gate.
 
+## Current fixed candidate evidence
+
+Source `ad9b83676bdfafcfc3848cc9a974b63c8742a020` and package `f181e6300f15d8977817a552db90d35caf0edc869067ebeea815c7be1df0248e` include the activity initialization
+correction. The [private upgrade record](RELEASE-1.0-PRIVATE-UPGRADE.md) retains
+its scoped ARM64 installation-copy upgrade/restart and separate 35-test focused
+native result. [Fixed-candidate ordinary restore](RELEASE-1.0-FIXED-ORDINARY-RESTORE.md)
+now binds run 39824890930: 45 fixture contracts, four managed amd64 HAOS phases and
+17 independent consumer contracts passed for these exact bytes. Person links,
+explicit source selections, activity/Recorder cohorts and automatic guard
+review/refusal survived ordinary partial restore and restart.
+
+Earlier source/package results below retain their original scopes. The full
+native package suite has not yet been repeated for f181; that is the next
+engineering gate. Advertised backup variants and other acceptance/disposition
+gates remain open. This evidence is not a stable release declaration.
+
 ## Starting point and support proposal
 
 - Public main: `bfabadd0b7a6b7c6c6a5a6583130d4fde4fef7ba`.
