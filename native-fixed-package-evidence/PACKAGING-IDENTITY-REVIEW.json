@@ -1,0 +1,15 @@
+{
+  "builder_algorithm_read_from_exact_source": "3c33160c67e53956ab52298ffc10ccc9992132f0:scripts/build_release.py",
+  "candidate_compression_level": 6,
+  "candidate_silently_replaced": false,
+  "candidate_zip_bytes": 623447,
+  "candidate_zip_sha256": "f181e6300f15d8977817a552db90d35caf0edc869067ebeea815c7be1df0248e",
+  "canonical_level9_zip_bytes": 620358,
+  "canonical_level9_zip_sha256": "acfcda419a817032c38a463505f686b0f6ab49e69a8f1603d9b2ff43f24e442b",
+  "outcome": "confirmed_packaging_identity_difference",
+  "product_source_changed": false,
+  "root_and_peer_reproduced_both_hashes": true,
+  "schema": 1,
+  "scope": "same113 member bytes; distinct archive identities and compression settings; full runner will pin/inspect/test originalf181 and report canonical rebuild separately",
+  "uncompressed_members_identical": 113
+}
