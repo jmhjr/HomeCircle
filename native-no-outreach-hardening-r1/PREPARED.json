@@ -1,0 +1,88 @@
+{
+  "config_sha256": "91054fbe673e0b904674ac9c9a57cb13af5a99259a0f8cd9d0e44b0ff39dd41f",
+  "legal_clearance_claimed": false,
+  "native_execution_performed": false,
+  "payload": {
+    "config.json": {
+      "bytes": 49676,
+      "sha256": "91054fbe673e0b904674ac9c9a57cb13af5a99259a0f8cd9d0e44b0ff39dd41f"
+    },
+    "homecircle.zip": {
+      "bytes": 627698,
+      "sha256": "bfd6bc5aeb65c895e32a28a5bab264387ca4403aa366778b4b329032d8f597ec"
+    },
+    "inventory.json": {
+      "bytes": 16673,
+      "sha256": "d16e4fc07d7a4a1e80d40b3f8ed8a69c51d5eb6e36978d7e2783dab9adabfe08"
+    },
+    "source-export.json": {
+      "bytes": 89564,
+      "sha256": "be13a815abf79d35ea7bf8ed550e6d31d303279167c308943214ef681c964019"
+    },
+    "source-inventory.json": {
+      "bytes": 61320,
+      "sha256": "f19e4ff91b0fb641f02ef6c2bf5287ba59102772b389ff4fb15e9ab049a5d2fa"
+    },
+    "source.tgz": {
+      "bytes": 1435869,
+      "sha256": "f59c500b1f73ffa104454c7a0db59805a21bec418fd9e9bd32f59422a18f4cf7"
+    }
+  },
+  "publication_performed": false,
+  "schema": 1,
+  "scope": "native_current_core_affected_provider_pytest_only",
+  "selected_base_functions": 343,
+  "selected_modules": [
+    "tests/test_provider_controls.py",
+    "tests/test_findmy_provider_controls.py",
+    "tests/test_config_flow.py",
+    "tests/test_tracker_providers.py",
+    "tests/test_tracker_provider_startup_isolation.py",
+    "tests/test_tracker_cleanup_cancellation.py",
+    "tests/test_life360_direct.py",
+    "tests/test_findmy_provider.py",
+    "tests/test_findmy_polling_isolation.py",
+    "tests/test_findmy_poll_progress.py",
+    "tests/test_findmy_progress_lifecycle.py",
+    "tests/test_findmy_settings_concurrency.py",
+    "tests/test_findmy_saved_flow.py",
+    "tests/test_findmy_settings_token.py",
+    "tests/test_findmy_flow.py",
+    "tests/test_findmy_cancelled_work_hardening.py",
+    "tests/test_findmy_terminal_messages.py",
+    "tests/test_findmy_setup.py",
+    "tests/test_place_import.py",
+    "tests/test_family_refresh.py",
+    "tests/test_selection_refresh.py",
+    "tests/test_findmy_polling_diagnostics.py",
+    "tests/test_release_package.py",
+    "tests/test_findmy_gsa_work_lifetime.py",
+    "tests/test_findmy_recovery_guard.py",
+    "tests/test_findmy_recovery_restart.py"
+  ],
+  "source_commit": "237524817c2ffa8fc6eb75e820717ce0ce49ac5d",
+  "source_files": 402,
+  "tools": {
+    "CORE-GRAPH.json": {
+      "bytes": 3528,
+      "sha256": "55630f755ad3ed451e6ec94499ba8d682e584e2d4d4fcc9ae7f9f88283c9f79d"
+    },
+    "driver.py": {
+      "bytes": 26086,
+      "sha256": "830a3c5bcc28e1cca5f8e04abb88fe1c169b602901c491be79cb103d12f5164c"
+    },
+    "requirements_support.py": {
+      "bytes": 9191,
+      "sha256": "91bb0d92bfeef8021184275369d8923e8b951d2cb7b85a31bd34414101e3a513"
+    },
+    "run_native.sh": {
+      "bytes": 9129,
+      "sha256": "d5737a165aaa7bdf0899178b5ea6fe5cf8c5b00553780d65ea5b035058a3e19d"
+    },
+    "verify_results.py": {
+      "bytes": 14260,
+      "sha256": "068848198635a908e63a869f7cd0f8414beb42b89148b16035201a8d25855c65"
+    }
+  },
+  "workflow_dispatch": false
+}
