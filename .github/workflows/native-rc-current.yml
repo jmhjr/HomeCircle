@@ -1,0 +1,91 @@
+name: HomeCircle frozen RC current native qualification
+
+on:
+  push:
+    branches: [codex/native-amd64-validation]
+    paths:
+      - native-rc-current/**
+      - .github/workflows/native-rc-current.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: homecircle-rc-current-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  rc-current:
+    if: github.ref == 'refs/heads/codex/native-amd64-validation'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    steps:
+      - name: Check out reviewed packet and canonical source history
+        timeout-minutes: 3
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Verify every exact frozen input before importing helpers
+        timeout-minutes: 2
+        run: |
+          python3 -I -B - <<'PYCODE'
+          import hashlib,pathlib,stat
+          root=pathlib.Path('native-rc-current')
+          expected={'CONFIG.sha256': '465fe15e931058aad702a827e306a03138e9df44508f3229324a5fa19df10d58', 'PREPARED.json': 'c52df8df28e4478e2d045b16335f7e03cab6b37278a7ea01a8d2f95acf54cb11', 'README.md': '7f66f62b7ade73259e8a0663b693c4c4bd440a225190fbb64effd662e8130594', 'driver.py': 'bdc821d7df341c84679ccb14e71fba4c83b4dce7e7a399b40940f44a335987d0', 'payload/baseline-vault.py': '7c6a846cefba6a34647d84b7738a93d85738a948da32fbf752a96c4e1cf4c0f2', 'payload/config.json': '40fc5c48648bdc6b49a039f215604868f1680378db20c7ef75f9be897a0f14f0', 'payload/homecircle.zip': '4f94a18e2f7862e9bd7f4c85250e5f10e4b8e1292ea9d7b263b441d2e1b77dd9', 'payload/inventory.json': 'e4bc34e3921e75157402cf643f87ed658d95c76505a448abb393fd90a304db12', 'payload/source-inventory.json': '9195daa05eb845f2e65d3553d57075f4a7497538923a0b050cfca27c3f1d2394', 'payload/source.tgz': '98256480be83c35b76f370ae0f8ed3bda28ab1ef5dca913d68c72e422f37073d', 'requirements_support.py': '91bb0d92bfeef8021184275369d8923e8b951d2cb7b85a31bd34414101e3a513', 'run_host.sh': '6b39953237a88ec750732c5913b6e7f523717cca3151723b2a2f036762eb8fba', 'test_driver.py': '74afe5fc4d7399cd28aa0b3b8bd268d4c05bb077979cc172c868187ba5cd4209'}
+          actual={p.relative_to(root).as_posix() for p in root.rglob('*') if p.is_file() or p.is_symlink()}
+          assert actual==set(expected),'frozen_input_members_refused'
+          assert not any(p.is_symlink() for p in root.rglob('*')),'frozen_input_symlink_refused'
+          for name,digest in expected.items():
+              path=root/name
+              assert stat.S_ISREG(path.lstat().st_mode) and hashlib.sha256(path.read_bytes()).hexdigest()==digest,'frozen_input_bytes_refused'
+          print('All frozen inputs verified.')
+          PYCODE
+      - name: Use reviewed frontend toolchain
+        timeout-minutes: 3
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: 23.7.0
+      - name: Verify safe standalone harness contracts
+        timeout-minutes: 3
+        run: |
+          bash -n native-rc-current/run_host.sh
+          python3 -I -B - <<'PYCODE'
+          import sys,unittest
+          sys.path.insert(0,'native-rc-current')
+          suite=unittest.defaultTestLoader.loadTestsFromName('test_driver')
+          assert suite.countTestCases()==47,'host_contract_count_refused'
+          result=unittest.TextTestRunner(verbosity=2).run(suite)
+          assert result.wasSuccessful() and result.testsRun==47 and not result.skipped,'host_contract_result_refused'
+          PYCODE
+      - name: Run full current-Core backend frontend privacy and package qualification
+        timeout-minutes: 62
+        shell: bash
+        run: |
+          timeout --signal=TERM --kill-after=150s 3500s bash native-rc-current/run_host.sh \
+            --payload "$PWD/native-rc-current/payload" \
+            --output "$RUNNER_TEMP/rc-current-results" \
+            --pins-sha 40fc5c48648bdc6b49a039f215604868f1680378db20c7ef75f9be897a0f14f0 \
+            --source-repository "$GITHUB_WORKSPACE"
+          jq -e '.outcome=="passed" and .container_stopped==true and .container_removed==true and .cleanup_failed==false and .private_workspace_removed==true and .release_assets_checked==true and .candidate_zip_sha256=="4f94a18e2f7862e9bd7f4c85250e5f10e4b8e1292ea9d7b263b441d2e1b77dd9"' \
+            "$RUNNER_TEMP/rc-current-results/public-summary/host.json"
+      - name: Retain only bounded safe qualification receipts
+        timeout-minutes: 3
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: rc-current-validation-receipts
+          path: ${{ runner.temp }}/rc-current-results/public-summary/*.json
+          if-no-files-found: warn
+          retention-days: 7
+          include-hidden-files: false
+      - name: Retain exact frozen RC package rebuilt by native qualification
+        timeout-minutes: 3
+        if: success()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: unreleased-rc-current-candidate
+          path: ${{ runner.temp }}/rc-current-results/release-assets/*
+          if-no-files-found: error
+          retention-days: 7
+          include-hidden-files: false
