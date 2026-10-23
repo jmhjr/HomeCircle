@@ -1,0 +1,236 @@
+{
+  "candidate_source_commit": "b906d3ee51711d3455a497cc265fd3bc18f3adec",
+  "candidate_source_prefix": "",
+  "canonical_package_sha256": "4f94a18e2f7862e9bd7f4c85250e5f10e4b8e1292ea9d7b263b441d2e1b77dd9",
+  "checker_sha256": "216331d16af8fb2ec636e1466303923ecfe32c76f78ea72f89d373c80c9713d2",
+  "driver_sha256": "445ec6d2edb008c5c7aa050472f53f1a527fcc47b3c7c35fc763b14660489709",
+  "expected_release_files": 112,
+  "frontend_tests": 126,
+  "minimum_backend_passed": 1732,
+  "package_inventory_sha256": "e4bc34e3921e75157402cf643f87ed658d95c76505a448abb393fd90a304db12",
+  "package_sha256": "4f94a18e2f7862e9bd7f4c85250e5f10e4b8e1292ea9d7b263b441d2e1b77dd9",
+  "required_backend_tests": [
+    {
+      "class": "tests.test_normalize",
+      "function": "test_legacy_pending_gps_skips_passive_residence_but_keeps_explicit_person_state"
+    },
+    {
+      "class": "tests.test_city_lookup",
+      "function": "test_close_waits_for_inflight_disk_save"
+    },
+    {
+      "class": "tests.test_city_lookup",
+      "function": "test_close_handles_independently_cancelled_disk_save"
+    },
+    {
+      "class": "tests.test_city_lookup",
+      "function": "test_close_preserves_caller_cancellation_after_draining"
+    },
+    {
+      "class": "tests.test_city_lookup",
+      "function": "test_close_preserves_failed_save_cleanup_disposition"
+    },
+    {
+      "class": "tests.test_city_lookup",
+      "function": "test_cancelled_city_save_failure_has_no_raw_loop_diagnostic"
+    },
+    {
+      "class": "tests.test_privacy_guard.PrivacyGuardTests",
+      "function": "test_reviewed_public_license_requires_exact_bytes_and_path"
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_recovery_credential_failure_after_verification_keeps_actionable_error"
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_recovery_bootstrap_logs_only_fixed_credential_reason_and_status"
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_recovery_bootstrap_rejects_unknown_credential_metadata"
+    },
+    {
+      "class": "tests.test_findmy_recovery_integration",
+      "function": "test_recovery_rate_limit_requires_exact_preproof_transient_status"
+    },
+    {
+      "class": "tests.test_findmy_flow",
+      "function": "test_recovery_bootstrap_after_consumed_code_closes_real_flow_without_replay"
+    },
+    {
+      "class": "tests.test_findmy_flow",
+      "function": "test_consumed_code_recovery_routing_is_finite_and_stage_specific"
+    },
+    {
+      "class": "tests.test_findmy_flow",
+      "function": "test_consumed_code_abort_messages_exist_in_both_locales"
+    },
+    {
+      "class": "tests.test_findmy_flow",
+      "function": "test_later_passcode_transient_keeps_its_retry_stage"
+    },
+    {
+      "class": "tests.test_findmy_flow",
+      "function": "test_empty_recovery_devices_after_consumed_code_ends_without_replay"
+    },
+    {
+      "class": "tests.test_findmy_recovery_protocol",
+      "function": "test_pet_service_failure_preserves_only_current_response_context"
+    },
+    {
+      "class": "tests.test_findmy_recovery_protocol",
+      "function": "test_pet_error_context_accepts_only_exact_bounded_metadata"
+    },
+    {
+      "class": "tests.test_findmy_recovery_protocol",
+      "function": "test_pet_transport_error_does_not_inherit_preceding_response_context"
+    },
+    {
+      "class": "tests.test_findmy_recovery_protocol",
+      "function": "test_pet_cancellation_still_propagates_and_cleans_clone"
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_recovery_bootstrap_logs_current_pet_phase_and_bounded_retry_only"
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_recovery_bootstrap_revalidates_mutated_pet_error_context"
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_discovery_error_site_reports_only_bound_own_source"
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_discovery_error_site_rejects_unbound_or_oversized_sites"
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_discovery_error_site_prefers_innermost_allowlisted_frame"
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_discovery_logs_fixed_pcs_subclass_and_site_without_retry"
+    },
+    {
+      "class": "tests.test_findmy_pcs_hardening",
+      "function": "test_strict_outer_auth_failure_exposes_fixed_reason_before_key_unwrap"
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_outer_auth_reason_sanitizer_accepts_only_exact_pcs_codes"
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_outer_auth_reason_sanitizer_redacts_mutated_or_spoofed_metadata"
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_discovery_logs_only_fixed_outer_auth_reason_without_reproof"
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_outer_auth_import_failure_preserves_original_discovery_failure"
+    },
+    {
+      "class": "tests.test_findmy_pcs_hardening",
+      "function": "test_signature_key_identifiers_accept_only_exact_trusted_p256_encodings"
+    },
+    {
+      "class": "tests.test_findmy_vault_hardening",
+      "function": "test_malformed_key_refuses_load_and_save_without_replacement"
+    },
+    {
+      "class": "tests.test_findmy_vault_hardening",
+      "function": "test_missing_or_unreadable_store_load_is_redacted_without_creating_files"
+    },
+    {
+      "class": "tests.test_findmy_identity_continuity",
+      "function": "test_explicit_disconnect_removes_only_confirmed_malformed_or_missing_owned_store"
+    },
+    {
+      "class": "tests.test_findmy_identity_continuity",
+      "function": "test_explicit_disconnect_preserves_unsafe_or_legacy_store_and_metadata"
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "function": "test_fresh_storage_needs_explicit_review_before_unlock"
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "function": "test_legacy_ledger_reset_does_not_enroll_another_account"
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "function": "test_maximum_counter_crash_conversion_is_bounded_and_stays_blocked"
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "function": "test_missing_witness_does_not_reclassify_pending_or_finish_old_attempt"
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "function": "test_ordinary_backup_restore_fails_closed_and_review_is_per_account"
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "function": "test_rollback_with_retained_witness_and_same_counter_aba_is_detected"
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "function": "test_unsafe_witness_never_allows_unlock_or_changes_ledger"
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "function": "test_witness_commit_failure_never_permits_dispatch"
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "function": "test_witness_from_another_identity_cannot_authorize_account"
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "function": "test_witness_must_be_outside_ledger_tree"
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "function": "test_zero_account_ledger_does_not_reuse_retained_witness"
+    },
+    {
+      "class": "tests.test_findmy_recovery_integration",
+      "function": "test_restore_review_acknowledges_only_authenticated_account_without_proof"
+    },
+    {
+      "class": "tests.test_findmy_recovery_integration",
+      "function": "test_restore_review_requires_exact_consent_without_unlock"
+    },
+    {
+      "class": "tests.test_findmy_recovery_integration",
+      "function": "test_rolled_back_ledger_refuses_before_sdk_unlock"
+    },
+    {
+      "class": "tests.test_activity_projection",
+      "function": "test_projected_item_observes_named_place_without_losing_saved_history"
+    },
+    {
+      "class": "tests.test_activity_projection",
+      "function": "test_projected_item_and_original_member_history_survive_next_restart"
+    },
+    {
+      "class": "tests.test_activity_projection",
+      "function": "test_changed_saved_selection_still_invalidates_prior_projected_history"
+    },
+    {
+      "class": "tests.test_activity_projection",
+      "function": "test_setup_projects_new_item_before_loading_and_observing_activity"
+    }
+  ],
+  "requirements_helper_sha256": "91bb0d92bfeef8021184275369d8923e8b951d2cb7b85a31bd34414101e3a513",
+  "schema": 1,
+  "source_files": 402,
+  "source_inventory_sha256": "866c4d39b18182dc1be6749b943040e81e9604731327a2e58a5d250648dc4915",
+  "source_sha256": "5e28c35ef4e103ad4531503376c9485466521fff1879e229bb6c3fae6495b865",
+  "version": "1.0.0-rc.1"
+}
