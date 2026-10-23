@@ -1,0 +1,59 @@
+name: HomeCircle bounded native diagnostic only
+on:
+  push:
+    branches: [codex/native-amd64-validation]
+    paths:
+      - native-rc-diagnostic/**
+      - .github/workflows/native-rc-diagnostic.yml
+permissions:
+  contents: read
+concurrency:
+  group: homecircle-rc-diagnostic-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  rc-diagnostic:
+    if: github.ref == 'refs/heads/codex/native-amd64-validation'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - name: Check out reviewed diagnostic packet and canonical source history
+        timeout-minutes: 3
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Verify every frozen diagnostic input before helper imports
+        timeout-minutes: 2
+        run: |
+          python3 -I -B - <<'PYCODE'
+          import hashlib,pathlib,stat
+          root=pathlib.Path('native-rc-diagnostic')
+          expected={'CONFIG.sha256': '4bf13cc4eca5f8b9a5324566b5cca464904b1b0352514d570226e08088142924', 'driver.py': 'bbd1b673ca7722ff02b8eec8e866bf0129b3c8e8446e4548fb7cadc478790029', 'payload/baseline-vault.py': '7c6a846cefba6a34647d84b7738a93d85738a948da32fbf752a96c4e1cf4c0f2', 'payload/config.json': '1259fd9a0d169464bb69141d09c72a62ce73afa28cf9403da37ebea9c2f1da7a', 'payload/homecircle.zip': '4f94a18e2f7862e9bd7f4c85250e5f10e4b8e1292ea9d7b263b441d2e1b77dd9', 'payload/inventory.json': 'e4bc34e3921e75157402cf643f87ed658d95c76505a448abb393fd90a304db12', 'payload/source-inventory.json': 'ded548b9b624e03746e757dc4eaab9404ba3715025bc7b0b3f5a0448c06a9955', 'payload/source.tgz': '296d95048b6e98a105a6d2f5416af111dbc13efecdbeb8c47a0e121997d11dbd', 'requirements_support.py': '91bb0d92bfeef8021184275369d8923e8b951d2cb7b85a31bd34414101e3a513', 'run_host.sh': 'f51593eb5db9d29969372186a516fb31ac88531cff96acae102e4f247d795e0e'}
+          actual={p.relative_to(root).as_posix() for p in root.rglob('*') if p.is_file() or p.is_symlink()}
+          assert actual==set(expected) and not any(p.is_symlink() for p in root.rglob('*'))
+          for name,digest in expected.items():
+              path=root/name
+              assert stat.S_ISREG(path.lstat().st_mode) and hashlib.sha256(path.read_bytes()).hexdigest()==digest
+          print('All diagnostic inputs verified; no release qualification claimed.')
+          PYCODE
+      - name: Collect source identities and diagnose one city-removal test only
+        timeout-minutes: 33
+        run: |
+          bash -n native-rc-diagnostic/run_host.sh
+          timeout --signal=TERM --kill-after=150s 1900s bash native-rc-diagnostic/run_host.sh \
+            --payload "$PWD/native-rc-diagnostic/payload" \
+            --output "$RUNNER_TEMP/rc-diagnostic-results" \
+            --pins-sha 1259fd9a0d169464bb69141d09c72a62ce73afa28cf9403da37ebea9c2f1da7a \
+            --source-repository "$GITHUB_WORKSPACE"
+          jq -e '.diagnostic_completed==true and .qualification==false and .release_qualified==false and .container_stopped==true and .container_removed==true and .private_workspace_removed==true and .cleanup_failed==false' \
+            "$RUNNER_TEMP/rc-diagnostic-results/public-summary/host.json"
+      - name: Retain only two bounded diagnostic summaries
+        timeout-minutes: 3
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: rc-diagnostic-validation-receipts
+          path: ${{ runner.temp }}/rc-diagnostic-results/public-summary/*.json
+          if-no-files-found: warn
+          retention-days: 7
+          include-hidden-files: false
