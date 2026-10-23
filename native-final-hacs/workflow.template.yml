@@ -1,0 +1,111 @@
+name: Final genuine HACS RC installation qualification
+on:
+  push:
+    branches: [codex/native-amd64-validation]
+    paths:
+      - native-final-hacs/**
+      - .github/workflows/native-final-hacs.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: homecircle-final-hacs-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  final-hacs:
+    if: github.ref == 'refs/heads/codex/native-amd64-validation'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 125
+    steps:
+      - name: Check out isolated qualification revision
+        timeout-minutes: 3
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Verify every frozen executable input before imports
+        timeout-minutes: 2
+        shell: bash
+        run: |
+          python3 -I -B - <<'PY'
+          import hashlib,json,pathlib,stat
+          root=pathlib.Path('native-final-hacs')
+          raw=(root/'INPUTS.json').read_bytes()
+          assert hashlib.sha256(raw).hexdigest()=='__FROZEN_INPUTS_SHA256__'
+          manifest=json.loads(raw)
+          assert manifest['schema']==1 and manifest['source_commit']=='b906d3ee51711d3455a497cc265fd3bc18f3adec'
+          assert set(manifest)=={'schema','source_commit','files'}
+          for name,expected in manifest['files'].items():
+              parts=pathlib.PurePosixPath(name)
+              assert parts.parts and not parts.is_absolute() and '..' not in parts.parts
+              path=root
+              for part in parts.parts:
+                  path=path/part
+                  assert not path.is_symlink()
+              assert stat.S_ISREG(path.stat().st_mode)
+              data=path.read_bytes()
+              assert expected=={'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest()}
+          PY
+      - name: Verify inherited and current bounded offline contracts
+        timeout-minutes: 3
+        shell: bash
+        run: |
+          python3 -I -B - <<'PY'
+          import pathlib,sys,unittest
+          sys.path.insert(0,str(pathlib.Path('native-final-hacs').resolve()))
+          suite=unittest.defaultTestLoader.loadTestsFromName('test_donor_contracts')
+          assert suite.countTestCases()==45
+          result=unittest.TextTestRunner(verbosity=1).run(suite)
+          assert result.wasSuccessful() and not result.skipped
+          PY
+          python3 -I -B - <<'PY'
+          import pathlib,sys,unittest
+          sys.path.insert(0,str(pathlib.Path('native-final-hacs').resolve()))
+          suite=unittest.defaultTestLoader.loadTestsFromName('test_contracts')
+          assert suite.countTestCases()==15
+          result=unittest.TextTestRunner(verbosity=1).run(suite)
+          assert result.wasSuccessful() and not result.skipped
+          PY
+      - name: Install native virtual machine tools
+        timeout-minutes: 12
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo apt_metadata
+          sudo timeout --signal=TERM --kill-after=20s 240s apt-get -o Acquire::Retries=2 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 update -qq
+          echo apt_packages
+          sudo timeout --signal=TERM --kill-after=20s 420s apt-get -o Acquire::Retries=2 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 install -y -qq --no-install-recommends qemu-system-x86 qemu-utils ovmf
+          test -c /dev/kvm
+          sudo chown "$(id -u):$(id -g)" /dev/kvm
+          test -r /dev/kvm && test -w /dev/kvm
+      - name: Fetch exact anonymous published release assets
+        timeout-minutes: 12
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir native-final-hacs/assets
+          curl --fail --location --proto '=https' --tlsv1.2 --max-time 180 --retry 2 https://github.com/hacs/integration/releases/download/2.0.5/hacs.zip --output native-final-hacs/assets/hacs.zip
+          curl --fail --location --proto '=https' --tlsv1.2 --max-time 180 --retry 2 https://github.com/jmhjr/HomeCircle/releases/download/v1.0.0-rc.1/homecircle.zip --output native-final-hacs/assets/candidate.zip
+          curl --fail --location --proto '=https' --tlsv1.2 --max-time 180 --retry 2 https://github.com/jmhjr/HomeCircle/releases/download/v1.0.0-rc.1/inventory.json --output native-final-hacs/assets/candidate-inventory.json
+          curl --fail --location --proto '=https' --tlsv1.2 --max-time 180 --retry 2 https://github.com/jmhjr/HomeCircle/releases/download/v0.1.0-beta.20/homecircle.zip --output native-final-hacs/assets/baseline.zip
+          curl --fail --location --proto '=https' --tlsv1.2 --max-time 180 --retry 2 https://github.com/jmhjr/HomeCircle/releases/download/v0.1.0-beta.20/inventory.json --output native-final-hacs/assets/baseline-inventory.json
+          printf '%s\n' '97be6b824a4f38e683728cc6dd72367f6b8bad0a43428b1b3b987a3087adf413  native-final-hacs/assets/hacs.zip' '4f94a18e2f7862e9bd7f4c85250e5f10e4b8e1292ea9d7b263b441d2e1b77dd9  native-final-hacs/assets/candidate.zip' 'e4bc34e3921e75157402cf643f87ed658d95c76505a448abb393fd90a304db12  native-final-hacs/assets/candidate-inventory.json' 'fc0b365d9688459504f874af5c38393e24145d657f15f1def8ada9184f363285  native-final-hacs/assets/baseline.zip' '5e724f69ff20a711dd87b2a39ed96818781813bb6f1e7b3addedc6e048593d77  native-final-hacs/assets/baseline-inventory.json' | sha256sum --check --strict
+      - name: Rehearse actual HACS installation removal upgrade restart and rollback
+        timeout-minutes: 97
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          bash native-final-hacs/run_host.sh --candidate-zip native-final-hacs/assets/candidate.zip --inventory native-final-hacs/assets/candidate-inventory.json --baseline-zip native-final-hacs/assets/baseline.zip --baseline-inventory native-final-hacs/assets/baseline-inventory.json --hacs-zip native-final-hacs/assets/hacs.zip --release-anchor native-final-hacs/release-anchor.json --release-anchor-sha256 __RELEASE_ANCHOR_SHA256__ --branch-commit "$GITHUB_SHA" --output native-final-hacs-results
+          python3 -I -B native-final-hacs/verify_results.py --receipts native-final-hacs-results/public-summary --candidate-inventory native-final-hacs/assets/candidate-inventory.json --baseline-inventory native-final-hacs/assets/baseline-inventory.json --expected-provenance native-final-hacs/expected-provenance.json --anchor-sha256 __RELEASE_ANCHOR_SHA256__ --branch-commit "$GITHUB_SHA" --output native-final-hacs-results/public-summary/independent-review.json
+      - name: Retain only bounded synthetic receipts
+        timeout-minutes: 3
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: final-hacs-qualification-receipts
+          path: native-final-hacs-results/public-summary/*.json
+          if-no-files-found: warn
+          retention-days: 7
+          include-hidden-files: false
+
