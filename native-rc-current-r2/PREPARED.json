@@ -1,0 +1,104 @@
+{
+  "actual_core_component_graph_and_startup_versions_required": true,
+  "actual_technical_dependency_versions_required": {
+    "cryptography": "50.0.1",
+    "srp": "1.0.22",
+    "unicorn": "2.1.4"
+  },
+  "archive_sha256": "4f94a18e2f7862e9bd7f4c85250e5f10e4b8e1292ea9d7b263b441d2e1b77dd9",
+  "candidate_static_gate": {
+    "archive_sha256": "4f94a18e2f7862e9bd7f4c85250e5f10e4b8e1292ea9d7b263b441d2e1b77dd9",
+    "canonical_level9_archive_verified": true,
+    "generated_frontend_members": 2,
+    "hacs_delivery_qualified": false,
+    "hacs_metadata_validated": true,
+    "inventory_sha256": "e4bc34e3921e75157402cf643f87ed658d95c76505a448abb393fd90a304db12",
+    "literal_source_members": 110,
+    "native_runtime_qualified": false,
+    "outcome": "passed",
+    "package_files": 112,
+    "release_published": false,
+    "schema": 1,
+    "scope": "frozen_candidate_static_bytes_only",
+    "source_commit": "1825410fe61ea29fdd5611bcadb6cb9b043f3fda",
+    "source_files": 402,
+    "source_git_blob_identities_verified": true,
+    "tag": "v1.0.0-rc.1",
+    "version": "1.0.0-rc.1",
+    "version_labels_consistent": true
+  },
+  "canonical_candidate_and_rebuild_same_archive": true,
+  "canonical_compression_level": 9,
+  "cause_verified_baseline_cases": 14,
+  "complete_collection_contracts_added": 5,
+  "core": "2026.10.2",
+  "existing_current_image_constraints_and_plugin_reused": true,
+  "files": {
+    "CONFIG.sha256": {
+      "bytes": 65,
+      "sha256": "095cc708f4e5c529012aa444c95929ce2688a5af29d7791dd511be61024fd977"
+    },
+    "README.md": {
+      "bytes": 187,
+      "sha256": "1e6c0d6917641b040818771d97ba4368a3d4e2fccf24e3ef62d6cceb36c301e7"
+    },
+    "driver.py": {
+      "bytes": 60436,
+      "sha256": "45b85e25da0cdc3d85f8159fbac87fa38a0c2c8d38cae466616fba154142fb38"
+    },
+    "payload/baseline-vault.py": {
+      "bytes": 6065,
+      "sha256": "7c6a846cefba6a34647d84b7738a93d85738a948da32fbf752a96c4e1cf4c0f2"
+    },
+    "payload/config.json": {
+      "bytes": 8813,
+      "sha256": "16518a22bec888250dcb0a8775597319a246642d2e93c788d5f94eec5a311c16"
+    },
+    "payload/homecircle.zip": {
+      "bytes": 628136,
+      "sha256": "4f94a18e2f7862e9bd7f4c85250e5f10e4b8e1292ea9d7b263b441d2e1b77dd9"
+    },
+    "payload/inventory.json": {
+      "bytes": 16674,
+      "sha256": "e4bc34e3921e75157402cf643f87ed658d95c76505a448abb393fd90a304db12"
+    },
+    "payload/source-inventory.json": {
+      "bytes": 61321,
+      "sha256": "ded548b9b624e03746e757dc4eaab9404ba3715025bc7b0b3f5a0448c06a9955"
+    },
+    "payload/source.tgz": {
+      "bytes": 1437669,
+      "sha256": "296d95048b6e98a105a6d2f5416af111dbc13efecdbeb8c47a0e121997d11dbd"
+    },
+    "requirements_support.py": {
+      "bytes": 9191,
+      "sha256": "91bb0d92bfeef8021184275369d8923e8b951d2cb7b85a31bd34414101e3a513"
+    },
+    "run_host.sh": {
+      "bytes": 22828,
+      "sha256": "6b39953237a88ec750732c5913b6e7f523717cca3151723b2a2f036762eb8fba"
+    },
+    "test_driver.py": {
+      "bytes": 40341,
+      "sha256": "dd6433a0cc998ccca1a631d0b47ac58ff9b0f60a2d532e2736c8b3ef69b6e002"
+    }
+  },
+  "frontend_tests": 126,
+  "full_unfiltered_collection_matches_junit_required": true,
+  "inventory_sha256": "e4bc34e3921e75157402cf643f87ed658d95c76505a448abb393fd90a304db12",
+  "minimum_backend_passed": 1732,
+  "native_qualification_claimed": false,
+  "only_named_optional_skip": "tests.test_findmy_runtime_bootstrap::test_retained_public_apple_dmg_fixed_ranges",
+  "original_contracts": 42,
+  "outcome": "prepared_not_executed",
+  "required_functions": 54,
+  "requires_generated_input_freeze_native_independent_consumer_rebind": true,
+  "safe_contracts": 48,
+  "schema": 1,
+  "setup_package_technical_version_continuity_required": true,
+  "source_commit": "1825410fe61ea29fdd5611bcadb6cb9b043f3fda",
+  "source_files": 402,
+  "technical_version_contracts_added": 1,
+  "template_map_sha256": "0123f6cd33b7c00ed181bf762581e885ea6da660281b85165f895d14c491f2ab",
+  "version": "1.0.0-rc.1"
+}
