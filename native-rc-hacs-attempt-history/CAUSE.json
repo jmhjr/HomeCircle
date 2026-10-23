@@ -1,0 +1,139 @@
+{
+  "Git_mutations": 0,
+  "actual_helper": {
+    "lines": [
+      {
+        "first": 82,
+        "last": 85,
+        "purpose": "registers a custom repository without defaultTrue"
+      },
+      {
+        "first": 182,
+        "last": 195,
+        "purpose": "incorrectly requires repository object before both removal and postrestart verification"
+      }
+    ],
+    "matches_actual_host_provenance": true,
+    "path": "native-final-hacs/guest_helper/homecircle_hacs_release_qa/__init__.py",
+    "sha256": "935539b68ecf53032de9bd990631448f467b990581f5576be787221639acc07c"
+  },
+  "artifact_bytes": 4881,
+  "artifact_id": 12525804348,
+  "artifact_name": "final-hacs-qualification-receipts",
+  "artifact_sha256": "79c484f0afa0a0e7705e1ff6c9dd17504883364f35c5bf2115fda3db779334cf",
+  "canonical_failed_download_later_available": true,
+  "cleanup": {
+    "cleanup_failed": false,
+    "private_workspace_removed": true,
+    "qemu_stopped": true
+  },
+  "completed_passed_phases": [
+    "bootstrap_hacs",
+    "fresh_download",
+    "fresh",
+    "fresh_remove"
+  ],
+  "completed_phase_count": 4,
+  "confidence": "confirmed helper semantic mismatch from exact pinned source plus exact failing helper condition and earlier passed uninstall; no private VM state was retained or inspected",
+  "confirmed_cause": "After genuine uninstall, HACS2.0.5 STARTUP explicitly unregisters uninstalled nondefault custom repositories. The postrestart fresh_removed helper requires that object to remain present, so it rejects a valid removal state before running its existing package/UI/module absence checks.",
+  "download_verification_sha256": "58c8118d7055b1545a37fc5bbf15ecad7fd3c32c1b86081c0e16d8bb27f4501a",
+  "failed_phase": "fresh_removed",
+  "failure_code": "qa_removal_repository",
+  "failure_stage": "hacs_ready",
+  "metadata_sha256": "8dbb32f451ad76de06b3837a5e954fb7d2560d084bd82d797ec6f8bf841ed4dd",
+  "minimal_fix": {
+    "fresh_remove": "Require repository present before actual uninstall and require installedFalse/versionNone afterward.",
+    "fresh_removed": "Allow repository absence; if an object remains require installedFalse/versionNone. Do not re-register or download.",
+    "preserve": [
+      "postrestart no HomeCircle config entry",
+      "package directory absent",
+      "owned activity store absent",
+      "owned resource/dashboard absent",
+      "owned staticHTTP404",
+      "unrelated resource and exact staticHTTP200bytes retained",
+      "HomeCircle modules absent from restarted process",
+      "HACS enabled and idle/version2.0.5",
+      "all process identity/phase/cleanup/provider-fence gates"
+    ]
+  },
+  "native_execution_by_reviewer": false,
+  "network_requests": 0,
+  "normal_Core_actions": 8,
+  "observed_final_conclusion": "failure",
+  "observed_final_status": "completed",
+  "official_pinned_HACS": {
+    "asset_url": "https://github.com/hacs/integration/releases/download/2.0.5/hacs.zip",
+    "source_files": {
+      "base.py": {
+        "official_tag_path": "custom_components/hacs/base.py",
+        "relevant_lines": [
+          {
+            "first": 524,
+            "last": 533,
+            "purpose": "custom repository registration defaults defaultFalse"
+          },
+          {
+            "first": 873,
+            "last": 886,
+            "purpose": "STARTUP removes uninstalled nondefault repositories"
+          }
+        ],
+        "sha256": "a9b7bc5980114f9fecb532a01819d13385175340b2ff0d7044b7dc91cf3d1bd8"
+      },
+      "repositories/base.py": {
+        "official_tag_path": "custom_components/hacs/repositories/base.py",
+        "relevant_lines": [
+          {
+            "first": 758,
+            "last": 779,
+            "purpose": "real uninstall removes local files, marks uninstalled and clears installed version"
+          }
+        ],
+        "sha256": "17aeee13aa48153f17c0de654ce6d4cd03495f21be3c57a218bf1909fefc4d2e"
+      },
+      "utils/data.py": {
+        "official_tag_path": "custom_components/hacs/utils/data.py",
+        "relevant_lines": [
+          {
+            "first": 114,
+            "last": 131,
+            "purpose": "save uninstalled repository metadata"
+          },
+          {
+            "first": 259,
+            "last": 300,
+            "purpose": "restore installedFalse and absent installed_version asNone"
+          }
+        ],
+        "sha256": "a4c7b2af6ab0cdc14e9b7dbc79831d4b6fd6f9572c9b069835db3b9fa7e8900b"
+      }
+    },
+    "version": "2.0.5",
+    "zip_sha256": "97be6b824a4f38e683728cc6dd72367f6b8bad0a43428b1b3b987a3087adf413"
+  },
+  "original_inspection_was_unaccepted_while_run_in_progress": true,
+  "package_sha256_unchanged": "4f94a18e2f7862e9bd7f4c85250e5f10e4b8e1292ea9d7b263b441d2e1b77dd9",
+  "product_defect_confirmed": false,
+  "provider_or_owner_access": false,
+  "qa_head": "e33eff58abfcdfba1b325fce19ea95382f9d2238",
+  "qualification_accepted": false,
+  "remaining_HACS_phases_not_proven_by_failed_run": true,
+  "run_attempt": 1,
+  "run_id": 40011430688,
+  "runtime_product_change_required": false,
+  "safe_json_members": [
+    "bootstrap_hacs.json",
+    "failure.json",
+    "fresh.json",
+    "fresh_download.json",
+    "fresh_remove.json",
+    "host.json"
+  ],
+  "schema": 1,
+  "scope": "independent_read_only_failure_cause_review_of_HACS_qualification_helper",
+  "source_commit": "b906d3ee51711d3455a497cc265fd3bc18f3adec",
+  "source_edits": 0,
+  "tests_by_reviewer": 0,
+  "workflow_path": ".github/workflows/native-final-hacs.yml",
+  "workflow_sha256": "dfaa311e42e161e0dfb6ef0b2b94d4bacb1251167836ac8339921c3f3a0ed348"
+}

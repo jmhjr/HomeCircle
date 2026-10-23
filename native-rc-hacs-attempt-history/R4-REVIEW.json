@@ -1,0 +1,135 @@
+{
+  "Git_mutations": 0,
+  "actual_AST_branch_contract_review": {
+    "accepts": [
+      "postrestart repositoryNone",
+      "postrestart installedFalse/versionNone",
+      "actual fresh_remove performs entry remove+uninstall+save"
+    ],
+    "refuses": [
+      "missing object before uninstall",
+      "installedTrue afterrestart",
+      "version empty string instead ofNone",
+      "installed numeric0 instead ofFalse"
+    ]
+  },
+  "actual_QA_files": {
+    ".github/workflows/native-final-hacs.yml": {
+      "bytes": 7094,
+      "sha256": "7d8c5c4eab56ee51c2afaf2ff879d204237cbc4d0bd32ac1e37f0dfa45123dbd"
+    },
+    "native-final-hacs/INPUTS.json": {
+      "bytes": 2003,
+      "sha256": "c3a446dbd0c7a0aaa30b32d4b260f374c9c4484d19b74b06a8868f2dc24f94f1"
+    },
+    "native-final-hacs/controller.py": {
+      "bytes": 19487,
+      "sha256": "2e2a0f10d2385a3c38e33b99febf1c674060fa6136c696e5ee08b380ad97a6c0"
+    },
+    "native-final-hacs/donor_host.py": {
+      "bytes": 60626,
+      "sha256": "2331fd51fcda94b754b2760b6d239f1c1c0fde2f37dd28a2679341becbbe26cb"
+    },
+    "native-final-hacs/expected-provenance.json": {
+      "bytes": 1500,
+      "sha256": "45104684a4fae795a65433fa0617e11419e6665e073b9a3fa568995c2085070e"
+    },
+    "native-final-hacs/finalize_packet.py": {
+      "bytes": 6126,
+      "sha256": "cca8b464d4170da5dd27962669ec90876da96911d062e456b7ab37701d7f94d8"
+    },
+    "native-final-hacs/guest_helper/__init__.py": {
+      "bytes": 749,
+      "sha256": "c14807afd0d599d4cdfffaf80ec9891d83df266336561fe755cb276d6f36532a"
+    },
+    "native-final-hacs/guest_helper/homecircle_hacs_release_qa/__init__.py": {
+      "bytes": 17564,
+      "sha256": "fd99be5b0e2873c70b34888801dc6c57183eba02954842c78c5b338522eae6a4"
+    },
+    "native-final-hacs/guest_helper/homecircle_hacs_release_qa/donor.py": {
+      "bytes": 37843,
+      "sha256": "89153c1f5810bc63ec8052b30ce27c936ea54018bab8564d0c40375832ee3598"
+    },
+    "native-final-hacs/guest_helper/homecircle_hacs_release_qa/manifest.json": {
+      "bytes": 321,
+      "sha256": "dce2e3f7927c2fde9a6f0e15531c457abe4bf76bfd894a5fca8d3ec201267d5a"
+    },
+    "native-final-hacs/guest_helper/homecircle_hacs_release_qa/protocol.py": {
+      "bytes": 4534,
+      "sha256": "4f888162cbc2a289bc101fd784ac44b6de51e2366d9abfefdcfa97fe66c7ca74"
+    },
+    "native-final-hacs/protocol.py": {
+      "bytes": 4534,
+      "sha256": "4f888162cbc2a289bc101fd784ac44b6de51e2366d9abfefdcfa97fe66c7ca74"
+    },
+    "native-final-hacs/release-anchor.json": {
+      "bytes": 492,
+      "sha256": "8c4dbcf76cbab338de290dfbb6600f1fff83a037dbeea1d3f7181e36d5ed842f"
+    },
+    "native-final-hacs/run_host.sh": {
+      "bytes": 798,
+      "sha256": "6a41897b06faa92828057a33edfc89cefae230a2186c0e4ac8866d451cd190c1"
+    },
+    "native-final-hacs/test_contracts.py": {
+      "bytes": 19476,
+      "sha256": "9da4a83243eaca2820bcced1895c5858b8f2af2e3e7d2dda331021e16d79769c"
+    },
+    "native-final-hacs/test_donor_contracts.py": {
+      "bytes": 23118,
+      "sha256": "93506fef3b9b74e136ed9bd93ed16536e9e4338d348bd3633bfd2963c4ecb9a3"
+    },
+    "native-final-hacs/verify_results.py": {
+      "bytes": 12689,
+      "sha256": "42557e371570b09150f1fb8b6963bd97d45c5e1f40f55db64ac018ae1233283a"
+    },
+    "native-final-hacs/workflow.template.yml": {
+      "bytes": 6976,
+      "sha256": "af4d1d75e93f162b566fa4774c12847368dd21066a5fcc2e4134e0391faf8667"
+    }
+  },
+  "actual_committed_external_input_files_verified": 18,
+  "actual_internal_payload_files_verified": 16,
+  "candidate_sha256": "4f94a18e2f7862e9bd7f4c85250e5f10e4b8e1292ea9d7b263b441d2e1b77dd9",
+  "cause_record_sha256": "fc75b8ec5b09bc1ffa2f9760a35cc26aac2d3b3aa97ebf018b00617c6d1e60a4",
+  "contract_execution_by_this_peer": false,
+  "download_helper_only_scope_choice_changed": true,
+  "first_parent_changed_paths": [
+    ".github/workflows/native-final-hacs.yml",
+    "native-final-hacs/INPUTS.json",
+    "native-final-hacs/expected-provenance.json",
+    "native-final-hacs/finalize_packet.py",
+    "native-final-hacs/guest_helper/homecircle_hacs_release_qa/__init__.py",
+    "native-final-hacs/test_contracts.py",
+    "native-final-hacs/workflow.template.yml"
+  ],
+  "input_map_sha256": "28d9ba9b435da845c20c086d19b104d4690e837ee2b18253912a56e1cd2a4668",
+  "minimal_behavior_change": "Require HACS repository before fresh_remove uninstall; after restart permit repositoryNone or strict installedFalse/versionNone, without registration or download.",
+  "native_execution_by_peer": false,
+  "native_result_still_required": true,
+  "network_requests": 0,
+  "old_R3_seal_preserved": true,
+  "only_changed_helper_function": "Rehearsal.run",
+  "outcome": "no_confirmed_blocker_for_bounded_HACS_rerun",
+  "preparation_files_verified": 17,
+  "preparation_manifest_sha256": "bb81812c1dd631d3e014b8e64b258cd3b019b88e347abfbad363efba7d1d297a",
+  "preparer_reports_actual_emitted_61_pass_zero_skip": true,
+  "product_changes": 0,
+  "provider_or_owner_access": false,
+  "qa_head": "38e9b19264e79ef452a7f3131a163e174b783227",
+  "qa_parents_verified": [
+    "92e929482d12bb120514a004fab1669e523724f8",
+    "b906d3ee51711d3455a497cc265fd3bc18f3adec"
+  ],
+  "qualification_accepted": false,
+  "schema": 1,
+  "scope": "independent_read_only_R4_helper_correction_and_actual_QA_binding_review_before_launch",
+  "source_commit": "b906d3ee51711d3455a497cc265fd3bc18f3adec",
+  "unchanged_complete_removal_status_AST": true,
+  "unchanged_controller_consumer_protocol_and_lifecycle": true,
+  "workflow_and_finalizer_contract_counts": {
+    "current": 16,
+    "donor": 45,
+    "total": 61
+  },
+  "workflow_sha256": "7d8c5c4eab56ee51c2afaf2ff879d204237cbc4d0bd32ac1e37f0dfa45123dbd"
+}

@@ -1,0 +1,42 @@
+{
+  "files": {
+    "CAUSE.json": {
+      "bytes": 5531,
+      "sha256": "fc75b8ec5b09bc1ffa2f9760a35cc26aac2d3b3aa97ebf018b00617c6d1e60a4"
+    },
+    "DOWNLOAD-VERIFICATION.json": {
+      "bytes": 505,
+      "sha256": "58c8118d7055b1545a37fc5bbf15ecad7fd3c32c1b86081c0e16d8bb27f4501a"
+    },
+    "HACS-INPUTS.json": {
+      "bytes": 2782,
+      "sha256": "458a62ad7c7531313aa393b46a5f0e9435cfacc94cc6ed149b46831914bb7321"
+    },
+    "HACS-RUN-ANCHORS.json": {
+      "bytes": 858,
+      "sha256": "d9dca4346e7b1b3bddd75579869c3eaa45413638e8218bef049705b75f14c5c1"
+    },
+    "INDEX.md": {
+      "bytes": 5216,
+      "sha256": "bf1d673c67bf2a4fbdf7020dfc2d52d4bd8d936ce784e3a31239ec1396dc2392"
+    },
+    "R4-PREPARATION-MANIFEST.json": {
+      "bytes": 3394,
+      "sha256": "bb81812c1dd631d3e014b8e64b258cd3b019b88e347abfbad363efba7d1d297a"
+    },
+    "R4-REVIEW.json": {
+      "bytes": 5669,
+      "sha256": "3098d8407b05e2a199b3362ec55592511b42ca9a9560b3df2fe5f010d04bd499"
+    },
+    "ROOT-METADATA.json": {
+      "bytes": 601,
+      "sha256": "8dbb32f451ad76de06b3837a5e954fb7d2560d084bd82d797ec6f8bf841ed4dd"
+    },
+    "artifact.zip": {
+      "bytes": 4881,
+      "sha256": "79c484f0afa0a0e7705e1ff6c9dd17504883364f35c5bf2115fda3db779334cf"
+    }
+  },
+  "schema": 1,
+  "scope": "failed_HACS_R1_attempt_and_reviewed_helper_only_correction_no_qualification"
+}
