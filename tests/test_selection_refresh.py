@@ -1,6 +1,7 @@
 """Selection refresh uses exact ownership, permission checks and shared limits."""
 
 from datetime import UTC, datetime, timedelta
+from contextlib import nullcontext
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
@@ -40,6 +41,9 @@ def scenario(platform="homecircle"):
         location_request_times={},
         last_location_request={},
         location_request_failures=set(),
+        provider_controls=SimpleNamespace(
+            paused=lambda *_: False, operation=lambda *_: nullcontext()
+        ),
     )
     user = SimpleNamespace(permissions=SimpleNamespace(check_entity=lambda *_: True))
     hass = SimpleNamespace(services=SimpleNamespace(has_service=lambda *_: True))
@@ -200,3 +204,40 @@ async def test_external_life360_requires_control_and_persistence_before_dispatch
         )["status"] == "unavailable"
     hass.services.async_call.assert_not_awaited()
     assert not runtime.last_location_request
+
+
+async def test_paused_selection_never_checks_provider_or_spends_budget():
+    hass, runtime, member, user, registry, client = scenario()
+    runtime.provider_controls.paused = lambda *_: True
+    with patch("custom_components.homecircle.selection_refresh.er.async_get", return_value=registry):
+        assert (await async_refresh_selected(hass, runtime, member, user, "example-entry"))["status"] == "disabled"
+    client.async_refresh_on_selection.assert_not_awaited()
+    assert not runtime.location_request_times
+    assert not runtime.selection_refresh_times
+
+
+async def test_pause_during_selection_reservation_prevents_provider_dispatch(hass):
+    from custom_components.homecircle.provider_controls import async_get_controls
+
+    fake_hass, runtime, member, user, registry, client = scenario()
+    controls = runtime.provider_controls = await async_get_controls(hass, "example-selection")
+
+    async def reserve(_data):
+        await controls.async_set_paused("life360", True)
+
+    runtime.location_request_store.async_save.side_effect = reserve
+    with (
+        patch.object(hass.config_entries, "async_reload", new=AsyncMock()),
+        patch("custom_components.homecircle.selection_refresh.er.async_get", return_value=registry),
+    ):
+        assert (await async_refresh_selected(fake_hass, runtime, member, user, "example-entry"))["status"] == "disabled"
+    client.async_refresh_on_selection.assert_not_awaited()
+
+
+async def test_external_selection_cannot_dispatch_while_paused():
+    hass, runtime, member, user, registry, _client = scenario("life360")
+    runtime.provider_controls.paused = lambda *_: True
+    hass.services.async_call = AsyncMock()
+    with patch("custom_components.homecircle.selection_refresh.er.async_get", return_value=registry):
+        assert (await async_refresh_selected(hass, runtime, member, user, "example-entry"))["status"] == "disabled"
+    hass.services.async_call.assert_not_awaited()

@@ -20,6 +20,7 @@ from .findmy_setup import FindMySetup, FindMySetupError, safe_label
 from .findmy_vault import Vault, VaultError, account_identity
 from .findmy_provider import account_root
 from .findmy_resume import prepare_saved_setup, has_saved_report_capability
+from .provider_controls import ProviderPaused, async_get_controls
 from .findmy_identity import (
     IdentityError,
     accessory_material,
@@ -32,6 +33,8 @@ from .findmy_identity import (
 
 _TERMINAL_SIGNIN_ERRORS = frozenset(
     {
+        "provider_paused",
+        "provider_controls_failed",
         "findmy_code_signin_failed",
         "findmy_code_delegate_failed",
         "findmy_verification_limit",
@@ -217,7 +220,7 @@ class FindMyFlow:
             return self.async_abort(reason="findmy_account_mismatch")
         errors = {}
         if user_input is not None:
-            if not user_input.get("consent"):
+            if user_input.get("consent") is not True:
                 errors["base"] = "findmy_consent_required"
             else:
                 setup = None
@@ -290,8 +293,13 @@ class FindMyFlow:
         self.findmy_saved_only = False
         errors = {}
         existing = self.draft.get(CONF_FINDMY_ACCOUNTS, {}).get(self.findmy_account_id)
+        entry = self._findmy_config_entry()
+        if entry is not None:
+            controls = await async_get_controls(self.hass, entry.entry_id)
+            if controls.paused("findmy", self.findmy_account_id):
+                return self.async_abort(reason="provider_paused")
         if user_input is not None:
-            if not user_input.get("consent"):
+            if user_input.get("consent") is not True:
                 errors["base"] = "findmy_consent_required"
             else:
                 self.findmy_label = safe_label(
@@ -397,14 +405,28 @@ class FindMyFlow:
         self.findmy_error = None
 
         async def work():
+            started = False
             try:
-                outcome = await coroutine
+                entry = self._findmy_config_entry()
+                if entry is None:
+                    started = True
+                    outcome = await coroutine
+                else:
+                    controls = await async_get_controls(self.hass, entry.entry_id)
+                    async with controls.operation("findmy", self.findmy_account_id):
+                        started = True
+                        outcome = await coroutine
                 if isinstance(outcome, str):
                     self.findmy_next = "findmy_" + outcome
+            except ProviderPaused:
+                self.findmy_error = "provider_paused"
             except FindMySetupError as error:
                 self.findmy_error = str(error)
             except Exception:
                 self.findmy_error = "findmy_operation_failed"
+            finally:
+                if not started and callable(getattr(coroutine, "close", None)):
+                    coroutine.close()
 
         self.findmy_task = self.hass.async_create_background_task(
             work(), "HomeCircle Find My setup", eager_start=True

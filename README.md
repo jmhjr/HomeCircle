@@ -1,6 +1,6 @@
 # HomeCircle
 
-Development toward **HomeCircle 1.0.0** is tracked in the [1.0 release plan](docs/RELEASE-1.0-PLAN.md). This source branch includes corrections after beta 20 and is not an installable release. The published beta 20 package and its historical validation remain unchanged.
+Development toward **HomeCircle 1.0.0** is tracked in the [1.0 release plan](docs/RELEASE-1.0-PLAN.md). This source branch is preparing unpublished qualification candidate 1.0.0-rc.1; it includes corrections after beta 20 and has no published RC asset yet. The published beta 20 package and its historical validation remain unchanged.
 
 Family location and presence for Home Assistant, independent of the tracking provider.
 
@@ -15,6 +15,9 @@ HomeCircle consumes standard HA `person` and `device_tracker` entities, with opt
 See [beta 20 validation](docs/BETA20-VALIDATION.md) for the versioned package boundary and remaining acceptance. Historical live Find My proof belongs to [beta 19](docs/BETA19-VALIDATION.md). Earlier features and their release checks are recorded in [beta 18 validation](docs/BETA18-VALIDATION.md).
 
 ## Start here
+
+- [First-release checklist](docs/RELEASE-1.0-FIRST-RELEASE-TRACKER.md), [HAOS support target](docs/RELEASE-1.0-SUPPORT-PROPOSAL.md) and [no-contact distribution decision record](docs/RELEASE-1.0-NO-OUTREACH-DECISION.md)
+- [First-release user guide](docs/RELEASE-1.0-USER-GUIDE.md), [maintenance and recovery](docs/RELEASE-1.0-MAINTENANCE.md), [privacy/support](docs/RELEASE-1.0-PRIVACY-SUPPORT.md) and [troubleshooting](docs/RELEASE-1.0-TROUBLESHOOTING.md)
 
 - [Per-source report times](docs/PER-SOURCE-REPORTS.md)
 - [Beta 16 validation](docs/BETA16-VALIDATION.md), [beta 15 candidate validation](docs/BETA15-CANDIDATE-VALIDATION.md), [current release readiness](docs/CURRENT-RELEASE-READINESS.md), and [earlier direct Life360 validation](docs/DIRECT-LIFE360-CANDIDATE-VALIDATION.md)
@@ -66,6 +69,44 @@ Family location refresh uses explicitly assigned supported trackers and is off b
 Person cards show **Since** from the selected tracker’s genuine arrival timestamp when supported, or a saved HomeCircle observation of arrival into a named place. Times use Home Assistant’s time zone; earlier days include the date. Missing or mismatched evidence shows **Since unknown**. The tooltip identifies tracker evidence or an observed arrival and any observation gap. This time is separate from the latest tracker report.
 
 **Since after restart:** Genuine Life360 trackers supply their own arrival time, separately from their latest report. Other trackers use a locally saved observed arrival into a configured place. A restart preserves the saved time when the place still matches; the tooltip notes that uninterrupted presence during the gap is unconfirmed. A changed place during the gap remains unknown until a new arrival is observed. Initial unknown times are not fabricated. Changes to saved HomeCircle configuration reset observation checkpoints.
+
+## Direct connections, privacy and licensing
+
+Standard HA People and trackers remain usable without a HomeCircle provider
+account. The direct Apple Find My and Life360 connections are optional and
+unofficial. Use only accounts and data you are lawfully entitled to access;
+HomeCircle does not authorize access to another person's account or location.
+Provider names identify compatibility. HomeCircle is not affiliated with or
+endorsed by Apple or Life360, and claims no provider approval or logo right.
+
+HomeCircle provides no hosted account relay, telemetry or support-upload
+service. Saved account data stays in your Home Assistant installation, subject
+to its storage and backup access. Enabled provider connections and optional
+map, portrait and city services still make the requests described in
+[privacy and support](docs/RELEASE-1.0-PRIVACY-SUPPORT.md). Reports can be stale,
+access can be denied and unofficial interfaces can change. Do not rely on
+HomeCircle for emergency response or a person's safety.
+
+The source-based HACS package includes Python/protocol source, public
+certificates, generated frontend text assets and retained OSS notices. It does
+not bundle dependency wheels, native executables/libraries, Apple payloads or a
+container image. HA installs declared dependencies separately, and the optional
+Find My setup can download its pinned Apple runtime payload locally. The
+published OSS grants apply to their covered code; they do not license Apple's
+binary or provider services. See the [distribution basis and remaining
+maintainer decisions](docs/RELEASE-1.0-DISTRIBUTION-QUESTIONS.md).
+
+The current source candidate implements administrator **Manage direct
+connections** with **Pause** and **Resume**, plus account/provider stops after
+access denial. Open Options, choose the saved connection and an action; saved
+accounts, identities, selections and history are kept. Resume deliberately
+allows requests for that provider again, including denied accounts, and does not
+reset Find My recovery safeguards. The affected native checks and final RC/HACS
+qualification are pending in the [active tracker](docs/RELEASE-1.0-FIRST-RELEASE-TRACKER.md);
+source implementation is not a native pass. See the
+[decision record](docs/RELEASE-1.0-NO-OUTREACH-DECISION.md). For help, use
+[SUPPORT.md](SUPPORT.md) or [private security reporting](SECURITY.md); no raw
+account file, backup or diagnostic upload is required.
 
 ## Experimental Apple Find My
 

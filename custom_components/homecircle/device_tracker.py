@@ -5,12 +5,57 @@ from functools import partial
 import logging
 
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import entity_registry as er
+from homeassistant.components.device_tracker import TrackerEntity, SourceType
 
 from .const import DOMAIN
-from .tracker_providers import connected_providers
+from .tracker_providers import ProviderHealth, connected_providers
+from .provider_controls import PROVIDERS, async_get_controls
 
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class _PausedTracker(TrackerEntity):
+    """Keep an already registered tracker unavailable, with its exact identity."""
+
+    _attr_available = False
+    _attr_should_poll = False
+
+    def __init__(self, record):
+        self.entity_id = record.entity_id
+        self._attr_unique_id = record.unique_id
+        self._attr_name = record.original_name or record.name
+
+    @property
+    def source_type(self):
+        return SourceType.GPS
+
+
+class _PausedClient:
+    """A saved connection stays connected locally without loading its SDK."""
+
+    def __init__(self, hass, entry_id, provider, add_entities):
+        self.hass, self.entry_id = hass, entry_id
+        self.provider, self.add_entities = provider, add_entities
+        self.count = 0
+
+    async def async_start(self):
+        registry = er.async_get(self.hass)
+        trackers = [
+            _PausedTracker(record)
+            for record in er.async_entries_for_config_entry(registry, self.entry_id)
+            if record.domain == self.provider.platform
+            and self.provider.owns_entity(registry, record.entity_id)
+        ]
+        self.count = len(trackers)
+        self.add_entities(trackers)
+
+    async def async_stop(self):
+        return None
+
+    def health_snapshot(self):
+        return ProviderHealth("paused", discovered_trackers=self.count)
 
 
 async def _async_stop_after_startup(clients):
@@ -49,6 +94,7 @@ async def _async_stop_after_startup(clients):
 
 async def async_setup_entry(hass, entry, async_add_entities):
     runtime = entry.runtime_data
+    controls = runtime.provider_controls = await async_get_controls(hass, entry.entry_id)
     started = []
     current = None
     try:
@@ -57,12 +103,15 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 continue
             issue_id = f"tracker_provider_start_{entry.entry_id}_{provider.id}"
             try:
-                client = provider.client_factory(
-                    hass,
-                    runtime.config[provider.account_key],
-                    async_add_entities,
-                    entry.entry_id,
-                )
+                if provider.id in PROVIDERS and controls.paused(provider.id):
+                    client = _PausedClient(hass, entry.entry_id, provider, async_add_entities)
+                else:
+                    client = provider.client_factory(
+                        hass,
+                        runtime.config[provider.account_key],
+                        async_add_entities,
+                        entry.entry_id,
+                    )
                 current = (provider.id, client)
                 await client.async_start()
             except Exception as error:

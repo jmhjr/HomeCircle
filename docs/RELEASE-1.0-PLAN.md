@@ -5,6 +5,38 @@ remains experimental `v0.1.0-beta.20`. This is an execution tracker, not a stabl
 release declaration. Check a task only after linking its exact evidence. Retain
 failed attempts and record any accepted scope change instead of deleting a gate.
 
+## First-release decisions and active checklist
+
+The maintainer accepted official HAOS on amd64 and ARM64 as the first-release
+support target on October 22, 2026; Home Assistant Container remains experimental
+for this release. Both direct Apple Find My and Life360 remain included.
+The proposed minimum Core 2026.9.4/current Core 2026.10.2 endpoints remain the
+qualification targets. The maintainer also explicitly accepted the completed
+Claude AI technical review with its documented partial coverage and missing
+independent producer-format evidence. This supersedes the earlier human-specialist
+assurance gate for 1.0; no such human assurance is claimed.
+
+Use the [seven-item first-release tracker](RELEASE-1.0-FIRST-RELEASE-TRACKER.md) for
+current work and the [accepted support target and exclusions](RELEASE-1.0-SUPPORT-PROPOSAL.md)
+for launch scope. [Current AI review and source bindings](RELEASE-1.0-ASSURANCE-CURRENT.md)
+and [distribution questions](RELEASE-1.0-DISTRIBUTION-QUESTIONS.md) retain separate
+technical and distribution outcomes. On October 23 the maintainer requested a
+[no-contact implementation](RELEASE-1.0-NO-OUTREACH-DECISION.md): source-only HACS
+delivery, actual public OSS grants, complete retained notices, optional unofficial
+providers and local privacy/support. No permission letters or mandatory outreach
+are required. Exact Apple binary/service and Unicorn terms remain factual basis
+and residual-uncertainty questions for a maintainer scope decision; technical
+review does not manufacture permission or legal clearance. Administrator
+Manage direct connections, Pause/Resume and stop-on-access-denial are implemented in the source candidate; affected runtime results remain tied to their exact recorded source.
+
+Complete one bounded owner acceptance round and one frozen-RC qualification.
+Fold the affected minimum-Core startup/activity/restart check into that RC pass,
+reuse existing architecture evidence, and do not reopen completed ordinary
+restore, private-copy upgrade or current-Core checks for documentation edits.
+Final RC, HACS installed delivery, remaining owner acceptance and stable
+publication remain pending. The detailed thirteen-stage history below retains
+its dated outcomes; superseded scope/assurance proposals are historical.
+
 ## Current fixed candidate evidence
 
 Source `3c33160c67e53956ab52298ffc10ccc9992132f0` and package `f181e6300f15d8977817a552db90d35caf0edc869067ebeea815c7be1df0248e` include the activity initialization
@@ -53,17 +85,18 @@ On October 20, 2026 the maintainer selected **both direct Apple Find My and
 direct Life360 for 1.0**, with their validation to be completed. Provider-independent
 HA entity selection remains the core. This shipping-scope decision activates
 both providers' account, dependency, permission and applicable cryptographic
-gates; it does not assert those gates have passed. The proposed platform matrix
-and installed-upgrade baseline policy still need final acceptance.
+gates; it does not assert those gates have passed. The HAOS-first target is now accepted as described above; final candidate
+qualification and the installed-upgrade baseline acceptance remain pending.
 
 ## Execution and evidence rules
 
 Agent means implementation, local/disposable validation and documentation.
-Maintainer means product/support decisions and final acceptance. Owner means
-the account/device participant. Specialist means an independent qualified
-reviewer for the identified cryptographic or licensing question; another agent
-review does not silently substitute for that requirement. Owner/specialist
-inputs may remain pending while independent engineering work proceeds.
+Maintainer means product/support and residual-uncertainty scope decisions plus
+final acceptance. Owner means the account/device participant. Identify any
+actually commissioned specialist review by role and scope; no external lawyer
+or qualified-human assurance is invented. The earlier human cryptographic gate
+was superseded by the accepted Claude method above. The no-contact approach
+does not require provider/author correspondence before preparation proceeds.
 
 Every acceptance receipt records source revision, ZIP/inventory hashes, target,
 versions, named cases, outcome and cleanup. Evidence remains attached to its
@@ -76,11 +109,11 @@ Infrastructure failures receive one bounded diagnosis before any reasoned retry.
 
 | Stage | Current status / dependency | Responsible | Completion evidence |
 | --- | --- | --- | --- |
-| 1. Freeze scope and support | Both direct providers selected October 20; platform/support proposal open | Maintainer, agent records | Signed-off feature/provider list, supported target matrix, upgrade baselines, exclusions and `1.0.0` naming |
+| 1. Freeze scope and support | Both providers selected; HAOS-first target accepted October 22; qualification/baseline acceptance pending | Maintainer, agent records | Signed-off feature/provider list, supported target matrix, upgrade baselines, exclusions and `1.0.0` naming |
 | 2. Consolidate release source and blockers | Clean source in draft PR #36; focused fixes independently reviewed; exact-source native suite passed | Agent; maintainer review | Clean canonical release branch, reviewed product-only diff, notices included, recorded defect dispositions |
-| 3. Close provenance and provider decisions | Open; inventory and notice preview complete; depends on stage 1 for final scope | Maintainer/specialist, agent supplies evidence | Exact-source/installed-dependency notices and obligations disposition; source/permission/service/name decisions for shipped scope |
+| 3. Record provenance and provider scope decisions | No-contact source-only implementation requested October23; retained grants/notices and Mac exclusion recorded; final factual checks and residual decisions pending | Maintainer decides scope; agent supplies evidence | Exact source/package/dependency notice checks, actual terms/basis, residual uncertainty or real exclusions; no invented permission letter or legal clearance |
 | 4. Enabled backup/restore safety | Recovery-guard and scoped ordinary Person/activity partial restore passed; advertised backup variants remain open | Agent | Actual Person identities/links and product activity B/M/R preserved under normal requirements/default conditions; arrival-gap/pending-shutdown and broader variants remain unqualified |
-| 5. Cryptographic and format assurance | Synthetic independent source review complete; external assurance open if Find My ships | Specialist, agent fixes; owner only for controlled acceptance | Review disposition, independent format vectors, authenticated rejection/recovery cases and fixes rechecked |
+| 5. Cryptographic and format assurance | Maintainer accepted completed Claude AI source review with documented limits on October 22; no confirmed actionable findings | Agent records; maintainer accepted method | Current source bindings, Claude partial coverage and unresolved format limits retained; no qualified-human or producer-vector assurance claimed |
 | 6. Advertised compatibility | Four native QA-container lifecycle cells and both scoped managed ARM endpoints passed; fresh consumer/RC support gates open | Agent | All advertised cells have candidate dependency/install/start/restart evidence; unsupported cells excluded explicitly |
 | 7. Real-account acceptance | Initial connections and saved-session restart witnessed; remaining lifecycle and stages 3/5 disposition open | Owner, agent guides/records | Controlled setup, discovery, selections, session lifecycle and successful recovery receipts without deliberately wrong passcodes |
 | 8. Sustained field acceptance | Earlier observations exist; final scope incomplete; depends on stages 6/7 as applicable | Owner observes, agent analyzes | Agreed observation window and movement/outage/renewal/staleness cases with genuine source-report times |
@@ -92,8 +125,9 @@ Infrastructure failures receive one bounded diagnosis before any reasoned retry.
 
 ### 1. Scope and support decision
 
-- [ ] Record included features, both direct-provider dispositions and the
-  compatibility matrix. Identify what is experimental, deferred or unsupported.
+- [x] Record included features, both direct-provider dispositions and the
+  first-release HAOS support target and explicit experimental/excluded variants.
+  Final candidate qualification remains separate; see the current seven-item tracker.
 - [ ] Set `1.0.0` consistently in current planning and later release metadata.
   Preserve older `0.1.0` milestones as dated history.
 - [ ] Choose the supported upgrade baselines and define treatment of locally
@@ -119,24 +153,32 @@ Status icons, additional landscape polish, trip trails, traffic/ETA, adaptive
 freshness and additional providers remain optional post-1.0 work unless the
 maintainer changes the scope. Do not convert the old wishlist into new blockers.
 
-### 3. Notices, source obligations and permission
+### 3. Notices, distribution basis and provider scope
 
 - [x] Carry the GrandSlam, Unicorn supplemental and Construct notice correction
   into the actual candidate and verify its installed integration paths:
-  [exact-package notice witness](RELEASE-1.0-NOTICE-INSTALLATION.md). Individual
-  dependency-wheel layouts and source/permission obligations remain separate.
-- [ ] Record disposition of the unlicensed gist ancestry/independent
-  implementation basis and GrandSlam's literal unfilled license fields.
-- [ ] Resolve Unicorn binding/core attribution and applicable GPLv2 source or
-  distribution obligations; address the fetched wheel's missing material.
-  Retaining supplemental text alone does not close these questions.
-- [ ] Resolve fetched pyelftools/Construct notice placement and any upstream
-  distribution remedy. Bind the final inventory to the actual resolved artifacts.
-- [ ] For shipped providers, record assessment of the pinned Apple software's
-  accompanying agreement, extraction/emulated use, applicable iCloud/Life360
-  service permissions and public branding. Technical inventory is not permission.
-- [ ] If an unresolved component is deferred, demonstrate its real exclusion
-  and validate the resulting package/dependency behavior.
+  [exact-package notice witness](RELEASE-1.0-NOTICE-INSTALLATION.md). That dated
+  result stays tied to its package; repeat changed-candidate notice checks.
+- [x] Record the October23 no-contact implementation direction, public OSS
+  grant basis and source-only distribution limits in the
+  [decision record](RELEASE-1.0-NO-OUTREACH-DECISION.md). This closes the choice of
+  preparation approach, not the outstanding terms questions or final release.
+- [ ] Verify that the changed candidate excludes the unused Mac utility/CLI,
+  retains complete inherited notices and introduces no bundled dependency/native
+  or Apple payload. Preserve dated provenance instead of inventing attribution.
+- [ ] Record the actual Unicorn core/binding terms and source-only distribution
+  basis, including any remaining combined-work/source-delivery uncertainty.
+  No invented BSD text or source offer is acceptable; separate installation and
+  IPC alone are not the disposition.
+- [ ] Bind the final dependency/notice inventory to actual resolved artifacts.
+  Distinguish retained supplemental text from an upstream wheel repair.
+- [ ] Record the exact Apple software/service and Life360 terms/basis, remaining
+  uncertainty and maintainer include/restrict/defer choice for the shipped
+  behavior. No mandatory contact or permission letter is imposed; no grant or
+  legal clearance is asserted by this plan.
+- [ ] Verify administrator Pause/Resume and stop-on-denial, local privacy/support
+  and non-affiliation disclosures against the final implementation. Record any
+  actual scope exclusion and affected checks; a checkbox does not resolve terms.
 
 ### 4. Enabled restore and rollback safety
 
@@ -228,18 +270,21 @@ configuration snapshot still requires an external monotonic anchor.
 
 ### 5. Independent security and format acceptance
 
-The [assurance handoff](RELEASE-1.0-ASSURANCE-HANDOFF.md) identifies the exact
-source, all 74 unchanged Find My Python members and the remaining trust/format
-questions. It is prepared evidence, not completion of external assurance.
+- [x] Identify the current source, changed paths, prior findings and threat boundaries.
+  The [current assurance handoff](RELEASE-1.0-ASSURANCE-CURRENT.md) binds all 74 primary
+  Python files and the six changes since the dated earlier handoff.
+- [x] Complete the Claude AI source review and source-based question triage.
+  It reported no confirmed actionable defect in its disclosed partial scope.
+  The maintainer explicitly accepted this review method with its documented
+  limits for 1.0 on October 22, 2026.
+- [x] Retain unresolved protocol/format assumptions and residual-risk boundaries
+  without relabeling generated fixtures as independent Apple-produced proof.
+  The absence of independent producer vectors remains a disclosed limitation.
+  No human/external-qualified assurance is asserted; the old human-review
+  requirement is superseded by the explicit maintainer decision.
 
-- [ ] Give the independent reviewer the identified source, prior findings,
-  limits, threat boundaries and exact unresolved questions.
-- [ ] Add independently sourced supported-format cases and safe unsupported/
-  malformed rejection cases; retain authenticated peer/account/key binding,
-  record integrity, resource bounds and cancellation checks.
-- [ ] Resolve and recheck confirmed findings. Record residual risks and the
-  explicit disposition of each; do not describe generated synthetic fixtures as
-  independent real-format proof.
+New confirmed defects would require correction and affected rechecks.
+Source/license/service-permission decisions remain separately open.
 
 ### 6. Compatibility qualification
 
@@ -279,8 +324,10 @@ Fresh online consumer and broader release gates remain open.
   and identities; graceful cleanup passed. Provider/native-worker, HACS, restore
   and final-RC scope remain separate.
 
-- [ ] Freeze the advertised matrix. The current proposal has eight cells:
-  HAOS/Container × amd64/ARM64 × Core 2026.9.4/2026.10.2.
+- [x] Freeze the first-release target: HAOS × amd64/ARM64 ×
+  Core 2026.9.4/2026.10.2. Container stays experimental with historical
+  evidence retained. Final qualification remains pending; reuse unchanged
+  architecture evidence and run the focused minimum check within final RC.
 - [ ] For each cell, verify actual requirements installation, exact candidate
   files, setup/load, restart, native worker where shipped, provider failure
   isolation and removal. Record HAOS/Supervisor/HACS versions where relevant.
@@ -317,6 +364,11 @@ accepted. No owner account attempt has started during this preparation.
   the session and confirm secrets do not enter logs, artifacts or release files.
 
 ### 8. Finite field window
+
+The active first-release approach is one finite agreed owner round combining
+provider, movement/outage/staleness and required display/access checks. The
+earlier seven-day proposal below is historical, not an automatic waiting period.
+Do not infer unobserved natural renewal or missing events as passed.
 
 - [ ] Agree and record the observation period and pass criteria before starting.
   Proposal: seven consecutive days plus at least one genuine departure/return,
@@ -399,12 +451,17 @@ selection completion and the remaining mobile/display/access cases stay open.
 
 ## Work that can proceed now
 
-The scoped ordinary Person/activity partial restore and automatic recovery-guard
-block are complete, alongside the earlier initial account/saved-session restart
-and compatibility evidence. Both direct providers remain included. Continue
-advertised backup-variant acceptance, provider lifecycle/renewal,
-assurance/provenance dispositions, remaining compatibility cells, finite
-field/mobile/display checks and real installed-state upgrade acceptance before
-freezing an RC. Arrival-gap and deliberately pending-on-shutdown writes are not
-qualified by the scoped restore. Earlier failed attempts and narrower passes
-retain their recorded outcomes. Stable release approval remains open.
+Follow the seven-item tracker: run the affected native checks for the implemented
+Manage direct connections, Pause/Resume and stop-on-denial changes; verify source-only packaging/notices,
+record the remaining maintainer basis/scope decisions, and finish one bounded
+owner round plus frozen-RC/HACS qualification. Fold the focused minimum-Core
+check into that RC pass and reuse unchanged accepted evidence; do not add a new
+architecture matrix or require author/provider correspondence.
+
+The ordinary Person/activity restore, recovery-guard block and private-copy
+upgrade keep their recorded scopes. Arrival-gap, pending-on-shutdown and broader
+backup/platform variants remain unqualified unless separately accepted; they do
+not automatically create a new first-release test matrix. Historical failures,
+AI limits and narrower passes stay unchanged. Stable release approval remains
+open; neither these documents nor a risk checkbox makes the maintainer's final
+distribution/provider decision.
