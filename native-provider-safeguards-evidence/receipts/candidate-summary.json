@@ -1,0 +1,1994 @@
+{
+  "collected_cases_match_junit": true,
+  "completed": true,
+  "core": "2026.10.2",
+  "core_requirement_graph": {
+    "default_auth_modules": {
+      "homeassistant.auth.mfa_modules.totp": [
+        "pyotp==2.10.0",
+        "PyQRCode==1.2.1"
+      ],
+      "homeassistant.auth.providers.homeassistant": []
+    },
+    "domains": [
+      "ai_task",
+      "air_quality",
+      "alarm_control_panel",
+      "analytics",
+      "api",
+      "application_credentials",
+      "assist_pipeline",
+      "assist_satellite",
+      "auth",
+      "automation",
+      "backup",
+      "battery",
+      "binary_sensor",
+      "blueprint",
+      "brands",
+      "button",
+      "camera",
+      "climate",
+      "config",
+      "conversation",
+      "counter",
+      "cover",
+      "date",
+      "datetime",
+      "device_automation",
+      "device_tracker",
+      "diagnostics",
+      "door",
+      "energy",
+      "event",
+      "fan",
+      "ffmpeg",
+      "file_upload",
+      "frontend",
+      "garage_door",
+      "gate",
+      "geo_location",
+      "hardware",
+      "hassio",
+      "history",
+      "homeassistant",
+      "http",
+      "humidifier",
+      "humidity",
+      "illuminance",
+      "image",
+      "image_processing",
+      "image_upload",
+      "infrared",
+      "input_boolean",
+      "input_button",
+      "input_datetime",
+      "input_number",
+      "input_select",
+      "input_text",
+      "intent",
+      "labs",
+      "lawn_mower",
+      "light",
+      "llm",
+      "lock",
+      "logger",
+      "lovelace",
+      "map_tiles",
+      "media_player",
+      "media_source",
+      "moisture",
+      "motion",
+      "network",
+      "notify",
+      "number",
+      "occupancy",
+      "onboarding",
+      "persistent_notification",
+      "person",
+      "power",
+      "radio_frequency",
+      "recorder",
+      "remote",
+      "repairs",
+      "scene",
+      "schedule",
+      "script",
+      "search",
+      "select",
+      "sensor",
+      "siren",
+      "stt",
+      "switch",
+      "switch_as_x",
+      "system_health",
+      "system_log",
+      "tag",
+      "temperature",
+      "text",
+      "time",
+      "timer",
+      "trace",
+      "tts",
+      "update",
+      "vacuum",
+      "valve",
+      "vibration",
+      "wake_word",
+      "water_heater",
+      "weather",
+      "web_rtc",
+      "webhook",
+      "websocket_api",
+      "window",
+      "zone"
+    ],
+    "preimport_own_requirements_modules": [
+      "api",
+      "auth",
+      "config",
+      "default_config",
+      "device_automation",
+      "diagnostics",
+      "file_upload",
+      "group",
+      "history",
+      "http",
+      "image_upload",
+      "logbook",
+      "lovelace",
+      "onboarding",
+      "person",
+      "recorder",
+      "repairs",
+      "search",
+      "sensor",
+      "system_log",
+      "webhook",
+      "websocket_api"
+    ],
+    "requirements": [
+      "Pillow==12.3.0",
+      "PyQRCode==1.2.1",
+      "PyTurboJPEG==1.8.3",
+      "SQLAlchemy==2.0.54",
+      "aiohasupervisor==0.6.0",
+      "cronsim==2.7",
+      "fnv-hash-fast==2.0.3",
+      "gazetteer-matcher==1.1.0",
+      "ha-ffmpeg==3.2.2",
+      "hassil==3.12.1",
+      "home-assistant-frontend==20260930.4",
+      "home-assistant-intents==2026.10.6",
+      "ifaddr==0.2.0",
+      "infrared-protocols==10.1.0",
+      "mutagen==1.48.1",
+      "psutil-home-assistant==0.0.1",
+      "pymicro-vad==1.0.1",
+      "pyotp==2.10.0",
+      "pyspeex-noise==1.0.2",
+      "rf-protocols==4.3.0",
+      "securetar==2026.4.1"
+    ],
+    "source_sha256": {
+      "auth/mfa_modules/totp.py": "e727960aa53f9c4885e0bac0f06bfa334c496e83294842340b317d8bf91e1b45",
+      "auth/providers/homeassistant.py": "410e0c75c95685f37674e2d328014703d7d4589ea569173f11757fb9b7bb0bb4",
+      "bootstrap.py": "5ed958ca262133aedd7653055edecbdb2d15d7dd9a9dd42a0915e0a0f1194e92",
+      "core_config.py": "f2088ad95f16564485b957ff3f7a001c5b211356d5fe5a1115af146984112e75",
+      "requirements.py": "ec9a8434fe5d883d77d4b76ce013aed79878e0597e2ca774bf1dd89142951843"
+    }
+  },
+  "failed": 0,
+  "full_backend_suite_repeated": false,
+  "full_managed_core_lifecycle": false,
+  "hacs_delivery_tested": false,
+  "kvm_used": false,
+  "outcome": "passed",
+  "owner_accounts_used": false,
+  "package_inventory_sha256": "e4bc34e3921e75157402cf643f87ed658d95c76505a448abb393fd90a304db12",
+  "package_sha256": "4f94a18e2f7862e9bd7f4c85250e5f10e4b8e1292ea9d7b263b441d2e1b77dd9",
+  "passed": 548,
+  "production_configuration_used": false,
+  "release_files": 112,
+  "runtime_versions": {
+    "anisette": "1.2.4",
+    "beautifulsoup4": "4.13.3",
+    "cryptography": "50.0.1",
+    "homeassistant": "2026.10.2",
+    "life360": "7.2.0",
+    "protobuf": "7.36.0",
+    "pytest-homeassistant-custom-component": "0.13.373",
+    "srp": "1.0.22",
+    "unicorn": "2.1.4"
+  },
+  "schema": 1,
+  "scope": "native_current_core_affected_provider_pytest_only",
+  "selected_base_function_count": 345,
+  "selected_base_functions": [
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_add_hide_and_remove_one_tracker_without_reconfirming_household",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_borrowed_home_position_warns_in_setup_and_options",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_cancel_and_duplicate_flow",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_changing_primary_to_saved_other_home_removes_excluded_default",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_connections_pause_preserves_account_selection_and_stale_options",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_create_other_home_zone_preserves_member_choices",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_create_person_with_existing_yaml_person",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_create_place_zone_keeps_household_draft",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_create_primary_zone_rejects_duplicate_name",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_details_never_link_trackers_or_block_yaml_person",
+      "variants_passed": 4
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_direct_life360_account_and_tracker_person_setup",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_direct_life360_creates_selectable_tracker",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_disabled_direct_tracker_does_not_interrupt_other_members",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_discovery_does_not_guess_from_names",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_duplicate_tracker_names_are_distinct_in_hint_and_review",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_external_provider_control_requires_exact_selected_registry_platform",
+      "variants_passed": 2
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_failed_tracker_platform_setup_can_retry_cleanly",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_family_refresh_opt_in_is_explicit_and_persisted",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_final_review_shows_draft_and_cancel_keeps_it_unsaved",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_full_household_options_keeps_people_and_hides_legacy_additions",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_invalid_household",
+      "variants_passed": 5
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_invalid_members_and_deleted_during_flow",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_life360_acknowledgement_is_not_an_account_credential",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_life360_reauth_replaces_secret_and_preserves_household",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_life360_requires_explicit_acknowledgement_before_validation",
+      "variants_passed": 4
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_map_source_guidance_and_report_prompts_follow_effective_source",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_member_description_escapes_entity_name",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_member_setup_explains_suggestions_without_changing_them",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_missing_unavailable_recovery_and_repair",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_new_pet_person_is_created_and_tracker_linked_on_save",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_new_setup_requires_a_person_for_pet_tracker",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_offline_tracker_still_gets_report_time_prompt",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_older_account_replacement_compares_valid_old_sign_in",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_older_reauth_requires_confirmation_if_old_sign_in_expired",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_options_add_tracker_task_uses_short_form",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_options_battery_task_shows_only_member_then_sensors",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_options_create_pet_person_before_assigning_tracker",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_options_person_settings_open_selected_members_details",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_options_reconfigure_and_listener_replacement",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_options_remove_tracker_is_scoped_to_selected_person",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_other_home_picker_excludes_selected_primary",
+      "variants_passed": 2
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_paused_life360_replacement_and_reauth_make_no_validation_call",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_paused_unsaved_provider_can_resume_without_auth_or_options_save",
+      "variants_passed": 3
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_per_source_flow_migrates_preserves_and_clears",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_person_and_pet_person_share_household_flow",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_person_offline_tracker_and_no_source_report_steps",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_pet_thresholds_persist_in_options",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_reconnect_rejects_a_different_life360_account",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_registry_disabled_and_rename_require_reselection",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_remove_selected_person_tracker_preserves_person",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_review_back_and_edit_member_preserve_two_member_draft",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_runtime_report_aging_source_changes_and_unload",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_same_tracker_cannot_be_assigned_to_two_people",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_saved_direct_tracker_is_unavailable_during_offline_reload",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_saved_person_report_mapping_is_not_labelled_for_deletion",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_saved_tracker_only_pet_can_move_to_person_without_losing_settings",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_setup_persistence_sources_and_unload",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_supporting_flow_validation_persistence_and_clear",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_tracker_guide_does_not_guess_between_equal_sources",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_tracker_guide_prefers_position_over_home_only_presence",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_tracker_linked_to_another_ha_person_is_rejected",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_tracker_only_pet_setup_and_options",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_tracker_selection_default_and_explicit_follow_persist",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_tracker_shortcuts_reject_conflicts_before_member_form",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_config_flow",
+      "function": "test_unchanged_reconfigure_keeps_owned_resource",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_family_refresh",
+      "function": "test_all_skipped_sources_still_explain_results_without_spending_budget",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_family_refresh",
+      "function": "test_complete_circle_and_phone_are_combined_without_duplicate_circle_calls",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_family_refresh",
+      "function": "test_complete_circle_permission_and_scope_fail_before_send",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_family_refresh",
+      "function": "test_concurrent_clicks_single_send_and_shared_individual_limit",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_family_refresh",
+      "function": "test_config_change_during_second_reservation_never_sends_removed_phone",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_family_refresh",
+      "function": "test_disabled_phone_and_unknown_provider_are_explicitly_skipped",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_family_refresh",
+      "function": "test_exact_family_http_denial_persists_pause_and_never_sends_again",
+      "variants_passed": 2
+    },
+    {
+      "class": "tests.test_family_refresh",
+      "function": "test_failed_family_feedback_also_expires",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_family_refresh",
+      "function": "test_family_allows_fiftieth_attempt_and_one_minute_boundary",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_family_refresh",
+      "function": "test_family_refresh_requires_explicit_opt_in_before_credentials_or_send",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_family_refresh",
+      "function": "test_feedback_new_report_same_source_only_and_observation_expires",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_family_refresh",
+      "function": "test_ha_receipt_is_not_a_gps_report_and_late_receipts_do_not_count",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_family_refresh",
+      "function": "test_late_reports_cannot_rewrite_results_and_feedback_expires",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_family_refresh",
+      "function": "test_managed_cloud_connection_checks_once_for_multiple_assigned_sources",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_family_refresh",
+      "function": "test_manual_next_available_rolls_over_at_exact_boundary",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_family_refresh",
+      "function": "test_manual_request_ignores_existing_individual_caps_and_preserves_them",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_family_refresh",
+      "function": "test_mixed_assigned_sources_refresh_without_map_source_or_full_circle",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_family_refresh",
+      "function": "test_mixed_button_daily_limit_exact_expiry_and_storage_failure",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_family_refresh",
+      "function": "test_mixed_concurrency_and_individual_phone_budget_are_shared",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_family_refresh",
+      "function": "test_one_limited_or_failed_source_does_not_block_other_provider",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_family_refresh",
+      "function": "test_pause_during_family_reservation_prevents_circle_send",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_family_refresh",
+      "function": "test_paused_family_never_reads_or_sends_circle_credentials",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_family_refresh",
+      "function": "test_person_fallback_still_uses_explicit_selected_life360_tracker",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_family_refresh",
+      "function": "test_phone_notification_permission_prevents_every_dispatch",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_family_refresh",
+      "function": "test_registry_rebinding_during_save_cannot_redirect_phone_request",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_family_refresh",
+      "function": "test_save_failure_rolls_back_every_source_and_failed_send_consumes_cap",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_family_refresh",
+      "function": "test_saved_limits_survive_new_runtime_and_enforce_daily_cap",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_family_refresh",
+      "function": "test_source_change_during_limit_save_prevents_old_circle_dispatch",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_cancelled_work_hardening",
+      "function": "test_commit_failure_without_cancellation_is_preserved",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_cancelled_work_hardening",
+      "function": "test_confirmed_commit_drains_cancelled_failure_without_logging",
+      "variants_passed": 2
+    },
+    {
+      "class": "tests.test_findmy_cancelled_work_hardening",
+      "function": "test_poll_vault_write_drains_cancelled_executor_failure_without_logging",
+      "variants_passed": 2
+    },
+    {
+      "class": "tests.test_findmy_cancelled_work_hardening",
+      "function": "test_poll_write_failure_without_cancellation_is_preserved",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_flow",
+      "function": "test_additional_code_challenge_returns_to_method_form_without_recovery",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_flow",
+      "function": "test_consumed_authentication_ends_without_code_retry_or_saved_connection",
+      "variants_passed": 6
+    },
+    {
+      "class": "tests.test_findmy_flow",
+      "function": "test_consumed_code_abort_messages_exist_in_both_locales",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_flow",
+      "function": "test_consumed_code_recovery_routing_is_finite_and_stage_specific",
+      "variants_passed": 9
+    },
+    {
+      "class": "tests.test_findmy_flow",
+      "function": "test_denied_zone_access_routes_to_passcode_free_retry",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_flow",
+      "function": "test_discovery_error_routes_to_retry_without_another_passcode",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_flow",
+      "function": "test_empty_recovery_devices_after_consumed_code_ends_without_replay",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_flow",
+      "function": "test_findmy_in_household_flow_continues_member_setup_and_abort_leaves_no_vault",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_flow",
+      "function": "test_later_passcode_transient_keeps_its_retry_stage",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_flow",
+      "function": "test_native_findmy_requires_consent_and_cleans_up_on_abort",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_flow",
+      "function": "test_native_progress_device_selection_and_explicit_selected_store",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_flow",
+      "function": "test_reconnect_changes_session_revision_for_framework_reload",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_flow",
+      "function": "test_recovery_bootstrap_after_consumed_code_closes_real_flow_without_replay",
+      "variants_passed": 7
+    },
+    {
+      "class": "tests.test_findmy_gsa_work_lifetime",
+      "function": "test_actual_gsa_drains_repeated_cancel_before_releasing_password",
+      "variants_passed": 2
+    },
+    {
+      "class": "tests.test_findmy_gsa_work_lifetime",
+      "function": "test_password_worker_success_and_failure_propagate_without_cancellation",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_poll_progress",
+      "function": "test_auth_expiry_persists_completed_report_and_requires_reauth",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_poll_progress",
+      "function": "test_cancelled_poll_drains_repeated_cancellation_before_reconnect",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_poll_progress",
+      "function": "test_partial_item_failure_preserves_health_for_other_item",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_poll_progress",
+      "function": "test_vault_failure_is_not_reported_as_success_and_is_not_retried",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_polling_diagnostics",
+      "function": "test_account_observation_requires_exact_strict_scalars",
+      "variants_passed": 7
+    },
+    {
+      "class": "tests.test_findmy_polling_diagnostics",
+      "function": "test_existing_lock_serializes_observations_and_active_cancel_is_terminal",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_polling_diagnostics",
+      "function": "test_failure_or_cancellation_does_not_reuse_previous_success",
+      "variants_passed": 4
+    },
+    {
+      "class": "tests.test_findmy_polling_diagnostics",
+      "function": "test_fetch_calls_observe_existing_batching_without_extra_calls_or_key_changes",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_polling_diagnostics",
+      "function": "test_invalid_aggregate_cannot_export_raw_or_ambiguous_counts",
+      "variants_passed": 5
+    },
+    {
+      "class": "tests.test_findmy_polling_diagnostics",
+      "function": "test_missing_and_invalid_returned_reports_do_not_count_as_valid_or_advanced",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_polling_diagnostics",
+      "function": "test_optional_diagnostics_exports_only_valid_aggregate_without_triggering_poll",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_polling_diagnostics",
+      "function": "test_partial_fetch_failure_retains_committed_item_success",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_polling_diagnostics",
+      "function": "test_paused_diagnostics_expose_only_fixed_controls_and_aggregate_counts",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_polling_diagnostics",
+      "function": "test_provider_aggregate_has_no_account_item_location_time_or_error_values",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_polling_diagnostics",
+      "function": "test_returned_equal_older_and_advanced_reports_are_distinct_from_empty_cache",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_polling_isolation",
+      "function": "test_auth_expiry_aborts_account_but_keeps_completed_reports_and_cursor",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_polling_isolation",
+      "function": "test_auth_expiry_commits_new_report_from_current_items_completed_batch",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_polling_isolation",
+      "function": "test_later_batch_timeout_preserves_cursor_without_skipping_failed_keys",
+      "variants_passed": 2
+    },
+    {
+      "class": "tests.test_findmy_polling_isolation",
+      "function": "test_quiet_item_transport_failure_keeps_cache_and_other_item_succeeds",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_polling_isolation",
+      "function": "test_quiet_real_accessory_does_not_prevent_healthy_item_polling",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_progress_lifecycle",
+      "function": "test_active_work_is_cancelled_and_cleaned_on_abort_or_session_expiry",
+      "variants_passed": 2
+    },
+    {
+      "class": "tests.test_findmy_progress_lifecycle",
+      "function": "test_cancelled_background_task_cannot_advance_to_uncompleted_device_step",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_progress_lifecycle",
+      "function": "test_completion_notifies_and_advances_actual_manager_without_manual_configure",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_progress_lifecycle",
+      "function": "test_instant_restored_identity_returns_email_form_in_initial_response",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_progress_lifecycle",
+      "function": "test_missing_progress_task_ends_with_existing_fixed_state_error",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_provider",
+      "function": "test_cleanup_failure_does_not_stop_homecircle_household",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_provider",
+      "function": "test_explicit_pet_role_and_picture_survive_item_projection",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_provider",
+      "function": "test_one_expired_account_does_not_stop_other_accounts",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_provider",
+      "function": "test_pause_reconnect_waits_for_old_poll_and_resumes_only_its_account",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_provider_controls",
+      "function": "test_completed_batch_is_saved_once_before_denial_reload_closes_client",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_provider_controls",
+      "function": "test_denied_findmy_account_is_persisted_skipped_after_restart_and_sibling_continues",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_provider_controls",
+      "function": "test_explicit_findmy_resume_never_resets_recovery_guard",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_provider_controls",
+      "function": "test_paused_findmy_setup_never_creates_or_signs_in",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_provider_controls",
+      "function": "test_whole_findmy_pause_never_loads_sdk_or_saved_session",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "function": "test_attempt_callbacks_cannot_reserve_after_context_releases_lock",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "function": "test_cancellation_after_dispatch_hook_returns_is_uncertain",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "function": "test_cancellation_after_process_lock_acquisition_does_not_strand_lock",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "function": "test_cancelled_failed_reservation_never_logs_executor_failure",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "function": "test_cancelled_reservation_drains_and_clears_proven_undispatched_submission",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "function": "test_cancelled_verified_write_publishes_durable_outcome_before_reraising",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "function": "test_concurrent_submissions_cannot_oversubscribe",
+      "variants_passed": 5
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "function": "test_fresh_storage_needs_explicit_review_before_unlock",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "function": "test_hass_service_is_shared_outside_account_namespace",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "function": "test_identity_must_be_validated_hash_no_username_fallback",
+      "variants_passed": 6
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "function": "test_legacy_ledger_reset_does_not_enroll_another_account",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "function": "test_maximum_counter_crash_conversion_is_bounded_and_stays_blocked",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "function": "test_missing_witness_does_not_reclassify_pending_or_finish_old_attempt",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "function": "test_new_storage_directory_creation_must_be_durable",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "function": "test_ordinary_backup_restore_fails_closed_and_review_is_per_account",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "function": "test_pre_proof_failure_and_context_entry_do_not_reserve",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "function": "test_refusal_unknown_outcome_limit_and_explicit_reset",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "function": "test_rollback_with_retained_witness_and_same_counter_aba_is_detected",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "function": "test_same_account_serializes_across_guard_instances_other_account_runs",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "function": "test_separate_process_cannot_enter_or_reset_held_account",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "function": "test_separate_process_reads_counts_and_crash_pending_becomes_uncertain",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "function": "test_storage_failure_prevents_dispatch_and_preserves_conservative_counts",
+      "variants_passed": 4
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "function": "test_unsafe_storage_fails_closed_without_overwriting",
+      "variants_passed": 8
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "function": "test_unsafe_witness_never_allows_unlock_or_changes_ledger",
+      "variants_passed": 7
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "function": "test_verified_submission_does_not_clear_prior_unresolved",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "function": "test_witness_commit_failure_never_permits_dispatch",
+      "variants_passed": 4
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "function": "test_witness_from_another_identity_cannot_authorize_account",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "function": "test_witness_must_be_outside_ledger_tree",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "function": "test_zero_account_ledger_does_not_reuse_retained_witness",
+      "variants_passed": 2
+    },
+    {
+      "class": "tests.test_findmy_recovery_restart",
+      "function": "test_failed_cli_kills_owned_group_and_drains_process",
+      "variants_passed": 3
+    },
+    {
+      "class": "tests.test_findmy_recovery_restart",
+      "function": "test_guard_accounting_survives_process_restart_and_explicit_acknowledgment",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_saved_flow",
+      "function": "test_cancelled_client_waits_for_committed_vault_and_options",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_saved_flow",
+      "function": "test_changed_identity_during_selection_never_overwrites_and_resumes",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_saved_flow",
+      "function": "test_failed_metadata_publish_restores_vault_and_resumes_client",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_saved_flow",
+      "function": "test_flow_removal_waits_for_authorized_commit_before_closing_setup",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_saved_flow",
+      "function": "test_newer_data_revision_is_rejected_before_pause_even_if_options_are_old",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_saved_flow",
+      "function": "test_real_options_manager_does_not_schedule_a_second_reload",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_saved_flow",
+      "function": "test_saved_commit_keeps_latest_token_keys_reports_and_unique_id",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_saved_flow",
+      "function": "test_saved_selection_needs_consent_and_never_reauthenticates",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_saved_flow",
+      "function": "test_simultaneous_saved_flows_reject_stale_confirmation",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_saved_flow",
+      "function": "test_unrelated_options_changed_during_vault_write_are_preserved",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_settings_concurrency",
+      "function": "test_stale_household_save_cannot_reconnect_disconnected_account",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_settings_concurrency",
+      "function": "test_stale_household_save_cannot_restore_deselected_items",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_settings_concurrency",
+      "function": "test_stale_reconfigure_cannot_restore_newer_findmy_selection",
+      "variants_passed": 2
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "function": "test_direct_and_settings_routes_fill_missing_gateways",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "function": "test_direct_record_sync_does_not_add_gateway_routing_segment",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "function": "test_failed_settings_request_clears_stale_token_presence",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "function": "test_http_success_with_service_rejection_cannot_grant_access",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "function": "test_item_recovery_failure_logs_only_safe_phase_metadata",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "function": "test_missing_token_hop_preserves_session",
+      "variants_passed": 5
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "function": "test_named_zone_request_uses_shared_gateway_and_checks_response",
+      "variants_passed": 6
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "function": "test_native_container_uses_service_profile_and_validates_response",
+      "variants_passed": 4
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "function": "test_native_delegate_retains_only_transient_pet_copy",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "function": "test_native_uses_successful_ios_settings_profile_directly",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "function": "test_no_mme_token_does_not_send_request",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "function": "test_only_apple_service_routes_are_usable",
+      "variants_passed": 8
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "function": "test_partition_descriptor_shapes_never_crash",
+      "variants_passed": 5
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "function": "test_protobuf_rejection_records_only_result_code",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "function": "test_recent_login_pet_is_transient_and_age_bounded",
+      "variants_passed": 4
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "function": "test_rejection_metadata_never_returns_response_or_header_text",
+      "variants_passed": 9
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "function": "test_settings_can_fill_missing_report_token_without_logging_it",
+      "variants_passed": 4
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "function": "test_transport_replay_keeps_request_and_tls_and_never_promotes_response",
+      "variants_passed": 2
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "function": "test_unauthorized_operation_metadata_excludes_realm_and_response_values",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "function": "test_valid_container_without_code_routes_uses_shared_apple_gateway",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "function": "test_zone_alignment_does_not_change_other_operation_headers",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_account_identity_pair_is_never_replaced_by_native_provisioning",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_adi_dependency_cannot_log_persistent_tokens",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_apple_rejection_logs_only_numeric_code_and_fixed_phase",
+      "variants_passed": 2
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_close_drops_transient_auth_even_if_dependency_close_fails",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_close_still_closes_account_when_keychain_cleanup_fails",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_delegate_diagnostics_filter_every_field_before_logging",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_device_labels_explain_missing_names_without_inventing_association",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_discovery_error_site_prefers_innermost_allowlisted_frame",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_discovery_error_site_rejects_unbound_or_oversized_sites",
+      "variants_passed": 4
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_discovery_error_site_reports_only_bound_own_source",
+      "variants_passed": 2
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_discovery_logs_fixed_pcs_subclass_and_site_without_retry",
+      "variants_passed": 4
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_discovery_logs_only_fixed_outer_auth_reason_without_reproof",
+      "variants_passed": 7
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_duplicate_identity_does_not_silently_drop_an_item",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_empty_recovery_cannot_mark_success_or_retry_discovery",
+      "variants_passed": 2
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_factor_verification_uses_selected_method_and_never_auto_accepts_terms",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_failed_recovery_is_bounded_and_never_returns_exception_secrets",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_identity_failure_happens_before_credentials_are_submitted",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_login_discovery_saves_only_selected_keys_without_password",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_missing_accessory_ids_use_distinct_stable_keys",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_outer_auth_import_failure_preserves_original_discovery_failure",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_outer_auth_reason_sanitizer_accepts_only_exact_pcs_codes",
+      "variants_passed": 5
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_outer_auth_reason_sanitizer_redacts_mutated_or_spoofed_metadata",
+      "variants_passed": 12
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_preflight_rejection_does_not_recover_or_log_response",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_real_sdk_initial_rejection_retains_safe_status",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_reconnect_uses_existing_keys_without_keychain_recovery",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_reconnection_reuses_identity_and_discards_old_login",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_recovery_bootstrap_logs_current_pet_phase_and_bounded_retry_only",
+      "variants_passed": 2
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_recovery_bootstrap_logs_only_fixed_credential_reason_and_status",
+      "variants_passed": 6
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_recovery_bootstrap_rejects_unknown_credential_metadata",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_recovery_bootstrap_revalidates_mutated_pet_error_context",
+      "variants_passed": 6
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_recovery_credential_failure_after_verification_keeps_actionable_error",
+      "variants_passed": 6
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_recovery_failure_after_verification_is_not_a_code_failure",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_recovery_failure_is_distinct_from_invalid_credentials",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_recovery_preserves_migrated_identifiers_and_actual_report",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_replacement_namespace_and_logs_are_isolated",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_service_refusal_retains_only_bounded_diagnostics",
+      "variants_passed": 4
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_settings_pair_comparison_restores_rejected_tokens_and_never_recovers",
+      "variants_passed": 2
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_signin_errors_do_not_blame_credentials_or_log_private_text",
+      "variants_passed": 3
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_signin_without_factor_keeps_transient_password_for_pet_bootstrap",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_unselected_and_duplicate_item_ids_are_not_persisted",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "function": "test_verification_failure_reports_stage_without_blaming_code",
+      "variants_passed": 3
+    },
+    {
+      "class": "tests.test_findmy_terminal_messages",
+      "function": "test_terminal_findmy_errors_have_config_and_options_abort_messages",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_life360_direct",
+      "function": "test_account_validation_keeps_only_fingerprint",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_life360_direct",
+      "function": "test_authorization_failure_starts_repair_flow",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_life360_direct",
+      "function": "test_changed_member_response_does_not_stop_other_trackers",
+      "variants_passed": 3
+    },
+    {
+      "class": "tests.test_life360_direct",
+      "function": "test_circle_access_rejection_pauses_without_login_probe",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_life360_direct",
+      "function": "test_denial_blocks_before_persistence_yields_without_account_probes",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_life360_direct",
+      "function": "test_denial_callback_can_stop_its_current_client_without_self_wait",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_life360_direct",
+      "function": "test_direct_missing_flags_stay_unknown",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_life360_direct",
+      "function": "test_direct_report_projection_keeps_only_needed_fields",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_life360_direct",
+      "function": "test_direct_report_rejects_nonsharing_and_bad_coordinates",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_life360_direct",
+      "function": "test_disabled_tracker_does_not_write_or_interrupt_other_trackers",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_life360_direct",
+      "function": "test_discovery_and_poll_do_not_require_third_party_entities",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_life360_direct",
+      "function": "test_failed_pause_persistence_keeps_denial_block_without_probes",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_life360_direct",
+      "function": "test_member_shared_in_two_circles_uses_visible_location",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_life360_direct",
+      "function": "test_new_circle_member_appears_on_periodic_discovery",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_life360_direct",
+      "function": "test_nonsharing_member_is_unavailable_without_api_shape_error",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_life360_direct",
+      "function": "test_one_circle_denial_halts_all_later_requests",
+      "variants_passed": 2
+    },
+    {
+      "class": "tests.test_life360_direct",
+      "function": "test_one_circle_discovery_failure_keeps_known_members_polling",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_life360_direct",
+      "function": "test_one_failed_member_becomes_unavailable_independently",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_life360_direct",
+      "function": "test_one_member_denial_marks_all_unavailable_and_stops_polling",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_life360_direct",
+      "function": "test_pause_during_discovery_stops_before_next_provider_request",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_life360_direct",
+      "function": "test_rate_limit_pauses_requests",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_life360_direct",
+      "function": "test_rejected_credentials_wait_for_repair_without_retrying",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_life360_direct",
+      "function": "test_restored_provider_pause_prevents_startup_and_manual_io",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_life360_direct",
+      "function": "test_stop_cancels_interval_refresh_before_closing_session",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_life360_direct",
+      "function": "test_tls_context_is_created_outside_event_loop",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_life360_direct",
+      "function": "test_unchanged_report_keeps_connection_fresh",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_life360_direct",
+      "function": "test_unexpected_api_shape_has_safe_health_code",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_place_import",
+      "function": "test_denied_place_fetch_persists_stop_and_repeated_form_cannot_retry",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_place_import",
+      "function": "test_edited_duplicate_names_are_rejected",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_place_import",
+      "function": "test_fetch_failure_exposes_no_raw_exception",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_place_import",
+      "function": "test_import_creates_reviewed_zones_only_after_confirmation",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_place_import",
+      "function": "test_new_conflict_blocks_import_before_any_writes",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_place_import",
+      "function": "test_parse_places_rejects_bad_values_and_discards_private_extras",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_place_import",
+      "function": "test_partial_failure_retries_only_remaining_zones",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_place_import",
+      "function": "test_pause_cancels_and_drains_inflight_place_fetch",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_place_import",
+      "function": "test_paused_place_import_never_opens_provider_fetch",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_place_import",
+      "function": "test_preview_empty_selection_and_cancel_make_no_zones",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_place_import",
+      "function": "test_real_zone_creation_preserves_existing_zones",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_place_import",
+      "function": "test_skipping_every_place_exits_without_creating_zones",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_place_import",
+      "function": "test_skipping_first_place_continues_without_validating_its_fields",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_place_import",
+      "function": "test_skipping_last_place_keeps_previously_reviewed_places",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_place_import",
+      "function": "test_unexpected_and_disabled_external_account_shapes_are_skipped",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_place_import",
+      "function": "test_zone_added_during_selection_returns_review_error",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_provider_controls",
+      "function": "test_account_denial_preserves_findmy_sibling_and_explicit_resume",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_provider_controls",
+      "function": "test_corrupt_controls_fail_closed_without_overwriting",
+      "variants_passed": 2
+    },
+    {
+      "class": "tests.test_provider_controls",
+      "function": "test_denial_inside_operation_never_stops_itself_or_publishes_result",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_provider_controls",
+      "function": "test_factory_second_client_sees_actual_persisted_pause_before_sdk",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_provider_controls",
+      "function": "test_failed_reload_still_stops_loaded_clients",
+      "variants_passed": 2
+    },
+    {
+      "class": "tests.test_provider_controls",
+      "function": "test_load_failure_and_missing_initial_write_fail_closed",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_provider_controls",
+      "function": "test_manual_pause_cancels_and_drains_registered_fetch",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_provider_controls",
+      "function": "test_nested_operation_registration_is_drained_once",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_provider_controls",
+      "function": "test_new_denial_during_resume_save_never_exposes_unpaused_window",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_provider_controls",
+      "function": "test_pause_blocks_before_save_finishes_and_save_failure_never_reloads",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_provider_controls",
+      "function": "test_pause_cancellation_returns_disabled_but_unrelated_cancel_propagates",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_provider_controls",
+      "function": "test_pause_save_drains_repeated_caller_cancellation_before_restart",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_provider_controls",
+      "function": "test_pause_survives_actual_store_reload_and_resume_is_explicit",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_provider_controls",
+      "function": "test_paused_startup_keeps_registered_entity_without_loading_client",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_release_package",
+      "function": "test_archive_and_inventory_are_deterministic",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_release_package",
+      "function": "test_archive_cannot_omit_required_runtime_or_license_files",
+      "variants_passed": 10
+    },
+    {
+      "class": "tests.test_release_package",
+      "function": "test_archive_duplicate_member_is_refused_before_extraction",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_release_package",
+      "function": "test_inventory_tampering_is_refused",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_release_package",
+      "function": "test_labs_state_identity_and_binaries_never_enter_archive",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_release_package",
+      "function": "test_payload_symlink_to_private_source_is_refused",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_release_package",
+      "function": "test_recursive_runtime_and_vendor_provenance_are_packaged",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_release_package",
+      "function": "test_retired_local_macos_cli_is_excluded_and_complete_notices_remain",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_release_package",
+      "function": "test_runtime_is_optional_until_referenced_but_import_closure_is_checked",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_release_package",
+      "function": "test_unsafe_archive_metadata_is_refused",
+      "variants_passed": 3
+    },
+    {
+      "class": "tests.test_release_package",
+      "function": "test_validation_refuses_private_or_unsafe_archive_members",
+      "variants_passed": 8
+    },
+    {
+      "class": "tests.test_selection_refresh",
+      "function": "test_cloud_check_is_shared_and_reserved_before_await",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_selection_refresh",
+      "function": "test_direct_cloud_check_respects_backoff_and_existing_work",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_selection_refresh",
+      "function": "test_external_life360_requires_control_and_persistence_before_dispatch",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_selection_refresh",
+      "function": "test_external_life360_uses_exact_supported_target_and_persisted_limits",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_selection_refresh",
+      "function": "test_external_selection_cannot_dispatch_while_paused",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_selection_refresh",
+      "function": "test_fresh_unselected_and_other_entry_never_poll",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_selection_refresh",
+      "function": "test_pause_during_selection_reservation_prevents_provider_dispatch",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_selection_refresh",
+      "function": "test_paused_selection_never_checks_provider_or_spends_budget",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_selection_refresh",
+      "function": "test_phone_requires_opt_in_control_permission_and_shared_limits",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_tracker_cleanup_cancellation",
+      "function": "test_cancelled_shield_drains_all_cleanup_without_automatic_private_log",
+      "variants_passed": 2
+    },
+    {
+      "class": "tests.test_tracker_cleanup_cancellation",
+      "function": "test_failure_without_cancellation_propagates_the_same_exception",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_tracker_cleanup_cancellation",
+      "function": "test_owned_stop_failures_are_sanitized_and_siblings_finish_after_cancel",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_tracker_provider_startup_isolation",
+      "function": "test_cancellation_is_terminal_and_cleans_current_and_newly_started_clients",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_tracker_provider_startup_isolation",
+      "function": "test_factory_failure_does_not_prevent_later_provider_start",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_tracker_provider_startup_isolation",
+      "function": "test_partial_start_is_cleaned_and_cleanup_failure_does_not_stop_siblings",
+      "variants_passed": 3
+    },
+    {
+      "class": "tests.test_tracker_provider_startup_isolation",
+      "function": "test_real_findmy_sdk_import_failure_preserves_life360_and_later_provider",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_tracker_provider_startup_isolation",
+      "function": "test_repeated_cancellation_drains_cleanup_before_releasing_started_clients",
+      "variants_passed": 2
+    },
+    {
+      "class": "tests.test_tracker_provider_startup_isolation",
+      "function": "test_success_clears_stale_startup_issue_and_unload_clears_current_issue",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_tracker_providers",
+      "function": "test_multiple_managed_trackers_start_and_disconnect_independently",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_tracker_providers",
+      "function": "test_provider_account_steps_run_before_member_setup",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_tracker_providers",
+      "function": "test_provider_first_setup_uses_registry_not_life360_key",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_tracker_providers",
+      "function": "test_ready_trackers_prompt_until_one_owned_tracker_is_explicitly_selected",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_tracker_providers",
+      "function": "test_reauth_selects_only_the_failing_registered_provider",
+      "variants_passed": 1
+    },
+    {
+      "class": "tests.test_tracker_providers",
+      "function": "test_setup_warns_when_external_life360_trackers_already_exist",
+      "variants_passed": 1
+    }
+  ],
+  "selected_modules": [
+    "tests/test_provider_controls.py",
+    "tests/test_findmy_provider_controls.py",
+    "tests/test_config_flow.py",
+    "tests/test_tracker_providers.py",
+    "tests/test_tracker_provider_startup_isolation.py",
+    "tests/test_tracker_cleanup_cancellation.py",
+    "tests/test_life360_direct.py",
+    "tests/test_findmy_provider.py",
+    "tests/test_findmy_polling_isolation.py",
+    "tests/test_findmy_poll_progress.py",
+    "tests/test_findmy_progress_lifecycle.py",
+    "tests/test_findmy_settings_concurrency.py",
+    "tests/test_findmy_saved_flow.py",
+    "tests/test_findmy_settings_token.py",
+    "tests/test_findmy_flow.py",
+    "tests/test_findmy_cancelled_work_hardening.py",
+    "tests/test_findmy_terminal_messages.py",
+    "tests/test_findmy_setup.py",
+    "tests/test_place_import.py",
+    "tests/test_family_refresh.py",
+    "tests/test_selection_refresh.py",
+    "tests/test_findmy_polling_diagnostics.py",
+    "tests/test_release_package.py",
+    "tests/test_findmy_gsa_work_lifetime.py",
+    "tests/test_findmy_recovery_guard.py",
+    "tests/test_findmy_recovery_restart.py"
+  ],
+  "skipped": 0,
+  "source_commit": "c7b31c5a82431a6b16d8b7208f9423626b95bd4b",
+  "source_export_sha256": "1aa6f4c16058b154a5f7222311d32534c9ea0c01105279de352e823433c28c96",
+  "source_files": 402,
+  "source_inventory_sha256": "9195daa05eb845f2e65d3553d57075f4a7497538923a0b050cfca27c3f1d2394",
+  "source_sha256": "98256480be83c35b76f370ae0f8ed3bda28ab1ef5dca913d68c72e422f37073d",
+  "source_unchanged": true,
+  "startup_requirement_versions": {
+    "aiohasupervisor": "0.6.0",
+    "cronsim": "2.7",
+    "fnv-hash-fast": "2.0.3",
+    "gazetteer-matcher": "1.1.0",
+    "ha-ffmpeg": "3.2.2",
+    "hassil": "3.12.1",
+    "home-assistant-frontend": "20260930.4",
+    "home-assistant-intents": "2026.10.6",
+    "ifaddr": "0.2.0",
+    "infrared-protocols": "10.1.0",
+    "mutagen": "1.48.1",
+    "pillow": "12.3.0",
+    "psutil-home-assistant": "0.0.1",
+    "pymicro-vad": "1.0.1",
+    "pyotp": "2.10.0",
+    "pyqrcode": "1.2.1",
+    "pyspeex-noise": "1.0.2",
+    "pyturbojpeg": "1.8.3",
+    "rf-protocols": "4.3.0",
+    "securetar": "2026.4.1",
+    "sqlalchemy": "2.0.54"
+  },
+  "upgrade_validated": false,
+  "version": "1.0.0-rc.1"
+}

@@ -1,0 +1,40 @@
+{
+  "acceptance_qualified": false,
+  "artifact_id": 12517186021,
+  "artifact_zip_sha256": "d3fc0f6c498c1a6dbbaf1aa74fd0921db537ad9a4b22d55544d62b941a8bca0e",
+  "conclusion": "success",
+  "event": "push",
+  "files": {
+    "candidate-summary.json": {
+      "bytes": 64921,
+      "sha256": "c81be857e7f141bbdba7a74cdc3028254fbe650dad4360df06f01e92faf93b30"
+    },
+    "focused-diagnostic.json": {
+      "bytes": 119585,
+      "sha256": "7e53d3d70b515147287426074af23afc9c6a5d4ebc9c8ed8a30fae360c5422d7"
+    },
+    "host.json": {
+      "bytes": 1051,
+      "sha256": "e28317c031097ce6b4a8eed98650ec7fcb037064763e4bf088857b0f4f10f336"
+    },
+    "setup-summary.json": {
+      "bytes": 6078,
+      "sha256": "3fa62fc5f9c50103db94b55b66a7ba0b7f96fcebe4709dda23d7e59b2aa52eed"
+    },
+    "source-summary.json": {
+      "bytes": 1042,
+      "sha256": "3123584301c1fdf57e925119eb01c0f67844351c1636af2922c587c79e2ec2e8"
+    }
+  },
+  "github_digest_verified": true,
+  "head_sha": "8a57ce7618288eb0afbc023949084914a6f78885",
+  "jobs_conclusions": [
+    "success"
+  ],
+  "owner_instance_actions": 0,
+  "run_attempt": 1,
+  "run_id": 39988121148,
+  "schema": 1,
+  "workflow": ".github/workflows/native-no-outreach-hardening-r5.yml",
+  "workflow_dispatches": 0
+}

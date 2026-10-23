@@ -1,0 +1,45 @@
+{
+  "artifact_transport_verified_by_consumer": false,
+  "cleanup_required_and_observed": true,
+  "config_sha256": "5303e76bf33e49747aca6fe4f589ebb5219c19dd41369db73cf18c008a19f664",
+  "failed": 0,
+  "full_backend_suite_repeated": false,
+  "offline_test_phase": true,
+  "outcome": "accepted",
+  "owner_accounts_used": false,
+  "package_sha256": "4f94a18e2f7862e9bd7f4c85250e5f10e4b8e1292ea9d7b263b441d2e1b77dd9",
+  "passed": 548,
+  "producer_collection_assertion_consumed": true,
+  "production_configuration_used": false,
+  "receipts": {
+    "candidate-summary.json": {
+      "bytes": 64921,
+      "sha256": "c81be857e7f141bbdba7a74cdc3028254fbe650dad4360df06f01e92faf93b30"
+    },
+    "focused-diagnostic.json": {
+      "bytes": 119585,
+      "sha256": "7e53d3d70b515147287426074af23afc9c6a5d4ebc9c8ed8a30fae360c5422d7"
+    },
+    "host.json": {
+      "bytes": 1051,
+      "sha256": "e28317c031097ce6b4a8eed98650ec7fcb037064763e4bf088857b0f4f10f336"
+    },
+    "setup-summary.json": {
+      "bytes": 6078,
+      "sha256": "3fa62fc5f9c50103db94b55b66a7ba0b7f96fcebe4709dda23d7e59b2aa52eed"
+    },
+    "source-summary.json": {
+      "bytes": 1042,
+      "sha256": "3123584301c1fdf57e925119eb01c0f67844351c1636af2922c587c79e2ec2e8"
+    }
+  },
+  "release_published": false,
+  "schema": 1,
+  "scope": "native_current_core_affected_provider_pytest_only",
+  "selected_base_functions": 345,
+  "selected_modules": 26,
+  "skipped": 0,
+  "source_commit": "c7b31c5a82431a6b16d8b7208f9423626b95bd4b",
+  "source_files": 402,
+  "upgrade_validated": false
+}

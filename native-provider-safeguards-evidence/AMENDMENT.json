@@ -1,0 +1,46 @@
+{
+  "cause": {
+    "function": "test_rejection_metadata_never_returns_response_or_header_text",
+    "lines": [
+      442,
+      452
+    ],
+    "observation": "Run 39985564780 reports all 543 cases passed with zero failed or skipped, then refusal focused_collection_identity_refused; old private-name cap is smaller than this existing parameter.",
+    "public_test": "tests/test_findmy_settings_token.py",
+    "synthetic_bytes_parameter_length": 65537
+  },
+  "changed_existing_files": [
+    "PLAN.md",
+    "driver.py",
+    "test_driver.py"
+  ],
+  "native_run_performed": false,
+  "network_accessed": false,
+  "new_contracts": [
+    "65537-character parameter plus suffix accepted only with exact complete collection/JUnit names; one-character change is refused and parameter text stays out of public diagnostics",
+    "Private case name above 128 KiB is refused"
+  ],
+  "producer_change": {
+    "changed_lines": 1,
+    "file": "driver.py",
+    "new_private_name_limit": 131072,
+    "old_private_name_limit": 1024
+  },
+  "r1_files_verified_unchanged": 14,
+  "r1_manifest_sha256": "b00923efdf3d3833ff0c38d6203a945c8c954866af5005e2fbaa16ad734d894c",
+  "release_published": false,
+  "safe_contracts_passed": 23,
+  "schema": 1,
+  "scope": "narrow_harness_private_identity_length_amendment",
+  "source_modified": false,
+  "unchanged_acceptance_requirements": [
+    "Complete exact class/name identity equality between collection and JUnit",
+    "Unique full collection/JUnit identities",
+    "Every frozen source AST base function collected",
+    "Zero deselection, failure, error or skip",
+    "Maximum 4096 collected cases",
+    "Bounded 64 MiB collection input and 4 MiB JUnit input",
+    "Parameter IDs remain private and diagnostics strip them",
+    "Source/package/runtime/network/cleanup binding and independent consumer criteria"
+  ]
+}

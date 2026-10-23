@@ -1,0 +1,3852 @@
+{
+  "acceptance_qualified": false,
+  "cases": [
+    {
+      "class": "tests.test_provider_controls",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_pause_survives_actual_store_reload_and_resume_is_explicit",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_provider_controls",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_account_denial_preserves_findmy_sibling_and_explicit_resume",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_provider_controls",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_manual_pause_cancels_and_drains_registered_fetch",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_provider_controls",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_denial_inside_operation_never_stops_itself_or_publishes_result",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_provider_controls",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_pause_blocks_before_save_finishes_and_save_failure_never_reloads",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_provider_controls",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_new_denial_during_resume_save_never_exposes_unpaused_window",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_provider_controls",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_corrupt_controls_fail_closed_without_overwriting",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_provider_controls",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_corrupt_controls_fail_closed_without_overwriting",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_provider_controls",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_load_failure_and_missing_initial_write_fail_closed",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_provider_controls",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_paused_startup_keeps_registered_entity_without_loading_client",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_provider_controls",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_factory_second_client_sees_actual_persisted_pause_before_sdk",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_provider_controls",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_nested_operation_registration_is_drained_once",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_provider_controls",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_pause_save_drains_repeated_caller_cancellation_before_restart",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_provider_controls",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_failed_reload_still_stops_loaded_clients",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_provider_controls",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_failed_reload_still_stops_loaded_clients",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_provider_controls",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_pause_cancellation_returns_disabled_but_unrelated_cancel_propagates",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_provider_controls",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_denied_findmy_account_is_persisted_skipped_after_restart_and_sibling_continues",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_provider_controls",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_explicit_findmy_resume_never_resets_recovery_guard",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_provider_controls",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_paused_findmy_setup_never_creates_or_signs_in",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_provider_controls",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_whole_findmy_pause_never_loads_sdk_or_saved_session",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_provider_controls",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_completed_batch_is_saved_once_before_denial_reload_closes_client",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_life360_requires_explicit_acknowledgement_before_validation",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_life360_requires_explicit_acknowledgement_before_validation",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_life360_requires_explicit_acknowledgement_before_validation",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_life360_requires_explicit_acknowledgement_before_validation",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_life360_acknowledgement_is_not_an_account_credential",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_new_pet_person_is_created_and_tracker_linked_on_save",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_saved_tracker_only_pet_can_move_to_person_without_losing_settings",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_review_back_and_edit_member_preserve_two_member_draft",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_create_place_zone_keeps_household_draft",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_create_other_home_zone_preserves_member_choices",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_create_primary_zone_rejects_duplicate_name",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_connections_pause_preserves_account_selection_and_stale_options",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_paused_unsaved_provider_can_resume_without_auth_or_options_save",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_paused_unsaved_provider_can_resume_without_auth_or_options_save",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_paused_unsaved_provider_can_resume_without_auth_or_options_save",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_external_provider_control_requires_exact_selected_registry_platform",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_external_provider_control_requires_exact_selected_registry_platform",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_paused_life360_replacement_and_reauth_make_no_validation_call",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_options_battery_task_shows_only_member_then_sensors",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_options_person_settings_open_selected_members_details",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_options_remove_tracker_is_scoped_to_selected_person",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_options_add_tracker_task_uses_short_form",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_options_create_pet_person_before_assigning_tracker",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_create_person_with_existing_yaml_person",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_setup_persistence_sources_and_unload",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_cancel_and_duplicate_flow",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_invalid_household",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_invalid_household",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_invalid_household",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_invalid_household",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_invalid_household",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_tracker_only_pet_setup_and_options",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_add_hide_and_remove_one_tracker_without_reconfirming_household",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_remove_selected_person_tracker_preserves_person",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_tracker_shortcuts_reject_conflicts_before_member_form",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_offline_tracker_still_gets_report_time_prompt",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_person_offline_tracker_and_no_source_report_steps",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_full_household_options_keeps_people_and_hides_legacy_additions",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_direct_life360_account_and_tracker_person_setup",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_disabled_direct_tracker_does_not_interrupt_other_members",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_failed_tracker_platform_setup_can_retry_cleanly",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_saved_direct_tracker_is_unavailable_during_offline_reload",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_life360_reauth_replaces_secret_and_preserves_household",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_reconnect_rejects_a_different_life360_account",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_older_account_replacement_compares_valid_old_sign_in",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_older_reauth_requires_confirmation_if_old_sign_in_expired",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_direct_life360_creates_selectable_tracker",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_new_setup_requires_a_person_for_pet_tracker",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_tracker_linked_to_another_ha_person_is_rejected",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_same_tracker_cannot_be_assigned_to_two_people",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_person_and_pet_person_share_household_flow",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_other_home_picker_excludes_selected_primary",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_other_home_picker_excludes_selected_primary",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_invalid_members_and_deleted_during_flow",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_options_reconfigure_and_listener_replacement",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_unchanged_reconfigure_keeps_owned_resource",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_missing_unavailable_recovery_and_repair",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_registry_disabled_and_rename_require_reselection",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_discovery_does_not_guess_from_names",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_member_setup_explains_suggestions_without_changing_them",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_tracker_guide_prefers_position_over_home_only_presence",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_map_source_guidance_and_report_prompts_follow_effective_source",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_borrowed_home_position_warns_in_setup_and_options",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_saved_person_report_mapping_is_not_labelled_for_deletion",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_tracker_guide_does_not_guess_between_equal_sources",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_duplicate_tracker_names_are_distinct_in_hint_and_review",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_final_review_shows_draft_and_cancel_keeps_it_unsaved",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_supporting_flow_validation_persistence_and_clear",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_runtime_report_aging_source_changes_and_unload",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_pet_thresholds_persist_in_options",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_per_source_flow_migrates_preserves_and_clears",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_details_never_link_trackers_or_block_yaml_person",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_details_never_link_trackers_or_block_yaml_person",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_details_never_link_trackers_or_block_yaml_person",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_details_never_link_trackers_or_block_yaml_person",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_family_refresh_opt_in_is_explicit_and_persisted",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_member_description_escapes_entity_name",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_tracker_selection_default_and_explicit_follow_persist",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_config_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_changing_primary_to_saved_other_home_removes_excluded_default",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_tracker_providers",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_provider_first_setup_uses_registry_not_life360_key",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_tracker_providers",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_reauth_selects_only_the_failing_registered_provider",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_tracker_providers",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_multiple_managed_trackers_start_and_disconnect_independently",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_tracker_providers",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_provider_account_steps_run_before_member_setup",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_tracker_providers",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_setup_warns_when_external_life360_trackers_already_exist",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_tracker_providers",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_ready_trackers_prompt_until_one_owned_tracker_is_explicitly_selected",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_tracker_provider_startup_isolation",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_real_findmy_sdk_import_failure_preserves_life360_and_later_provider",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_tracker_provider_startup_isolation",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_factory_failure_does_not_prevent_later_provider_start",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_tracker_provider_startup_isolation",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_partial_start_is_cleaned_and_cleanup_failure_does_not_stop_siblings",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_tracker_provider_startup_isolation",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_partial_start_is_cleaned_and_cleanup_failure_does_not_stop_siblings",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_tracker_provider_startup_isolation",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_partial_start_is_cleaned_and_cleanup_failure_does_not_stop_siblings",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_tracker_provider_startup_isolation",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_cancellation_is_terminal_and_cleans_current_and_newly_started_clients",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_tracker_provider_startup_isolation",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_success_clears_stale_startup_issue_and_unload_clears_current_issue",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_tracker_provider_startup_isolation",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_repeated_cancellation_drains_cleanup_before_releasing_started_clients",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_tracker_provider_startup_isolation",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_repeated_cancellation_drains_cleanup_before_releasing_started_clients",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_tracker_cleanup_cancellation",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_cancelled_shield_drains_all_cleanup_without_automatic_private_log",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_tracker_cleanup_cancellation",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_cancelled_shield_drains_all_cleanup_without_automatic_private_log",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_tracker_cleanup_cancellation",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_failure_without_cancellation_propagates_the_same_exception",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_tracker_cleanup_cancellation",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_owned_stop_failures_are_sanitized_and_siblings_finish_after_cancel",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_life360_direct",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_direct_report_projection_keeps_only_needed_fields",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_life360_direct",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_direct_report_rejects_nonsharing_and_bad_coordinates",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_life360_direct",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_direct_missing_flags_stay_unknown",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_life360_direct",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_disabled_tracker_does_not_write_or_interrupt_other_trackers",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_life360_direct",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_tls_context_is_created_outside_event_loop",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_life360_direct",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_account_validation_keeps_only_fingerprint",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_life360_direct",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_discovery_and_poll_do_not_require_third_party_entities",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_life360_direct",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_rate_limit_pauses_requests",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_life360_direct",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_member_shared_in_two_circles_uses_visible_location",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_life360_direct",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_nonsharing_member_is_unavailable_without_api_shape_error",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_life360_direct",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_unchanged_report_keeps_connection_fresh",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_life360_direct",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_new_circle_member_appears_on_periodic_discovery",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_life360_direct",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_one_circle_discovery_failure_keeps_known_members_polling",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_life360_direct",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_one_failed_member_becomes_unavailable_independently",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_life360_direct",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_changed_member_response_does_not_stop_other_trackers",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_life360_direct",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_changed_member_response_does_not_stop_other_trackers",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_life360_direct",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_changed_member_response_does_not_stop_other_trackers",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_life360_direct",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_unexpected_api_shape_has_safe_health_code",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_life360_direct",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_authorization_failure_starts_repair_flow",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_life360_direct",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_rejected_credentials_wait_for_repair_without_retrying",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_life360_direct",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_one_circle_denial_halts_all_later_requests",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_life360_direct",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_one_circle_denial_halts_all_later_requests",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_life360_direct",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_one_member_denial_marks_all_unavailable_and_stops_polling",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_life360_direct",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_denial_blocks_before_persistence_yields_without_account_probes",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_life360_direct",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_failed_pause_persistence_keeps_denial_block_without_probes",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_life360_direct",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_stop_cancels_interval_refresh_before_closing_session",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_life360_direct",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_circle_access_rejection_pauses_without_login_probe",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_life360_direct",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_restored_provider_pause_prevents_startup_and_manual_io",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_life360_direct",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_pause_during_discovery_stops_before_next_provider_request",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_life360_direct",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_denial_callback_can_stop_its_current_client_without_self_wait",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_provider",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_one_expired_account_does_not_stop_other_accounts",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_provider",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_pause_reconnect_waits_for_old_poll_and_resumes_only_its_account",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_provider",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_cleanup_failure_does_not_stop_homecircle_household",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_provider",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_explicit_pet_role_and_picture_survive_item_projection",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_polling_isolation",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_later_batch_timeout_preserves_cursor_without_skipping_failed_keys",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_polling_isolation",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_later_batch_timeout_preserves_cursor_without_skipping_failed_keys",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_polling_isolation",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_quiet_real_accessory_does_not_prevent_healthy_item_polling",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_polling_isolation",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_quiet_item_transport_failure_keeps_cache_and_other_item_succeeds",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_polling_isolation",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_auth_expiry_aborts_account_but_keeps_completed_reports_and_cursor",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_polling_isolation",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_auth_expiry_commits_new_report_from_current_items_completed_batch",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_poll_progress",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_auth_expiry_persists_completed_report_and_requires_reauth",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_poll_progress",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_cancelled_poll_drains_repeated_cancellation_before_reconnect",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_poll_progress",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_partial_item_failure_preserves_health_for_other_item",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_poll_progress",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_vault_failure_is_not_reported_as_success_and_is_not_retried",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_progress_lifecycle",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_completion_notifies_and_advances_actual_manager_without_manual_configure",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_progress_lifecycle",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_instant_restored_identity_returns_email_form_in_initial_response",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_progress_lifecycle",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_active_work_is_cancelled_and_cleaned_on_abort_or_session_expiry",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_progress_lifecycle",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_active_work_is_cancelled_and_cleaned_on_abort_or_session_expiry",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_progress_lifecycle",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_cancelled_background_task_cannot_advance_to_uncompleted_device_step",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_progress_lifecycle",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_missing_progress_task_ends_with_existing_fixed_state_error",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_concurrency",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_stale_reconfigure_cannot_restore_newer_findmy_selection",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_concurrency",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_stale_reconfigure_cannot_restore_newer_findmy_selection",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_concurrency",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_stale_household_save_cannot_restore_deselected_items",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_concurrency",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_stale_household_save_cannot_reconnect_disconnected_account",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_saved_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_saved_selection_needs_consent_and_never_reauthenticates",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_saved_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_saved_commit_keeps_latest_token_keys_reports_and_unique_id",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_saved_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_changed_identity_during_selection_never_overwrites_and_resumes",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_saved_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_simultaneous_saved_flows_reject_stale_confirmation",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_saved_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_cancelled_client_waits_for_committed_vault_and_options",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_saved_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_unrelated_options_changed_during_vault_write_are_preserved",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_saved_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_newer_data_revision_is_rejected_before_pause_even_if_options_are_old",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_saved_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_failed_metadata_publish_restores_vault_and_resumes_client",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_saved_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_flow_removal_waits_for_authorized_commit_before_closing_setup",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_saved_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_real_options_manager_does_not_schedule_a_second_reload",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_missing_token_hop_preserves_session",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_missing_token_hop_preserves_session",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_missing_token_hop_preserves_session",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_missing_token_hop_preserves_session",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_missing_token_hop_preserves_session",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_settings_can_fill_missing_report_token_without_logging_it",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_settings_can_fill_missing_report_token_without_logging_it",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_settings_can_fill_missing_report_token_without_logging_it",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_settings_can_fill_missing_report_token_without_logging_it",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_failed_settings_request_clears_stale_token_presence",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_no_mme_token_does_not_send_request",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_native_uses_successful_ios_settings_profile_directly",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_http_success_with_service_rejection_cannot_grant_access",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_native_container_uses_service_profile_and_validates_response",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_native_container_uses_service_profile_and_validates_response",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_native_container_uses_service_profile_and_validates_response",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_native_container_uses_service_profile_and_validates_response",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_partition_descriptor_shapes_never_crash",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_partition_descriptor_shapes_never_crash",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_partition_descriptor_shapes_never_crash",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_partition_descriptor_shapes_never_crash",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_partition_descriptor_shapes_never_crash",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_recent_login_pet_is_transient_and_age_bounded",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_recent_login_pet_is_transient_and_age_bounded",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_recent_login_pet_is_transient_and_age_bounded",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_recent_login_pet_is_transient_and_age_bounded",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_native_delegate_retains_only_transient_pet_copy",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_only_apple_service_routes_are_usable",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_only_apple_service_routes_are_usable",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_only_apple_service_routes_are_usable",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_only_apple_service_routes_are_usable",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_only_apple_service_routes_are_usable",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_only_apple_service_routes_are_usable",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_only_apple_service_routes_are_usable",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_only_apple_service_routes_are_usable",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_direct_and_settings_routes_fill_missing_gateways",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_valid_container_without_code_routes_uses_shared_apple_gateway",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_item_recovery_failure_logs_only_safe_phase_metadata",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_direct_record_sync_does_not_add_gateway_routing_segment",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_unauthorized_operation_metadata_excludes_realm_and_response_values",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_named_zone_request_uses_shared_gateway_and_checks_response",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_named_zone_request_uses_shared_gateway_and_checks_response",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_named_zone_request_uses_shared_gateway_and_checks_response",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_named_zone_request_uses_shared_gateway_and_checks_response",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_named_zone_request_uses_shared_gateway_and_checks_response",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_named_zone_request_uses_shared_gateway_and_checks_response",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_rejection_metadata_never_returns_response_or_header_text",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_rejection_metadata_never_returns_response_or_header_text",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_rejection_metadata_never_returns_response_or_header_text",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_rejection_metadata_never_returns_response_or_header_text",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_rejection_metadata_never_returns_response_or_header_text",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_rejection_metadata_never_returns_response_or_header_text",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_rejection_metadata_never_returns_response_or_header_text",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_rejection_metadata_never_returns_response_or_header_text",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_rejection_metadata_never_returns_response_or_header_text",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_protobuf_rejection_records_only_result_code",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_transport_replay_keeps_request_and_tls_and_never_promotes_response",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_transport_replay_keeps_request_and_tls_and_never_promotes_response",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_settings_token",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_zone_alignment_does_not_change_other_operation_headers",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_native_findmy_requires_consent_and_cleans_up_on_abort",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_consumed_authentication_ends_without_code_retry_or_saved_connection",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_consumed_authentication_ends_without_code_retry_or_saved_connection",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_consumed_authentication_ends_without_code_retry_or_saved_connection",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_consumed_authentication_ends_without_code_retry_or_saved_connection",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_consumed_authentication_ends_without_code_retry_or_saved_connection",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_consumed_authentication_ends_without_code_retry_or_saved_connection",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_native_progress_device_selection_and_explicit_selected_store",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_findmy_in_household_flow_continues_member_setup_and_abort_leaves_no_vault",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_reconnect_changes_session_revision_for_framework_reload",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_denied_zone_access_routes_to_passcode_free_retry",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_discovery_error_routes_to_retry_without_another_passcode",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_additional_code_challenge_returns_to_method_form_without_recovery",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_recovery_bootstrap_after_consumed_code_closes_real_flow_without_replay",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_recovery_bootstrap_after_consumed_code_closes_real_flow_without_replay",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_recovery_bootstrap_after_consumed_code_closes_real_flow_without_replay",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_recovery_bootstrap_after_consumed_code_closes_real_flow_without_replay",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_recovery_bootstrap_after_consumed_code_closes_real_flow_without_replay",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_recovery_bootstrap_after_consumed_code_closes_real_flow_without_replay",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_recovery_bootstrap_after_consumed_code_closes_real_flow_without_replay",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_consumed_code_recovery_routing_is_finite_and_stage_specific",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_consumed_code_recovery_routing_is_finite_and_stage_specific",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_consumed_code_recovery_routing_is_finite_and_stage_specific",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_consumed_code_recovery_routing_is_finite_and_stage_specific",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_consumed_code_recovery_routing_is_finite_and_stage_specific",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_consumed_code_recovery_routing_is_finite_and_stage_specific",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_consumed_code_recovery_routing_is_finite_and_stage_specific",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_consumed_code_recovery_routing_is_finite_and_stage_specific",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_consumed_code_recovery_routing_is_finite_and_stage_specific",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_consumed_code_abort_messages_exist_in_both_locales",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_later_passcode_transient_keeps_its_retry_stage",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_flow",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_empty_recovery_devices_after_consumed_code_ends_without_replay",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_cancelled_work_hardening",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_confirmed_commit_drains_cancelled_failure_without_logging",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_cancelled_work_hardening",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_confirmed_commit_drains_cancelled_failure_without_logging",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_cancelled_work_hardening",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_poll_vault_write_drains_cancelled_executor_failure_without_logging",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_cancelled_work_hardening",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_poll_vault_write_drains_cancelled_executor_failure_without_logging",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_cancelled_work_hardening",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_commit_failure_without_cancellation_is_preserved",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_cancelled_work_hardening",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_poll_write_failure_without_cancellation_is_preserved",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_terminal_messages",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_terminal_findmy_errors_have_config_and_options_abort_messages",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_login_discovery_saves_only_selected_keys_without_password",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_close_drops_transient_auth_even_if_dependency_close_fails",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_factor_verification_uses_selected_method_and_never_auto_accepts_terms",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_failed_recovery_is_bounded_and_never_returns_exception_secrets",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_empty_recovery_cannot_mark_success_or_retry_discovery",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_empty_recovery_cannot_mark_success_or_retry_discovery",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_unselected_and_duplicate_item_ids_are_not_persisted",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_device_labels_explain_missing_names_without_inventing_association",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_replacement_namespace_and_logs_are_isolated",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_missing_accessory_ids_use_distinct_stable_keys",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_duplicate_identity_does_not_silently_drop_an_item",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_reconnection_reuses_identity_and_discards_old_login",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_recovery_preserves_migrated_identifiers_and_actual_report",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_adi_dependency_cannot_log_persistent_tokens",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_close_still_closes_account_when_keychain_cleanup_fails",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_reconnect_uses_existing_keys_without_keychain_recovery",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_signin_errors_do_not_blame_credentials_or_log_private_text",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_signin_errors_do_not_blame_credentials_or_log_private_text",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_signin_errors_do_not_blame_credentials_or_log_private_text",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_identity_failure_happens_before_credentials_are_submitted",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_service_refusal_retains_only_bounded_diagnostics",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_service_refusal_retains_only_bounded_diagnostics",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_service_refusal_retains_only_bounded_diagnostics",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_service_refusal_retains_only_bounded_diagnostics",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_recovery_failure_is_distinct_from_invalid_credentials",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_apple_rejection_logs_only_numeric_code_and_fixed_phase",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_apple_rejection_logs_only_numeric_code_and_fixed_phase",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_real_sdk_initial_rejection_retains_safe_status",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_account_identity_pair_is_never_replaced_by_native_provisioning",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_verification_failure_reports_stage_without_blaming_code",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_verification_failure_reports_stage_without_blaming_code",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_verification_failure_reports_stage_without_blaming_code",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_recovery_failure_after_verification_is_not_a_code_failure",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_delegate_diagnostics_filter_every_field_before_logging",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_signin_without_factor_keeps_transient_password_for_pet_bootstrap",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_preflight_rejection_does_not_recover_or_log_response",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_settings_pair_comparison_restores_rejected_tokens_and_never_recovers",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_settings_pair_comparison_restores_rejected_tokens_and_never_recovers",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_recovery_credential_failure_after_verification_keeps_actionable_error",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_recovery_credential_failure_after_verification_keeps_actionable_error",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_recovery_credential_failure_after_verification_keeps_actionable_error",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_recovery_credential_failure_after_verification_keeps_actionable_error",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_recovery_credential_failure_after_verification_keeps_actionable_error",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_recovery_credential_failure_after_verification_keeps_actionable_error",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_recovery_bootstrap_logs_only_fixed_credential_reason_and_status",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_recovery_bootstrap_logs_only_fixed_credential_reason_and_status",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_recovery_bootstrap_logs_only_fixed_credential_reason_and_status",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_recovery_bootstrap_logs_only_fixed_credential_reason_and_status",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_recovery_bootstrap_logs_only_fixed_credential_reason_and_status",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_recovery_bootstrap_logs_only_fixed_credential_reason_and_status",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_recovery_bootstrap_rejects_unknown_credential_metadata",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_recovery_bootstrap_logs_current_pet_phase_and_bounded_retry_only",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_recovery_bootstrap_logs_current_pet_phase_and_bounded_retry_only",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_recovery_bootstrap_revalidates_mutated_pet_error_context",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_recovery_bootstrap_revalidates_mutated_pet_error_context",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_recovery_bootstrap_revalidates_mutated_pet_error_context",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_recovery_bootstrap_revalidates_mutated_pet_error_context",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_recovery_bootstrap_revalidates_mutated_pet_error_context",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_recovery_bootstrap_revalidates_mutated_pet_error_context",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_discovery_error_site_reports_only_bound_own_source",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_discovery_error_site_reports_only_bound_own_source",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_discovery_error_site_rejects_unbound_or_oversized_sites",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_discovery_error_site_rejects_unbound_or_oversized_sites",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_discovery_error_site_rejects_unbound_or_oversized_sites",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_discovery_error_site_rejects_unbound_or_oversized_sites",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_discovery_error_site_prefers_innermost_allowlisted_frame",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_discovery_logs_fixed_pcs_subclass_and_site_without_retry",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_discovery_logs_fixed_pcs_subclass_and_site_without_retry",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_discovery_logs_fixed_pcs_subclass_and_site_without_retry",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_discovery_logs_fixed_pcs_subclass_and_site_without_retry",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_outer_auth_reason_sanitizer_accepts_only_exact_pcs_codes",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_outer_auth_reason_sanitizer_accepts_only_exact_pcs_codes",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_outer_auth_reason_sanitizer_accepts_only_exact_pcs_codes",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_outer_auth_reason_sanitizer_accepts_only_exact_pcs_codes",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_outer_auth_reason_sanitizer_accepts_only_exact_pcs_codes",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_outer_auth_reason_sanitizer_redacts_mutated_or_spoofed_metadata",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_outer_auth_reason_sanitizer_redacts_mutated_or_spoofed_metadata",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_outer_auth_reason_sanitizer_redacts_mutated_or_spoofed_metadata",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_outer_auth_reason_sanitizer_redacts_mutated_or_spoofed_metadata",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_outer_auth_reason_sanitizer_redacts_mutated_or_spoofed_metadata",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_outer_auth_reason_sanitizer_redacts_mutated_or_spoofed_metadata",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_outer_auth_reason_sanitizer_redacts_mutated_or_spoofed_metadata",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_outer_auth_reason_sanitizer_redacts_mutated_or_spoofed_metadata",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_outer_auth_reason_sanitizer_redacts_mutated_or_spoofed_metadata",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_outer_auth_reason_sanitizer_redacts_mutated_or_spoofed_metadata",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_outer_auth_reason_sanitizer_redacts_mutated_or_spoofed_metadata",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_outer_auth_reason_sanitizer_redacts_mutated_or_spoofed_metadata",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_discovery_logs_only_fixed_outer_auth_reason_without_reproof",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_discovery_logs_only_fixed_outer_auth_reason_without_reproof",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_discovery_logs_only_fixed_outer_auth_reason_without_reproof",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_discovery_logs_only_fixed_outer_auth_reason_without_reproof",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_discovery_logs_only_fixed_outer_auth_reason_without_reproof",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_discovery_logs_only_fixed_outer_auth_reason_without_reproof",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_discovery_logs_only_fixed_outer_auth_reason_without_reproof",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_setup",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_outer_auth_import_failure_preserves_original_discovery_failure",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_place_import",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_paused_place_import_never_opens_provider_fetch",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_place_import",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_pause_cancels_and_drains_inflight_place_fetch",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_place_import",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_denied_place_fetch_persists_stop_and_repeated_form_cannot_retry",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_place_import",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_parse_places_rejects_bad_values_and_discards_private_extras",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_place_import",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_preview_empty_selection_and_cancel_make_no_zones",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_place_import",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_import_creates_reviewed_zones_only_after_confirmation",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_place_import",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_partial_failure_retries_only_remaining_zones",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_place_import",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_new_conflict_blocks_import_before_any_writes",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_place_import",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_fetch_failure_exposes_no_raw_exception",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_place_import",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_real_zone_creation_preserves_existing_zones",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_place_import",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_edited_duplicate_names_are_rejected",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_place_import",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_skipping_first_place_continues_without_validating_its_fields",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_place_import",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_skipping_last_place_keeps_previously_reviewed_places",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_place_import",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_skipping_every_place_exits_without_creating_zones",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_place_import",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_zone_added_during_selection_returns_review_error",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_place_import",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_unexpected_and_disabled_external_account_shapes_are_skipped",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_family_refresh",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_complete_circle_permission_and_scope_fail_before_send",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_family_refresh",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_concurrent_clicks_single_send_and_shared_individual_limit",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_family_refresh",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_save_failure_rolls_back_every_source_and_failed_send_consumes_cap",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_family_refresh",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_feedback_new_report_same_source_only_and_observation_expires",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_family_refresh",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_saved_limits_survive_new_runtime_and_enforce_daily_cap",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_family_refresh",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_source_change_during_limit_save_prevents_old_circle_dispatch",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_family_refresh",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_person_fallback_still_uses_explicit_selected_life360_tracker",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_family_refresh",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_manual_request_ignores_existing_individual_caps_and_preserves_them",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_family_refresh",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_manual_next_available_rolls_over_at_exact_boundary",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_family_refresh",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_family_allows_fiftieth_attempt_and_one_minute_boundary",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_family_refresh",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_late_reports_cannot_rewrite_results_and_feedback_expires",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_family_refresh",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_failed_family_feedback_also_expires",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_family_refresh",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_family_refresh_requires_explicit_opt_in_before_credentials_or_send",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_family_refresh",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_mixed_assigned_sources_refresh_without_map_source_or_full_circle",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_family_refresh",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_mixed_concurrency_and_individual_phone_budget_are_shared",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_family_refresh",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_one_limited_or_failed_source_does_not_block_other_provider",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_family_refresh",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_disabled_phone_and_unknown_provider_are_explicitly_skipped",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_family_refresh",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_phone_notification_permission_prevents_every_dispatch",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_family_refresh",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_config_change_during_second_reservation_never_sends_removed_phone",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_family_refresh",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_ha_receipt_is_not_a_gps_report_and_late_receipts_do_not_count",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_family_refresh",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_complete_circle_and_phone_are_combined_without_duplicate_circle_calls",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_family_refresh",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_managed_cloud_connection_checks_once_for_multiple_assigned_sources",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_family_refresh",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_mixed_button_daily_limit_exact_expiry_and_storage_failure",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_family_refresh",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_all_skipped_sources_still_explain_results_without_spending_budget",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_family_refresh",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_registry_rebinding_during_save_cannot_redirect_phone_request",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_family_refresh",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_paused_family_never_reads_or_sends_circle_credentials",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_family_refresh",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_pause_during_family_reservation_prevents_circle_send",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_family_refresh",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_exact_family_http_denial_persists_pause_and_never_sends_again",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_family_refresh",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_exact_family_http_denial_persists_pause_and_never_sends_again",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_selection_refresh",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_cloud_check_is_shared_and_reserved_before_await",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_selection_refresh",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_fresh_unselected_and_other_entry_never_poll",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_selection_refresh",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_phone_requires_opt_in_control_permission_and_shared_limits",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_selection_refresh",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_direct_cloud_check_respects_backoff_and_existing_work",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_selection_refresh",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_external_life360_uses_exact_supported_target_and_persisted_limits",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_selection_refresh",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_external_life360_requires_control_and_persistence_before_dispatch",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_selection_refresh",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_paused_selection_never_checks_provider_or_spends_budget",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_selection_refresh",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_pause_during_selection_reservation_prevents_provider_dispatch",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_selection_refresh",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_external_selection_cannot_dispatch_while_paused",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_polling_diagnostics",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_returned_equal_older_and_advanced_reports_are_distinct_from_empty_cache",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_polling_diagnostics",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_missing_and_invalid_returned_reports_do_not_count_as_valid_or_advanced",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_polling_diagnostics",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_fetch_calls_observe_existing_batching_without_extra_calls_or_key_changes",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_polling_diagnostics",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_failure_or_cancellation_does_not_reuse_previous_success",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_polling_diagnostics",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_failure_or_cancellation_does_not_reuse_previous_success",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_polling_diagnostics",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_failure_or_cancellation_does_not_reuse_previous_success",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_polling_diagnostics",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_failure_or_cancellation_does_not_reuse_previous_success",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_polling_diagnostics",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_partial_fetch_failure_retains_committed_item_success",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_polling_diagnostics",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_existing_lock_serializes_observations_and_active_cancel_is_terminal",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_polling_diagnostics",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_account_observation_requires_exact_strict_scalars",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_polling_diagnostics",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_account_observation_requires_exact_strict_scalars",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_polling_diagnostics",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_account_observation_requires_exact_strict_scalars",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_polling_diagnostics",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_account_observation_requires_exact_strict_scalars",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_polling_diagnostics",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_account_observation_requires_exact_strict_scalars",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_polling_diagnostics",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_account_observation_requires_exact_strict_scalars",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_polling_diagnostics",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_account_observation_requires_exact_strict_scalars",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_polling_diagnostics",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_provider_aggregate_has_no_account_item_location_time_or_error_values",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_polling_diagnostics",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_optional_diagnostics_exports_only_valid_aggregate_without_triggering_poll",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_polling_diagnostics",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_invalid_aggregate_cannot_export_raw_or_ambiguous_counts",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_polling_diagnostics",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_invalid_aggregate_cannot_export_raw_or_ambiguous_counts",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_polling_diagnostics",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_invalid_aggregate_cannot_export_raw_or_ambiguous_counts",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_polling_diagnostics",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_invalid_aggregate_cannot_export_raw_or_ambiguous_counts",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_polling_diagnostics",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_invalid_aggregate_cannot_export_raw_or_ambiguous_counts",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_polling_diagnostics",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_paused_diagnostics_expose_only_fixed_controls_and_aggregate_counts",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_release_package",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_recursive_runtime_and_vendor_provenance_are_packaged",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_release_package",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_retired_local_macos_cli_is_excluded_and_complete_notices_remain",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_release_package",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_labs_state_identity_and_binaries_never_enter_archive",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_release_package",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_archive_and_inventory_are_deterministic",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_release_package",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_archive_cannot_omit_required_runtime_or_license_files",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_release_package",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_archive_cannot_omit_required_runtime_or_license_files",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_release_package",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_archive_cannot_omit_required_runtime_or_license_files",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_release_package",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_archive_cannot_omit_required_runtime_or_license_files",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_release_package",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_archive_cannot_omit_required_runtime_or_license_files",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_release_package",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_archive_cannot_omit_required_runtime_or_license_files",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_release_package",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_archive_cannot_omit_required_runtime_or_license_files",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_release_package",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_archive_cannot_omit_required_runtime_or_license_files",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_release_package",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_archive_cannot_omit_required_runtime_or_license_files",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_release_package",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_archive_cannot_omit_required_runtime_or_license_files",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_release_package",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_runtime_is_optional_until_referenced_but_import_closure_is_checked",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_release_package",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_validation_refuses_private_or_unsafe_archive_members",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_release_package",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_validation_refuses_private_or_unsafe_archive_members",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_release_package",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_validation_refuses_private_or_unsafe_archive_members",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_release_package",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_validation_refuses_private_or_unsafe_archive_members",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_release_package",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_validation_refuses_private_or_unsafe_archive_members",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_release_package",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_validation_refuses_private_or_unsafe_archive_members",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_release_package",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_validation_refuses_private_or_unsafe_archive_members",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_release_package",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_validation_refuses_private_or_unsafe_archive_members",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_release_package",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_archive_duplicate_member_is_refused_before_extraction",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_release_package",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_unsafe_archive_metadata_is_refused",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_release_package",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_unsafe_archive_metadata_is_refused",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_release_package",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_unsafe_archive_metadata_is_refused",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_release_package",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_payload_symlink_to_private_source_is_refused",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_release_package",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_inventory_tampering_is_refused",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_gsa_work_lifetime",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_actual_gsa_drains_repeated_cancel_before_releasing_password",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_gsa_work_lifetime",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_actual_gsa_drains_repeated_cancel_before_releasing_password",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_gsa_work_lifetime",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_password_worker_success_and_failure_propagate_without_cancellation",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_pre_proof_failure_and_context_entry_do_not_reserve",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_attempt_callbacks_cannot_reserve_after_context_releases_lock",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_new_storage_directory_creation_must_be_durable",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_verified_submission_does_not_clear_prior_unresolved",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_refusal_unknown_outcome_limit_and_explicit_reset",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_separate_process_reads_counts_and_crash_pending_becomes_uncertain",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_same_account_serializes_across_guard_instances_other_account_runs",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_separate_process_cannot_enter_or_reset_held_account",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_concurrent_submissions_cannot_oversubscribe",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_concurrent_submissions_cannot_oversubscribe",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_concurrent_submissions_cannot_oversubscribe",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_concurrent_submissions_cannot_oversubscribe",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_concurrent_submissions_cannot_oversubscribe",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_cancelled_reservation_drains_and_clears_proven_undispatched_submission",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_cancellation_after_process_lock_acquisition_does_not_strand_lock",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_cancelled_failed_reservation_never_logs_executor_failure",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_cancellation_after_dispatch_hook_returns_is_uncertain",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_cancelled_verified_write_publishes_durable_outcome_before_reraising",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_storage_failure_prevents_dispatch_and_preserves_conservative_counts",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_storage_failure_prevents_dispatch_and_preserves_conservative_counts",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_storage_failure_prevents_dispatch_and_preserves_conservative_counts",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_storage_failure_prevents_dispatch_and_preserves_conservative_counts",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_unsafe_storage_fails_closed_without_overwriting",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_unsafe_storage_fails_closed_without_overwriting",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_unsafe_storage_fails_closed_without_overwriting",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_unsafe_storage_fails_closed_without_overwriting",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_unsafe_storage_fails_closed_without_overwriting",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_unsafe_storage_fails_closed_without_overwriting",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_unsafe_storage_fails_closed_without_overwriting",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_unsafe_storage_fails_closed_without_overwriting",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_identity_must_be_validated_hash_no_username_fallback",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_identity_must_be_validated_hash_no_username_fallback",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_identity_must_be_validated_hash_no_username_fallback",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_identity_must_be_validated_hash_no_username_fallback",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_identity_must_be_validated_hash_no_username_fallback",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_identity_must_be_validated_hash_no_username_fallback",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_hass_service_is_shared_outside_account_namespace",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_fresh_storage_needs_explicit_review_before_unlock",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_ordinary_backup_restore_fails_closed_and_review_is_per_account",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_rollback_with_retained_witness_and_same_counter_aba_is_detected",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_legacy_ledger_reset_does_not_enroll_another_account",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_missing_witness_does_not_reclassify_pending_or_finish_old_attempt",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_witness_commit_failure_never_permits_dispatch",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_witness_commit_failure_never_permits_dispatch",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_witness_commit_failure_never_permits_dispatch",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_witness_commit_failure_never_permits_dispatch",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_unsafe_witness_never_allows_unlock_or_changes_ledger",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_unsafe_witness_never_allows_unlock_or_changes_ledger",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_unsafe_witness_never_allows_unlock_or_changes_ledger",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_unsafe_witness_never_allows_unlock_or_changes_ledger",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_unsafe_witness_never_allows_unlock_or_changes_ledger",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_unsafe_witness_never_allows_unlock_or_changes_ledger",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_unsafe_witness_never_allows_unlock_or_changes_ledger",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_witness_from_another_identity_cannot_authorize_account",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_witness_must_be_outside_ledger_tree",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_zero_account_ledger_does_not_reuse_retained_witness",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_zero_account_ledger_does_not_reuse_retained_witness",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_guard",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_maximum_counter_crash_conversion_is_bounded_and_stays_blocked",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_restart",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_failed_cli_kills_owned_group_and_drains_process",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_restart",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_failed_cli_kills_owned_group_and_drains_process",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_restart",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_failed_cli_kills_owned_group_and_drains_process",
+      "skipped": false
+    },
+    {
+      "class": "tests.test_findmy_recovery_restart",
+      "failed": false,
+      "failure_locations": [],
+      "function": "test_guard_accounting_survives_process_restart_and_explicit_acknowledgment",
+      "skipped": false
+    }
+  ],
+  "error_nodes": 0,
+  "failed_cases": 0,
+  "failure_nodes": 0,
+  "junit_available": true,
+  "junit_parsed": true,
+  "observed_cases": 548,
+  "pytest_exit": 0,
+  "schema": 1,
+  "scope": "unaccepted_focused_pytest_diagnostics",
+  "skipped_cases": 0,
+  "unmapped_case_count": 0
+}
