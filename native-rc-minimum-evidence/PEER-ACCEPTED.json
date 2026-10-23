@@ -1,0 +1,42 @@
+{
+  "artifact_transport_verified_by_consumer": false,
+  "cleanup_required_and_observed": true,
+  "failed": 0,
+  "focused_passed": 20,
+  "full_backend_suite_repeated": false,
+  "hacs_delivery_tested": false,
+  "managed_haos_service_claimed": false,
+  "offline_execution": true,
+  "outcome": "accepted",
+  "owner_accounts_used": false,
+  "package_files": 112,
+  "package_sha256": "4f94a18e2f7862e9bd7f4c85250e5f10e4b8e1292ea9d7b263b441d2e1b77dd9",
+  "provider_account_cases_repeated": false,
+  "receipts": {
+    "host.json": {
+      "bytes": 1154,
+      "sha256": "26834756bc02e29201a25f37fb4d271a85881d277e004b4e9834474839210bc1"
+    },
+    "lifecycle-summary.json": {
+      "bytes": 8700,
+      "sha256": "e213ebdf3df9386dcca8715345165c90dd8f2fd7a93482d4f5690785bd15438b"
+    },
+    "setup-summary.json": {
+      "bytes": 6071,
+      "sha256": "72b4df51448cad1ec29815f661b9e839f8079ed86a5d4e01c803227e0ce7a417"
+    },
+    "source-summary.json": {
+      "bytes": 228,
+      "sha256": "7e9cfc151ef654a1e534b60fe1e8148ad0b9a2e85b240a31a581d454ec13013c"
+    }
+  },
+  "release_published": false,
+  "restart_identity_preserved": true,
+  "schema": 1,
+  "scope": "minimum_core_2026_9_4_twenty_tests_four_core_processes",
+  "separate_core_processes": 4,
+  "skipped": 0,
+  "source_commit": "c7b31c5a82431a6b16d8b7208f9423626b95bd4b",
+  "source_files": 402,
+  "version": "1.0.0-rc.1"
+}

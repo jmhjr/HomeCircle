@@ -1,0 +1,55 @@
+{
+  "files": {
+    ".github/workflows/native-rc-minimum.yml": {
+      "bytes": 3840,
+      "sha256": "d194ed562140a390ab83436355301456df33d849225dab5ee356b0b9862f5e47"
+    },
+    "PREPARED.json": {
+      "bytes": 3248,
+      "sha256": "a6463336936b094af114c1496d5e071cda824d32d9e75d9446cb0f6c47a33260"
+    },
+    "driver.py": {
+      "bytes": 27107,
+      "sha256": "fe682fe09cb15313de57e253da1815a7265434aa280aa11abc60ef178baedcc4"
+    },
+    "package_support.py": {
+      "bytes": 30741,
+      "sha256": "f6c7554aaa33e3e7c220e5f2cbc645e6bc9115791af9ffd777b038abc868e15d"
+    },
+    "payload/homecircle.zip": {
+      "bytes": 628136,
+      "sha256": "4f94a18e2f7862e9bd7f4c85250e5f10e4b8e1292ea9d7b263b441d2e1b77dd9"
+    },
+    "payload/inventory.json": {
+      "bytes": 16674,
+      "sha256": "e4bc34e3921e75157402cf643f87ed658d95c76505a448abb393fd90a304db12"
+    },
+    "payload/source-config.json": {
+      "bytes": 3378,
+      "sha256": "ac7cc366445c143f9942c771b601256ec85708ebcb5e8530d93ed6e95a88ef12"
+    },
+    "payload/source-inventory.json": {
+      "bytes": 61321,
+      "sha256": "9195daa05eb845f2e65d3553d57075f4a7497538923a0b050cfca27c3f1d2394"
+    },
+    "payload/source.tgz": {
+      "bytes": 1437597,
+      "sha256": "98256480be83c35b76f370ae0f8ed3bda28ab1ef5dca913d68c72e422f37073d"
+    },
+    "pins-amd64.json": {
+      "bytes": 511,
+      "sha256": "5bde5f3e3083475bc92b3d28f8d7df1f7d4d6f5e5a339302d9ab99a2f82d333f"
+    },
+    "requirements_support.py": {
+      "bytes": 9183,
+      "sha256": "153693d1a06b06e33a8601fa2580a677908ece4336aa71a03c6c1eabf81c1728"
+    },
+    "run_host.sh": {
+      "bytes": 12932,
+      "sha256": "4639412ce67741117c9ee969a3f096793c6cbbf8068ab5b053ffb418c9c1af3a"
+    }
+  },
+  "fixture_name": "native-rc-minimum",
+  "schema": 1,
+  "source_commit": "c7b31c5a82431a6b16d8b7208f9423626b95bd4b"
+}

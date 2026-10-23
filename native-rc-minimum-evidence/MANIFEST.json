@@ -1,0 +1,82 @@
+{
+  "files": {
+    "CONSUMER-CONTROL.json": {
+      "bytes": 4282,
+      "sha256": "0ce3f8318f46235fdd952812833fa7b0516d7f07a750440150257deac61988b3"
+    },
+    "CORE-GRAPH.json": {
+      "bytes": 3525,
+      "sha256": "010171530bf98e9963989227f1490004b486f17f80a27532a2ec2569296ba0db"
+    },
+    "DOWNLOAD-VERIFICATION.json": {
+      "bytes": 466,
+      "sha256": "522274c37cf818094e569b13485ac9cf14515867e842ac1c12cd620bf41b9b86"
+    },
+    "INDEX.md": {
+      "bytes": 4399,
+      "sha256": "36bdc2f066a3f4ccd494f254dd345e780e01836070d4c63be17925d821c04def"
+    },
+    "INPUTS.json": {
+      "bytes": 1843,
+      "sha256": "8b26b5ea700e5684ce6904fc98af2e3af6ee482a5994e355fc7a5205d4120bbc"
+    },
+    "PEER-ACCEPTED.json": {
+      "bytes": 1375,
+      "sha256": "d1ad77a2942e26be0280dc04564d67ec62827e7a2f86a67b45df1c1e9f25dbaf"
+    },
+    "PEER-REPLAY-VERIFICATION.json": {
+      "bytes": 3586,
+      "sha256": "b34b299f5d1c94efa599ff61c6fdf082e9404f4a5b15f092cfaab306d959dab6"
+    },
+    "ROOT-ACCEPTED.json": {
+      "bytes": 1375,
+      "sha256": "d1ad77a2942e26be0280dc04564d67ec62827e7a2f86a67b45df1c1e9f25dbaf"
+    },
+    "ROOT-METADATA.json": {
+      "bytes": 598,
+      "sha256": "f886e6c2fd1e512862cf4f81044c93a56d621d99d8e948d8f8dba5014b9ad6bf"
+    },
+    "RUN-ANCHORS.json": {
+      "bytes": 865,
+      "sha256": "ed938d3758555c85624989770e861957d4489aeadf5d913ccd07f4a14a7a4471"
+    },
+    "STARTUP-VERSIONS.json": {
+      "bytes": 581,
+      "sha256": "8f1d479bf6e4716af6300d1517901c3b2adc0518d92a20dd5c0dee1a89d19f80"
+    },
+    "TRANSPORT-ACCEPTED.json": {
+      "bytes": 811,
+      "sha256": "13d76c66c98a78655c66e427f9a5d2233e8faf0f961586d1b8b4c0d8e64a3370"
+    },
+    "artifact.zip": {
+      "bytes": 5303,
+      "sha256": "955d6a4d4fba2b61aa650b133647ea1ff6744c32840d716c5ca3814ce893b58e"
+    },
+    "receipts/host.json": {
+      "bytes": 1154,
+      "sha256": "26834756bc02e29201a25f37fb4d271a85881d277e004b4e9834474839210bc1"
+    },
+    "receipts/lifecycle-summary.json": {
+      "bytes": 8700,
+      "sha256": "e213ebdf3df9386dcca8715345165c90dd8f2fd7a93482d4f5690785bd15438b"
+    },
+    "receipts/setup-summary.json": {
+      "bytes": 6071,
+      "sha256": "72b4df51448cad1ec29815f661b9e839f8079ed86a5d4e01c803227e0ce7a417"
+    },
+    "receipts/source-summary.json": {
+      "bytes": 228,
+      "sha256": "7e9cfc151ef654a1e534b60fe1e8148ad0b9a2e85b240a31a581d454ec13013c"
+    },
+    "replay.py": {
+      "bytes": 9269,
+      "sha256": "21a8576ed71d90aba4f5e93c5d9dc51c3519a3f05fa8ec377722817ed824ec99"
+    },
+    "verify_results.py": {
+      "bytes": 13346,
+      "sha256": "5742f95ca99b32aa0dfc06c4b97b15d8a316bac7030bc778cd4ac89153854a51"
+    }
+  },
+  "schema": 1,
+  "scope": "already_accepted_C7_minimum_Core_2026_9_4_20_functions_four_Core_processes"
+}

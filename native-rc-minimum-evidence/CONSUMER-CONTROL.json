@@ -1,0 +1,79 @@
+{
+  "archive_sha256": "4f94a18e2f7862e9bd7f4c85250e5f10e4b8e1292ea9d7b263b441d2e1b77dd9",
+  "driver_sha256": "fe682fe09cb15313de57e253da1815a7265434aa280aa11abc60ef178baedcc4",
+  "focused_selectors": {
+    "tests/test_activity.py::test_arrival_load_allowlists_private_fields_and_rejects_invalid_state": 1,
+    "tests/test_activity.py::test_arrival_survives_reload_retention_and_detects_gap_changes": 1,
+    "tests/test_activity.py::test_arrival_unknown_initial_place_and_changed_place_during_restart": 1,
+    "tests/test_activity.py::test_changes_only_and_report_time_separate_from_observation": 1,
+    "tests/test_activity.py::test_close_ignores_late_request_results_and_state_callbacks": 1,
+    "tests/test_activity.py::test_failed_load_disables_persistence_without_overwrite": 1,
+    "tests/test_activity.py::test_freshness_churn_preserves_arrivals_requests_and_reload": 1,
+    "tests/test_activity.py::test_load_allowlists_fields_members_and_values": 1,
+    "tests/test_activity.py::test_quiet_retention_cleanup_is_scheduled_without_new_events": 1,
+    "tests/test_activity.py::test_reload_away_baseline_allows_the_next_observed_arrival": 1,
+    "tests/test_activity.py::test_reload_keeps_history_but_starts_new_observation_boundary": 1,
+    "tests/test_activity.py::test_retention_cap_and_source_projection": 1,
+    "tests/test_activity.py::test_total_cap_evicts_freshness_before_significant_events": 1,
+    "tests/test_activity.py::test_unavailable_gap_preserves_checkpoint_but_does_not_invent_new_arrival": 1,
+    "tests/test_activity.py::test_unversioned_startup_checkpoints_are_not_treated_as_arrivals": 1,
+    "tests/test_activity.py::test_withheld_position_clears_map_source_and_does_not_publish_coordinates": 1,
+    "tests/test_activity_projection.py::test_changed_saved_selection_still_invalidates_prior_projected_history": 1,
+    "tests/test_activity_projection.py::test_projected_item_and_original_member_history_survive_next_restart": 1,
+    "tests/test_activity_projection.py::test_projected_item_observes_named_place_without_losing_saved_history": 1,
+    "tests/test_activity_projection.py::test_setup_projects_new_item_before_loading_and_observing_activity": 1
+  },
+  "frontend_sha256": "aad5dbcfa8fd03f4977231ce60942b46a746ec8fd160d0c499525e0a6c84070c",
+  "frozen_inputs": {
+    "PREPARED.json": {
+      "bytes": 3248,
+      "sha256": "a6463336936b094af114c1496d5e071cda824d32d9e75d9446cb0f6c47a33260"
+    },
+    "driver.py": {
+      "bytes": 27107,
+      "sha256": "fe682fe09cb15313de57e253da1815a7265434aa280aa11abc60ef178baedcc4"
+    },
+    "package_support.py": {
+      "bytes": 30741,
+      "sha256": "f6c7554aaa33e3e7c220e5f2cbc645e6bc9115791af9ffd777b038abc868e15d"
+    },
+    "payload/homecircle.zip": {
+      "bytes": 628136,
+      "sha256": "4f94a18e2f7862e9bd7f4c85250e5f10e4b8e1292ea9d7b263b441d2e1b77dd9"
+    },
+    "payload/inventory.json": {
+      "bytes": 16674,
+      "sha256": "e4bc34e3921e75157402cf643f87ed658d95c76505a448abb393fd90a304db12"
+    },
+    "payload/source-config.json": {
+      "bytes": 3378,
+      "sha256": "ac7cc366445c143f9942c771b601256ec85708ebcb5e8530d93ed6e95a88ef12"
+    },
+    "payload/source-inventory.json": {
+      "bytes": 61321,
+      "sha256": "9195daa05eb845f2e65d3553d57075f4a7497538923a0b050cfca27c3f1d2394"
+    },
+    "payload/source.tgz": {
+      "bytes": 1437597,
+      "sha256": "98256480be83c35b76f370ae0f8ed3bda28ab1ef5dca913d68c72e422f37073d"
+    },
+    "pins-amd64.json": {
+      "bytes": 511,
+      "sha256": "5bde5f3e3083475bc92b3d28f8d7df1f7d4d6f5e5a339302d9ab99a2f82d333f"
+    },
+    "requirements_support.py": {
+      "bytes": 9183,
+      "sha256": "153693d1a06b06e33a8601fa2580a677908ece4336aa71a03c6c1eabf81c1728"
+    },
+    "run_host.sh": {
+      "bytes": 12932,
+      "sha256": "4639412ce67741117c9ee969a3f096793c6cbbf8068ab5b053ffb418c9c1af3a"
+    }
+  },
+  "graph_sha256": "010171530bf98e9963989227f1490004b486f17f80a27532a2ec2569296ba0db",
+  "inventory_sha256": "e4bc34e3921e75157402cf643f87ed658d95c76505a448abb393fd90a304db12",
+  "pins_sha256": "5bde5f3e3083475bc92b3d28f8d7df1f7d4d6f5e5a339302d9ab99a2f82d333f",
+  "schema": 1,
+  "source_commit": "c7b31c5a82431a6b16d8b7208f9423626b95bd4b",
+  "startup_versions_sha256": "8f1d479bf6e4716af6300d1517901c3b2adc0518d92a20dd5c0dee1a89d19f80"
+}

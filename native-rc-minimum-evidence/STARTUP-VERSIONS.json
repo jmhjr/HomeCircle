@@ -1,0 +1,23 @@
+{
+  "aiohasupervisor": "0.6.0",
+  "cronsim": "2.7",
+  "fnv-hash-fast": "2.0.3",
+  "gazetteer-matcher": "1.1.0",
+  "ha-ffmpeg": "3.2.2",
+  "hassil": "3.12.1",
+  "home-assistant-frontend": "20260826.7",
+  "home-assistant-intents": "2026.8.28",
+  "ifaddr": "0.2.0",
+  "infrared-protocols": "9.0.0",
+  "mutagen": "1.48.1",
+  "pillow": "12.3.0",
+  "psutil-home-assistant": "0.0.1",
+  "pymicro-vad": "1.0.1",
+  "pyotp": "2.9.0",
+  "pyqrcode": "1.2.1",
+  "pyspeex-noise": "1.0.2",
+  "pyturbojpeg": "1.8.3",
+  "rf-protocols": "4.3.0",
+  "securetar": "2026.4.1",
+  "sqlalchemy": "2.0.52"
+}

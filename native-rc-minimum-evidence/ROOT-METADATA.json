@@ -1,0 +1,16 @@
+{
+  "artifact_id": 12522208110,
+  "artifact_name": "rc-minimum-validation-receipts",
+  "artifact_zip_sha256": "955d6a4d4fba2b61aa650b133647ea1ff6744c32840d716c5ca3814ce893b58e",
+  "branch": "codex/native-amd64-validation",
+  "conclusion": "success",
+  "event": "push",
+  "github_digest_verified": true,
+  "head_sha": "93c68c83d49275026539309a2dc49e712ed97071",
+  "run_attempt": 1,
+  "run_id": 40002540583,
+  "schema": 1,
+  "status": "completed",
+  "workflow_path": ".github/workflows/native-rc-minimum.yml",
+  "workflow_sha256": "d194ed562140a390ab83436355301456df33d849225dab5ee356b0b9862f5e47"
+}

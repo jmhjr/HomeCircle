@@ -1,0 +1,21 @@
+{
+  "artifacts": {
+    "rc-minimum-validation-receipts": {
+      "id": 12522208110,
+      "safe_members": 4,
+      "zip_sha256": "955d6a4d4fba2b61aa650b133647ea1ff6744c32840d716c5ca3814ce893b58e"
+    }
+  },
+  "event": "push",
+  "fresh_job_readback_sha256": "99028e4fa5543dc99bd608c8cada3b852f8ff3bf8b698c2045d0e1a1540cb19b",
+  "fresh_run_readback_sha256": "8cf4ff781fee0c16b2d54e1d35fee675c4a76858a782254e4bd790d22b249d4e",
+  "github_digests_verified": true,
+  "observed_conclusion": "success",
+  "original_download_verification_sha256": "522274c37cf818094e569b13485ac9cf14515867e842ac1c12cd620bf41b9b86",
+  "owner_instance_actions": 0,
+  "qa_head": "93c68c83d49275026539309a2dc49e712ed97071",
+  "run_attempt": 1,
+  "run_id": 40002540583,
+  "schema": 1,
+  "source": "c7b31c5a82431a6b16d8b7208f9423626b95bd4b"
+}
