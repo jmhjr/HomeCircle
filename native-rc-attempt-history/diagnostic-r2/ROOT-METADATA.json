@@ -1,0 +1,16 @@
+{
+  "artifact_id": 12525063913,
+  "artifact_name": "rc-diagnostic-r2-validation-receipts",
+  "artifact_zip_sha256": "c4e1323fe96fda5fbff874bc532b128aad4c6f4e8700e37692241ffca635d397",
+  "branch": "codex/native-amd64-validation",
+  "conclusion": "success",
+  "event": "push",
+  "github_digest_verified": true,
+  "head_sha": "103d894fd37c09abba980a447bf4b719f15aeeee",
+  "run_attempt": 1,
+  "run_id": 40008762105,
+  "schema": 1,
+  "status": "completed",
+  "workflow_path": ".github/workflows/native-rc-diagnostic-r2.yml",
+  "workflow_sha256": "46e980f04001e5836f9d096f8eb9642dcc112a062b8f9d88d817c826bdd23f5a"
+}

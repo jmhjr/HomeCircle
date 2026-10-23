@@ -1,0 +1,33 @@
+{
+  "all_401_other_source_blobs_identical": true,
+  "all_integration_and_frontend_source_blobs_identical": true,
+  "changed_source_files": [
+    "tests/test_city_lookup.py"
+  ],
+  "inventory_sha256": "e4bc34e3921e75157402cf643f87ed658d95c76505a448abb393fd90a304db12",
+  "minimum_reuse": {
+    "actual_tested_package_identical": true,
+    "full_rerun_repeated": false,
+    "new_source_scope_claimed": false,
+    "run_id": 40002540583,
+    "tested_source": "c7b31c5a82431a6b16d8b7208f9423626b95bd4b"
+  },
+  "native_diagnostic_run": 40008762105,
+  "native_diagnostic_target_class": "InvalidSpecError",
+  "native_diagnostic_target_line": 252,
+  "owner_checkout_changed": false,
+  "package_members": 112,
+  "package_sha256": "4f94a18e2f7862e9bd7f4c85250e5f10e4b8e1292ea9d7b263b441d2e1b77dd9",
+  "parent_source": "c7b31c5a82431a6b16d8b7208f9423626b95bd4b",
+  "prior_failed_current_runs": [
+    40002507530,
+    40004476753
+  ],
+  "product_behavior_changed": false,
+  "schema": 1,
+  "source": "b906d3ee51711d3455a497cc265fd3bc18f3adec",
+  "source_export_sha256": "42e834f6ae5a6f109e614e52c3dec38b1d01187a9900dfe51fb326dd85f0f9a7",
+  "source_files": 402,
+  "source_git_blob_identities_verified": true,
+  "test_fix": "Record the five actual awaited Store removals directly; do not autospec the already mocked Home Assistant fixture method"
+}

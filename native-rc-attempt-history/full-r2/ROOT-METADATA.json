@@ -1,0 +1,16 @@
+{
+  "artifact_id": 12523193783,
+  "artifact_name": "rc-current-r2-validation-receipts",
+  "artifact_zip_sha256": "37107bc9777ebb525d545b18c46701e61fb85cecf26b16cb509e8160c40ed5f9",
+  "branch": "codex/native-amd64-validation",
+  "conclusion": "failure",
+  "event": "push",
+  "github_digest_verified": true,
+  "head_sha": "8086e73e8c74913a4a25ba84148a78541d7f1ca5",
+  "run_attempt": 1,
+  "run_id": 40004476753,
+  "schema": 1,
+  "status": "completed",
+  "workflow_path": ".github/workflows/native-rc-current-r2.yml",
+  "workflow_sha256": "090f17e37d02093fbcea208c55beb1b16fa576eb99ea9115d23f5fe342f6a571"
+}

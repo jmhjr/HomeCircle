@@ -1,0 +1,16 @@
+{
+  "native_imports_performed": false,
+  "plugin_source_sha256": "dd92bb387f1814e43b29ada9807c915b1e66476235f7e011a9204e3929bb8207",
+  "plugin_version": "0.13.373",
+  "public_registry_digest_verified": true,
+  "schema": 1,
+  "scope": "public_pinned_plugin_source_only; original_native_failure_not_recovered",
+  "verbose_option_reads": [
+    {
+      "line": 182,
+      "source": "if config.getoption(\"verbose\") > 0:"
+    }
+  ],
+  "wheel_bytes": 88186,
+  "wheel_sha256": "bdd22816780122def0451564c46b536c9889c14c04da98782ea5db4a40994dab"
+}

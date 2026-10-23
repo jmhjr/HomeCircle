@@ -1,0 +1,82 @@
+{
+  "files": {
+    "CURRENT-R2-RUN-ANCHORS.json": {
+      "bytes": 903,
+      "sha256": "8f8ca481be54e1dfa05a28916b0fca7265d0d5ff7f6c3078912c6ae22b5448fa"
+    },
+    "CURRENT-RUN-ANCHORS.json": {
+      "bytes": 894,
+      "sha256": "b3e761838c4fbe5ec763cc46289a38dd1d84bc289af32ee35e830b9d6e7b6df1"
+    },
+    "DIAGNOSTIC-PLUGIN-OPTION-REVIEW.json": {
+      "bytes": 540,
+      "sha256": "ecee3baf768bce76954126523c30994438d7b8f3376db6f77a5aa9a11cf8c094"
+    },
+    "DIAGNOSTIC-R2-RUN-ANCHORS.json": {
+      "bytes": 514,
+      "sha256": "17882086efffd0ce2ae82a26494c4212e5e05cf40c7299fde63d12b2333e3f81"
+    },
+    "DIAGNOSTIC-RUN-ANCHORS.json": {
+      "bytes": 511,
+      "sha256": "ec6bd622221ae9954a88d236528ff872cb47816ec7b1fa311245d3e9484d327a"
+    },
+    "INDEX.md": {
+      "bytes": 8229,
+      "sha256": "4fde32351d82d26673221ba48a5f83da347f8c472ae8f7ad08d1d693ff7b475e"
+    },
+    "TEST-ONLY-SOURCE-DELTA-r3.json": {
+      "bytes": 1333,
+      "sha256": "dbad1b48a9de21cab5f697bff639520e0d115e3088c945de8a7f5875772aa6e2"
+    },
+    "diagnostic-r1/DOWNLOAD-VERIFICATION.json": {
+      "bytes": 505,
+      "sha256": "eaf8eb9ff6d3ebbf050d036087070dd912aad51f7ad78f446acbc36432f0c3f8"
+    },
+    "diagnostic-r1/ROOT-METADATA.json": {
+      "bytes": 604,
+      "sha256": "f0a5bbd21ae6d951cb7ebaeb986d2b7850e98f5bccc6346edc486c4ba8e46998"
+    },
+    "diagnostic-r1/artifact.zip": {
+      "bytes": 649,
+      "sha256": "c328ed9031c548ee27e4852a5209b89851121893216865ffdce3912eec18b8be"
+    },
+    "diagnostic-r2/DOWNLOAD-VERIFICATION.json": {
+      "bytes": 508,
+      "sha256": "d5054c04a6c5d57d37db8b96f3eb8cd5d7295728e773ee26240056ad705b950e"
+    },
+    "diagnostic-r2/ROOT-METADATA.json": {
+      "bytes": 610,
+      "sha256": "eaa2feb83cfe725c852920c3be59b5aca6721946460cfc3f628e524eb3b40a4d"
+    },
+    "diagnostic-r2/artifact.zip": {
+      "bytes": 1749,
+      "sha256": "c4e1323fe96fda5fbff874bc532b128aad4c6f4e8700e37692241ffca635d397"
+    },
+    "full-r1/DOWNLOAD-VERIFICATION.json": {
+      "bytes": 502,
+      "sha256": "1803757e5c849179abbc0f17c189a7a1596bc7feaddb32b5508e7c3b8ac59a1b"
+    },
+    "full-r1/ROOT-METADATA.json": {
+      "bytes": 598,
+      "sha256": "42c86fbf75379265c40deba82df1f25b873f46cba1d5739e308c2797cdd79aa6"
+    },
+    "full-r1/artifact.zip": {
+      "bytes": 7051,
+      "sha256": "9c27fdfeebc7879e5241b9d3b9d9d151070986916eb010879634b8de5aa3d3e8"
+    },
+    "full-r2/DOWNLOAD-VERIFICATION.json": {
+      "bytes": 505,
+      "sha256": "e73bd733f41ab487f298af5074e322bc962ef1d40cb38f1cda01914ad265d85e"
+    },
+    "full-r2/ROOT-METADATA.json": {
+      "bytes": 604,
+      "sha256": "1122c74e107aa7ae7c7a0da0e720aca26d6564ae60cc1b589dadb95b965e9621"
+    },
+    "full-r2/artifact.zip": {
+      "bytes": 7051,
+      "sha256": "37107bc9777ebb525d545b18c46701e61fb85cecf26b16cb509e8160c40ed5f9"
+    }
+  },
+  "schema": 1,
+  "scope": "earlier_failed_full_attempts_and_diagnostic_history_only_no_release_qualification"
+}

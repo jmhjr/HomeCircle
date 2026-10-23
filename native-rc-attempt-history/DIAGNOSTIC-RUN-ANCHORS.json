@@ -1,0 +1,14 @@
+{
+  "event": "push",
+  "frozen": true,
+  "input_count": 11,
+  "input_map_sha256": "20e56e83ef833e57437e7926bdabfdc2e93298a31029ef085232e21d05725df0",
+  "qa_head": "4605e5a82873e5dc423bad69dbdaa94a9f6f6a3d",
+  "qualification": false,
+  "run_attempt": 1,
+  "run_id": 40007477641,
+  "schema": 1,
+  "source_commit": "1825410fe61ea29fdd5611bcadb6cb9b043f3fda",
+  "workflow_path": ".github/workflows/native-rc-diagnostic.yml",
+  "workflow_sha256": "752d3a1f4712cbb35c918ff27c8b108def7cdb2a5e67001e48dc1def62715eb9"
+}

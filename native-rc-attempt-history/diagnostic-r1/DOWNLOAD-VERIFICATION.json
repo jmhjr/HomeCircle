@@ -1,0 +1,18 @@
+{
+  "artifacts": {
+    "rc-diagnostic-validation-receipts": {
+      "id": 12524752590,
+      "safe_members": 1,
+      "zip_sha256": "c328ed9031c548ee27e4852a5209b89851121893216865ffdce3912eec18b8be"
+    }
+  },
+  "event": "push",
+  "github_digests_verified": true,
+  "observed_conclusion": "failure",
+  "owner_instance_actions": 0,
+  "qa_head": "4605e5a82873e5dc423bad69dbdaa94a9f6f6a3d",
+  "run_attempt": 1,
+  "run_id": 40007477641,
+  "schema": 1,
+  "source": "1825410fe61ea29fdd5611bcadb6cb9b043f3fda"
+}
