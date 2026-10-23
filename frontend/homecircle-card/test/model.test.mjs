@@ -26,6 +26,14 @@ const member = (id, presence = "home", focusable = true) => ({
 });
 test("provider alerts use fixed messages and ignore unknown states", () => {
   assert.match(
+    providerAlertText({ name: "Life360", state: "access_denied" }),
+    /requests are paused/,
+  );
+  assert.match(
+    providerAlertText({ name: "Life360", state: "paused" }),
+    /paused; open HomeCircle settings to review or resume/,
+  );
+  assert.match(
     providerAlertText({ name: "Life360", state: "auth_required" }),
     /sign-in needs attention/,
   );

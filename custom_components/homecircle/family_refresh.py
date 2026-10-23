@@ -4,6 +4,7 @@ The Circle viewing operation was observed on the native app. It is unofficial;
 unsupported layouts fail closed and no cloud credentials cross the household API.
 """
 
+from contextlib import nullcontext
 from datetime import timedelta
 from hashlib import sha256
 import ssl
@@ -25,6 +26,12 @@ from .location_requests import (
     available_notification_entity,
 )
 from .tracker_providers import TRACKER_PROVIDERS
+from .provider_controls import ProviderPaused
+
+
+class ProviderAccessDenied(Exception):
+    """An explicit HTTP access refusal, with no provider payload attached."""
+
 
 
 OBSERVATION_WINDOW = timedelta(minutes=2)
@@ -61,6 +68,9 @@ def plan(hass, runtime, registry):
         or runtime.household is None
         or runtime.config.get(CONF_FAMILY_REFRESH_ENABLED) is not True
     ):
+        return None
+    controls = getattr(runtime, "provider_controls", None)
+    if controls is None or controls.paused("life360"):
         return None
     targets = []
     for member in runtime.household.members:
@@ -122,6 +132,8 @@ async def async_send(hass, cid, authorization):
             json={"requestTrace": False},
             allow_redirects=False,
         ) as response:
+            if response.status in (401, 403):
+                raise ProviderAccessDenied()
             return 200 <= response.status < 300
 
 
@@ -207,6 +219,10 @@ def assigned_plan(hass, runtime, registry):
                     target["outcome"] = "unavailable"
             elif registered.platform == "life360":
                 target["provider"] = "Life360"
+                controls = getattr(runtime, "provider_controls", None)
+                if controls is None or controls.paused("life360"):
+                    target["outcome"] = "disabled"
+                    continue
                 if has_service("life360", "update_location"):
                     action = {
                         "kind": "entity",
@@ -223,6 +239,10 @@ def assigned_plan(hass, runtime, registry):
                     ),
                     None,
                 )
+                controls = getattr(runtime, "provider_controls", None)
+                if provider and (controls is None or controls.paused(provider.id)):
+                    target["outcome"] = "disabled"
+                    continue
                 client = (
                     getattr(runtime, "managed_trackers", {}).get(provider.id)
                     if provider
@@ -483,44 +503,55 @@ async def async_refresh_family(hass, runtime, user):
                 status = "source_changed"
             else:
                 try:
-                    if action["kind"] == "circle":
-                        status = (
-                            "requested"
-                            if await async_send(
-                                hass, live["circle"][1], live["circle"][2]
+                    provider_id = ("life360" if action["kind"] in ("circle", "entity")
+                                   else action.get("provider_id"))
+                    controls = getattr(runtime, "provider_controls", None)
+                    if provider_id and controls is None:
+                        raise ProviderPaused("provider_paused")
+                    async with (controls.operation(provider_id) if provider_id else nullcontext()):
+                        if action["kind"] == "circle":
+                            status = (
+                                "requested"
+                                if await async_send(
+                                    hass, live["circle"][1], live["circle"][2]
+                                )
+                                else "send_failed"
                             )
-                            else "send_failed"
-                        )
-                    elif action["kind"] == "phone":
-                        await hass.services.async_call(
-                            "notify",
-                            "send_message",
-                            {
-                                "entity_id": action["notify"],
-                                "message": "request_location_update",
-                            },
-                            blocking=True,
-                        )
-                        status = "requested"
-                    elif action["kind"] == "entity":
-                        await hass.services.async_call(
-                            "life360",
-                            "update_location",
-                            {"entity_id": action["sources"]},
-                            blocking=True,
-                        )
-                        status = "requested"
-                    else:
-                        previous = getattr(runtime, "selection_refresh_times", {}).get(
-                            action["provider_id"]
-                        )
-                        if previous and dt_util.utcnow() - previous < MANUAL_INTERVAL:
-                            status = "cooldown"
+                        elif action["kind"] == "phone":
+                            await hass.services.async_call(
+                                "notify",
+                                "send_message",
+                                {
+                                    "entity_id": action["notify"],
+                                    "message": "request_location_update",
+                                },
+                                blocking=True,
+                            )
+                            status = "requested"
+                        elif action["kind"] == "entity":
+                            await hass.services.async_call(
+                                "life360",
+                                "update_location",
+                                {"entity_id": action["sources"]},
+                                blocking=True,
+                            )
+                            status = "requested"
                         else:
-                            runtime.selection_refresh_times[action["provider_id"]] = (
-                                dt_util.utcnow()
+                            previous = getattr(runtime, "selection_refresh_times", {}).get(
+                                action["provider_id"]
                             )
-                            status = await action["client"].async_refresh_on_selection()
+                            if previous and dt_util.utcnow() - previous < MANUAL_INTERVAL:
+                                status = "cooldown"
+                            else:
+                                runtime.selection_refresh_times[action["provider_id"]] = (
+                                    dt_util.utcnow()
+                                )
+                                status = await action["client"].async_refresh_on_selection()
+                except ProviderAccessDenied:
+                    await controls.async_pause_denied("life360")
+                    status = "disabled"
+                except ProviderPaused:
+                    status = "disabled"
                 except Exception:
                     status = "send_failed"
         if status in {"requested", "checked"}:

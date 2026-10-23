@@ -11,6 +11,10 @@ import zipfile
 ROOT = Path(__file__).resolve().parents[1]
 TIMESTAMP = (2020, 1, 1, 0, 0, 0)
 PYTHON_ROOTS = {"_vendor_findmy", "_findmy_runtime"}
+RETIRED_LOCAL_MACOS_FILES = {
+    "_vendor_findmy/plist.py",
+    "_vendor_findmy/__main__.py",
+}
 EXCLUDED_PARTS = {
     "__pycache__",
     "tests",
@@ -66,6 +70,8 @@ class ReleaseError(ValueError):
 def allowed_member(name):
     """Explicit package roots/assets; generated state and lab trees never qualify."""
     if type(name) is not str or not name or "\\" in name or "\x00" in name:
+        return False
+    if name in RETIRED_LOCAL_MACOS_FILES:
         return False
     path = PurePosixPath(name)
     if (

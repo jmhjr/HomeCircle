@@ -1,0 +1,257 @@
+{
+  "candidate_zip_sha256": "f181e6300f15d8977817a552db90d35caf0edc869067ebeea815c7be1df0248e",
+  "canonical_packaged_notice_inventory": {
+    "LICENSE": {
+      "binding": "exact_canonical_git_blob_and_zip_member",
+      "bytes": 1070,
+      "sha256": "d1b0ebd8a99c8c743208b2be4451f911395fd3b27e1f56e7de9dde23ff4552c3"
+    },
+    "_findmy_runtime/LICENSE.md": {
+      "binding": "exact_canonical_git_blob_and_zip_member",
+      "bytes": 20800,
+      "sha256": "d0d08d053daacc07d9357fbdae0fefb972eec9ae6a14cada17695d6f5c1f28e4"
+    },
+    "_findmy_runtime/PROVENANCE.md": {
+      "binding": "exact_canonical_git_blob_and_zip_member",
+      "bytes": 4526,
+      "sha256": "8c335cb1efe3a23afc1138b8200b293d55f42b3e5b5d54a1f830f6e9a84599c9"
+    },
+    "_findmy_runtime/emulator/LICENSE": {
+      "binding": "exact_canonical_git_blob_and_zip_member",
+      "bytes": 1062,
+      "sha256": "d13de33ca644eb1350ca7ab815075d2499621f24dad01ee9be532360934483d6"
+    },
+    "_vendor_findmy/LICENSE.md": {
+      "binding": "exact_canonical_git_blob_and_zip_member",
+      "bytes": 3784,
+      "sha256": "f18c0397abd455385e63fc78f33860b61f19b762d5e82115dd6bef8fd3c9d1d0"
+    },
+    "frontend/LEAFLET-LICENSE.txt": {
+      "binding": "generated_asset_verified_by_frozen_full_native_inventory",
+      "bytes": 1395,
+      "sha256": "53e8dc25862014e4324741ca18fbe3611e11d42ef69f59f86ea8c5389647d4cb"
+    }
+  },
+  "canonical_source": "c31c220563ae55d469bbf530fa77dd2f80583910",
+  "clearance_asserted": false,
+  "dependency_installs_or_imports": 0,
+  "dependency_inventory_version_drift": {
+    "certifi": {
+      "current_native_receipt_version": "2026.7.22",
+      "fresh_public_wheel_inspection": {
+        "bytes": 136983,
+        "dependency_imports": 0,
+        "filename": "certifi-2026.7.22-py3-none-any.whl",
+        "native_executions": 0,
+        "notice_members": [
+          {
+            "bytes": 989,
+            "path": "certifi-2026.7.22.dist-info/licenses/LICENSE",
+            "sha256": "e93716da6b9c0d5a4a1df60fe695b370f0695603d21f6f83f053e42cfc10caf7"
+          }
+        ],
+        "sha256": "62f22742b58a1a33014a2b6b706588a8d7e2a88ae7bd1a6ebe8c992928483775",
+        "url": "https://files.pythonhosted.org/packages/0b/a7/71ac2cff56fec219ed242bb11b8efb69fcc4bec75db06fb7bfe35de520e6/certifi-2026.7.22-py3-none-any.whl"
+      },
+      "license_expression": null,
+      "metadata_license": "MPL-2.0",
+      "metadata_obtained": true,
+      "not_claimed_exact_installed_wheel": true,
+      "october20_inventory_version": "2026.10.19"
+    },
+    "multidict": {
+      "current_native_receipt_version": "6.9.1",
+      "fresh_public_wheel_inspection": {
+        "bytes": 330261,
+        "dependency_imports": 0,
+        "filename": "multidict-6.9.1-cp314-cp314-musllinux_1_2_x86_64.whl",
+        "native_executions": 0,
+        "notice_members": [
+          {
+            "bytes": 11313,
+            "path": "multidict-6.9.1.dist-info/licenses/LICENSE",
+            "sha256": "2e4be5fc6c4c72a466fcb665d726e049a6891981fe536c4f04b6366749461d23"
+          }
+        ],
+        "sha256": "6b7e54fd883671d1a8810704851c044b7173287c552b9f5c3d9e0eb9f00ae194",
+        "url": "https://files.pythonhosted.org/packages/f4/8c/abe55548f06f12878588f08eb803c5a391283f01243f784cb00adac79231/multidict-6.9.1-cp314-cp314-musllinux_1_2_x86_64.whl"
+      },
+      "license_expression": null,
+      "metadata_license": "Apache License 2.0",
+      "metadata_obtained": true,
+      "not_claimed_exact_installed_wheel": true,
+      "october20_inventory_version": "7.1.0"
+    }
+  },
+  "fresh_notice_comparisons": {
+    "Construct": {
+      "complete_upstream_notice_retained": true,
+      "fetch_succeeded": true,
+      "url": "https://raw.githubusercontent.com/eliben/pyelftools/v0.33/elftools/construct/LICENSE"
+    },
+    "FindMy": {
+      "complete_upstream_notice_retained": true,
+      "fetch_succeeded": true,
+      "url": "https://raw.githubusercontent.com/parawanderer/FindMy.py/7969003ca785658369b650f75d9e7ca519566bf6/LICENSE.md"
+    },
+    "GrandSlam": {
+      "complete_upstream_notice_retained": true,
+      "fetch_succeeded": true,
+      "url": "https://raw.githubusercontent.com/nythepegasus/grandslam/e2321633f493f6c1d9146e8d85ad6d57ba490708/LICENSE"
+    },
+    "OpenTagViewer": {
+      "complete_upstream_notice_retained": true,
+      "fetch_succeeded": true,
+      "url": "https://raw.githubusercontent.com/parawanderer/OpenTagViewer/08a59cab551721afb9dc9f829ad31dae8d5bd400/LICENSE.TXT"
+    },
+    "Unicorn_core": {
+      "complete_upstream_notice_retained": true,
+      "fetch_succeeded": true,
+      "url": "https://raw.githubusercontent.com/unicorn-engine/unicorn/2.1.4/COPYING"
+    }
+  },
+  "latest_native_dependency_receipt": {
+    "closure_is_not_complete_HA_OS_or_nested_component_inventory": true,
+    "core": "2026.10.2",
+    "cryptography_version_in_this_receipt": null,
+    "installed_dependency_closure": {
+      "aiohappyeyeballs": "2.7.1",
+      "aiohttp": "3.14.5",
+      "aiosignal": "1.4.0",
+      "anisette": "1.2.4",
+      "appdirs": "1.4.4",
+      "attrs": "26.1.0",
+      "beautifulsoup4": "4.13.3",
+      "certifi": "2026.7.22",
+      "frozenlist": "1.8.0",
+      "fs": "2.4.16",
+      "idna": "3.20",
+      "life360": "7.2.0",
+      "multidict": "6.9.1",
+      "propcache": "0.5.4",
+      "protobuf": "7.36.0",
+      "pyelftools": "0.33",
+      "setuptools": "84.0.0",
+      "six": "1.17.0",
+      "soupsieve": "3.0.3",
+      "srp": "1.0.22",
+      "typing-extensions": "4.16.0",
+      "unicorn": "2.1.4",
+      "urllib3": "2.8.0",
+      "yarl": "1.25.1"
+    },
+    "python": "3.14.6",
+    "run_id": 39865496620,
+    "sha256": "27d0aa371a530740f6dcc841d1cca06e506805ada130e06ae22ca08ac40cb431",
+    "source_commit": "3c33160c67e53956ab52298ffc10ccc9992132f0"
+  },
+  "owner_data_accesses": 0,
+  "primary_fetch_receipts": [
+    {
+      "bytes": 1079,
+      "observed_at": "2026-10-23T00:39:31.242312+00:00",
+      "sha256": "51396fd82204e1d844bbff2019054d8c3712e53c3ed8485c9f19dd73990eb46e",
+      "status": 200,
+      "url": "https://raw.githubusercontent.com/parawanderer/FindMy.py/7969003ca785658369b650f75d9e7ca519566bf6/LICENSE.md"
+    },
+    {
+      "bytes": 1065,
+      "observed_at": "2026-10-23T00:39:31.556465+00:00",
+      "sha256": "e5d3404f06c194c08bfd18bfe4d42ece466f28098177b38c14aeb2bfe6b39597",
+      "status": 200,
+      "url": "https://raw.githubusercontent.com/parawanderer/OpenTagViewer/08a59cab551721afb9dc9f829ad31dae8d5bd400/LICENSE.TXT"
+    },
+    {
+      "bytes": 1069,
+      "observed_at": "2026-10-23T00:39:31.754694+00:00",
+      "sha256": "002c2696d92b5c8cf956c11072baa58eaf9f6ade995c031ea635c6a1ee342ad1",
+      "status": 200,
+      "url": "https://raw.githubusercontent.com/nythepegasus/grandslam/e2321633f493f6c1d9146e8d85ad6d57ba490708/LICENSE"
+    },
+    {
+      "bytes": 17992,
+      "observed_at": "2026-10-23T00:39:32.079768+00:00",
+      "sha256": "6f04ae8364d0079a192b14635f4b1da294ce18724c034c39a6a41d1b09df6100",
+      "status": 200,
+      "url": "https://raw.githubusercontent.com/unicorn-engine/unicorn/2.1.4/COPYING"
+    },
+    {
+      "bytes": 1082,
+      "observed_at": "2026-10-23T00:39:32.220209+00:00",
+      "sha256": "f8d0c347a0dcc6ebe1671640dfae8d2411b6ded892e06a6764f8208b218b2af4",
+      "status": 200,
+      "url": "https://raw.githubusercontent.com/eliben/pyelftools/v0.33/elftools/construct/LICENSE"
+    },
+    {
+      "bytes": 283999,
+      "observed_at": "2026-10-23T00:39:32.406697+00:00",
+      "sha256": "3c8fa8997a1dcbf890654bfa504ac994189cffe338b84e4a1945400a2aad66ff",
+      "status": 200,
+      "url": "https://api.github.com/repos/unicorn-engine/unicorn/git/trees/2.1.4?recursive=1"
+    },
+    {
+      "bytes": 23882,
+      "observed_at": "2026-10-23T00:39:32.979147+00:00",
+      "sha256": "02753d1bf6ccbc6f3386347bb118a21e061f88a7ff8b8fe3f97e4a9d873a0ac1",
+      "status": 200,
+      "url": "https://pypi.org/pypi/unicorn/2.1.4/json"
+    },
+    {
+      "bytes": 6498,
+      "observed_at": "2026-10-23T00:39:33.155722+00:00",
+      "sha256": "876c0a26c34e91f9d752d78ea754b9ef988ae1cb30bd2ef7671d537f334d1d30",
+      "status": 200,
+      "url": "https://pypi.org/pypi/certifi/2026.7.22/json"
+    },
+    {
+      "bytes": 136983,
+      "observed_at": "2026-10-23T00:39:33.253987+00:00",
+      "sha256": "62f22742b58a1a33014a2b6b706588a8d7e2a88ae7bd1a6ebe8c992928483775",
+      "status": 200,
+      "url": "https://files.pythonhosted.org/packages/0b/a7/71ac2cff56fec219ed242bb11b8efb69fcc4bec75db06fb7bfe35de520e6/certifi-2026.7.22-py3-none-any.whl"
+    },
+    {
+      "bytes": 156507,
+      "observed_at": "2026-10-23T00:39:33.498218+00:00",
+      "sha256": "35dfa27a368babee3240617789a038e8071315872c1dc0d5972988f7c8d947d1",
+      "status": 200,
+      "url": "https://pypi.org/pypi/multidict/6.9.1/json"
+    },
+    {
+      "bytes": 330261,
+      "observed_at": "2026-10-23T00:39:33.578092+00:00",
+      "sha256": "6b7e54fd883671d1a8810704851c044b7173287c552b9f5c3d9e0eb9f00ae194",
+      "status": 200,
+      "url": "https://files.pythonhosted.org/packages/f4/8c/abe55548f06f12878588f08eb803c5a391283f01243f784cb00adac79231/multidict-6.9.1-cp314-cp314-musllinux_1_2_x86_64.whl"
+    }
+  ],
+  "product_changes": 0,
+  "schema": 1,
+  "scope": "engineering_notice_source_distribution_preparation_not_permission_or_legal_clearance",
+  "unicorn_public_artifact_candidates": {
+    "license_expression": null,
+    "metadata_license": "BSD License",
+    "reviewed_artifact_candidates": [
+      {
+        "bytes": 16436886,
+        "filename": "unicorn-2.1.4-cp37-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+        "sha256": "9d6e6dea140560de4ebd8446661f7ef84a357d428c14a3ef09dacd306ec8c239",
+        "type": "bdist_wheel",
+        "url": "https://files.pythonhosted.org/packages/e7/df/ded5e3684c2d7600b30cc8a7530277b8cb36644a1a9d34cade7ebb45604c/unicorn-2.1.4-cp37-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
+      },
+      {
+        "bytes": 2900334,
+        "filename": "unicorn-2.1.4.tar.gz",
+        "sha256": "00567a70e323f749b419cd86bee4f9115beab7ebba32194581c090cbb7c59cff",
+        "type": "sdist",
+        "url": "https://files.pythonhosted.org/packages/b2/1b/b4248aa8422e86de690cf8e85cf8feae4c33405a097d1ebe71570bdaa6f5/unicorn-2.1.4.tar.gz"
+      }
+    ]
+  },
+  "unicorn_python_binding_notice_search": {
+    "resolved_tree_sha": "8028ec436f2d9376525352dd38ed9ed6b9f6be10",
+    "standalone_python_binding_notice_paths": [],
+    "truncated": false
+  },
+  "upstream_contacts_or_permission_requests": 0
+}

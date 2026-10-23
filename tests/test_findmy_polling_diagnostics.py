@@ -4,7 +4,7 @@ import asyncio
 from copy import deepcopy
 from datetime import datetime, timedelta, UTC
 from types import SimpleNamespace
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -246,3 +246,24 @@ async def test_optional_diagnostics_exports_only_valid_aggregate_without_trigger
 async def test_invalid_aggregate_cannot_export_raw_or_ambiguous_counts(hass, change):
     value = make_provider(hass, {}).polling_snapshot()
     assert validated_polling_snapshot({**value, **change}) is None
+
+
+async def test_paused_diagnostics_expose_only_fixed_controls_and_aggregate_counts(hass):
+    from custom_components.homecircle.provider_controls import ProviderControls
+
+    controls = ProviderControls(hass, "example-entry")
+    await controls.async_load()
+    with patch.object(hass.config_entries, "async_reload", new=AsyncMock(return_value=True)):
+        await controls.async_pause_denied("findmy", "private-account-canary")
+        await hass.async_block_till_done()
+    entry = SimpleNamespace(
+        data={"findmy_accounts": {"private-account-canary": {"items": {}}}},
+        options={},
+        runtime_data=SimpleNamespace(managed_trackers={}, provider_controls=controls),
+    )
+    result = await async_get_config_entry_diagnostics(hass, entry)
+    assert result["connection_controls"] == {
+        "findmy": {"paused": False, "paused_accounts": 1, "storage_available": True},
+    }
+    assert "private" not in repr(result)
+    assert "canary" not in repr(result)

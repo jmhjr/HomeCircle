@@ -1,0 +1,39 @@
+{
+  "changed_files": [
+    {
+      "current_sha256": "441d3cdfa91271f6131261f08f6722a88c0405d9092898b467092d53b8d86dc7",
+      "path": "custom_components/homecircle/_findmy_runtime/onboarding.py",
+      "prior_sha256": "0bcb64a3bef9f775da40a38725d8903fa20e585a185c2f729ca48bd8a58a512a"
+    },
+    {
+      "current_sha256": "a3106e721c1f6d8ed1c5a5cdcd509a57da7f78fdf0909b4d5b5fea1957d57a36",
+      "path": "custom_components/homecircle/_vendor_findmy/cloudkit/pcs.py",
+      "prior_sha256": "13a991006b2a23efa55a8f2635922836c6994e255a5260a81a4344e3fb646aca"
+    },
+    {
+      "current_sha256": "1ae5071fe1df0944b80c2c2f6ab688efb692b417eba87f53cc3324d48a19ddb6",
+      "path": "custom_components/homecircle/findmy_flow.py",
+      "prior_sha256": "40c2de90f14ab42b9a34d11510c1d9c418ea0575002fb9f9153436bced04ec39"
+    },
+    {
+      "current_sha256": "8e30539172c7f0d9606be8adab77bfefa52d7e5547ed4daca42f1374fb1c0957",
+      "path": "custom_components/homecircle/findmy_recovery_guard.py",
+      "prior_sha256": "c8abe90b71c216e14d63b8d7382f377128aa0cce83ce53e553039fee3005ea6a"
+    },
+    {
+      "current_sha256": "a59e5e866c40c866042e343eab58493ccb3500f33b50877a1c09729a4e1e0b1a",
+      "path": "custom_components/homecircle/findmy_setup.py",
+      "prior_sha256": "f1618311ed09cd3e48b19c47c99d8528c1919ff23038449aff8755d48449433e"
+    },
+    {
+      "current_sha256": "1959c143d36c4f06aff13d85aed2886c32161de86680fd0567427bda418e12f5",
+      "path": "custom_components/homecircle/findmy_vault.py",
+      "prior_sha256": "7c6a846cefba6a34647d84b7738a93d85738a948da32fbf752a96c4e1cf4c0f2"
+    }
+  ],
+  "current_primary_scope_count": 74,
+  "current_source": "c31c220563ae55d469bbf530fa77dd2f80583910",
+  "historical_all74_unchanged_claim_is_not_current": true,
+  "prior_assurance_source": "9bf03eb45d2cf43274074534e9dfe2de841f4011",
+  "schema": 1
+}

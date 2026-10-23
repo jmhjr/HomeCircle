@@ -30,24 +30,39 @@ function translate(hass, key, fallback, placeholders) {
   return hass.localize?.(key, placeholders) || fallback;
 }
 
+const DESCRIPTION_LINKS = new Set([
+  "/config/person",
+  "https://www.apple.com/legal/internet-services/icloud/en/terms.html",
+  "https://www.apple.com/legal/sla/docs/iTunes.pdf",
+  "https://legal.corp.life360.com/hc/en-us/articles/42963368361239-Life360-Terms-of-Service-2026-8",
+]);
+
 function appendDescription(node, description) {
-  description = description
-    .replaceAll("**", "")
-    .replace(/\\([\\`*_{}\[\]<>])/g, "$1");
-  const marker = "[Home Assistant People settings](/config/person)";
-  const index = description.indexOf(marker);
-  if (index < 0) {
-    node.textContent = description;
-    return;
+  const plain = (value) =>
+    value.replaceAll("**", "").replace(/\\([\\`*_{}\[\]<>])/g, "$1");
+  const pattern = /\[([^\]\n]+)\]\(([^)\s]+)\)/g;
+  let offset = 0;
+  for (const match of description.matchAll(pattern)) {
+    if (
+      description[match.index - 1] === "\\" ||
+      !DESCRIPTION_LINKS.has(match[2])
+    )
+      continue;
+    node.append(
+      document.createTextNode(plain(description.slice(offset, match.index))),
+    );
+    const link = document.createElement("a");
+    link.href = match[2];
+    link.textContent = plain(match[1]);
+    if (match[2].startsWith("https://")) {
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.referrerPolicy = "no-referrer";
+    }
+    node.append(link);
+    offset = match.index + match[0].length;
   }
-  node.append(document.createTextNode(description.slice(0, index)));
-  const link = document.createElement("a");
-  link.href = "/config/person";
-  link.textContent = "Home Assistant People settings";
-  node.append(
-    link,
-    document.createTextNode(description.slice(index + marker.length)),
-  );
+  node.append(document.createTextNode(plain(description.slice(offset))));
 }
 
 export async function openSettingsDialog(

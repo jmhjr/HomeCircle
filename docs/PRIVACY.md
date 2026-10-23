@@ -14,7 +14,7 @@ Do not use whole Home Assistant backups, `.storage`, databases, or credential-on
 
 ## Runtime requirements
 
-Use HA authentication and authorization. Do not expose unauthenticated household data. Existing HA tracker integrations keep their own provider credentials. Each enabled built in tracker connection owns its credentials in Home Assistant's config entry storage; the current Life360 path stores a password or access token and a hashed account identity there. Credentials and the identity fingerprint are not sent to the card, diagnostic snapshot, or repository. HA config storage is not encrypted by HomeCircle. No analytics by default, no background exports, no separate precise-location history store. Directly created tracker entities may be retained by Home Assistant Recorder under the user's Recorder settings. Redact diagnostics by allowlisting safe fields; never log raw entity attributes, coordinates, address strings, tokens or requests containing them.
+Use HA authentication and authorization. Do not expose unauthenticated household data. Existing HA tracker integrations keep their own provider credentials. Each enabled built in tracker connection owns its credentials in Home Assistant's config entry storage; the current Life360 path stores a password or access token and a hashed account identity there. Credentials and the identity fingerprint are not sent to the card, diagnostic snapshot, or repository. HA config storage is not encrypted by HomeCircle. No HomeCircle telemetry or automatic support uploads, no background exports, no separate precise-location history store. HomeCircle provides no hosted account relay or diagnostic-upload service; enabled providers and explicitly enabled external features still make the requests disclosed below. Directly created tracker entities may be retained by Home Assistant Recorder under the user's Recorder settings. Redact diagnostics by allowlisting safe fields; never log raw entity attributes, coordinates, address strings, tokens or requests containing them.
 
 Home Assistant's HomeCircle diagnostics export includes only provider status codes, aggregate tracker counts, and API operation times. It excludes the saved account configuration, member IDs, locations, raw responses, and exception text. Review any other Home Assistant diagnostics separately before sharing them.
 
@@ -65,6 +65,31 @@ The local store retains at most 256 street/city results for seven days, keyed by
 Tracker-only photo selection and crop stay in the browser until Save. Only the resulting 512-pixel JPG is uploaded to HA's authenticated native image service. HomeCircle stores an image ID; no photo goes to Photon or tracker providers. Native HA image URLs are readable without authentication by anyone holding the opaque link, so do not share those links publicly. Browser JPEG re-encoding discards original photo metadata. Clearing a reference, cancelling after upload, or removing HomeCircle does not delete HA's uploaded image. Manage retained assets and HA backups accordingly.
 
 Life360 saved-place import is a separate administrator-initiated read through an existing saved connection. Authorization stays on the server. Circle names and saved-place coordinates/names/radii are retained in flow memory for review, then only explicitly confirmed places become editable HA zones. The importer neither synchronizes nor deletes existing zones; created zones remain after HomeCircle removal or a partial creation failure. No saved-place geocoding is performed.
+
+## Optional provider scope and pending controls
+
+Apple Find My and Life360 connections are optional and unofficial. Use accounts
+and data you are lawfully entitled to access; local consent is not represented
+as a provider permission grant. HomeCircle claims no Apple/Life360 affiliation,
+endorsement, approval or logo right. Reports can be stale or unavailable and are
+not an emergency or safety guarantee. The source-only package and remaining
+terms/distribution decisions are recorded in the
+[no-contact decision record](RELEASE-1.0-NO-OUTREACH-DECISION.md).
+
+The current source candidate implements administrator **Manage direct
+connections** in Options, with **Saved connection** and **Action → Pause/Resume**.
+Apple denial stops the denied account while healthy siblings can continue;
+Life360 denial stops that provider. Saved accounts, identities, selections and
+local history remain. Normally persisted pause state survives restart; a storage
+failure blocks current-process requests and shows a fixed error instead of
+success, with no persistence promise after process loss if all disk writes fail.
+Resume deliberately permits the selected provider again, including denied
+accounts. It does not acknowledge recovery or reset its safeguard. The controls
+cover HomeCircle polling and its manual/auxiliary requests, not another
+integration's polling, map/city choices or Recorder retention. No hosted remote
+kill switch is provided. Affected native validation and final qualification
+remain pending in the [active tracker](RELEASE-1.0-FIRST-RELEASE-TRACKER.md);
+source inspection does not establish a published-beta or native pass.
 
 ## Apple Find My connection
 

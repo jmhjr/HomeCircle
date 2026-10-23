@@ -5,6 +5,7 @@ provider responses. Home Assistant's diagnostics download may be shared.
 """
 
 from .tracker_providers import ProviderHealth, connected_providers
+from .provider_controls import PROVIDERS
 
 
 async def async_get_config_entry_diagnostics(hass, entry) -> dict:
@@ -23,6 +24,16 @@ async def async_get_config_entry_diagnostics(hass, entry) -> dict:
             for provider in connected_providers(config)
         },
     }
+    controls = getattr(runtime, "provider_controls", None)
+    if controls is not None:
+        result["connection_controls"] = {
+            provider.id: controls.summary(provider.id)
+            for provider in connected_providers(config)
+            if provider.id in PROVIDERS
+        }
+        for provider_id, status in result["connection_controls"].items():
+            if status["paused"]:
+                result["providers"][provider_id] = ProviderHealth(state="paused").as_dict()
     findmy = clients.get("findmy")
     getter = getattr(findmy, "polling_snapshot", None)
     if callable(getter):

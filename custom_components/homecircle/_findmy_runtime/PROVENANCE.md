@@ -78,3 +78,22 @@ upstream packaging corrections and final installed-artifact notice locations
 remain open. This addition supplies no invented BSD text or source offer and
 does not establish Apple software/service authorization or stable-release
 clearance. The published beta 20 archive remains unchanged.
+
+## Current source-only distribution direction (October 23, 2026)
+
+The maintainer requested a no-contact implementation. HomeCircle relies on the
+actual published OSS grants for covered source and retains complete existing
+notices. The HACS ZIP contains no dependency wheel, native library/executable,
+Apple installer/library payload or provisioned identity; HA resolves declared
+dependencies separately and optional setup can acquire the pinned Apple payload
+locally. This does not make Apple's binary open source or settle its extraction,
+emulated-use or service terms.
+
+The exact Apple accompanying agreement/service basis and Unicorn core/binding
+terms remain recorded questions. No BSD text, source offer, Apple permission or
+legal clearance is invented. Separate dependency download and child-process
+execution alone do not answer combined-work/source obligations. The
+[decision record](../../../docs/RELEASE-1.0-NO-OUTREACH-DECISION.md) separates
+these facts and remaining maintainer scope decisions; it requires no permission
+letters or author/provider contact. Existing notices and dated evidence remain
+unchanged.
