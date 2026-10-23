@@ -1,0 +1,63 @@
+{
+  "files": {
+    ".github/workflows/native-rc-current-r3.yml": {
+      "bytes": 5317,
+      "sha256": "36b044cf93a80674ecdf9d3812c14be7dd2bb92f96870dbfe8836504eb8fa99b"
+    },
+    "CONFIG.sha256": {
+      "bytes": 65,
+      "sha256": "6ba9ac82a81510cc277be117d77b666df75146dfcd39242ee2dd5fbdea664aed"
+    },
+    "PREPARED.json": {
+      "bytes": 3963,
+      "sha256": "27ad6fd049195736ca9213cb9921c43048b57965d896543af4eba90b81ee499d"
+    },
+    "README.md": {
+      "bytes": 187,
+      "sha256": "f6111c0272191a75676e21f957be6b1f06a87ce1021ffecb96b02293f37dce95"
+    },
+    "driver.py": {
+      "bytes": 60555,
+      "sha256": "445ec6d2edb008c5c7aa050472f53f1a527fcc47b3c7c35fc763b14660489709"
+    },
+    "payload/baseline-vault.py": {
+      "bytes": 6065,
+      "sha256": "7c6a846cefba6a34647d84b7738a93d85738a948da32fbf752a96c4e1cf4c0f2"
+    },
+    "payload/config.json": {
+      "bytes": 8813,
+      "sha256": "abbca6a0e77d57225cd1cdbaeca361ea1982c0042d0e15bb6dc730494b1e8a03"
+    },
+    "payload/homecircle.zip": {
+      "bytes": 628136,
+      "sha256": "4f94a18e2f7862e9bd7f4c85250e5f10e4b8e1292ea9d7b263b441d2e1b77dd9"
+    },
+    "payload/inventory.json": {
+      "bytes": 16674,
+      "sha256": "e4bc34e3921e75157402cf643f87ed658d95c76505a448abb393fd90a304db12"
+    },
+    "payload/source-inventory.json": {
+      "bytes": 61321,
+      "sha256": "866c4d39b18182dc1be6749b943040e81e9604731327a2e58a5d250648dc4915"
+    },
+    "payload/source.tgz": {
+      "bytes": 1437674,
+      "sha256": "5e28c35ef4e103ad4531503376c9485466521fff1879e229bb6c3fae6495b865"
+    },
+    "requirements_support.py": {
+      "bytes": 9191,
+      "sha256": "91bb0d92bfeef8021184275369d8923e8b951d2cb7b85a31bd34414101e3a513"
+    },
+    "run_host.sh": {
+      "bytes": 22828,
+      "sha256": "6b39953237a88ec750732c5913b6e7f523717cca3151723b2a2f036762eb8fba"
+    },
+    "test_driver.py": {
+      "bytes": 41352,
+      "sha256": "6bc737a5228c58f2add5db4f5a8fe209affe566dfbc167fbf540652855eba3ed"
+    }
+  },
+  "fixture_name": "native-rc-current-r3",
+  "schema": 1,
+  "source_commit": "b906d3ee51711d3455a497cc265fd3bc18f3adec"
+}

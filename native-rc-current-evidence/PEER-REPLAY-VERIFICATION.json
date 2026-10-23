@@ -1,0 +1,106 @@
+{
+  "Git_mutations": 0,
+  "acceptance_sha256": "7052164a931f666b2a1ac1c6e3950e3a31adba3529dd940a6c47798001fb26ef",
+  "actual_committed_inputs_verified": {
+    ".github/workflows/native-rc-current-r3.yml": {
+      "bytes": 5317,
+      "sha256": "36b044cf93a80674ecdf9d3812c14be7dd2bb92f96870dbfe8836504eb8fa99b"
+    },
+    "native-rc-current-r3/CONFIG.sha256": {
+      "bytes": 65,
+      "sha256": "6ba9ac82a81510cc277be117d77b666df75146dfcd39242ee2dd5fbdea664aed"
+    },
+    "native-rc-current-r3/PREPARED.json": {
+      "bytes": 3963,
+      "sha256": "27ad6fd049195736ca9213cb9921c43048b57965d896543af4eba90b81ee499d"
+    },
+    "native-rc-current-r3/README.md": {
+      "bytes": 187,
+      "sha256": "f6111c0272191a75676e21f957be6b1f06a87ce1021ffecb96b02293f37dce95"
+    },
+    "native-rc-current-r3/driver.py": {
+      "bytes": 60555,
+      "sha256": "445ec6d2edb008c5c7aa050472f53f1a527fcc47b3c7c35fc763b14660489709"
+    },
+    "native-rc-current-r3/payload/baseline-vault.py": {
+      "bytes": 6065,
+      "sha256": "7c6a846cefba6a34647d84b7738a93d85738a948da32fbf752a96c4e1cf4c0f2"
+    },
+    "native-rc-current-r3/payload/config.json": {
+      "bytes": 8813,
+      "sha256": "abbca6a0e77d57225cd1cdbaeca361ea1982c0042d0e15bb6dc730494b1e8a03"
+    },
+    "native-rc-current-r3/payload/homecircle.zip": {
+      "bytes": 628136,
+      "sha256": "4f94a18e2f7862e9bd7f4c85250e5f10e4b8e1292ea9d7b263b441d2e1b77dd9"
+    },
+    "native-rc-current-r3/payload/inventory.json": {
+      "bytes": 16674,
+      "sha256": "e4bc34e3921e75157402cf643f87ed658d95c76505a448abb393fd90a304db12"
+    },
+    "native-rc-current-r3/payload/source-inventory.json": {
+      "bytes": 61321,
+      "sha256": "866c4d39b18182dc1be6749b943040e81e9604731327a2e58a5d250648dc4915"
+    },
+    "native-rc-current-r3/payload/source.tgz": {
+      "bytes": 1437674,
+      "sha256": "5e28c35ef4e103ad4531503376c9485466521fff1879e229bb6c3fae6495b865"
+    },
+    "native-rc-current-r3/requirements_support.py": {
+      "bytes": 9191,
+      "sha256": "91bb0d92bfeef8021184275369d8923e8b951d2cb7b85a31bd34414101e3a513"
+    },
+    "native-rc-current-r3/run_host.sh": {
+      "bytes": 22828,
+      "sha256": "6b39953237a88ec750732c5913b6e7f523717cca3151723b2a2f036762eb8fba"
+    },
+    "native-rc-current-r3/test_driver.py": {
+      "bytes": 41352,
+      "sha256": "6bc737a5228c58f2add5db4f5a8fe209affe566dfbc167fbf540652855eba3ed"
+    }
+  },
+  "artifact_id": 12525179285,
+  "artifact_zip_sha256": "4e43555127d5a0401efbadf0193a4f4de0c8baafa7f9dc5b824ddb41848e9078",
+  "backend_offline": true,
+  "backend_only_named_optional_skip": true,
+  "backend_passed": 1779,
+  "candidate_artifact_id": 12525742618,
+  "candidate_artifact_zip_sha256": "5e084064fcde866f63471e9bca004e35bd1338a715f761552419035bde56065c",
+  "cause_verified_old_vault_red_cases": 14,
+  "cleanup_verified": true,
+  "complete_collection_matches_junit": true,
+  "consumer_sha256": "683fb927cf38ec96629deede221fbd812e9e4f539fcb28ce343e8c632bc3e471",
+  "declared_base_functions": 912,
+  "exact_six_raw_artifact_receipts_match_extracted_bytes": true,
+  "exact_two_raw_candidate_artifact_members_match_extracted_bytes": true,
+  "frontend_passed": 126,
+  "hacs_delivery_tested": false,
+  "input_map_sha256": "06d3421d2862d1e4251a946689f4938bb00babee32ee6c78c0cd3eb36ae1efe3",
+  "later_root_transport_readback_attestation_sha256": "30a1e994d1d6bb3b8825397d640ee502703a2a636be2107a3cb11179ef5027dd",
+  "later_root_transport_readback_hashes_and_scope_verified": true,
+  "native_execution_by_peer": false,
+  "network_requests": 0,
+  "ordinary_restore_repeated": false,
+  "outcome": "accepted",
+  "package_sha256": "4f94a18e2f7862e9bd7f4c85250e5f10e4b8e1292ea9d7b263b441d2e1b77dd9",
+  "provider_account_cases_repeated": false,
+  "provider_imports": 0,
+  "qa_head": "6dfca95d6c1032cadd0bd18d6afbcad7f709f255",
+  "required_functions_passed": 54,
+  "root_acceptance_byte_identical": true,
+  "run_anchors_sha256": "8db9c2b3d21e1e73c524c9b2f79d60bd420e4253241c07ed587a953adc176ef5",
+  "run_attempt": 1,
+  "run_id": 40010260549,
+  "saved_GitHub_artifact_digests_match": true,
+  "saved_run_and_single_job_success": true,
+  "schema": 1,
+  "scope": "current_Core_R3_full_independent_consumer_and_saved_transport_replay",
+  "sealed_preparation_files_reverified": 41,
+  "source_commit": "b906d3ee51711d3455a497cc265fd3bc18f3adec",
+  "source_edits": 0,
+  "source_files": 402,
+  "stable_release_approval": false,
+  "transport_basis": "saved GitHub run/artifact metadata, verified local ZIP digests and exact committed public input bytes; later root readback attestation and saved successful run/job checked; no new API requests",
+  "upgrade_repeated": false,
+  "workflow_sha256": "36b044cf93a80674ecdf9d3812c14be7dd2bb92f96870dbfe8836504eb8fa99b"
+}

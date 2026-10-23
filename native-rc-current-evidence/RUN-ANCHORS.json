@@ -1,0 +1,19 @@
+{
+  "artifact_name": "rc-current-r3-validation-receipts",
+  "candidate_artifact_name": "unreleased-rc-current-r3-candidate",
+  "event": "push",
+  "frozen": true,
+  "input_count": 14,
+  "input_map_sha256": "06d3421d2862d1e4251a946689f4938bb00babee32ee6c78c0cd3eb36ae1efe3",
+  "inventory_sha256": "e4bc34e3921e75157402cf643f87ed658d95c76505a448abb393fd90a304db12",
+  "package_sha256": "4f94a18e2f7862e9bd7f4c85250e5f10e4b8e1292ea9d7b263b441d2e1b77dd9",
+  "qa_head": "6dfca95d6c1032cadd0bd18d6afbcad7f709f255",
+  "run_attempt": 1,
+  "run_id": 40010260549,
+  "schema": 1,
+  "source_commit": "b906d3ee51711d3455a497cc265fd3bc18f3adec",
+  "source_export_sha256": "42e834f6ae5a6f109e614e52c3dec38b1d01187a9900dfe51fb326dd85f0f9a7",
+  "source_files": 402,
+  "workflow_path": ".github/workflows/native-rc-current-r3.yml",
+  "workflow_sha256": "36b044cf93a80674ecdf9d3812c14be7dd2bb92f96870dbfe8836504eb8fa99b"
+}
