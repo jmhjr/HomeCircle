@@ -1,0 +1,96 @@
+{
+  "candidate_source_commit": "c7b31c5a82431a6b16d8b7208f9423626b95bd4b",
+  "candidate_source_prefix": "",
+  "checker_sha256": "216331d16af8fb2ec636e1466303923ecfe32c76f78ea72f89d373c80c9713d2",
+  "driver_sha256": "f6c7554aaa33e3e7c220e5f2cbc645e6bc9115791af9ffd777b038abc868e15d",
+  "expected_release_files": 112,
+  "frontend_tests": 122,
+  "minimum_backend_passed": 1732,
+  "required_backend_tests": [
+    {
+      "class": "tests.test_activity",
+      "function": "test_changes_only_and_report_time_separate_from_observation"
+    },
+    {
+      "class": "tests.test_activity",
+      "function": "test_retention_cap_and_source_projection"
+    },
+    {
+      "class": "tests.test_activity",
+      "function": "test_reload_keeps_history_but_starts_new_observation_boundary"
+    },
+    {
+      "class": "tests.test_activity",
+      "function": "test_load_allowlists_fields_members_and_values"
+    },
+    {
+      "class": "tests.test_activity",
+      "function": "test_failed_load_disables_persistence_without_overwrite"
+    },
+    {
+      "class": "tests.test_activity",
+      "function": "test_withheld_position_clears_map_source_and_does_not_publish_coordinates"
+    },
+    {
+      "class": "tests.test_activity",
+      "function": "test_quiet_retention_cleanup_is_scheduled_without_new_events"
+    },
+    {
+      "class": "tests.test_activity",
+      "function": "test_close_ignores_late_request_results_and_state_callbacks"
+    },
+    {
+      "class": "tests.test_activity",
+      "function": "test_freshness_churn_preserves_arrivals_requests_and_reload"
+    },
+    {
+      "class": "tests.test_activity",
+      "function": "test_total_cap_evicts_freshness_before_significant_events"
+    },
+    {
+      "class": "tests.test_activity",
+      "function": "test_arrival_survives_reload_retention_and_detects_gap_changes"
+    },
+    {
+      "class": "tests.test_activity",
+      "function": "test_arrival_unknown_initial_place_and_changed_place_during_restart"
+    },
+    {
+      "class": "tests.test_activity",
+      "function": "test_arrival_load_allowlists_private_fields_and_rejects_invalid_state"
+    },
+    {
+      "class": "tests.test_activity",
+      "function": "test_unavailable_gap_preserves_checkpoint_but_does_not_invent_new_arrival"
+    },
+    {
+      "class": "tests.test_activity",
+      "function": "test_reload_away_baseline_allows_the_next_observed_arrival"
+    },
+    {
+      "class": "tests.test_activity",
+      "function": "test_unversioned_startup_checkpoints_are_not_treated_as_arrivals"
+    },
+    {
+      "class": "tests.test_activity_projection",
+      "function": "test_projected_item_observes_named_place_without_losing_saved_history"
+    },
+    {
+      "class": "tests.test_activity_projection",
+      "function": "test_projected_item_and_original_member_history_survive_next_restart"
+    },
+    {
+      "class": "tests.test_activity_projection",
+      "function": "test_changed_saved_selection_still_invalidates_prior_projected_history"
+    },
+    {
+      "class": "tests.test_activity_projection",
+      "function": "test_setup_projects_new_item_before_loading_and_observing_activity"
+    }
+  ],
+  "schema": 1,
+  "source_files": 402,
+  "source_inventory_sha256": "9195daa05eb845f2e65d3553d57075f4a7497538923a0b050cfca27c3f1d2394",
+  "source_sha256": "98256480be83c35b76f370ae0f8ed3bda28ab1ef5dca913d68c72e422f37073d",
+  "version": "1.0.0-rc.1"
+}

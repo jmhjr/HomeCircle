@@ -1,0 +1,89 @@
+{
+  "candidate_static_gate": {
+    "archive_sha256": "4f94a18e2f7862e9bd7f4c85250e5f10e4b8e1292ea9d7b263b441d2e1b77dd9",
+    "canonical_level9_archive_verified": true,
+    "generated_frontend_members": 2,
+    "hacs_delivery_qualified": false,
+    "hacs_metadata_validated": true,
+    "inventory_sha256": "e4bc34e3921e75157402cf643f87ed658d95c76505a448abb393fd90a304db12",
+    "literal_source_members": 110,
+    "native_runtime_qualified": false,
+    "outcome": "passed",
+    "package_files": 112,
+    "release_published": false,
+    "schema": 1,
+    "scope": "frozen_candidate_static_bytes_only",
+    "source_commit": "c7b31c5a82431a6b16d8b7208f9423626b95bd4b",
+    "source_files": 402,
+    "source_git_blob_identities_verified": true,
+    "tag": "v1.0.0-rc.1",
+    "version": "1.0.0-rc.1",
+    "version_labels_consistent": true
+  },
+  "core": "2026.9.4",
+  "files": {
+    "driver.py": {
+      "bytes": 27107,
+      "sha256": "fe682fe09cb15313de57e253da1815a7265434aa280aa11abc60ef178baedcc4"
+    },
+    "package_support.py": {
+      "bytes": 30741,
+      "sha256": "f6c7554aaa33e3e7c220e5f2cbc645e6bc9115791af9ffd777b038abc868e15d"
+    },
+    "payload/homecircle.zip": {
+      "bytes": 628136,
+      "sha256": "4f94a18e2f7862e9bd7f4c85250e5f10e4b8e1292ea9d7b263b441d2e1b77dd9"
+    },
+    "payload/inventory.json": {
+      "bytes": 16674,
+      "sha256": "e4bc34e3921e75157402cf643f87ed658d95c76505a448abb393fd90a304db12"
+    },
+    "payload/source-config.json": {
+      "bytes": 3378,
+      "sha256": "ac7cc366445c143f9942c771b601256ec85708ebcb5e8530d93ed6e95a88ef12"
+    },
+    "payload/source-inventory.json": {
+      "bytes": 61321,
+      "sha256": "9195daa05eb845f2e65d3553d57075f4a7497538923a0b050cfca27c3f1d2394"
+    },
+    "payload/source.tgz": {
+      "bytes": 1437597,
+      "sha256": "98256480be83c35b76f370ae0f8ed3bda28ab1ef5dca913d68c72e422f37073d"
+    },
+    "pins-amd64.json": {
+      "bytes": 511,
+      "sha256": "5bde5f3e3083475bc92b3d28f8d7df1f7d4d6f5e5a339302d9ab99a2f82d333f"
+    },
+    "requirements_support.py": {
+      "bytes": 9183,
+      "sha256": "153693d1a06b06e33a8601fa2580a677908ece4336aa71a03c6c1eabf81c1728"
+    },
+    "run_host.sh": {
+      "bytes": 12932,
+      "sha256": "4639412ce67741117c9ee969a3f096793c6cbbf8068ab5b053ffb418c9c1af3a"
+    }
+  },
+  "focused_cases": 20,
+  "full_backend_suite_repeated": false,
+  "hacs_delivery_claimed": false,
+  "native_architecture": "amd64",
+  "native_qualification_claimed": false,
+  "new_architecture_matrix": false,
+  "outcome": "prepared_not_executed",
+  "phases": [
+    "create",
+    "restart",
+    "remove",
+    "removed"
+  ],
+  "requires_independent_generated_diff_and_shell_review_before_native_execution": true,
+  "schema": 1,
+  "source_config_legacy_baseline_count_is_not_a_new_full_suite_claim": true,
+  "template_hashes": {
+    "driver.py": "8bfa9aab9093d36b4c2a9cf1108aee3ee043b76fc1d14ce75aef08876045cec2",
+    "package_support.py": "e97e3f71fc9f7ceb9391f86e0178c59c3b88a2fafe5f397e25a9fb69fe568e59",
+    "requirements_support.py": "153693d1a06b06e33a8601fa2580a677908ece4336aa71a03c6c1eabf81c1728",
+    "run_host.sh": "1d1f5f6fb1582a576c077384ca07ecee4b86d96587d785980bde0f357dd715a5"
+  },
+  "test_helper": "pytest-homeassistant-custom-component==0.13.367"
+}

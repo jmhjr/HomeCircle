@@ -1,0 +1,66 @@
+name: HomeCircle frozen RC minimum native qualification
+
+on:
+  push:
+    branches: [codex/native-amd64-validation]
+    paths:
+      - native-rc-minimum/**
+      - .github/workflows/native-rc-minimum.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: homecircle-rc-minimum-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  rc-minimum:
+    if: github.ref == 'refs/heads/codex/native-amd64-validation'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - name: Check out reviewed packet and canonical source history
+        timeout-minutes: 3
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Verify every exact frozen input before importing helpers
+        timeout-minutes: 2
+        run: |
+          python3 -I -B - <<'PYCODE'
+          import hashlib,pathlib,stat
+          root=pathlib.Path('native-rc-minimum')
+          expected={'PREPARED.json': 'a6463336936b094af114c1496d5e071cda824d32d9e75d9446cb0f6c47a33260', 'driver.py': 'fe682fe09cb15313de57e253da1815a7265434aa280aa11abc60ef178baedcc4', 'package_support.py': 'f6c7554aaa33e3e7c220e5f2cbc645e6bc9115791af9ffd777b038abc868e15d', 'payload/homecircle.zip': '4f94a18e2f7862e9bd7f4c85250e5f10e4b8e1292ea9d7b263b441d2e1b77dd9', 'payload/inventory.json': 'e4bc34e3921e75157402cf643f87ed658d95c76505a448abb393fd90a304db12', 'payload/source-config.json': 'ac7cc366445c143f9942c771b601256ec85708ebcb5e8530d93ed6e95a88ef12', 'payload/source-inventory.json': '9195daa05eb845f2e65d3553d57075f4a7497538923a0b050cfca27c3f1d2394', 'payload/source.tgz': '98256480be83c35b76f370ae0f8ed3bda28ab1ef5dca913d68c72e422f37073d', 'pins-amd64.json': '5bde5f3e3083475bc92b3d28f8d7df1f7d4d6f5e5a339302d9ab99a2f82d333f', 'requirements_support.py': '153693d1a06b06e33a8601fa2580a677908ece4336aa71a03c6c1eabf81c1728', 'run_host.sh': '4639412ce67741117c9ee969a3f096793c6cbbf8068ab5b053ffb418c9c1af3a'}
+          actual={p.relative_to(root).as_posix() for p in root.rglob('*') if p.is_file() or p.is_symlink()}
+          assert actual==set(expected),'frozen_input_members_refused'
+          assert not any(p.is_symlink() for p in root.rglob('*')),'frozen_input_symlink_refused'
+          for name,digest in expected.items():
+              path=root/name
+              assert stat.S_ISREG(path.lstat().st_mode) and hashlib.sha256(path.read_bytes()).hexdigest()==digest,'frozen_input_bytes_refused'
+          print('All frozen inputs verified.')
+          PYCODE
+      - name: Run minimum-Core focused tests and four separate Core processes
+        timeout-minutes: 39
+        shell: bash
+        run: |
+          bash -n native-rc-minimum/run_host.sh
+          timeout --signal=TERM --kill-after=150s 2200s bash native-rc-minimum/run_host.sh \
+            --payload "$PWD/native-rc-minimum/payload" \
+            --output "$RUNNER_TEMP/rc-minimum-results" \
+            --pins "$PWD/native-rc-minimum/pins-amd64.json" \
+            --pins-sha 5bde5f3e3083475bc92b3d28f8d7df1f7d4d6f5e5a339302d9ab99a2f82d333f \
+            --source-repository "$GITHUB_WORKSPACE"
+          jq -e '.outcome=="passed" and .container_stopped==true and .container_removed==true and .cleanup_failed==false and .private_workspace_removed==true and .acceptance_network_disconnected==true' \
+            "$RUNNER_TEMP/rc-minimum-results/public-summary/host.json"
+      - name: Retain only bounded safe qualification receipts
+        timeout-minutes: 3
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: rc-minimum-validation-receipts
+          path: ${{ runner.temp }}/rc-minimum-results/public-summary/*.json
+          if-no-files-found: warn
+          retention-days: 7
+          include-hidden-files: false
