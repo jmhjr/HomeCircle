@@ -62,7 +62,7 @@ jobs:
           import pathlib,sys,unittest
           sys.path.insert(0,str(pathlib.Path('native-final-hacs').resolve()))
           suite=unittest.defaultTestLoader.loadTestsFromName('test_contracts')
-          assert suite.countTestCases()==15
+          assert suite.countTestCases()==16
           result=unittest.TextTestRunner(verbosity=1).run(suite)
           assert result.wasSuccessful() and not result.skipped
           PY

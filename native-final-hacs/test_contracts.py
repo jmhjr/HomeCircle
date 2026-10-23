@@ -6,7 +6,7 @@ from pathlib import Path
 import tempfile
 from types import SimpleNamespace
 import unittest
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import protocol as p
 import verify_results as v
@@ -240,7 +240,7 @@ class Publication(unittest.TestCase):
             shutil.copytree(HERE / "guest_helper", source / "guest_helper")
             files = {path.relative_to(source).as_posix(): {"bytes": path.stat().st_size, "sha256": p.digest(path.read_bytes())}
                      for path in source.rglob("*") if path.is_file()}
-            manifest = {"schema": 1, "source_commit": p.SOURCE, "contracts": {"donor": 45, "current": 15, "total": 60},
+            manifest = {"schema": 1, "source_commit": p.SOURCE, "contracts": {"donor": 45, "current": 16, "total": 61},
                         "files": files, "donor_provenance": {}, "scope": {}}
             raw = p.canonical(manifest)
             (source / "PREPARATION-MANIFEST.json").write_bytes(raw)
@@ -258,6 +258,48 @@ class Publication(unittest.TestCase):
                 (source / "unlisted.py").write_text("extra")
                 with self.assertRaisesRegex(ValueError, "exact_file_set"):
                     f.finalize(p.digest(raw), anchor, p.digest(anchor.read_bytes()), root / "other")
+
+    def test_actual_removal_branch_accepts_absent_after_restart_but_never_skips_uninstall(self):
+        import asyncio
+        tree = ast.parse((HERE / "guest_helper/homecircle_hacs_release_qa/__init__.py").read_text())
+        run = next(node for node in ast.walk(tree) if isinstance(node, ast.AsyncFunctionDef) and node.name == "run")
+        branch = next(node for node in ast.walk(run) if isinstance(node, ast.If)
+                      and ast.unparse(node.test) == "name in {'fresh_remove', 'fresh_removed'}")
+        wrapper = ast.parse("async def check_branch(self, hacs, name, receipt):\n    pass\n").body[0]
+        wrapper.body = deepcopy(branch.body) + [ast.Return(value=ast.Name(id="receipt", ctx=ast.Load()))]
+        module = ast.fix_missing_locations(ast.Module(body=[wrapper], type_ignores=[]))
+
+        async def case(name, installed=None, version=None, absent=False):
+            removal = AsyncMock()
+            repository = None if absent else SimpleNamespace(data=SimpleNamespace(installed=installed, installed_version=version))
+            if repository is not None:
+                async def uninstall():
+                    repository.data.installed = False
+                    repository.data.installed_version = None
+                repository.uninstall = AsyncMock(side_effect=uninstall)
+            entries = SimpleNamespace(async_entries=lambda _domain: [SimpleNamespace(entry_id="example-entry")], async_remove=AsyncMock())
+            rehearsal = SimpleNamespace(hass=SimpleNamespace(config_entries=entries), directory=Path("example"), loaded=AsyncMock())
+            hacs = SimpleNamespace(repositories=SimpleNamespace(get_by_full_name=lambda _name: repository), data=SimpleNamespace(async_write=AsyncMock()))
+            namespace = {"check": p.check, "d": SimpleNamespace(REPOSITORY="jmhjr/HomeCircle"), "removal_status": removal, "inputs": {}}
+            exec(compile(module, "<actual-removal-branch>", "exec"), namespace)
+            result = await namespace["check_branch"](rehearsal, hacs, name, {})
+            self.assertEqual(result, {"removed": True, "removed_activity_store": True})
+            removal.assert_awaited_once_with(rehearsal.hass, rehearsal.directory, after_restart=name == "fresh_removed")
+            if name == "fresh_remove":
+                repository.uninstall.assert_awaited_once()
+                entries.async_remove.assert_awaited_once_with("example-entry")
+                hacs.data.async_write.assert_awaited_once()
+            else:
+                entries.async_remove.assert_not_called()
+                hacs.data.async_write.assert_not_called()
+        asyncio.run(case("fresh_removed", absent=True))
+        asyncio.run(case("fresh_removed", installed=False, version=None))
+        asyncio.run(case("fresh_remove", installed=True, version=p.TAG))
+        for name, installed, version, absent in (("fresh_remove", None, None, True),
+                ("fresh_removed", True, p.TAG, False), ("fresh_removed", False, "", False),
+                ("fresh_removed", 0, None, False)):
+            with self.subTest(name=name, installed=installed, version=version, absent=absent), self.assertRaises(ValueError):
+                asyncio.run(case(name, installed=installed, version=version, absent=absent))
 
 
 if __name__ == "__main__":

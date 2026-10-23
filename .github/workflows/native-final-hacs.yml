@@ -31,7 +31,7 @@ jobs:
           import hashlib,json,pathlib,stat
           root=pathlib.Path('native-final-hacs')
           raw=(root/'INPUTS.json').read_bytes()
-          assert hashlib.sha256(raw).hexdigest()=='6eac4f95ba82f4d20327fc79f73ba6bfb04b24274969bf360e9091d71c9e1535'
+          assert hashlib.sha256(raw).hexdigest()=='c3a446dbd0c7a0aaa30b32d4b260f374c9c4484d19b74b06a8868f2dc24f94f1'
           manifest=json.loads(raw)
           assert manifest['schema']==1 and manifest['source_commit']=='b906d3ee51711d3455a497cc265fd3bc18f3adec'
           assert set(manifest)=={'schema','source_commit','files'}
@@ -62,7 +62,7 @@ jobs:
           import pathlib,sys,unittest
           sys.path.insert(0,str(pathlib.Path('native-final-hacs').resolve()))
           suite=unittest.defaultTestLoader.loadTestsFromName('test_contracts')
-          assert suite.countTestCases()==15
+          assert suite.countTestCases()==16
           result=unittest.TextTestRunner(verbosity=1).run(suite)
           assert result.wasSuccessful() and not result.skipped
           PY

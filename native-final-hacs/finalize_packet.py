@@ -49,7 +49,7 @@ def finalize(manifest_sha, anchor, anchor_sha, output):
     check(sha(raw) == manifest_sha, "externally_pinned_preparation_manifest")
     manifest = json.loads(raw)
     check(set(manifest) == {"schema", "source_commit", "contracts", "files", "donor_provenance", "scope"}
-          and manifest["schema"] == 1 and manifest["contracts"] == {"donor": 45, "current": 15, "total": 60},
+          and manifest["schema"] == 1 and manifest["contracts"] == {"donor": 45, "current": 16, "total": 61},
           "sealed_preparation_schema")
     actual = set()
     for path in HERE.rglob("*"):

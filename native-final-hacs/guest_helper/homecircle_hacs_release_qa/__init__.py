@@ -181,8 +181,8 @@ class Rehearsal(d.Rehearsal):
                     repository = None
                 elif name in {"fresh_remove", "fresh_removed"}:
                     repository = hacs.repositories.get_by_full_name(d.REPOSITORY)
-                    check(repository is not None, "qa_removal_repository")
                     if name == "fresh_remove":
+                        check(repository is not None, "qa_removal_repository")
                         stage = "config_entry_remove"
                         entries = self.hass.config_entries.async_entries("homecircle")
                         check(len(entries) == 1, "qa_removal_entry_count")
@@ -192,7 +192,8 @@ class Rehearsal(d.Rehearsal):
                         await repository.uninstall()
                         await hacs.data.async_write()
                     await removal_status(self.hass, self.directory, after_restart=name == "fresh_removed")
-                    check(repository.data.installed is False and repository.data.installed_version is None, "qa_hacs_uninstalled")
+                    check(repository is None or (repository.data.installed is False
+                          and repository.data.installed_version is None), "qa_hacs_uninstalled")
                     receipt["removed"] = True
                     receipt["removed_activity_store"] = True
                 else:
