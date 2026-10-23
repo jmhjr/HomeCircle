@@ -1,0 +1,45 @@
+name: HomeCircle provider pause and denial safeguards
+on:
+  push:
+    branches: [codex/native-amd64-validation]
+    paths:
+      - native-no-outreach-hardening-r2/**
+      - .github/workflows/native-no-outreach-hardening-r2.yml
+permissions:
+  contents: read
+concurrency:
+  group: homecircle-provider-safeguards-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  affected-provider-checks:
+    if: github.ref == 'refs/heads/codex/native-amd64-validation'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - name: Check out reviewed controls and canonical source history
+        timeout-minutes: 3
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Check bounded validation and consumer contracts
+        timeout-minutes: 2
+        run: |
+          bash -n native-no-outreach-hardening-r2/run_native.sh
+          python3 -B -m unittest discover -s native-no-outreach-hardening-r2 -p 'test_*.py' -q
+      - name: Check affected provider behavior on Linux
+        timeout-minutes: 33
+        shell: bash
+        run: |
+          timeout --signal=TERM --kill-after=30s 1910s bash native-no-outreach-hardening-r2/run_native.sh --payload native-no-outreach-hardening-r2/payload --repository "$GITHUB_WORKSPACE" --output native-no-outreach-hardening-r2-results
+          python3 -B native-no-outreach-hardening-r2/verify_results.py --config native-no-outreach-hardening-r2/payload/config.json --config-sha fa281cdef12e63a6f78497134fd363a4e2f712c529b36d452fee0abf12955b2d --results native-no-outreach-hardening-r2-results/public-summary --output native-no-outreach-hardening-r2-results/ACCEPTED.json
+      - name: Retain only safe validation receipts
+        if: always()
+        timeout-minutes: 3
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: homecircle-provider-safeguards-r2-receipts
+          path: native-no-outreach-hardening-r2-results/public-summary/*.json
+          if-no-files-found: error
+          retention-days: 7
+          include-hidden-files: false
