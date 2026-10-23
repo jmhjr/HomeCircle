@@ -1,0 +1,79 @@
+{
+  "files": {
+    ".github/workflows/native-final-hacs.yml": {
+      "bytes": 7094,
+      "sha256": "7d8c5c4eab56ee51c2afaf2ff879d204237cbc4d0bd32ac1e37f0dfa45123dbd"
+    },
+    "INPUTS.json": {
+      "bytes": 2003,
+      "sha256": "c3a446dbd0c7a0aaa30b32d4b260f374c9c4484d19b74b06a8868f2dc24f94f1"
+    },
+    "controller.py": {
+      "bytes": 19487,
+      "sha256": "2e2a0f10d2385a3c38e33b99febf1c674060fa6136c696e5ee08b380ad97a6c0"
+    },
+    "donor_host.py": {
+      "bytes": 60626,
+      "sha256": "2331fd51fcda94b754b2760b6d239f1c1c0fde2f37dd28a2679341becbbe26cb"
+    },
+    "expected-provenance.json": {
+      "bytes": 1500,
+      "sha256": "45104684a4fae795a65433fa0617e11419e6665e073b9a3fa568995c2085070e"
+    },
+    "finalize_packet.py": {
+      "bytes": 6126,
+      "sha256": "cca8b464d4170da5dd27962669ec90876da96911d062e456b7ab37701d7f94d8"
+    },
+    "guest_helper/__init__.py": {
+      "bytes": 749,
+      "sha256": "c14807afd0d599d4cdfffaf80ec9891d83df266336561fe755cb276d6f36532a"
+    },
+    "guest_helper/homecircle_hacs_release_qa/__init__.py": {
+      "bytes": 17564,
+      "sha256": "fd99be5b0e2873c70b34888801dc6c57183eba02954842c78c5b338522eae6a4"
+    },
+    "guest_helper/homecircle_hacs_release_qa/donor.py": {
+      "bytes": 37843,
+      "sha256": "89153c1f5810bc63ec8052b30ce27c936ea54018bab8564d0c40375832ee3598"
+    },
+    "guest_helper/homecircle_hacs_release_qa/manifest.json": {
+      "bytes": 321,
+      "sha256": "dce2e3f7927c2fde9a6f0e15531c457abe4bf76bfd894a5fca8d3ec201267d5a"
+    },
+    "guest_helper/homecircle_hacs_release_qa/protocol.py": {
+      "bytes": 4534,
+      "sha256": "4f888162cbc2a289bc101fd784ac44b6de51e2366d9abfefdcfa97fe66c7ca74"
+    },
+    "protocol.py": {
+      "bytes": 4534,
+      "sha256": "4f888162cbc2a289bc101fd784ac44b6de51e2366d9abfefdcfa97fe66c7ca74"
+    },
+    "release-anchor.json": {
+      "bytes": 492,
+      "sha256": "8c4dbcf76cbab338de290dfbb6600f1fff83a037dbeea1d3f7181e36d5ed842f"
+    },
+    "run_host.sh": {
+      "bytes": 798,
+      "sha256": "6a41897b06faa92828057a33edfc89cefae230a2186c0e4ac8866d451cd190c1"
+    },
+    "test_contracts.py": {
+      "bytes": 19476,
+      "sha256": "9da4a83243eaca2820bcced1895c5858b8f2af2e3e7d2dda331021e16d79769c"
+    },
+    "test_donor_contracts.py": {
+      "bytes": 23118,
+      "sha256": "93506fef3b9b74e136ed9bd93ed16536e9e4338d348bd3633bfd2963c4ecb9a3"
+    },
+    "verify_results.py": {
+      "bytes": 12689,
+      "sha256": "42557e371570b09150f1fb8b6963bd97d45c5e1f40f55db64ac018ae1233283a"
+    },
+    "workflow.template.yml": {
+      "bytes": 6976,
+      "sha256": "af4d1d75e93f162b566fa4774c12847368dd21066a5fcc2e4134e0391faf8667"
+    }
+  },
+  "fixture_name": "native-final-hacs",
+  "schema": 1,
+  "source_commit": "b906d3ee51711d3455a497cc265fd3bc18f3adec"
+}

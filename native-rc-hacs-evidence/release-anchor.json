@@ -1,0 +1,15 @@
+{
+  "asset_bytes": 628136,
+  "asset_id": 670149140,
+  "candidate_sha256": "4f94a18e2f7862e9bd7f4c85250e5f10e4b8e1292ea9d7b263b441d2e1b77dd9",
+  "draft": false,
+  "inventory_asset_id": 670149173,
+  "inventory_bytes": 16674,
+  "inventory_sha256": "e4bc34e3921e75157402cf643f87ed658d95c76505a448abb393fd90a304db12",
+  "prerelease": true,
+  "release_id": 422230061,
+  "schema": 1,
+  "source_commit": "b906d3ee51711d3455a497cc265fd3bc18f3adec",
+  "tag": "v1.0.0-rc.1",
+  "version": "1.0.0-rc.1"
+}

@@ -1,0 +1,99 @@
+{
+  "contracts": {
+    "current": 16,
+    "donor": 45,
+    "total": 61
+  },
+  "donor_provenance": {
+    "controller_sha256": "2331fd51fcda94b754b2760b6d239f1c1c0fde2f37dd28a2679341becbbe26cb",
+    "executed_run": 39461573392,
+    "helper_sha256": "e2bc0adeff73ab787189587f26cecd123b7c8523f697c4ad65199f2d0c994d3a",
+    "qa_head": "479c3627b9808ed212a1f3c1fe1a8dec0098fb81"
+  },
+  "files": {
+    "PREPARATION-CHECKS.json": {
+      "bytes": 1232,
+      "sha256": "e47c77064f7aa570e5956265460968c50befef9be143c1711d99891a12753dc2"
+    },
+    "README.md": {
+      "bytes": 8257,
+      "sha256": "404157e5b076525caacfe9511cfcfd6e13d4f5c8ecffc723a4aa6996c20c305b"
+    },
+    "controller.py": {
+      "bytes": 19487,
+      "sha256": "2e2a0f10d2385a3c38e33b99febf1c674060fa6136c696e5ee08b380ad97a6c0"
+    },
+    "donor_host.py": {
+      "bytes": 60626,
+      "sha256": "2331fd51fcda94b754b2760b6d239f1c1c0fde2f37dd28a2679341becbbe26cb"
+    },
+    "finalize_packet.py": {
+      "bytes": 6126,
+      "sha256": "cca8b464d4170da5dd27962669ec90876da96911d062e456b7ab37701d7f94d8"
+    },
+    "guest_helper/__init__.py": {
+      "bytes": 749,
+      "sha256": "c14807afd0d599d4cdfffaf80ec9891d83df266336561fe755cb276d6f36532a"
+    },
+    "guest_helper/homecircle_hacs_release_qa/__init__.py": {
+      "bytes": 17564,
+      "sha256": "fd99be5b0e2873c70b34888801dc6c57183eba02954842c78c5b338522eae6a4"
+    },
+    "guest_helper/homecircle_hacs_release_qa/donor.py": {
+      "bytes": 37843,
+      "sha256": "89153c1f5810bc63ec8052b30ce27c936ea54018bab8564d0c40375832ee3598"
+    },
+    "guest_helper/homecircle_hacs_release_qa/manifest.json": {
+      "bytes": 321,
+      "sha256": "dce2e3f7927c2fde9a6f0e15531c457abe4bf76bfd894a5fca8d3ec201267d5a"
+    },
+    "guest_helper/homecircle_hacs_release_qa/protocol.py": {
+      "bytes": 4534,
+      "sha256": "4f888162cbc2a289bc101fd784ac44b6de51e2366d9abfefdcfa97fe66c7ca74"
+    },
+    "protocol.py": {
+      "bytes": 4534,
+      "sha256": "4f888162cbc2a289bc101fd784ac44b6de51e2366d9abfefdcfa97fe66c7ca74"
+    },
+    "release-anchor.example.json": {
+      "bytes": 477,
+      "sha256": "9390f4a59440f05a8b3e8a5cbab276a1de96264533497df4f2d2109ab27bdc89"
+    },
+    "run_host.sh": {
+      "bytes": 798,
+      "sha256": "6a41897b06faa92828057a33edfc89cefae230a2186c0e4ac8866d451cd190c1"
+    },
+    "test_contracts.py": {
+      "bytes": 19476,
+      "sha256": "9da4a83243eaca2820bcced1895c5858b8f2af2e3e7d2dda331021e16d79769c"
+    },
+    "test_donor_contracts.py": {
+      "bytes": 23118,
+      "sha256": "93506fef3b9b74e136ed9bd93ed16536e9e4338d348bd3633bfd2963c4ecb9a3"
+    },
+    "verify_results.py": {
+      "bytes": 12689,
+      "sha256": "42557e371570b09150f1fb8b6963bd97d45c5e1f40f55db64ac018ae1233283a"
+    },
+    "workflow.template.yml": {
+      "bytes": 6976,
+      "sha256": "af4d1d75e93f162b566fa4774c12847368dd21066a5fcc2e4134e0391faf8667"
+    }
+  },
+  "schema": 1,
+  "scope": {
+    "activity": "two_synthetic_allowlisted_markers_only",
+    "direct_candidate_installs": 0,
+    "genuine_hacs_downloads": 5,
+    "guard": "synthetic_opaque_byte_preservation_only",
+    "native_execution": false,
+    "normal_Core_actions": 23,
+    "oauth_onboarding": false,
+    "owner_accounts": 0,
+    "phases": 14,
+    "provider_accounts": 0,
+    "publication": false,
+    "supervisor_backup_restore": false
+  },
+  "source_commit": "b906d3ee51711d3455a497cc265fd3bc18f3adec"
+}

@@ -1,0 +1,32 @@
+{
+  "assets": {
+    "homecircle.zip": {
+      "anonymous_download_verified": true,
+      "bytes": 628136,
+      "id": 670149140,
+      "sha256": "4f94a18e2f7862e9bd7f4c85250e5f10e4b8e1292ea9d7b263b441d2e1b77dd9",
+      "url": "https://github.com/jmhjr/HomeCircle/releases/download/v1.0.0-rc.1/homecircle.zip"
+    },
+    "inventory.json": {
+      "anonymous_download_verified": true,
+      "bytes": 16674,
+      "id": 670149173,
+      "sha256": "e4bc34e3921e75157402cf643f87ed658d95c76505a448abb393fd90a304db12",
+      "url": "https://github.com/jmhjr/HomeCircle/releases/download/v1.0.0-rc.1/inventory.json"
+    }
+  },
+  "draft": false,
+  "hacs_rehearsal_still_required": true,
+  "html_url": "https://github.com/jmhjr/HomeCircle/releases/tag/v1.0.0-rc.1",
+  "local_checkout_index_refs_preserved": true,
+  "native_checks_preaccepted": true,
+  "owner_instance_actions": 0,
+  "permission_requests_sent": 0,
+  "prerelease": true,
+  "release_id": 422230061,
+  "schema": 1,
+  "source": "b906d3ee51711d3455a497cc265fd3bc18f3adec",
+  "stable_publication_performed": false,
+  "tag": "v1.0.0-rc.1",
+  "tag_resolves_exact_source": true
+}

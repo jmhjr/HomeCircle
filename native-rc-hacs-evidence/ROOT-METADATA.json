@@ -1,0 +1,16 @@
+{
+  "artifact_id": 12526934017,
+  "artifact_name": "final-hacs-qualification-receipts",
+  "artifact_zip_sha256": "22227bc1dc424b6c9ed119ef97afbe8d913fcdd43783edf2cad212b83215dd78",
+  "branch": "codex/native-amd64-validation",
+  "conclusion": "success",
+  "event": "push",
+  "github_digest_verified": true,
+  "head_sha": "38e9b19264e79ef452a7f3131a163e174b783227",
+  "run_attempt": 1,
+  "run_id": 40013210859,
+  "schema": 1,
+  "status": "completed",
+  "workflow_path": ".github/workflows/native-final-hacs.yml",
+  "workflow_sha256": "7d8c5c4eab56ee51c2afaf2ff879d204237cbc4d0bd32ac1e37f0dfa45123dbd"
+}

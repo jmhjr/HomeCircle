@@ -1,0 +1,18 @@
+{
+  "artifacts": {
+    "final-hacs-qualification-receipts": {
+      "id": 12526934017,
+      "safe_members": 16,
+      "zip_sha256": "22227bc1dc424b6c9ed119ef97afbe8d913fcdd43783edf2cad212b83215dd78"
+    }
+  },
+  "event": "push",
+  "github_digests_verified": true,
+  "observed_conclusion": "success",
+  "owner_instance_actions": 0,
+  "qa_head": "38e9b19264e79ef452a7f3131a163e174b783227",
+  "run_attempt": 1,
+  "run_id": 40013210859,
+  "schema": 1,
+  "source": "b906d3ee51711d3455a497cc265fd3bc18f3adec"
+}

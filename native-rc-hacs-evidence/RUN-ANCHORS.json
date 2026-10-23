@@ -1,0 +1,18 @@
+{
+  "artifact_name": "final-hacs-qualification-receipts",
+  "candidate_sha256": "4f94a18e2f7862e9bd7f4c85250e5f10e4b8e1292ea9d7b263b441d2e1b77dd9",
+  "event": "push",
+  "frozen": true,
+  "input_count": 18,
+  "input_map_sha256": "28d9ba9b435da845c20c086d19b104d4690e837ee2b18253912a56e1cd2a4668",
+  "preparation_manifest_sha256": "bb81812c1dd631d3e014b8e64b258cd3b019b88e347abfbad363efba7d1d297a",
+  "public_release_id": 422230061,
+  "qa_head": "38e9b19264e79ef452a7f3131a163e174b783227",
+  "release_anchor_sha256": "8c4dbcf76cbab338de290dfbb6600f1fff83a037dbeea1d3f7181e36d5ed842f",
+  "run_attempt": 1,
+  "run_id": 40013210859,
+  "schema": 1,
+  "source_commit": "b906d3ee51711d3455a497cc265fd3bc18f3adec",
+  "workflow_path": ".github/workflows/native-final-hacs.yml",
+  "workflow_sha256": "7d8c5c4eab56ee51c2afaf2ff879d204237cbc4d0bd32ac1e37f0dfa45123dbd"
+}
