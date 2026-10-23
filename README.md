@@ -1,6 +1,6 @@
 # HomeCircle
 
-Development toward **HomeCircle 1.0.0** is tracked in the [1.0 release plan](docs/RELEASE-1.0-PLAN.md). This source branch is preparing unpublished qualification candidate 1.0.0-rc.1; it includes corrections after beta 20 and has no published RC asset yet. The published beta 20 package and its historical validation remain unchanged.
+Development toward **HomeCircle 1.0.0** is tracked in the [1.0 release plan](docs/RELEASE-1.0-PLAN.md). The published [1.0.0-rc.1 prerelease](https://github.com/jmhjr/HomeCircle/releases/tag/v1.0.0-rc.1) has 112 package members. The [final qualification record](docs/RELEASE-1.0-FINAL-QUALIFICATION.md) identifies source b906 and the exact ZIP: current-Core full, focused minimum-Core and genuine fourteen-phase HACS acceptance passed. Stable-release approval remains separate. It includes corrections after beta20. The published beta 20 package and its historical validation remain unchanged.
 
 Family location and presence for Home Assistant, independent of the tracking provider.
 
@@ -8,7 +8,7 @@ Family location and presence for Home Assistant, independent of the tracking pro
 
 Use a test Home Assistant dashboard. Beta 20 hardens polling, native-worker cleanup, recovery safeguards and explicitly selected item identity continuity. It retains optional HA-only Apple Find My, existing HA trackers, Life360, places, pictures and source report times. Background iPhone departure/return and stable release gates remain open. See the [changelog](CHANGELOG.md).
 
-**Status: experimental beta 20 prerelease; stable release gates remain open.** HomeCircle is a working name; public naming remains a release decision.
+**Status: experimental 1.0.0-rc.1 prerelease; engineering qualification passed, stable-release approval remains pending.** HomeCircle is a working name; public naming remains a release decision.
 
 HomeCircle consumes standard HA `person` and `device_tracker` entities, with optional explicitly selected supporting sensors. Optional direct Life360 and Apple Find My connections use the built in tracker provider contract. Existing HA trackers remain selectable without a HomeCircle provider account.
 
@@ -39,7 +39,7 @@ See [beta 20 validation](docs/BETA20-VALIDATION.md) for the versioned package bo
 
 ## Experimental release
 
-Maintainer: [@jmhjr](https://github.com/jmhjr). Version `v0.1.0-beta.20` is experimental. Use the installable ZIP from [GitHub releases](https://github.com/jmhjr/HomeCircle/releases), then follow [HACS setup](docs/SETUP.md). See [beta 20 validation](docs/BETA20-VALIDATION.md) for the package, inherited evidence and limits.
+Maintainer: [@jmhjr](https://github.com/jmhjr). Version [`v1.0.0-rc.1`](https://github.com/jmhjr/HomeCircle/releases/tag/v1.0.0-rc.1) is an experimental prerelease. Its public ZIP/inventory are byte-verified and the genuine fourteen-phase HACS rehearsal passed on native amd64 HAOS. Failed R1 and the corrected R2 keep their separate records. Published beta20 remains the separate upgrade baseline. See [final qualification](docs/RELEASE-1.0-FINAL-QUALIFICATION.md) for exact results and limits, then follow [HACS setup](docs/SETUP.md).
 
 ## Repository
 
@@ -101,9 +101,7 @@ connections** with **Pause** and **Resume**, plus account/provider stops after
 access denial. Open Options, choose the saved connection and an action; saved
 accounts, identities, selections and history are kept. Resume deliberately
 allows requests for that provider again, including denied accounts, and does not
-reset Find My recovery safeguards. The affected native checks and final RC/HACS
-qualification are pending in the [active tracker](docs/RELEASE-1.0-FIRST-RELEASE-TRACKER.md);
-source implementation is not a native pass. See the
+reset Find My recovery safeguards. The affected548-case native check and final full current/minimum-Core checks passed with their exact recorded sources. Genuine HACS qualification passed; remaining owner/release decisions are recorded in the [active tracker](docs/RELEASE-1.0-FIRST-RELEASE-TRACKER.md); source implementation alone is not acceptance. See the
 [decision record](docs/RELEASE-1.0-NO-OUTREACH-DECISION.md). For help, use
 [SUPPORT.md](SUPPORT.md) or [private security reporting](SECURITY.md); no raw
 account file, backup or diagnostic upload is required.

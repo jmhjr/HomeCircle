@@ -1,8 +1,8 @@
 # HomeCircle 1.0 release plan
 
-Started October 20, 2026. The target is `v1.0.0`; the current published release
-remains experimental `v0.1.0-beta.20`. This is an execution tracker, not a stable
-release declaration. Check a task only after linking its exact evidence. Retain
+Started October20, 2026. The target is `v1.0.0`; the current published
+prerelease is `v1.0.0-rc.1`. Published beta20 remains the historical upgrade
+baseline. This is an execution tracker, not a stable-release declaration. Check a task only after linking its exact evidence. Retain
 failed attempts and record any accepted scope change instead of deleting a gate.
 
 ## First-release decisions and active checklist
@@ -29,13 +29,17 @@ and residual-uncertainty questions for a maintainer scope decision; technical
 review does not manufacture permission or legal clearance. Administrator
 Manage direct connections, Pause/Resume and stop-on-access-denial are implemented in the source candidate; affected runtime results remain tied to their exact recorded source.
 
-Complete one bounded owner acceptance round and one frozen-RC qualification.
-Fold the affected minimum-Core startup/activity/restart check into that RC pass,
-reuse existing architecture evidence, and do not reopen completed ordinary
-restore, private-copy upgrade or current-Core checks for documentation edits.
-Final RC, HACS installed delivery, remaining owner acceptance and stable
-publication remain pending. The detailed thirteen-stage history below retains
+Complete the remaining bounded owner acceptance and maintainer dispositions.
+The frozen-RC engineering qualification, including the focused minimum-Core
+check and genuine HACS delivery, is accepted. Reuse existing architecture
+evidence; do not reopen completed ordinary restore, private-copy upgrade or
+current-Core checks for documentation edits.
+Final current/minimum RC qualification and public prerelease byte verification passed. Genuine fourteen-phase HACS installed delivery passed. Remaining owner acceptance and stable publication remain separate and open. The detailed thirteen-stage history below retains
 its dated outcomes; superseded scope/assurance proposals are historical.
+
+## Final candidate qualification status
+
+The [final qualification record](RELEASE-1.0-FINAL-QUALIFICATION.md) identifies frozen source b906 and the unchanged 112-member RC ZIP4f94. Focused minimum-Core run40002540583 is accepted with its actual C7 source: 20 tests, four real Core processes, matching runtime/package and verified cleanup. Full current-Core R3 run40010260549 passed 1,779 backend/126 frontend cases, exact collection, privacy and cleanup. The tagged RC and both public assets are verified. Genuine HACS R1 remains failed after four phases and a confirmed helper-only post-uninstall expectation. Corrected R2 run40013210859 passed all14 phases/23 normal Core actions with root/peer/CI agreement and cleanup. Product/RC bytes are unchanged. Failed full and diagnostic attempts retain their actual scopes. The final b906 change is one test fixture correction; no runtime or package bytes changed. Historical records below remain dated evidence.
 
 ## Current fixed candidate evidence
 
@@ -84,9 +88,7 @@ The Ubuntu/glibc test remains a separately identified reference environment.
 On October 20, 2026 the maintainer selected **both direct Apple Find My and
 direct Life360 for 1.0**, with their validation to be completed. Provider-independent
 HA entity selection remains the core. This shipping-scope decision activates
-both providers' account, dependency, permission and applicable cryptographic
-gates; it does not assert those gates have passed. The HAOS-first target is now accepted as described above; final candidate
-qualification and the installed-upgrade baseline acceptance remain pending.
+both providers' recorded account/dependency evidence and service/assurance scope decisions; it did not assert that all acceptance was complete. The later accepted no-contact approach and limited Claude review remain as described above. Final current/minimum-Core qualification, public RC verification and genuine HACS installed-upgrade acceptance have now passed; owner/maintainer dispositions remain separate.
 
 ## Execution and evidence rules
 
@@ -109,18 +111,18 @@ Infrastructure failures receive one bounded diagnosis before any reasoned retry.
 
 | Stage | Current status / dependency | Responsible | Completion evidence |
 | --- | --- | --- | --- |
-| 1. Freeze scope and support | Both providers selected; HAOS-first target accepted October 22; qualification/baseline acceptance pending | Maintainer, agent records | Signed-off feature/provider list, supported target matrix, upgrade baselines, exclusions and `1.0.0` naming |
+| 1. Freeze scope and support | Both providers selected; HAOS-first target accepted October22; current/minimum RC and genuine HACS baseline checks passed; owner/maintainer dispositions retain their scope | Maintainer, agent records | Signed-off feature/provider list, supported target matrix, upgrade baselines, exclusions and `1.0.0` naming |
 | 2. Consolidate release source and blockers | Clean source in draft PR #36; focused fixes independently reviewed; exact-source native suite passed | Agent; maintainer review | Clean canonical release branch, reviewed product-only diff, notices included, recorded defect dispositions |
 | 3. Record provenance and provider scope decisions | No-contact source-only implementation requested October23; retained grants/notices and Mac exclusion recorded; final factual checks and residual decisions pending | Maintainer decides scope; agent supplies evidence | Exact source/package/dependency notice checks, actual terms/basis, residual uncertainty or real exclusions; no invented permission letter or legal clearance |
 | 4. Enabled backup/restore safety | Recovery-guard and scoped ordinary Person/activity partial restore passed; advertised backup variants remain open | Agent | Actual Person identities/links and product activity B/M/R preserved under normal requirements/default conditions; arrival-gap/pending-shutdown and broader variants remain unqualified |
 | 5. Cryptographic and format assurance | Maintainer accepted completed Claude AI source review with documented limits on October 22; no confirmed actionable findings | Agent records; maintainer accepted method | Current source bindings, Claude partial coverage and unresolved format limits retained; no qualified-human or producer-vector assurance claimed |
-| 6. Advertised compatibility | Four native QA-container lifecycle cells and both scoped managed ARM endpoints passed; fresh consumer/RC support gates open | Agent | All advertised cells have candidate dependency/install/start/restart evidence; unsupported cells excluded explicitly |
+| 6. Advertised compatibility | Historical lifecycle/ARM evidence retained; final current/minimum RC and native amd64 HAOS genuine HACS consumer delivery passed | Agent | All advertised cells have candidate dependency/install/start/restart evidence; unsupported cells excluded explicitly |
 | 7. Real-account acceptance | Initial connections and saved-session restart witnessed; remaining lifecycle and stages 3/5 disposition open | Owner, agent guides/records | Controlled setup, discovery, selections, session lifecycle and successful recovery receipts without deliberately wrong passcodes |
 | 8. Sustained field acceptance | Earlier observations exist; final scope incomplete; depends on stages 6/7 as applicable | Owner observes, agent analyzes | Agreed observation window and movement/outage/renewal/staleness cases with genuine source-report times |
 | 9. Dashboard, access and privacy | Exact-source privacy and scoped desktop Safari picture checks passed; remaining final acceptance open | Agent plus owner for real displays | Desktop/mobile/physical display, admin/household permissions, privacy/deletion, real attribution/request checks |
-| 10. Real installed-state upgrade | Synthetic published-beta transport complete; fresh installed-state acceptance open | Agent, owner/maintainer for actual instance | Fresh baseline inspection/backup, upgrade/rollback/removal receipts, preserved storage/Recorder/resource identities |
+| 10. Real installed-state upgrade | Genuine published-beta20 HACS upgrade/restart/coherent rollback/reupgrade passed with synthetic state; private-copy and owner observations retain separate scopes | Agent, owner/maintainer for actual instance | Fresh baseline inspection/backup, upgrade/rollback/removal receipts, preserved storage/Recorder/resource identities |
 | 11. Finish user and support documents | Open; draft in parallel, finalize after scope/results | Agent, maintainer accepts | Consistent installation/privacy/support/migration/recovery documents and known limitations |
-| 12. Freeze and qualify RC | Pending stages 1–11 or explicit tested exclusions | Agent, maintainer accepts | Identified RC, exact artifact, final check receipt and bounded RC acceptance with no unresolved blockers |
+| 12. Freeze and qualify RC | Exact RC current/minimum/HACS engineering checks and public prerelease verified; remaining bounded owner/maintainer acceptance separate | Agent, maintainer accepts | Identified RC, exact artifact, final check receipt and bounded RC acceptance with no unresolved blockers |
 | 13. Publish and verify 1.0.0 | Pending RC acceptance | Agent executes, maintainer release disposition | Stable tag/package/inventory/release notes, public-byte verification and genuine HACS install/upgrade restart proof |
 
 ### 1. Scope and support decision
@@ -326,17 +328,19 @@ Fresh online consumer and broader release gates remain open.
 
 - [x] Freeze the first-release target: HAOS × amd64/ARM64 ×
   Core 2026.9.4/2026.10.2. Container stays experimental with historical
-  evidence retained. Final qualification remains pending; reuse unchanged
-  architecture evidence and run the focused minimum check within final RC.
-- [ ] For each cell, verify actual requirements installation, exact candidate
-  files, setup/load, restart, native worker where shipped, provider failure
-  isolation and removal. Record HAOS/Supervisor/HACS versions where relevant.
-- [ ] Use the minimum/current Core and both architecture suite coverage already
-  available to target missing work; avoid running the entire suite separately
-  for every installation wrapper. Recheck changed runtime/native paths on each
-  affected architecture and the final RC's representative full-suite targets.
-- [ ] Publish exact supported combinations and limits. Keep additional glibc
-  distributions and future Core versions outside the claim until qualified.
+  evidence retained. Final scoped engineering qualification now passed: full
+  current-Core R3, focused minimum-Core and genuine native amd64 HAOS HACS.
+- [x] Record the historical per-cell requirements/startup/restart/native-worker
+  evidence with its original source and target. Reuse that evidence only where
+  unchanged bytes and the accepted first-release scope support the claim; no
+  fresh final-RC execution of every historical cell is asserted.
+- [x] Complete the agreed representative full current-Core suite and focused
+  minimum check, plus actual HACS delivery, without adding another broad CPU
+  matrix. Retain actual loaded/disk/served bytes, identity and cleanup results
+  in the final qualification record.
+- [x] Record the supported combinations and explicit exclusions in the accepted
+  support proposal. Additional glibc distributions and future Core versions
+  remain outside the claim until qualified.
 
 ### 7. Controlled owner account acceptance
 
@@ -429,12 +433,9 @@ selection completion and the remaining mobile/display/access cases stay open.
 
 ### 12. Release candidate
 
-- [ ] Freeze `v1.0.0-rc.1` (or the next numbered RC) with source revision,
-  deterministic package, inventory and hashes. No pending blocker may be hidden
-  by a successful build or passing test count.
-- [ ] Run backend/frontend checks, HACS and HA manifest validation, package/
-  public-byte checks, privacy/history review and final installed notice checks.
-  Reuse prior evidence only where source, artifact and scope support the claim.
+- [x] Freeze and publish identified prerelease `v1.0.0-rc.1` at b906 with the exact 112-member ZIP4f94 and inventorye4bc; anonymously verify both public assets. This is not stable approval.
+- [x] Complete the full current-Core R3 backend/frontend/package/privacy qualification and focused minimum-Core check, retaining actual sources, dependency versions, exact collection and independent cleanup acceptance.
+- [x] Complete genuine HACS install/upgrade/restart/removal/coherent rollback delivery against the public RC in run40013210859, with exact installed package/notice bytes, source/identity and cleanup checks. Reuse prior evidence only where source, artifact and scope support the claim.
 - [ ] Perform the agreed RC acceptance window. Fix confirmed blockers, increment
   the RC when its bytes change, and retest affected areas plus the final required
   checks. Record maintainer acceptance and every explicit scope exclusion.
@@ -451,12 +452,7 @@ selection completion and the remaining mobile/display/access cases stay open.
 
 ## Work that can proceed now
 
-Follow the seven-item tracker: run the affected native checks for the implemented
-Manage direct connections, Pause/Resume and stop-on-denial changes; verify source-only packaging/notices,
-record the remaining maintainer basis/scope decisions, and finish one bounded
-owner round plus frozen-RC/HACS qualification. Fold the focused minimum-Core
-check into that RC pass and reuse unchanged accepted evidence; do not add a new
-architecture matrix or require author/provider correspondence.
+Follow the seven-item tracker and final qualification record: retain the accepted 548-case affected-controls result and focused minimum-Core result; retain accepted full current-Core R3, focused minimum-Core, verified public RC assets and the accepted finite genuine HACS rehearsal. Finish the bounded owner round and remaining maintainer basis/scope decisions without relabelling prior observations. Reuse unchanged architecture/restore/upgrade evidence; do not add a broad matrix or require author/provider correspondence.
 
 The ordinary Person/activity restore, recovery-guard block and private-copy
 upgrade keep their recorded scopes. Arrival-gap, pending-on-shutdown and broader

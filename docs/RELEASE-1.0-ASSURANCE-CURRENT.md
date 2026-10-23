@@ -3,7 +3,7 @@
 The pre-exclusion implementation baseline is canonical source c31c220563ae55d469bbf530fa77dd2f80583910.
 The [source manifest](RELEASE-1.0-ASSURANCE-SOURCE.json) binds 74 primary Find My/recovery
 Python members plus 31 public context files to exact Git blob IDs and SHA-256 hashes.
-All 74 primary members match the previously tested f181 candidate. The first-release qualification candidate excludes the unused local macOS plist.py/__main__.py pair; the 72 retained primary Python files are unchanged from this review baseline. See [the exact exclusion](RELEASE-1.0-LOCAL-MACOS-EXCLUSION.md). The
+All 74 primary members match the previously tested f181 candidate. The first-release qualification candidate excludes the unused local macOS plist.py/__main__.py pair; the final b906 source retains 70 primary Python files identical to this review baseline, removes the two unused Mac files, and changes findmy_flow.py and findmy_provider.py for connection controls. The historical review manifest remains unchanged; it is not an all-retained-files-unchanged declaration for the final candidate. See [the exact exclusion](RELEASE-1.0-LOCAL-MACOS-EXCLUSION.md). The
 [change inventory](RELEASE-1.0-ASSURANCE-CHANGES.json) identifies six changed primary
 files since the older 9bf03eb assurance handoff. Historical all-74-unchanged
 statements apply to their historical snapshots.
@@ -35,10 +35,9 @@ a joint ledger/cache filesystem or VM snapshot, and an old backup can restore
 vulnerable older code. The supported ordinary partial-restore scope is explicit
 in the [maintenance guide](RELEASE-1.0-MAINTENANCE.md).
 
-The final RC receipt must capture actual cryptography/srp/unicorn versions and
-the target's dependency graph; constraints alone are not an observed installed
-version. Current-Core constraints pin cryptography 50.0.1, while minimum-Core
-constraints pin 48.0.1. Do not broaden the historical cryptographic report's runtime.
+The [final qualification record](RELEASE-1.0-FINAL-QUALIFICATION.md) separates the accepted 548-case controls run, accepted focused minimum-Core result, accepted full current-Core R3 result and accepted fourteen-phase genuine HACS delivery result. These checks do not enlarge Claude's disclosed coverage.
+
+The accepted final RC receipts capture actual cryptography/srp/unicorn versions and the target's component/default-auth dependency graph. Current Core observed 50.0.1/1.0.22/2.1.4; minimum Core observed 48.0.1/1.0.22/2.1.4. Constraints alone would not establish those installed versions. Do not broaden the historical cryptographic report's runtime.
 
 No credentials, private account replies, saved sessions, Apple libraries,
 dependency binaries or personal locations are included in this public handoff.
