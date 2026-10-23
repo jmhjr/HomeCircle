@@ -5,7 +5,7 @@ from copy import deepcopy
 from datetime import datetime, timedelta, UTC
 import threading
 from types import SimpleNamespace
-from unittest.mock import Mock
+from unittest.mock import AsyncMock, Mock, patch
 
 from custom_components.homecircle.findmy_provider import DirectFindMy, FindMyTracker
 from custom_components.homecircle._vendor_findmy.errors import UnauthorizedError
@@ -39,8 +39,10 @@ async def test_auth_expiry_persists_completed_report_and_requires_reauth(hass):
         return {keys[0]: report(datetime.now(UTC) - timedelta(minutes=1))}
 
     client.account.fetch_location.side_effect = fetch
-    await provider.poll("example")
-    assert provider.states["example"] == "auth_required"
+    with patch.object(hass.config_entries, "async_reload", new=AsyncMock(return_value=True)):
+        await provider.poll("example")
+        await hass.async_block_till_done()
+    assert provider.states["example"] == "paused"
     assert len(saves) == 1
     identifier = next(iter(client.items))
     retained = saves[0][identifier]["report"]

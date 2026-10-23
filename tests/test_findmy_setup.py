@@ -178,6 +178,9 @@ def test_device_labels_explain_missing_names_without_inventing_association():
 
 def test_replacement_namespace_and_logs_are_isolated():
     import logging
+    from pathlib import Path
+    import subprocess
+    import sys
     from custom_components.homecircle.findmy_setup import sdk
 
     _, _, _, client = sdk()
@@ -185,6 +188,31 @@ def test_replacement_namespace_and_logs_are_isolated():
     assert logging.getLogger(
         "custom_components.homecircle._vendor_findmy.reports.account"
     ).disabled
+    # A fresh interpreter proves the supported SDK does not rely on cached
+    # imports of the retired local-Mac CLI/decryptor.
+    code = """
+import importlib.abc
+import sys
+retired = {
+    'custom_components.homecircle._vendor_findmy.plist',
+    'custom_components.homecircle._vendor_findmy.__main__',
+}
+class RejectRetired(importlib.abc.MetaPathFinder):
+    def find_spec(self, fullname, path=None, target=None):
+        if fullname in retired:
+            raise AssertionError('retired local-Mac module imported')
+sys.meta_path.insert(0, RejectRetired())
+from custom_components.homecircle.findmy_setup import sdk
+*_, client = sdk()
+assert client.__module__ == 'custom_components.homecircle._vendor_findmy.icloud'
+assert not retired.intersection(sys.modules)
+"""
+    result = subprocess.run(
+        [sys.executable, "-I", "-c", "import sys; sys.path.insert(0, sys.argv[1]); " + code,
+         str(Path(__file__).resolve().parents[1])],
+        capture_output=True, timeout=30, check=False,
+    )
+    assert result.returncode == 0, "supported SDK must import without retired local-Mac modules"
 
 
 async def test_missing_accessory_ids_use_distinct_stable_keys():

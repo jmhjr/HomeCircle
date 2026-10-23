@@ -1,9 +1,12 @@
 """Full Circle scope, atomic request limits and evidence feedback."""
 
 import asyncio
+from contextlib import nullcontext
 from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace as NS
 from unittest.mock import AsyncMock, patch
+
+import pytest
 
 from custom_components.homecircle.family_refresh import (
     async_refresh_family,
@@ -61,6 +64,7 @@ def fixture():
         last_location_request={},
         restored_location_requests=set(),
         family_refresh={},
+        provider_controls=NS(paused=lambda *_: False, operation=lambda *_: nullcontext()),
     )
     user = NS(permissions=NS(check_entity=lambda *_: True))
     return hass, runtime, user, registry, circle
@@ -719,3 +723,65 @@ async def test_registry_rebinding_during_save_cannot_redirect_phone_request():
     ):
         assert (await async_refresh_family(h, r, u))["status"] == "unsupported"
     h.services.async_call.assert_not_awaited()
+
+
+async def test_paused_family_never_reads_or_sends_circle_credentials():
+    h, runtime, user, registry, _circle = fixture()
+    runtime.provider_controls.paused = lambda *_: True
+    with (
+        patch("custom_components.homecircle.family_refresh.er.async_get", return_value=registry),
+        patch("custom_components.homecircle.family_refresh.async_send", new=AsyncMock()) as send,
+    ):
+        assert (await async_refresh_family(h, runtime, user))["status"] == "unsupported"
+    send.assert_not_awaited()
+    assert not runtime.location_request_times
+
+
+async def test_pause_during_family_reservation_prevents_circle_send(hass):
+    from custom_components.homecircle.provider_controls import async_get_controls
+
+    h, runtime, user, registry, _circle = fixture()
+    controls = runtime.provider_controls = await async_get_controls(hass, "example-family-reservation")
+
+    async def save(_data):
+        await controls.async_set_paused("life360", True)
+
+    runtime.location_request_store.async_save.side_effect = save
+    with (
+        patch.object(hass.config_entries, "async_reload", new=AsyncMock()),
+        patch("custom_components.homecircle.family_refresh.er.async_get", return_value=registry),
+        patch("custom_components.homecircle.family_refresh.async_send", new=AsyncMock()) as send,
+    ):
+        assert (await async_refresh_family(h, runtime, user))["status"] == "unsupported"
+    send.assert_not_awaited()
+
+
+@pytest.mark.parametrize("http_status", [401, 403])
+async def test_exact_family_http_denial_persists_pause_and_never_sends_again(hass, http_status):
+    from unittest.mock import Mock
+    from custom_components.homecircle.provider_controls import ProviderControls, async_get_controls
+
+    h, runtime, user, registry, _circle = fixture()
+    controls = runtime.provider_controls = await async_get_controls(hass, "example-family-denial")
+    response_context = AsyncMock()
+    response_context.__aenter__.return_value = NS(status=http_status)
+    session = NS(post=Mock(return_value=response_context))
+    session_context = AsyncMock()
+    session_context.__aenter__.return_value = session
+    h.async_add_executor_job = AsyncMock(return_value=None)
+    with (
+        patch.object(hass.config_entries, "async_reload", new=AsyncMock()),
+        patch("custom_components.homecircle.family_refresh.er.async_get", return_value=registry),
+        patch("custom_components.homecircle.family_refresh.aiohttp.TCPConnector"),
+        patch("custom_components.homecircle.family_refresh.aiohttp.ClientSession", return_value=session_context),
+    ):
+        assert (await async_refresh_family(h, runtime, user))["status"] == "send_failed"
+        assert runtime.family_refresh["members"][0]["status"] == "disabled"
+        assert controls.paused("life360")
+        assert (await async_refresh_family(h, runtime, user))["status"] == "unsupported"
+        await hass.async_block_till_done()
+    session.post.assert_called_once()
+    assert session.post.call_args.kwargs["allow_redirects"] is False
+    restored = ProviderControls(hass, "example-family-denial")
+    await restored.async_load()
+    assert restored.paused("life360")

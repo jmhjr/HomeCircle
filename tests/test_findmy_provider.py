@@ -1,5 +1,6 @@
 """Account isolation and shutdown, using synthetic sessions and report clients."""
 
+import asyncio
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 from pytest_homeassistant_custom_component.common import MockConfigEntry
@@ -53,6 +54,7 @@ async def test_one_expired_account_does_not_stop_other_accounts(hass):
     entities = []
     provider = DirectFindMy(hass, accounts, entities.extend, entry.entry_id)
     with (
+        patch.object(hass.config_entries, "async_reload", new=AsyncMock(return_value=True)),
         patch(
             "custom_components.homecircle.findmy_provider.Vault.load", return_value=data
         ),
@@ -65,13 +67,15 @@ async def test_one_expired_account_does_not_stop_other_accounts(hass):
         ),
     ):
         await provider.async_start()
+        await asyncio.wait_for(asyncio.gather(*provider.tasks.values()), 5)
         await hass.async_block_till_done()
-        assert provider.states[first] == "auth_required"
+        assert provider.states[first] == "paused"
         assert provider.states[second] == "connected"
         assert provider.health_snapshot().state == "partial"
         assert len(entities) == 2
         save.assert_called_once()
         provider.interval()
+        await asyncio.wait_for(asyncio.gather(*provider.tasks.values()), 5)
         await hass.async_block_till_done()
         assert clients[0].poll.await_count == 1
         assert clients[1].poll.await_count == 2

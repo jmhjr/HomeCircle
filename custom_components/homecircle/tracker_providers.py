@@ -29,6 +29,8 @@ HEALTH_STATES = frozenset(
         "connected",
         "partial",
         "auth_required",
+        "access_denied",
+        "paused",
         "rate_limited",
         "network_error",
         "api_error",
@@ -111,8 +113,16 @@ class TrackerProvider:
 
 def _life360_client(hass, account, add_entities, entry_id):
     from .life360_direct import DirectLife360
+    from .provider_controls import get_loaded_controls
 
-    return DirectLife360(hass, account, add_entities, entry_id)
+    controls = get_loaded_controls(hass, entry_id)
+    return DirectLife360(
+        hass, account, add_entities, entry_id,
+        is_paused=lambda: controls is None or controls.paused("life360"),
+        on_access_denied=(
+            (lambda: controls.async_pause_denied("life360")) if controls else None
+        ),
+    )
 
 
 def _findmy_client(hass, accounts, add_entities, entry_id):
@@ -228,6 +238,8 @@ def setup_status(
         )
         return " ".join(lines)
     guidance = {
+        "paused": "paused locally; use Connections in HomeCircle Options to resume",
+        "access_denied": "access was denied; the connection is paused until you deliberately resume",
         "auth_required": "sign-in needs attention; open the Home Assistant repair prompt",
         "rate_limited": "temporarily rate limited; HomeCircle will retry",
         "network_error": "network request failed; HomeCircle will retry",
