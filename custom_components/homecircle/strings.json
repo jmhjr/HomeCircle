@@ -139,12 +139,13 @@
       },
       "life360_account": {
         "title": "Connect Life360",
-        "description": "Enter a Life360 email and password, or an access token. Some accounts with verified phone numbers cannot use password sign-in. Credentials are saved in Home Assistant configuration storage. Home Assistant Recorder may keep a history of the new tracker locations; review its settings before connecting. Member trackers may take several minutes to appear; reopen HomeCircle Options to select them.",
+        "description": "This optional connection uses an unofficial Life360 API. HomeCircle is independent and is not affiliated with or endorsed by Life360. Access can stop or lead to account restrictions. Use only accounts and location sharing you are entitled to access, and review the [Life360 terms](https://legal.corp.life360.com/hc/en-us/articles/42963368361239-Life360-Terms-of-Service-2026-8). This acknowledgement does not grant provider permission.\n\nEnter your email and password, or an access token. Some accounts with verified phone numbers cannot use password sign-in. Credentials stay in your Home Assistant configuration storage; protect storage and backups. Recorder may retain tracker locations. Trackers may take several minutes to appear; reopen HomeCircle Options to select them. Reports may be delayed; HomeCircle is not an emergency or safety service.",
         "data": {
           "method": "Sign-in method",
           "username": "Life360 email (password method)",
           "secret": "Password or access token",
-          "confirm_same_account": "I confirm this is the same Life360 account"
+          "confirm_same_account": "I confirm this is the same Life360 account",
+          "acknowledge_unofficial": "I understand the risks and allow this Life360 connection"
         },
         "data_description": {
           "secret": "For access token, enter only the token value. HomeCircle uses Bearer authorization.",
@@ -154,12 +155,13 @@
       },
       "reauth_confirm": {
         "title": "Reconnect Life360",
-        "description": "Life360 rejected the saved sign-in. Enter a current password or access token for the same account. HomeCircle will keep your household and tracker selections.",
+        "description": "This optional connection uses an unofficial Life360 API. HomeCircle is independent and is not affiliated with or endorsed by Life360. Access can stop or lead to account restrictions. Use only accounts and location sharing you are entitled to access, and review the [Life360 terms](https://legal.corp.life360.com/hc/en-us/articles/42963368361239-Life360-Terms-of-Service-2026-8). This acknowledgement does not grant provider permission.\n\nEnter your email and password, or an access token. Some accounts with verified phone numbers cannot use password sign-in. Credentials stay in your Home Assistant configuration storage; protect storage and backups. Recorder may retain tracker locations. Trackers may take several minutes to appear; reopen HomeCircle Options to select them. Reports may be delayed; HomeCircle is not an emergency or safety service.\n\nReconnect the same account to keep your household and tracker selections.",
         "data": {
           "method": "Sign-in method",
           "username": "Life360 email (password method)",
           "secret": "Password or access token",
-          "confirm_same_account": "I confirm this is the same Life360 account"
+          "confirm_same_account": "I confirm this is the same Life360 account",
+          "acknowledge_unofficial": "I understand the risks and allow this Life360 connection"
         },
         "data_description": {
           "secret": "For access token, enter only the token value.",
@@ -251,9 +253,9 @@
       },
       "findmy_add": {
         "title": "Connect Apple Find My",
-        "description": "HomeCircle signs in to Apple from Home Assistant, downloads Apple identity libraries when needed, and may appear as HomeCircle Find My in your Apple device list. Discovering new items requires a trusted device’s unlock passcode to recover Find My keys; reconnecting existing items only needs Apple sign-in. HomeCircle does not join a new Keychain trust peer. Passwords, verification codes and device passcodes stay transient. Only selected item keys, your account email, client identity, local identity provisioning state and the report-service token are saved in a local encrypted store; other account information and service tokens are removed. The encryption key is stored alongside it; protect HA storage and backups. Household viewers can see selected item locations. No Mac, terminal or separate helper is required.",
+        "description": "This optional connection uses unofficial Apple services. HomeCircle is independent and is not affiliated with or endorsed by Apple. Access can stop or lead to account restrictions. Use only accounts, items and location sharing you are entitled to access. Review the [iCloud terms](https://www.apple.com/legal/internet-services/icloud/en/terms.html) and [Apple software terms](https://www.apple.com/legal/sla/docs/iTunes.pdf). This acknowledgement does not grant provider permission.\n\nAfter you continue, HomeCircle downloads identity libraries from Apple's iTunes 12.8.3 installer when needed and runs CoreADI under emulation in Home Assistant. It may appear in your Apple device list. Discovering new items requires a trusted device's unlock passcode; reconnecting existing items needs Apple sign-in. HomeCircle does not join a new Keychain trust peer. Passwords, verification codes and passcodes stay transient. Selected item keys, account email, client identity, provisioning state and the report-service token are saved in a local encrypted store; its encryption key is alongside it. Protect HA storage and backups. Household viewers can see selected item locations. Reports may be delayed; HomeCircle is not an emergency or safety service.",
         "data": {
-          "consent": "Allow this Apple sign-in and Find My key recovery",
+          "consent": "I understand the risks and allow Apple sign-in and selected-item key recovery",
           "label": "Account label"
         }
       },
@@ -436,7 +438,12 @@
       "findmy_duplicate_item": "More than one item matched the same saved identity. The existing selection was not replaced.",
       "findmy_missing_item_identity": "This item has no usable identity. The existing selection was not replaced.",
       "findmy_recovery_rate_limited": "Apple refused recovery authentication with HTTP 429. The cause is unconfirmed. This sign-in has ended; do not reuse the verification code. No device-passcode submission was sent.",
-      "findmy_recovery_review": "HomeCircle could not verify local recovery continuity. No new device-passcode submission was sent. Review the recovery safeguard before continuing."
+      "findmy_recovery_review": "HomeCircle could not verify local recovery continuity. No new device-passcode submission was sent. Review the recovery safeguard before continuing.",
+      "provider_acknowledgement_required": "Review the unofficial connection notice and acknowledge it before connecting.",
+      "provider_paused": "This connection is paused. Open Manage direct connections to review and deliberately resume it.",
+      "provider_controls_failed": "HomeCircle could not safely read or save connection controls. Requests are stopped. Check local storage before continuing.",
+      "invalid_provider_control": "Choose a saved connection and either Pause or Resume.",
+      "provider_controls_storage_failed": "Direct requests are blocked now, but the setting could not be saved. Check Home Assistant storage before restarting."
     },
     "abort": {
       "already_configured": "HomeCircle is already configured. Use Options to edit the household.",
@@ -470,7 +477,12 @@
       "findmy_recovery_transient": "A temporary connection or service problem interrupted recovery preparation. No automatic passcode retry was sent. This sign-in has ended; do not reuse the verification code.",
       "findmy_recovery_uncertain": "The recovery submission outcome could not be verified. It is retained as uncertain by the local safeguard; no automatic retry was sent. This sign-in has ended; do not reuse the verification code.",
       "findmy_no_recovery_device": "Apple did not provide a recoverable trusted device. This sign-in has ended; do not reuse the verification code.",
-      "findmy_recovery_review": "HomeCircle could not verify local recovery continuity. No new device-passcode submission was sent. Review the recovery safeguard before continuing."
+      "findmy_recovery_review": "HomeCircle could not verify local recovery continuity. No new device-passcode submission was sent. Review the recovery safeguard before continuing.",
+      "provider_paused": "This connection is paused. Open Manage direct connections to review and deliberately resume it.",
+      "provider_controls_failed": "HomeCircle could not safely read or save connection controls. Requests are stopped. Check local storage before continuing.",
+      "provider_control_saved": "Connection control saved. Paused connections remain paused after a restart. Accounts, selected trackers and history are kept.",
+      "not_admin": "Only a Home Assistant administrator can manage direct connections.",
+      "provider_controls_storage_failed": "Direct requests are blocked now, but the setting could not be saved. Check Home Assistant storage before restarting."
     },
     "progress": {
       "findmy_connecting": "Connecting to Apple. Keep this window open; you may cancel to discard this setup."
@@ -487,7 +499,8 @@
           "convert_legacy_member": "Move a tracker-only member to a Person",
           "import_places": "Import places from Life360",
           "city_lookup": "City lookup",
-          "findmy_accounts": "Apple Find My accounts"
+          "findmy_accounts": "Apple Find My accounts",
+          "connections": "Manage direct connections"
         }
       },
       "status_member": {
@@ -673,12 +686,13 @@
       },
       "life360_account": {
         "title": "Connect Life360",
-        "description": "Enter a Life360 email and password, or an access token. Some accounts with verified phone numbers cannot use password sign-in. Credentials are saved in Home Assistant configuration storage. Home Assistant Recorder may keep a history of the new tracker locations; review its settings before connecting. Member trackers may take several minutes to appear; reopen HomeCircle Options to select them.",
+        "description": "This optional connection uses an unofficial Life360 API. HomeCircle is independent and is not affiliated with or endorsed by Life360. Access can stop or lead to account restrictions. Use only accounts and location sharing you are entitled to access, and review the [Life360 terms](https://legal.corp.life360.com/hc/en-us/articles/42963368361239-Life360-Terms-of-Service-2026-8). This acknowledgement does not grant provider permission.\n\nEnter your email and password, or an access token. Some accounts with verified phone numbers cannot use password sign-in. Credentials stay in your Home Assistant configuration storage; protect storage and backups. Recorder may retain tracker locations. Trackers may take several minutes to appear; reopen HomeCircle Options to select them. Reports may be delayed; HomeCircle is not an emergency or safety service.",
         "data": {
           "method": "Sign-in method",
           "username": "Life360 email (password method)",
           "secret": "Password or access token",
-          "confirm_same_account": "I confirm this is the same Life360 account"
+          "confirm_same_account": "I confirm this is the same Life360 account",
+          "acknowledge_unofficial": "I understand the risks and allow this Life360 connection"
         },
         "data_description": {
           "secret": "For access token, enter only the token value. HomeCircle uses Bearer authorization.",
@@ -830,9 +844,9 @@
       },
       "findmy_add": {
         "title": "Connect Apple Find My",
-        "description": "HomeCircle signs in to Apple from Home Assistant, downloads Apple identity libraries when needed, and may appear as HomeCircle Find My in your Apple device list. Discovering new items requires a trusted device’s unlock passcode to recover Find My keys; reconnecting existing items only needs Apple sign-in. HomeCircle does not join a new Keychain trust peer. Passwords, verification codes and device passcodes stay transient. Only selected item keys, your account email, client identity, local identity provisioning state and the report-service token are saved in a local encrypted store; other account information and service tokens are removed. The encryption key is stored alongside it; protect HA storage and backups. Household viewers can see selected item locations. No Mac, terminal or separate helper is required.",
+        "description": "This optional connection uses unofficial Apple services. HomeCircle is independent and is not affiliated with or endorsed by Apple. Access can stop or lead to account restrictions. Use only accounts, items and location sharing you are entitled to access. Review the [iCloud terms](https://www.apple.com/legal/internet-services/icloud/en/terms.html) and [Apple software terms](https://www.apple.com/legal/sla/docs/iTunes.pdf). This acknowledgement does not grant provider permission.\n\nAfter you continue, HomeCircle downloads identity libraries from Apple's iTunes 12.8.3 installer when needed and runs CoreADI under emulation in Home Assistant. It may appear in your Apple device list. Discovering new items requires a trusted device's unlock passcode; reconnecting existing items needs Apple sign-in. HomeCircle does not join a new Keychain trust peer. Passwords, verification codes and passcodes stay transient. Selected item keys, account email, client identity, provisioning state and the report-service token are saved in a local encrypted store; its encryption key is alongside it. Protect HA storage and backups. Household viewers can see selected item locations. Reports may be delayed; HomeCircle is not an emergency or safety service.",
         "data": {
-          "consent": "Allow this Apple sign-in and Find My key recovery",
+          "consent": "I understand the risks and allow Apple sign-in and selected-item key recovery",
           "label": "Account label"
         }
       },
@@ -929,6 +943,17 @@
         "data": {
           "acknowledge": "I have reviewed the device and passcode and understand the local safeguard may be incomplete"
         }
+      },
+      "connections": {
+        "title": "Manage direct connections",
+        "description": "{connection_status}\n\nPause stops HomeCircle requests for this provider and remains in effect after a restart. Saved accounts, tracker identities, selections and history are kept. Existing reports may remain visible with their original report times. Other integrations control their own requests.\n\nResume deliberately allows requests again for this provider, including accounts paused after an access denial. Review provider terms, account access and diagnostics first. HomeCircle does not retry authentication to work around an access denial. Resuming does not reset Find My recovery safeguards.",
+        "data": {
+          "provider": "Saved connection",
+          "action": "Action"
+        },
+        "data_description": {
+          "action": "Choose Pause to stop requests, or Resume to allow them again."
+        }
       }
     },
     "error": {
@@ -1022,7 +1047,12 @@
       "findmy_duplicate_item": "More than one item matched the same saved identity. The existing selection was not replaced.",
       "findmy_missing_item_identity": "This item has no usable identity. The existing selection was not replaced.",
       "findmy_recovery_rate_limited": "Apple refused recovery authentication with HTTP 429. The cause is unconfirmed. This sign-in has ended; do not reuse the verification code. No device-passcode submission was sent.",
-      "findmy_recovery_review": "HomeCircle could not verify local recovery continuity. No new device-passcode submission was sent. Review the recovery safeguard before continuing."
+      "findmy_recovery_review": "HomeCircle could not verify local recovery continuity. No new device-passcode submission was sent. Review the recovery safeguard before continuing.",
+      "provider_acknowledgement_required": "Review the unofficial connection notice and acknowledge it before connecting.",
+      "provider_paused": "This connection is paused. Open Manage direct connections to review and deliberately resume it.",
+      "provider_controls_failed": "HomeCircle could not safely read or save connection controls. Requests are stopped. Check local storage before continuing.",
+      "invalid_provider_control": "Choose a saved connection and either Pause or Resume.",
+      "provider_controls_storage_failed": "Direct requests are blocked now, but the setting could not be saved. Check Home Assistant storage before restarting."
     },
     "abort": {
       "place_import_no_account": "No saved Life360 connection is available. Connect Life360 first, then try again.",
@@ -1054,7 +1084,12 @@
       "findmy_recovery_transient": "A temporary connection or service problem interrupted recovery preparation. No automatic passcode retry was sent. This sign-in has ended; do not reuse the verification code.",
       "findmy_recovery_uncertain": "The recovery submission outcome could not be verified. It is retained as uncertain by the local safeguard; no automatic retry was sent. This sign-in has ended; do not reuse the verification code.",
       "findmy_no_recovery_device": "Apple did not provide a recoverable trusted device. This sign-in has ended; do not reuse the verification code.",
-      "findmy_recovery_review": "HomeCircle could not verify local recovery continuity. No new device-passcode submission was sent. Review the recovery safeguard before continuing."
+      "findmy_recovery_review": "HomeCircle could not verify local recovery continuity. No new device-passcode submission was sent. Review the recovery safeguard before continuing.",
+      "provider_paused": "This connection is paused. Open Manage direct connections to review and deliberately resume it.",
+      "provider_controls_failed": "HomeCircle could not safely read or save connection controls. Requests are stopped. Check local storage before continuing.",
+      "provider_control_saved": "Connection control saved. Paused connections remain paused after a restart. Accounts, selected trackers and history are kept.",
+      "not_admin": "Only a Home Assistant administrator can manage direct connections.",
+      "provider_controls_storage_failed": "Direct requests are blocked now, but the setting could not be saved. Check Home Assistant storage before restarting."
     },
     "progress": {
       "findmy_connecting": "Connecting to Apple. Keep this window open; you may cancel to discard this setup."

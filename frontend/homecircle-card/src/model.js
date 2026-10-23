@@ -15,6 +15,9 @@ const providerMessages = {
   partial:
     "some trackers could not be updated; check HomeCircle Options if this continues",
   auth_required: "sign-in needs attention; open Home Assistant Repairs",
+  paused: "paused; open HomeCircle settings to review or resume",
+  access_denied:
+    "access was denied; requests are paused until you review and resume the connection",
   rate_limited: "temporarily rate limited; HomeCircle will retry",
   network_error: "connection failed; HomeCircle will retry",
   api_error:

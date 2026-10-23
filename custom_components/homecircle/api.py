@@ -268,6 +268,10 @@ def provider_alerts(hass, runtime):
     registry = er.async_get(hass)
     selected = selected_entities(runtime.config)
     for provider in connected_providers(runtime.config):
+        controls = getattr(runtime, "provider_controls", None)
+        if controls is not None and controls.paused(provider.id):
+            alerts.append({"name": provider.display_name, "state": "paused"})
+            continue
         client = runtime.managed_trackers.get(provider.id)
         if client is None:
             continue

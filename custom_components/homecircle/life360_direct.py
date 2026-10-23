@@ -4,6 +4,7 @@ The Life360 API is unofficial. Keep credentials and raw responses out of logs.
 """
 
 import asyncio
+from collections.abc import Awaitable, Callable
 from datetime import datetime, timedelta, timezone
 from hashlib import sha256
 from math import isfinite
@@ -222,11 +223,17 @@ class DirectLife360:
         account: dict[str, str],
         add_entities,
         entry_id: str = "",
+        *,
+        is_paused: Callable[[], bool] | None = None,
+        on_access_denied: Callable[[], Awaitable[None]] | None = None,
     ):
         self.hass = hass
         self.account = account
         self.add_entities = add_entities
         self.entry_id = entry_id
+        self._is_paused = is_paused
+        self._on_access_denied = on_access_denied
+        self._denial_notified = False
         self.trackers: dict[str, Life360DirectTracker] = {}
         self.circles: dict[str, list[str]] = {}
         self.session: ClientSession | None = None
@@ -237,9 +244,7 @@ class DirectLife360:
         self._stopping = False
         self._auth_blocked = False
         self._next_discovery = datetime.min.replace(tzinfo=timezone.utc)
-        self._next_access_probe = datetime.min.replace(tzinfo=timezone.utc)
         self._retry_at = datetime.min.replace(tzinfo=timezone.utc)
-        self._access_denied = False
         self._last_success: dict[str, datetime] = {}
         self._health_state = "starting"
         self._last_api_success: datetime | None = None
@@ -265,9 +270,15 @@ class DirectLife360:
         # Earlier development builds used a non-actionable custom auth issue.
         if self.entry_id:
             ir.async_delete_issue(self.hass, DOMAIN, f"life360_auth_{self.entry_id}")
-        self.session = await new_session()
         if self.entry_id:
             self._restore_registered_trackers()
+        if self._requests_blocked():
+            return
+        self.session = await new_session()
+        if self._requests_blocked():
+            await self.session.close()
+            self.session = None
+            return
         self._unsub = async_track_time_interval(
             self.hass, self._interval, POLL_INTERVAL
         )
@@ -311,7 +322,7 @@ class DirectLife360:
 
     async def async_refresh_on_selection(self) -> str:
         """Read cloud reports without promising a phone request or bypassing backoff."""
-        if self._stopping or self._auth_blocked:
+        if self._stopping or self._requests_blocked():
             return "unavailable"
         if self._lock.locked():
             return "busy"
@@ -324,29 +335,33 @@ class DirectLife360:
     async def async_refresh(self) -> None:
         if self._stopping or self._lock.locked():
             return
-        if self._auth_blocked:
-            self._mark_stale()
+        if self._requests_blocked():
             return
         if datetime.now(timezone.utc) < self._retry_at:
             self._mark_stale()
             return
         async with self._lock:
             authenticating = False
-            self._access_denied = False
             try:
                 if self.api is None:
                     assert self.session is not None
                     authenticating = True
                     self.api = await authorized_client(self.session, self.account)
                     authenticating = False
+                    if self._requests_blocked():
+                        return
                 now = datetime.now(timezone.utc)
                 discovery_failed = discovery_malformed = 0
                 if now >= self._next_discovery:
                     discovery_failed, discovery_malformed = await self._discover()
+                    if self._requests_blocked():
+                        return
                     if not discovery_failed and not discovery_malformed:
                         self._last_api_success = datetime.now(timezone.utc)
                 if self.circles:
                     succeeded, failed, malformed = await self._poll_members()
+                    if self._requests_blocked():
+                        return
                     if succeeded:
                         self._last_api_success = datetime.now(timezone.utc)
                     failed += discovery_failed
@@ -355,21 +370,6 @@ class DirectLife360:
                     succeeded = 0
                     failed = discovery_failed
                     malformed = discovery_malformed
-                if (
-                    not succeeded
-                    and self._access_denied
-                    and now >= self._next_access_probe
-                ):
-                    self._next_access_probe = now + DISCOVERY_RETRY
-                    try:
-                        await self.api.get_me()
-                    except (LoginError, Unauthorized):
-                        self.api = None
-                        assert self.session is not None
-                        authenticating = True
-                        self.api = await authorized_client(self.session, self.account)
-                        authenticating = False
-                        self._next_discovery = datetime.min.replace(tzinfo=timezone.utc)
                 self._health_state = (
                     "unexpected_response"
                     if malformed
@@ -392,15 +392,10 @@ class DirectLife360:
                 self._health_state = "rate_limited"
                 self._last_error = datetime.now(timezone.utc)
             except (LoginError, Unauthorized):
-                self.api = None
-                self._auth_blocked = authenticating
-                self._retry_at = (
-                    datetime.min.replace(tzinfo=timezone.utc)
-                    if authenticating
-                    else datetime.now(timezone.utc) + DISCOVERY_RETRY
-                )
-                self._health_state = "auth_required" if authenticating else "api_error"
-                self._last_error = datetime.now(timezone.utc)
+                # Stop synchronously before persistence yields. Denied reads are
+                # not followed by profile probes, re-login or another Circle.
+                self._block_access("auth_required" if authenticating else "access_denied")
+                await self._persist_access_denied()
                 if (
                     authenticating
                     and self.entry_id
@@ -425,6 +420,46 @@ class DirectLife360:
                 self._last_error = datetime.now(timezone.utc)
             self._mark_stale()
 
+    def _mark_all_unavailable(self) -> None:
+        for tracker in self.trackers.values():
+            tracker.mark_unavailable()
+
+    def _requests_blocked(self) -> bool:
+        """Consult the already loaded local controls without network or awaits."""
+        if self._auth_blocked:
+            return True
+        try:
+            paused = self._is_paused() if self._is_paused is not None else False
+        except Exception:
+            paused = True
+        if type(paused) is not bool or paused:
+            self._health_state = "paused"
+            self._mark_all_unavailable()
+            return True
+        return False
+
+    def _block_access(self, state: str) -> None:
+        self._auth_blocked = True
+        self.api = None
+        self._health_state = state
+        self._retry_at = datetime.min.replace(tzinfo=timezone.utc)
+        self._last_error = datetime.now(timezone.utc)
+        self._mark_all_unavailable()
+
+    async def _persist_access_denied(self) -> None:
+        """Persist once; callback failures never undo the local request block."""
+        if self._denial_notified or self._on_access_denied is None:
+            return
+        self._denial_notified = True
+        try:
+            await self._on_access_denied()
+        except asyncio.CancelledError:
+            raise
+        except Exception:
+            # The controls layer owns its safe persistence-failure reporting.
+            # Never log callback exceptions or attempt a provider recovery here.
+            return
+
     def _mark_stale(self) -> None:
         now = datetime.now(timezone.utc)
         for member_id, tracker in self.trackers.items():
@@ -435,10 +470,14 @@ class DirectLife360:
     async def _discover(self) -> tuple[int, int]:
         assert self.api is not None
         circles = await self.api.get_circles()
+        if self._requests_blocked():
+            return 0, 0
         candidates: dict[str, dict[str, Any]] = {}
         memberships: dict[str, list[str]] = {}
         failed = malformed = 0
         for circle in circles:
+            if self._requests_blocked():
+                return failed, malformed
             if not isinstance(circle, dict) or not circle.get("id"):
                 malformed += 1
                 continue
@@ -448,9 +487,7 @@ class DirectLife360:
             except RateLimited:
                 raise
             except (LoginError, Unauthorized):
-                failed += 1
-                self._access_denied = True
-                continue
+                raise
             except NotModified:
                 members = []
                 for member_id, previous in self.circles.items():
@@ -463,6 +500,8 @@ class DirectLife360:
             except (AttributeError, KeyError, TypeError, ValueError):
                 malformed += 1
                 continue
+            if self._requests_blocked():
+                return failed, malformed
             if not isinstance(members, list):
                 malformed += 1
                 continue
@@ -504,8 +543,12 @@ class DirectLife360:
         assert self.api is not None
         succeeded = failed = malformed = 0
         for member_id, circle_ids in self.circles.items():
+            if self._requests_blocked():
+                return succeeded, failed, malformed
             had_error = bad_shape = False
             for circle_id in circle_ids:
+                if self._requests_blocked():
+                    return succeeded, failed, malformed
                 try:
                     raw = await self.api.get_circle_member(circle_id, member_id)
                 except NotModified:
@@ -517,12 +560,12 @@ class DirectLife360:
                 except RateLimited:
                     raise
                 except (LoginError, Unauthorized):
-                    had_error = True
-                    self._access_denied = True
-                    continue
+                    raise
                 except Life360Error:
                     had_error = True
                     continue
+                if self._requests_blocked():
+                    return succeeded, failed, malformed
                 if not isinstance(raw, dict):
                     had_error = bad_shape = True
                     continue
@@ -546,17 +589,19 @@ class DirectLife360:
 
     async def async_stop(self) -> None:
         self._stopping = True
+        current = asyncio.current_task()
         if self._unsub:
             self._unsub()
             self._unsub = None
         if self._task:
-            self._task.cancel()
-            try:
-                await self._task
-            except asyncio.CancelledError:
-                pass
+            if self._task is not current:
+                self._task.cancel()
+                try:
+                    await self._task
+                except asyncio.CancelledError:
+                    pass
             self._task = None
-        interval_tasks = tuple(self._interval_tasks)
+        interval_tasks = tuple(task for task in self._interval_tasks if task is not current)
         for task in interval_tasks:
             task.cancel()
         if interval_tasks:

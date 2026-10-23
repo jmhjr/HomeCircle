@@ -17,6 +17,7 @@ from homeassistant.util import dt as dt_util
 from .findmy_setup import sdk
 from .findmy_vault import Vault, VaultError
 from .tracker_providers import ProviderHealth
+from .provider_controls import ProviderPaused, async_get_controls
 
 PREFIX = "homecircle_findmy_"
 
@@ -158,14 +159,19 @@ class DirectFindMy:
         self.last_success = None
         self.last_error = None
         self.poll_slots = asyncio.Semaphore(2)
+        self.controls = None
 
     async def async_start(self):
+        self.controls = await async_get_controls(self.hass, self.entry_id)
+        if self.controls.paused("findmy"):
+            return
         sdk()
         from .findmy_reports import AccountClient, account_items
 
         entry = self.hass.config_entries.async_get_entry(self.entry_id)
         registry = er.async_get(self.hass)
         for account_id, metadata in self.accounts.items():
+            blocked = self.controls.paused("findmy", account_id)
             self.states[account_id] = "starting"
             if not isinstance(metadata, dict) or not isinstance(
                 metadata.get("items"), dict
@@ -174,6 +180,8 @@ class DirectFindMy:
                 continue
             previous = {}
             try:
+                if blocked:
+                    raise ProviderPaused()
                 root = await self.hass.async_add_executor_job(
                     account_root, self.hass, metadata
                 )
@@ -208,6 +216,8 @@ class DirectFindMy:
                     identifier: item.get("report")
                     for identifier, item in data["items"].items()
                 }
+            except ProviderPaused:
+                self.states[account_id] = "paused"
             except Exception:
                 self.states[account_id] = "unexpected_response"
                 self.last_error = dt_util.utcnow()
@@ -247,6 +257,9 @@ class DirectFindMy:
         if self.stopped:
             return
         for account_id in self.clients:
+            if self.controls is not None and self.controls.paused("findmy", account_id):
+                self.states[account_id] = "paused"
+                continue
             if self.states.get(account_id) == "auth_required":
                 continue
             task = self.tasks.get(account_id)
@@ -258,6 +271,15 @@ class DirectFindMy:
                 )
 
     async def poll(self, account_id):
+        if self.controls is None:
+            self.controls = await async_get_controls(self.hass, self.entry_id)
+        try:
+            async with self.controls.operation("findmy", account_id):
+                await self._poll_account(account_id)
+        except ProviderPaused:
+            self.states[account_id] = "paused"
+
+    async def _poll_account(self, account_id):
         from .findmy_reports import ReauthenticationRequired
 
         client = self.clients[account_id]
@@ -291,18 +313,28 @@ class DirectFindMy:
                     pass
             raise
         except Exception as error:
-            # Completed batch results remain valuable even when authentication
-            # expires later in the poll. Persist them before reporting failure.
-            if not save_attempted and getattr(client, "poll_progress", False):
-                try:
-                    await self.save_poll_progress(account_id, client)
-                except Exception:
-                    pass
             self.states[account_id] = (
                 "auth_required"
                 if isinstance(error, ReauthenticationRequired)
                 else "network_error"
             )
+            try:
+                if isinstance(error, ReauthenticationRequired):
+                    try:
+                        await self.controls.async_pause_denied("findmy", account_id)
+                    except Exception:
+                        # The controls object remains blocked on a storage failure.
+                        pass
+            finally:
+                # A durable denial can trigger unload while its callback is
+                # still returning. Preserve completed batches even when that
+                # unload cancels the poll before the normal error path resumes.
+                if not save_attempted and getattr(client, "poll_progress", False):
+                    save_attempted = True
+                    try:
+                        await self.save_poll_progress(account_id, client)
+                    except Exception:
+                        pass
             self.last_error = dt_util.utcnow()
             if self.states[account_id] == "auth_required":
                 ir.async_create_issue(
@@ -359,13 +391,19 @@ class DirectFindMy:
     def resume_account(self, account_id, client):
         if client is not None and not self.stopped:
             self.clients[account_id] = client
-            self.states[account_id] = "starting"
+            self.states[account_id] = (
+                "paused"
+                if self.controls is not None and self.controls.paused("findmy", account_id)
+                else "starting"
+            )
             self.interval()
 
     def health_snapshot(self):
         values = list(self.states.values())
         state = (
-            "connected"
+            "paused"
+            if values and all(v == "paused" for v in values)
+            else "connected"
             if values and all(v == "connected" for v in values)
             else "partial"
             if "connected" in values or "partial" in values

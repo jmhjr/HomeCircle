@@ -1,0 +1,747 @@
+{
+  "all74_primary_members_match_candidate_zip": true,
+  "candidate_members": 113,
+  "candidate_zip_sha256": "f181e6300f15d8977817a552db90d35caf0edc869067ebeea815c7be1df0248e",
+  "canonical_source": "c31c220563ae55d469bbf530fa77dd2f80583910",
+  "files": {
+    "LICENSE": {
+      "bytes": 1070,
+      "git_blob": "0c4c77a596fc80f30534cc40868b032525e1d7f2",
+      "mode": "100644",
+      "role": "supporting_context",
+      "sha256": "d1b0ebd8a99c8c743208b2be4451f911395fd3b27e1f56e7de9dde23ff4552c3"
+    },
+    "custom_components/homecircle/__init__.py": {
+      "bytes": 13869,
+      "git_blob": "086d199ea9b4982fd3b1e5b6cc349edd0577cfea",
+      "mode": "100644",
+      "role": "supporting_context",
+      "sha256": "dbaea8b292117f0a1815997042f1cdce0923286bba145101c6adf4806a2c13a4"
+    },
+    "custom_components/homecircle/_findmy_runtime/LICENSE.md": {
+      "bytes": 20800,
+      "git_blob": "dde57c24dc4f08767b534d73c6569301dcc62823",
+      "mode": "100644",
+      "role": "supporting_context",
+      "sha256": "d0d08d053daacc07d9357fbdae0fefb972eec9ae6a14cada17695d6f5c1f28e4"
+    },
+    "custom_components/homecircle/_findmy_runtime/PROVENANCE.md": {
+      "bytes": 4526,
+      "git_blob": "b6719bc2e1aa0aae5b1fbfe449c45d031f03cf0d",
+      "mode": "100644",
+      "role": "supporting_context",
+      "sha256": "8c335cb1efe3a23afc1138b8200b293d55f42b3e5b5d54a1f830f6e9a84599c9"
+    },
+    "custom_components/homecircle/_findmy_runtime/__init__.py": {
+      "bytes": 53,
+      "git_blob": "fdb2e58c61ce1f1c2b74212b306baa1a7a0edaa7",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "ec63a2a0fc509550aba536668b7f289ed69488d8a48c11feeee641bd9d3395a2"
+    },
+    "custom_components/homecircle/_findmy_runtime/bootstrap.py": {
+      "bytes": 9313,
+      "git_blob": "d30bc40570979687accf20a5e9c606ed8b434e28",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "f86a335d587fdc76b5ba6abcc11d325524f9ba56253d2b2a4247109a15290892"
+    },
+    "custom_components/homecircle/_findmy_runtime/emulator/LICENSE": {
+      "bytes": 1062,
+      "git_blob": "35e92a26f13097dff9c7954be522ab6530eff0de",
+      "mode": "100644",
+      "role": "supporting_context",
+      "sha256": "d13de33ca644eb1350ca7ab815075d2499621f24dad01ee9be532360934483d6"
+    },
+    "custom_components/homecircle/_findmy_runtime/emulator/__init__.py": {
+      "bytes": 79,
+      "git_blob": "b86409448f930bd7235930671ae4eec3cd4f53cf",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "e537473e2fb3c23daa985c1a0d1368717a21dd2f2f3d6e788e2ffbb8ffdf7830"
+    },
+    "custom_components/homecircle/_findmy_runtime/emulator/adi_run.py": {
+      "bytes": 12777,
+      "git_blob": "798b1fe6a81fe08daf466d57458d205377ec4787",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "91730177307e34647b9f8355ce2c1e64209d73f7c0c15d2d6601b9e92ee9d891"
+    },
+    "custom_components/homecircle/_findmy_runtime/emulator/harness.py": {
+      "bytes": 18264,
+      "git_blob": "c14c7765e07108c5c22e54b0fbd980855108538e",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "386dc8235ee91a5482dd40d644cf505e2b80da9ef2316dd459b6d308240940d3"
+    },
+    "custom_components/homecircle/_findmy_runtime/emulator/macho.py": {
+      "bytes": 16474,
+      "git_blob": "b276a5e0831f54e4680461189adb107092631663",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "6775e284e904debbae59234cb8d0732df5c199f7aaa9c285767d1f3bea09b6d4"
+    },
+    "custom_components/homecircle/_findmy_runtime/emulator/stubs.py": {
+      "bytes": 13756,
+      "git_blob": "0b352e1d0abbb96850bad064a34bb8e37c27d9ea",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "561f0460590225df2d76b317bd7bc19b76f259ef98e2bf8aa029e6f156501398"
+    },
+    "custom_components/homecircle/_findmy_runtime/onboarding.py": {
+      "bytes": 4845,
+      "git_blob": "ba430fe31179e211874b5e96022e09a0494fb1c9",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "441d3cdfa91271f6131261f08f6722a88c0405d9092898b467092d53b8d86dc7"
+    },
+    "custom_components/homecircle/_findmy_runtime/provider.py": {
+      "bytes": 27955,
+      "git_blob": "4a8dafee1c2a1ea8aa731cbe987678c02662c9c2",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "10519f5bba65e791ebc38c20736eca44214a4185c84bfc7d542f7045c6c5bc55"
+    },
+    "custom_components/homecircle/_findmy_runtime/worker.py": {
+      "bytes": 8951,
+      "git_blob": "5ff0641bce7ebd8e49a1b9a379daf1860b4be159",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "dbe98a6b0b832763974bd5f87c99dc2273ed2c9f138e4db69fad555fd8ff056d"
+    },
+    "custom_components/homecircle/_vendor_findmy/LICENSE.md": {
+      "bytes": 3784,
+      "git_blob": "28f480e22305993932681aba218d1fabd0a90395",
+      "mode": "100644",
+      "role": "supporting_context",
+      "sha256": "f18c0397abd455385e63fc78f33860b61f19b762d5e82115dd6bef8fd3c9d1d0"
+    },
+    "custom_components/homecircle/_vendor_findmy/__init__.py": {
+      "bytes": 4360,
+      "git_blob": "18a7f427ddc84062199684256f91d30b89e010ef",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "51570f34ebd3e7bd49291fa8a9e38084900578c24c5ee18fbd77fd265f2199e1"
+    },
+    "custom_components/homecircle/_vendor_findmy/__main__.py": {
+      "bytes": 3625,
+      "git_blob": "af5987363172615667ce4bd48f2da2a45f0a0ab7",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "9ebb9fe06933596eaa4e20ee94cf1cd258d976e6f40e3859cc53c3cd579dcf92"
+    },
+    "custom_components/homecircle/_vendor_findmy/accessory.py": {
+      "bytes": 28727,
+      "git_blob": "2848f19bddb878626c65079b1340b6441fbf9d3b",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "34ad11ed81881f837172750168e5a87348cbb4ff63ad813dc7cdf7b03b6cbcff"
+    },
+    "custom_components/homecircle/_vendor_findmy/cloudkit/__init__.py": {
+      "bytes": 3547,
+      "git_blob": "e1b3b203938236d6a443ea8b68136c56ff407c8a",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "5166732689d83f38d83dc4aeeb111325facf1c58d46daa21c5ae04ec82bf4fbe"
+    },
+    "custom_components/homecircle/_vendor_findmy/cloudkit/beacons.py": {
+      "bytes": 50530,
+      "git_blob": "95d95bb004b1fb7becaffe39990a9b3edf4c4ebd",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "63153ff8e8a75fc161719ee88ae54aaa6c9fa409509548f0bda31612fcc023b7"
+    },
+    "custom_components/homecircle/_vendor_findmy/cloudkit/client.py": {
+      "bytes": 50659,
+      "git_blob": "569e0bae88d882a79e1f2a76a301efe1222ad9cc",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "a440ac6033ad84ac257cb8a5dadfa313cb7165637c8c34756987837ca7d5859a"
+    },
+    "custom_components/homecircle/_vendor_findmy/cloudkit/constants.py": {
+      "bytes": 5542,
+      "git_blob": "68cc726996226ef52b45f3c6644d1d0ed33cafd2",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "f5e0a4e4fefcf3cd479af74d2007e9ec88efaa25775110ed7aa2c05f6b4e5060"
+    },
+    "custom_components/homecircle/_vendor_findmy/cloudkit/der.py": {
+      "bytes": 9253,
+      "git_blob": "7b3dd49c2f127d823509128afebd6125692d6824",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "c4085182917fb6979d19760ad717b5b3aea95b6f21c185fdf12c90edbb5efc1e"
+    },
+    "custom_components/homecircle/_vendor_findmy/cloudkit/pcs.py": {
+      "bytes": 75854,
+      "git_blob": "c044985810e801899631f1d6f1e54d6016c64810",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "a3106e721c1f6d8ed1c5a5cdcd509a57da7f78fdf0909b4d5b5fea1957d57a36"
+    },
+    "custom_components/homecircle/_vendor_findmy/cloudkit/proto/__init__.py": {
+      "bytes": 66,
+      "git_blob": "721a9905eeab447b80dda69332c71af822cd4708",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "6ecbf31833f54a094d75a85a34d45516bdaad168a80831b0dcc3427dd23e4f34"
+    },
+    "custom_components/homecircle/_vendor_findmy/cloudkit/proto/cloudkit_pb2.py": {
+      "bytes": 15756,
+      "git_blob": "720e90fceffbb43c644364858d1f67b28ca897cf",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "b7545139b191705b53d62ca41d14b024726194d4d80f362d6b09325dc8ebb9d5"
+    },
+    "custom_components/homecircle/_vendor_findmy/cloudkit/proto/cuttlefish_pb2.py": {
+      "bytes": 12558,
+      "git_blob": "5f144dc50299c56cd11cd9f4fa3cd75650524555",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "482566741fad9d2eb997578a1ebd6c922308e98ee1c85b154784d0722facdd96"
+    },
+    "custom_components/homecircle/_vendor_findmy/cloudkit/records.py": {
+      "bytes": 12964,
+      "git_blob": "60b854d133c21eb1a24a30746047b2a603cb3fd2",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "6eae8a1f5daba5930556a79ff18043c8d4940467da17a29d859d4a1ff0f37ebe"
+    },
+    "custom_components/homecircle/_vendor_findmy/errors.py": {
+      "bytes": 12871,
+      "git_blob": "4a61edd49bdc5f1bf14e8948277fd721db3fa511",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "dd3e60f0b4acb0631bf13240118f883fd369a3421420fc7504d76f6d54f940a4"
+    },
+    "custom_components/homecircle/_vendor_findmy/icloud.py": {
+      "bytes": 16664,
+      "git_blob": "7a824aae916e7402357a290265c37469f63629bb",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "30e19c810e00a68fce1dde3d3dbb6d990794814626568771b381c834895b7da2"
+    },
+    "custom_components/homecircle/_vendor_findmy/keychain/__init__.py": {
+      "bytes": 2759,
+      "git_blob": "9bbddde6cf989ba7747048f274c6967e2bff13ba",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "578b9f22c5ab56fadc39143d8d6998b1b5e6018e1c40d573b754541356e51e42"
+    },
+    "custom_components/homecircle/_vendor_findmy/keychain/bottle.py": {
+      "bytes": 27379,
+      "git_blob": "37f13682e53e5c1fda1d1553255b7972830a3047",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "67c97b5f974fb9f3490807846a1c2adf24449f7d46c6339701a56849de31ef49"
+    },
+    "custom_components/homecircle/_vendor_findmy/keychain/cuttlefish.py": {
+      "bytes": 4577,
+      "git_blob": "d6faca211e65abf65b3578f8d83892e5b2a5efa0",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "a0ea4ae64b1bf19ea581a20f140d1e4c5b7db5ae0c3d00203c8a4c3ae946c07e"
+    },
+    "custom_components/homecircle/_vendor_findmy/keychain/enrolment.py": {
+      "bytes": 44020,
+      "git_blob": "3b088b6a79f57d8244c04d58042d5032cb6aa3f0",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "a03f4056caecfe704086e317df5f89b3acb7f7b7477d4e9196dcbf41e72365f1"
+    },
+    "custom_components/homecircle/_vendor_findmy/keychain/escrow.py": {
+      "bytes": 55300,
+      "git_blob": "1bc2972c05b5a69ca305d8d717b73792f19bec5c",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "0250b884311c669dc921871953ae51a2467395b0eb7657601635acd7ece9b74f"
+    },
+    "custom_components/homecircle/_vendor_findmy/keychain/items.py": {
+      "bytes": 22436,
+      "git_blob": "eefff958182b65508a78eb17971fabd62371051d",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "30f82dd49a0d67b933d1c44cd07c9afa52ca5d2216d49ffebdb9281e3046b940"
+    },
+    "custom_components/homecircle/_vendor_findmy/keychain/join.py": {
+      "bytes": 35473,
+      "git_blob": "d90eaa9aa0e4eb7c306e9bd2e5535d067dd487ad",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "6de207b5a897bae11b75aa7daeb9a6032beaa38ff3df52a732d20e9e10523211"
+    },
+    "custom_components/homecircle/_vendor_findmy/keychain/peers.py": {
+      "bytes": 20014,
+      "git_blob": "4612a2193d4bb4b44ddcaf95b828191c107aa0fb",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "802662bce1db8e9cec59827f7495f9b21807ddc16f889decd85f3a238d650844"
+    },
+    "custom_components/homecircle/_vendor_findmy/keychain/recovery.py": {
+      "bytes": 20541,
+      "git_blob": "c249401ce3213f9c429bd7ea5d537150153d5590",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "7d51805ac520c0893b18f4e0e8cc3a5679bd714beffe3c2522a15f9349804ae9"
+    },
+    "custom_components/homecircle/_vendor_findmy/keychain/servicekey.py": {
+      "bytes": 17752,
+      "git_blob": "c20524ddc04f442f27f735754f965766fd0d4651",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "bc750999cbed260b005e744c579f0c9d499f35f774e3600ef32e6437ead537c6"
+    },
+    "custom_components/homecircle/_vendor_findmy/keychain/session.py": {
+      "bytes": 48636,
+      "git_blob": "d6549348ce89f8e3e649c5ea2686d0d23fb4cf18",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "8a52a9e9474167250a136e7e0d0cf0327d87708efe37a16d7513807f7bce519f"
+    },
+    "custom_components/homecircle/_vendor_findmy/keychain/shares.py": {
+      "bytes": 50078,
+      "git_blob": "c5815a8a61ef7c658aafa68cda3389839bc9b63d",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "d5acd09bd49035d2176c0d7049c78b6a5a2bda6e212de9d9131184a81b91406d"
+    },
+    "custom_components/homecircle/_vendor_findmy/keys.py": {
+      "bytes": 7914,
+      "git_blob": "038b2a6f4ae3fcaacdc3fc8c04d71dbd4733fc72",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "effcde429e375e7111138c35e8f6dcc4c667ef21d8207cde3d8801facab803a4"
+    },
+    "custom_components/homecircle/_vendor_findmy/plist.py": {
+      "bytes": 6281,
+      "git_blob": "209df4c2185b5729df84deed6ca32a332a7bfbdf",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "5ef5c26787b342d46ad7b33800d7386ac02efd2910c49d705eade2328f47fe4e"
+    },
+    "custom_components/homecircle/_vendor_findmy/reports/__init__.py": {
+      "bytes": 1555,
+      "git_blob": "8c4d05d851cc65558da889e6d487b5e37ca3a8fd",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "ff1313f32ded674065dab263cf4a54cecd522b0903e619fd61c19ad633678d57"
+    },
+    "custom_components/homecircle/_vendor_findmy/reports/account.py": {
+      "bytes": 113494,
+      "git_blob": "8942f2c4cb9cb755198616a4b577207785bb00f9",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "1051b098780432c800850d37ed4029cedac9dde10540705e4e6a4ca5a0391be6"
+    },
+    "custom_components/homecircle/_vendor_findmy/reports/anisette.py": {
+      "bytes": 33667,
+      "git_blob": "2d3b67da19814d63245b384f614cd6ffd2cbce8f",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "14cb858a6f488c34961b8bb39fec3c988e3c489f92ba3d7739c7c45b602ba282"
+    },
+    "custom_components/homecircle/_vendor_findmy/reports/endpoint_policy.py": {
+      "bytes": 4403,
+      "git_blob": "5bd8823c4154e5ecdf90ef6a7f02031ac3bb3459",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "fe7b69566c959f693452aca5145b54fb1f3bc7ba505b8cfa33435201cb11975d"
+    },
+    "custom_components/homecircle/_vendor_findmy/reports/reports.py": {
+      "bytes": 20324,
+      "git_blob": "42a6fc15e44dc9ebc8ddfba6f66ea7bfce7240c0",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "551615dd658d39eccb8ea4c6ec081dfe6b3693ecca719a6e25f3c4745d9814bb"
+    },
+    "custom_components/homecircle/_vendor_findmy/reports/state.py": {
+      "bytes": 861,
+      "git_blob": "852ace00ebd856ae0cb327a9fb93d3b6eb9e5153",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "bc743f8e68d739ed7b7c189bfc375167dc3804fc0d90a43247915887919278bf"
+    },
+    "custom_components/homecircle/_vendor_findmy/reports/terms.py": {
+      "bytes": 9024,
+      "git_blob": "adb6dbb5d86496ccd7caa53ac701f590d03665eb",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "4c60d9ab907936419ea245a49ae160bb86062c0857915e15ef8e907082168af5"
+    },
+    "custom_components/homecircle/_vendor_findmy/reports/twofactor.py": {
+      "bytes": 7285,
+      "git_blob": "cec2ed732e16f9ce13501a94d7a15e3d52d4a69c",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "4037ab24a504ccdfb1abec5e382d10b1d38f2152093903466c3a12d33d713d22"
+    },
+    "custom_components/homecircle/_vendor_findmy/scanner/__init__.py": {
+      "bytes": 356,
+      "git_blob": "b60543943b73de79703e8203e02ae4470fb9fbd1",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "5a02033895b9d65d2b3ad19ed57d14efaf9fe421e76683efbab9db8f867b4efd"
+    },
+    "custom_components/homecircle/_vendor_findmy/scanner/scanner.py": {
+      "bytes": 19359,
+      "git_blob": "ba8b8b347f04c603dcb74b4530a8711fca58c528",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "6c6e63f4285371f64124de419335c5e2116e41bf9800ba95ecf9fa92982a3108"
+    },
+    "custom_components/homecircle/_vendor_findmy/util/__init__.py": {
+      "bytes": 237,
+      "git_blob": "48ade67929cfee22fd19071c18dba03e3d8c6524",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "501c91eed94400f50bdc8bca9a4238241e8e9ed842c398335e53647e4a2bf9e6"
+    },
+    "custom_components/homecircle/_vendor_findmy/util/abc.py": {
+      "bytes": 3211,
+      "git_blob": "2e4d4de344b8190e54f18b9e0d907dab35ddb484",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "0f6997a31329998194c3eb7a769b7e74a15b9a05ac85e800d9d256d31faa3653"
+    },
+    "custom_components/homecircle/_vendor_findmy/util/crypto.py": {
+      "bytes": 2538,
+      "git_blob": "329bf175322072b18b8be322e1e4513b254db234",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "69181f27b634fad5dab3e38e61e4fff0af635123fa33f678fb955d90f786c167"
+    },
+    "custom_components/homecircle/_vendor_findmy/util/files.py": {
+      "bytes": 1958,
+      "git_blob": "b34170f93a8e90f840c661a52bd874997f8fbabe",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "c7c3dc9485300b16eb3931d81756bc08887d77736f64ba265012e01825916576"
+    },
+    "custom_components/homecircle/_vendor_findmy/util/http.py": {
+      "bytes": 11084,
+      "git_blob": "1d33e0e366c481d1f6868b3ac9fbb81d73fc54c9",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "1417cd19aadf73a4539e1c373474c3f6f1b5bf442d237da053982d9299421a05"
+    },
+    "custom_components/homecircle/_vendor_findmy/util/onboarding_anisette.py": {
+      "bytes": 6659,
+      "git_blob": "dd589b2b9a0d540cb747544d1a6d87195fe40845",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "a2fdb3d056e3a7acd1e190a7ed5e99aef8a63780e486832bd2d4abba2fc6ef0c"
+    },
+    "custom_components/homecircle/_vendor_findmy/util/onboarding_http.py": {
+      "bytes": 16329,
+      "git_blob": "8abc063ffcbbfe08347288d562ffc3e6d3396649",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "224d8625d18078cd7cfbc7c8537a689f0a866bee5d9261b3c4c3b2f7bf0911b1"
+    },
+    "custom_components/homecircle/_vendor_findmy/util/parsers.py": {
+      "bytes": 717,
+      "git_blob": "1953a8ddbf13d90aaf05083e3881f9db252799c7",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "a04ca2ac8d13b5c665ba599c8289bbf16a8af274020275ea3e8831d18677bb2f"
+    },
+    "custom_components/homecircle/_vendor_findmy/util/session.py": {
+      "bytes": 4472,
+      "git_blob": "56ab928bb8ea72fee2c9c19623d543f850224900",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "2a38a61ee5a40aa711e11ffb727afc2c04be3564845b66976861d4965121caf1"
+    },
+    "custom_components/homecircle/_vendor_findmy/util/srp.py": {
+      "bytes": 1226,
+      "git_blob": "e19cbdbf815f0b41109a4b2be8c065163204d2b1",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "b6c032e24a05d17ce60b6e1d2ba7669ab8803b08e5928e48953265eeaa40a1a0"
+    },
+    "custom_components/homecircle/_vendor_findmy/util/tls.py": {
+      "bytes": 7126,
+      "git_blob": "595507635de36420d204209504f39440c38b8966",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "d6b3f223a137f48e9aa63cb2c579520f89af29696ed936e4abfd9ed9bda5a4ed"
+    },
+    "custom_components/homecircle/_vendor_findmy/util/types.py": {
+      "bytes": 173,
+      "git_blob": "aabf2d14c555ac32e5df6db3d9caed888183b57c",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "9e21a5252021a0e4e0c0a2073136f4fe894db6baa19093448b12c4524b56788e"
+    },
+    "custom_components/homecircle/api.py": {
+      "bytes": 20259,
+      "git_blob": "4f672d9db373893f589792c78d8044529061b747",
+      "mode": "100644",
+      "role": "supporting_context",
+      "sha256": "9def3e357c7f224cecedaf89a1aff05d26557c47c861bd1da61936e25303c957"
+    },
+    "custom_components/homecircle/config_flow.py": {
+      "bytes": 95078,
+      "git_blob": "55ff9efd70ebdaeaeaaa3c94bf3a94a141e76a2f",
+      "mode": "100644",
+      "role": "supporting_context",
+      "sha256": "3bbe738590485dcfa474ec3f6905b12b02681585044139092ff88ad4b569fbb1"
+    },
+    "custom_components/homecircle/const.py": {
+      "bytes": 653,
+      "git_blob": "9f140dea3b4152b6d594fd3263c9c10cfcca041a",
+      "mode": "100644",
+      "role": "supporting_context",
+      "sha256": "1a6cdc0a7cfd423da545acfe5b6f7fc53cba5161ab18056ff1d1dccf6941467b"
+    },
+    "custom_components/homecircle/diagnostics.py": {
+      "bytes": 1327,
+      "git_blob": "1e629c1230d9433fa4a60577586d02a94d614206",
+      "mode": "100644",
+      "role": "supporting_context",
+      "sha256": "f7d583d03684cc4ca4b85ad37f01b08533f65ddc47e6c3e1fbb6e05b7c0a18bc"
+    },
+    "custom_components/homecircle/findmy_flow.py": {
+      "bytes": 70778,
+      "git_blob": "982e68f8d804dc77cc897b927598398b78333699",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "1ae5071fe1df0944b80c2c2f6ab688efb692b417eba87f53cc3324d48a19ddb6"
+    },
+    "custom_components/homecircle/findmy_identity.py": {
+      "bytes": 7518,
+      "git_blob": "899890db0d8a9f94f27b6575852ecc3730397d6e",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "0a020ad7f319b4d13686b7c2c177b762a4aabf30420164bf037cda1b8a7bc7c5"
+    },
+    "custom_components/homecircle/findmy_items.py": {
+      "bytes": 2952,
+      "git_blob": "53e08d3b278a0c10de2b7dfed4c7a969ed788543",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "c1253c9c11ed811ef23741ee949fc241b15ff182acc0f940e267170ee03a88f3"
+    },
+    "custom_components/homecircle/findmy_migration.py": {
+      "bytes": 14818,
+      "git_blob": "999d45210dfff852c41e98a6af9cb09f07b08ddb",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "1da04d26e360563ae8af708beb295b46280a6baaf2258f4eb069fc499ac80349"
+    },
+    "custom_components/homecircle/findmy_profile.py": {
+      "bytes": 2510,
+      "git_blob": "5c21279a8184fb1887d6c307f1be55095862cbbe",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "462c3a969a70d4eb89bed6670f851208c0b8dd7e2268f015414f4a54ab233d97"
+    },
+    "custom_components/homecircle/findmy_provider.py": {
+      "bytes": 17562,
+      "git_blob": "9d39c42eee72ccd536deb90f7ace51815ebf92fb",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "c5595108dbc464b6d9e2b279b6488479fb62be556358bc2066e10af43bda6983"
+    },
+    "custom_components/homecircle/findmy_recovery_guard.py": {
+      "bytes": 23908,
+      "git_blob": "58ced084aa95389baeeb16f548e82afbaa2e2eae",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "8e30539172c7f0d9606be8adab77bfefa52d7e5547ed4daca42f1374fb1c0957"
+    },
+    "custom_components/homecircle/findmy_report_service.py": {
+      "bytes": 11270,
+      "git_blob": "6484402607b258e0b7f7ee20f22bd450466d186e",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "b05cd7584b5e889efed9a77b6278f3c49ef6cae7fcb2ea053f775a858c2e090c"
+    },
+    "custom_components/homecircle/findmy_reports.py": {
+      "bytes": 15898,
+      "git_blob": "e99046aaef03490c1c33e2349c23c1e2150f105a",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "ab7591edbd20f60d08405924cf0d88f828900c558c5e3a76a154c2a0f2b67b1e"
+    },
+    "custom_components/homecircle/findmy_resume.py": {
+      "bytes": 3206,
+      "git_blob": "0518c4275c474972b9c97a9dcdf2e234086d27b6",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "8e5ad4aa024b7c8a790393cb99dfc29f3388c07e51d25136fb9d9f3ca246aa43"
+    },
+    "custom_components/homecircle/findmy_setup.py": {
+      "bytes": 50155,
+      "git_blob": "d9100e29c02b453d4d536a25c69890f9d82487b2",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "a59e5e866c40c866042e343eab58493ccb3500f33b50877a1c09729a4e1e0b1a"
+    },
+    "custom_components/homecircle/findmy_storage.py": {
+      "bytes": 1509,
+      "git_blob": "a12eaaa1f09db10c23b0d052ba948062b1cd0c44",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "1c3a91c1dab341bf4909af989e5cdb3ef43b6c72d5e954b30a57212d76f73787"
+    },
+    "custom_components/homecircle/findmy_vault.py": {
+      "bytes": 6420,
+      "git_blob": "eb4a3da72a1bc2049bf142e75ee3b7022125c85b",
+      "mode": "100644",
+      "role": "primary_74_python",
+      "sha256": "1959c143d36c4f06aff13d85aed2886c32161de86680fd0567427bda418e12f5"
+    },
+    "custom_components/homecircle/manifest.json": {
+      "bytes": 664,
+      "git_blob": "04457725e25a8f58d190c9bab8ee9499daf0b7fa",
+      "mode": "100644",
+      "role": "supporting_context",
+      "sha256": "7d1f4243d3741c434a3b85594617463105985ab26b387786e75e3da6dacecfa9"
+    },
+    "custom_components/homecircle/selection.py": {
+      "bytes": 9991,
+      "git_blob": "0a51ac9e3aa819e55bb5966c74abfb3474ac83b1",
+      "mode": "100644",
+      "role": "supporting_context",
+      "sha256": "bf87b91f662459ef539894bd908c28ea189ad91a29c49755169f4c0dff7b3562"
+    },
+    "custom_components/homecircle/tracker_providers.py": {
+      "bytes": 8841,
+      "git_blob": "a58f6ab8634e668ab33ef75def306a19b7746817",
+      "mode": "100644",
+      "role": "supporting_context",
+      "sha256": "c0d18a68009d7ffedc2f095ee1c8bba8a59202e38ca4bdecb9c8804d6d1d5e99"
+    },
+    "docs/INDEPENDENT-CRYPTO-VALIDATION.md": {
+      "bytes": 18111,
+      "git_blob": "a236b85c610894dc93883b825f208f5621800fd5",
+      "mode": "100644",
+      "role": "supporting_context",
+      "sha256": "73cb5ab32a99e3bae19575ed6b07d05417ad06f7d84c1760abcb2f52ef68178c"
+    },
+    "docs/RELEASE-1.0-ASSURANCE-HANDOFF.md": {
+      "bytes": 4436,
+      "git_blob": "c4e2f90c5b9894d7bcb3a56d81648741610ac8be",
+      "mode": "100644",
+      "role": "supporting_context",
+      "sha256": "b9ce23bc07b0ffb45f93613fd9fde8c1950bd15772c6b3662932ae06998cc7a9"
+    },
+    "docs/RELEASE-1.0-FIXED-ORDINARY-RESTORE.md": {
+      "bytes": 5503,
+      "git_blob": "9ad53a404ffde51346bc0ec7861a317eafb05b2e",
+      "mode": "100644",
+      "role": "supporting_context",
+      "sha256": "e94aa9e2f6fd818a88d0e11c1f7c18b95f31beeccd5c3b3104d3fe3a6268142b"
+    },
+    "docs/RELEASE-1.0-FIXED-PACKAGE-VALIDATION.md": {
+      "bytes": 5865,
+      "git_blob": "bc0fb492ca36e09f2bf37fd3618ce8bf999c0b89",
+      "mode": "100644",
+      "role": "supporting_context",
+      "sha256": "67a1dcb6ccd2ada098d5c76bf75b4b6554868e8047d020e7e65e0bd73d71c736"
+    },
+    "docs/RELEASE-1.0-PRIVATE-UPGRADE.md": {
+      "bytes": 5053,
+      "git_blob": "995d433a48d3648c3fc85d4608112c247ce67ce7",
+      "mode": "100644",
+      "role": "supporting_context",
+      "sha256": "4ef16f7132fdfb0c3a2e4c1f0daf53f36531fd6635e5a2f453e96a19eaa3ecfc"
+    },
+    "docs/RELEASE-1.0-ROLLBACK-PROTECTION.md": {
+      "bytes": 10237,
+      "git_blob": "196bd4c5aed0c174ac1da3637550d3aba6d2655a",
+      "mode": "100644",
+      "role": "supporting_context",
+      "sha256": "0fc272f1646fa86a1c3817f9f73da66ee74c13fe032b28edd2f1ca4f350faf85"
+    },
+    "tests/test_findmy_crypto_hardening.py": {
+      "bytes": 16927,
+      "git_blob": "f7b79e4a87334c28bb544ec1be2f7312d786cbef",
+      "mode": "100644",
+      "role": "supporting_context",
+      "sha256": "2101ed0eff20317dea1e41988c38b3c0d43fa98569b4614a289e52f428760233"
+    },
+    "tests/test_findmy_gsa_work_lifetime.py": {
+      "bytes": 3715,
+      "git_blob": "43efebd3d7845373d7d81aa1870ed357fea57154",
+      "mode": "100644",
+      "role": "supporting_context",
+      "sha256": "d40999efa61430e3bba32ad2d2c6735ed8f11291d57a3776a72552e220fc014d"
+    },
+    "tests/test_findmy_recovery_guard.py": {
+      "bytes": 28528,
+      "git_blob": "ba6619339d02fd04e6b25a95fbdb490ea98ad9d1",
+      "mode": "100644",
+      "role": "supporting_context",
+      "sha256": "550f70e1df209dad2c15a5ba5b8f4acdd86fccb7617735ba9c84bcca6c97c795"
+    },
+    "tests/test_findmy_recovery_integration.py": {
+      "bytes": 13691,
+      "git_blob": "84dab83dafb11ad07e23e0e91027f0256631f464",
+      "mode": "100644",
+      "role": "supporting_context",
+      "sha256": "b3f983371e647122fabc7365bdac7d6990f59aed70723da5ad0cc65f08070344"
+    },
+    "tests/test_findmy_recovery_protocol.py": {
+      "bytes": 25153,
+      "git_blob": "9d62f516ac2ed062e3f386754cc188143c2ae352",
+      "mode": "100644",
+      "role": "supporting_context",
+      "sha256": "8517dd3aa531d12eae70ee8d983f7ecd65094131c9c4d3609a88e536f16a56af"
+    },
+    "tests/test_findmy_recovery_public_bounds.py": {
+      "bytes": 3775,
+      "git_blob": "7ac0efbd6bdc40622e71e2fa0c25e9791ad3ae29",
+      "mode": "100644",
+      "role": "supporting_context",
+      "sha256": "87d4dbe3a565ee3f77ac150aee529696e52e9c0e14946f4111748abf060504da"
+    },
+    "tests/test_findmy_recovery_restart.py": {
+      "bytes": 5113,
+      "git_blob": "4d48b83a6dd83be6ac96d941f7d0e84b1977f87a",
+      "mode": "100644",
+      "role": "supporting_context",
+      "sha256": "130f5c5de574d62c8e80a9fce4d3248abcfe3763328efc99cf2b106de7272cb2"
+    },
+    "tests/test_findmy_runtime_bootstrap.py": {
+      "bytes": 12064,
+      "git_blob": "33411a0bb226faf5c2baf8384db9b34599748843",
+      "mode": "100644",
+      "role": "supporting_context",
+      "sha256": "5df762a47fd46d3454784cee13ebaf162af0a85f80e89a17c690492b0be22c4c"
+    },
+    "tests/test_findmy_srp_isolation.py": {
+      "bytes": 13207,
+      "git_blob": "ff88bee9667fd937d8a98f99ea15049462ed9ec1",
+      "mode": "100644",
+      "role": "supporting_context",
+      "sha256": "8f56921486f5d8df5a3b6dee89111b01fa82f66c1159752507aa1177e6dd65c3"
+    },
+    "tests/test_findmy_trust_binding.py": {
+      "bytes": 11707,
+      "git_blob": "3e36f2b2ce6b1a9c7a745899a0de9bd0eb4d1d40",
+      "mode": "100644",
+      "role": "supporting_context",
+      "sha256": "ec8fa7c97dfde692fc4d4d8c170d38f65bf9d9777ede87dba86632079b68f1a6"
+    },
+    "tests/test_findmy_vault.py": {
+      "bytes": 5427,
+      "git_blob": "c19be04b8cab68e697b19924674a694992d1d00d",
+      "mode": "100644",
+      "role": "supporting_context",
+      "sha256": "3c0afd59fb5ee40eaaf4bd1cf0643690d695369205f12a7ee0139beb78e17525"
+    },
+    "tests/test_findmy_vault_hardening.py": {
+      "bytes": 7706,
+      "git_blob": "1af7ce81affa7c421945e004aec6be72e11be646",
+      "mode": "100644",
+      "role": "supporting_context",
+      "sha256": "3510bf41c01390fbebf848439deae353e0bfd934cc2c63deca242643be8030c2"
+    }
+  },
+  "primary_scope_count": 74,
+  "schema": 1,
+  "source_basis": "exact regular Git blobs, no working-tree source bytes",
+  "supporting_context_count": 31
+}

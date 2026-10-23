@@ -100,3 +100,25 @@ notice is now retained verbatim in `LICENSE.md`, including the unfilled
 copyright fields. This notice addition changes no executable code and does
 not resolve those fields, the earlier gist permission question, or service
 authorization. The published beta 20 archive remains unchanged.
+
+
+First-release HAOS scope exclusion (October 22, 2026): HomeCircle no longer ships
+this vendor snapshot's local macOS record decryptor (plist.py) or its command-line
+entry point (__main__.py). They were not used or exported by HomeCircle's CloudKit
+discovery/report/keychain path. The release builder explicitly rejects both
+paths, including contaminated source inputs and manually injected archives.
+Their historical OpenTagViewer/gist ancestry remains recorded above and in the
+dated source inventory; current exclusion does not alter prior Git/release history
+or claim complete rights clearance. All inherited notices remain unchanged.
+See docs/RELEASE-1.0-LOCAL-MACOS-EXCLUSION.md for the bounded source/package proof.
+
+
+Current no-contact distribution direction (October 23, 2026): the source-only
+HACS candidate retains the actual upstream OSS grants and complete existing
+notices, including literal unfilled GrandSlam fields. No guessed author, date or
+new license terms are inserted. Apple binary/service and Unicorn terms questions
+remain separate; no provider permission or legal clearance is asserted. The
+[decision record](../../../docs/RELEASE-1.0-NO-OUTREACH-DECISION.md) records the
+chosen implementation approach and remaining maintainer decisions without
+mandatory author/provider outreach. Historical source and validation records
+retain their original claims and limits.

@@ -16,6 +16,7 @@ from .location_requests import (
     available_notification_entity,
 )
 from .tracker_providers import TRACKER_PROVIDERS
+from .provider_controls import ProviderPaused
 
 CLOUD_COOLDOWN = timedelta(minutes=1)
 
@@ -68,6 +69,9 @@ async def async_refresh_selected(hass, runtime, member, user, entry_id):
             else "requested"
         }
     if registered.platform == "life360":
+        controls = getattr(runtime, "provider_controls", None)
+        if controls is None or controls.paused("life360"):
+            return {"status": "disabled"}
         # Use only the installed integration's supported, entity-targeted action.
         if not hass.services.has_service("life360", "update_location"):
             return {"status": "unsupported"}
@@ -77,9 +81,12 @@ async def async_refresh_selected(hass, runtime, member, user, entry_id):
         if reserved != "reserved":
             return {"status": reserved}
         try:
-            await hass.services.async_call(
-                "life360", "update_location", {"entity_id": [source]}, blocking=True
-            )
+            async with controls.operation("life360"):
+                await hass.services.async_call(
+                    "life360", "update_location", {"entity_id": [source]}, blocking=True
+                )
+        except ProviderPaused:
+            return {"status": "disabled"}
         except Exception:
             runtime.location_request_failures.add(source)
             return {"status": "send_failed"}
@@ -90,6 +97,9 @@ async def async_refresh_selected(hass, runtime, member, user, entry_id):
     )
     if provider is None or registered.config_entry_id != entry_id:
         return {"status": "unsupported"}
+    controls = getattr(runtime, "provider_controls", None)
+    if controls is None or controls.paused(provider.id):
+        return {"status": "disabled"}
     client = runtime.managed_trackers.get(provider.id)
     check = getattr(client, "async_refresh_on_selection", None)
     if check is None:
@@ -102,4 +112,8 @@ async def async_refresh_selected(hass, runtime, member, user, entry_id):
         return {"status": reserved}
     # Reserve before awaiting so concurrent viewers cannot multiply cloud calls.
     runtime.selection_refresh_times[provider.id] = now
-    return {"status": await check()}
+    try:
+        async with controls.operation(provider.id):
+            return {"status": await check()}
+    except ProviderPaused:
+        return {"status": "disabled"}

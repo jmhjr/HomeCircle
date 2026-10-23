@@ -53,6 +53,7 @@ async def test_one_expired_account_does_not_stop_other_accounts(hass):
     entities = []
     provider = DirectFindMy(hass, accounts, entities.extend, entry.entry_id)
     with (
+        patch.object(hass.config_entries, "async_reload", new=AsyncMock(return_value=True)),
         patch(
             "custom_components.homecircle.findmy_provider.Vault.load", return_value=data
         ),
@@ -66,7 +67,7 @@ async def test_one_expired_account_does_not_stop_other_accounts(hass):
     ):
         await provider.async_start()
         await hass.async_block_till_done()
-        assert provider.states[first] == "auth_required"
+        assert provider.states[first] == "paused"
         assert provider.states[second] == "connected"
         assert provider.health_snapshot().state == "partial"
         assert len(entities) == 2

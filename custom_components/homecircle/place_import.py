@@ -5,13 +5,14 @@ import re
 from urllib.parse import quote
 
 import voluptuous as vol
-from life360 import Life360
+from life360 import Life360, LoginError, Unauthorized
 from life360.const import HOST
 from homeassistant.helpers import selector
 
 from .const import CONF_LIFE360_ACCOUNT, CONF_PLACES, CONF_PRIMARY_HOME
 from .life360_direct import authorized_client, new_session
 from .zone_setup import async_create_zone, zone_error
+from .provider_controls import ProviderPaused, async_get_controls
 
 
 def markdown_name(value):
@@ -120,6 +121,18 @@ def select_field(options, multiple=False):
 class PlaceImportFlow:
     """Options-flow steps; no zone writes until the final review is accepted."""
 
+    async def _guarded_place_fetch(self, circle=None):
+        entry = getattr(self, "config_entry", None)
+        if entry is None:
+            raise ProviderPaused("provider_paused")
+        controls = await async_get_controls(self.hass, entry.entry_id)
+        async with controls.operation("life360"):
+            try:
+                return await fetch(self.place_connection, circle)
+            except (LoginError, Unauthorized):
+                await controls.async_pause_denied("life360")
+                raise ProviderPaused("provider_paused") from None
+
     async def async_step_import_places(self, user_input=None):
         if user_input is None:
             self.place_connections = connections(self.hass, self.draft)
@@ -130,9 +143,11 @@ class PlaceImportFlow:
             index = int(user_input["account"])
             self.place_connection = self.place_connections[index][1]
             try:
-                self.place_circles = await fetch(self.place_connection)
+                self.place_circles = await self._guarded_place_fetch()
                 if not self.place_circles:
                     raise ValueError("No circles")
+            except ProviderPaused:
+                errors["base"] = "provider_paused"
             except Exception:
                 errors["base"] = "place_import_fetch"
             else:
@@ -157,10 +172,12 @@ class PlaceImportFlow:
         if user_input is not None:
             circle = self.place_circles[int(user_input["circle"])]
             try:
-                raw = await fetch(self.place_connection, circle["id"])
+                raw = await self._guarded_place_fetch(circle["id"])
                 self.import_candidates = parse_places(raw)
                 self.import_invalid = len(raw) - len(self.import_candidates)
                 self.import_created = []
+            except ProviderPaused:
+                errors["base"] = "provider_paused"
             except Exception:
                 errors["base"] = "place_import_fetch"
             else:

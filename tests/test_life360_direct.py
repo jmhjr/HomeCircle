@@ -169,12 +169,15 @@ async def test_rate_limit_pauses_requests(hass):
             self.calls += 1
             raise RateLimited("limited", 600)
 
-    client = DirectLife360(hass, {}, lambda _: None)
+    pause = AsyncMock()
+    client = DirectLife360(hass, {}, lambda _: None, on_access_denied=pause)
     client.api = LimitedAPI()
     await client.async_refresh()
     await client.async_refresh()
     assert client.api.calls == 1
     assert client.health_snapshot().state == "rate_limited"
+    assert not client._auth_blocked
+    pause.assert_not_awaited()
 
 
 async def test_member_shared_in_two_circles_uses_visible_location(hass):
@@ -477,17 +480,21 @@ async def test_rejected_credentials_wait_for_repair_without_retrying(hass):
 
 
 @pytest.mark.parametrize("failure", [Unauthorized, LoginError])
-async def test_one_circle_access_failure_keeps_other_members_fresh(hass, failure):
+async def test_one_circle_denial_halts_all_later_requests(hass, failure):
     raw = {
         "id": "example-member",
         "location": {ATTR_LATITUDE: "1", ATTR_LONGITUDE: "2"},
     }
 
     class RestrictedAPI:
+        calls = []
+
         async def get_circles(self):
+            self.calls.append("circles")
             return [{"id": "restricted"}, {"id": "accessible"}]
 
         async def get_circle_members(self, circle):
+            self.calls.append(f"members:{circle}")
             if circle == "restricted":
                 if failure is Unauthorized:
                     raise failure("fictional access rejection", None)
@@ -495,17 +502,25 @@ async def test_one_circle_access_failure_keeps_other_members_fresh(hass, failure
             return [raw]
 
         async def get_circle_member(self, _circle, _member):
+            self.calls.append("member")
             return raw
 
-    client = DirectLife360(hass, {}, lambda _: None)
-    client.api = RestrictedAPI()
+    pause = AsyncMock()
+    client = DirectLife360(hass, {}, lambda _: None, on_access_denied=pause)
+    api = RestrictedAPI()
+    client.api = api
     await client.async_refresh()
-    assert client.trackers["example-member"].available
-    assert client.health_snapshot().state == "partial"
-    assert client.api is not None
+    await client.async_refresh()
+    await client._interval(None)
+    assert await client.async_refresh_on_selection() == "unavailable"
+    assert api.calls == ["circles", "members:restricted"]
+    assert not client.trackers
+    assert client.health_snapshot().state == "access_denied"
+    assert client.api is None
+    pause.assert_awaited_once_with()
 
 
-async def test_one_member_access_failure_keeps_other_members_fresh(hass):
+async def test_one_member_denial_marks_all_unavailable_and_stops_polling(hass):
     first = {
         "id": "example-first",
         "location": {ATTR_LATITUDE: "1", ATTR_LONGITUDE: "2"},
@@ -513,6 +528,8 @@ async def test_one_member_access_failure_keeps_other_members_fresh(hass):
     second = {**first, "id": "example-second"}
 
     class RestrictedAPI:
+        polled = []
+
         async def get_circles(self):
             return [{"id": "example-circle"}]
 
@@ -520,20 +537,34 @@ async def test_one_member_access_failure_keeps_other_members_fresh(hass):
             return [first, second]
 
         async def get_circle_member(self, _circle, member):
+            self.polled.append(member)
             if member == "example-first":
                 raise Unauthorized("fictional access rejection", None)
             return second
 
-    client = DirectLife360(hass, {}, lambda _: None)
-    client.api = RestrictedAPI()
+    pause = AsyncMock()
+    client = DirectLife360(hass, {}, lambda _: None, on_access_denied=pause)
+    api = RestrictedAPI()
+    client.api = api
     await client.async_refresh()
-    assert client.health_snapshot().state == "partial"
-    assert client.trackers["example-second"].available
-    assert client.api is not None
+    assert client.health_snapshot().state == "access_denied"
+    assert set(client.trackers) == {"example-first", "example-second"}
+    assert all(not tracker.available for tracker in client.trackers.values())
+    assert all(tracker.latitude is None for tracker in client.trackers.values())
+    assert api.polled == ["example-first"]
+    assert client.api is None
+    pause.assert_awaited_once_with()
 
 
-async def test_all_members_denied_rechecks_sign_in_then_requests_repair(hass):
+async def test_denial_blocks_before_persistence_yields_without_account_probes(hass):
+    entered = asyncio.Event()
+    release = asyncio.Event()
+    saved = []
+
     class DeniedAPI:
+        member_calls = 0
+        profile_checks = 0
+
         async def get_circles(self):
             return [{"id": "example-circle"}]
 
@@ -541,31 +572,51 @@ async def test_all_members_denied_rechecks_sign_in_then_requests_repair(hass):
             return [{"id": "example-first"}, {"id": "example-second"}]
 
         async def get_circle_member(self, _circle, _member):
+            self.member_calls += 1
             raise Unauthorized("fictional member denial", None)
 
         async def get_me(self):
-            raise Unauthorized("fictional account denial", None)
+            self.profile_checks += 1
+            raise AssertionError("denial must not trigger an account probe")
+
+    async def persist_pause():
+        assert client._auth_blocked
+        assert client.health_snapshot().state == "access_denied"
+        assert all(not tracker.available for tracker in client.trackers.values())
+        entered.set()
+        await release.wait()
+        saved.append("life360")
 
     entry = Mock()
-    client = DirectLife360(hass, {}, lambda _: None, entry_id="example-entry")
-    client.api = DeniedAPI()
+    client = DirectLife360(
+        hass, {}, lambda _: None, entry_id="example-entry",
+        on_access_denied=persist_pause,
+    )
+    api = DeniedAPI()
+    client.api = api
     client.session = Mock()
     with (
         patch(
             "custom_components.homecircle.life360_direct.authorized_client",
             new_callable=AsyncMock,
-            side_effect=Unauthorized("fictional sign-in rejection", None),
         ) as authorize,
         patch.object(hass.config_entries, "async_get_entry", return_value=entry),
     ):
+        pending = asyncio.create_task(client.async_refresh())
+        await entered.wait()
         await client.async_refresh()
-        await client.async_refresh()
-    authorize.assert_awaited_once()
-    entry.async_start_reauth.assert_called_once()
-    assert client.health_snapshot().state == "auth_required"
+        assert await client.async_refresh_on_selection() == "unavailable"
+        await client._interval(None)
+        release.set()
+        await pending
+    authorize.assert_not_awaited()
+    entry.async_start_reauth.assert_not_called()
+    assert api.member_calls == 1
+    assert api.profile_checks == 0
+    assert saved == ["life360"]
 
 
-async def test_all_members_denied_but_account_valid_does_not_request_repair(hass):
+async def test_failed_pause_persistence_keeps_denial_block_without_probes(hass, caplog):
     class RestrictedAPI:
         profile_checks = 0
 
@@ -583,13 +634,23 @@ async def test_all_members_denied_but_account_valid_does_not_request_repair(hass
             return {"id": "fictional-account"}
 
     entry = Mock()
-    client = DirectLife360(hass, {}, lambda _: None, entry_id="example-entry")
-    client.api = RestrictedAPI()
+    pause = AsyncMock(side_effect=OSError("example-private-persistence-canary"))
+    client = DirectLife360(
+        hass, {}, lambda _: None, entry_id="example-entry", on_access_denied=pause
+    )
+    api = RestrictedAPI()
+    client.api = api
     with patch.object(hass.config_entries, "async_get_entry", return_value=entry):
         await client.async_refresh()
         await client.async_refresh()
-    assert client.api.profile_checks == 1
-    assert client.health_snapshot().state == "api_error"
+    assert api.profile_checks == 0
+    assert client.api is None
+    assert client._auth_blocked
+    assert client.health_snapshot().state == "access_denied"
+    assert await client.async_refresh_on_selection() == "unavailable"
+    pause.assert_awaited_once_with()
+    assert "example-private-persistence-canary" not in caplog.text
+    assert "example-private-persistence-canary" not in str(client.health_snapshot().as_dict())
     entry.async_start_reauth.assert_not_called()
 
 
@@ -617,16 +678,85 @@ async def test_stop_cancels_interval_refresh_before_closing_session(hass):
     assert client.session is None
 
 
-async def test_circle_access_rejection_rechecks_login_before_repair(hass):
+async def test_circle_access_rejection_pauses_without_login_probe(hass):
     class RejectedAPI:
         async def get_circles(self):
             raise Unauthorized("fictional circle rejection", None)
 
     entry = Mock()
-    client = DirectLife360(hass, {}, lambda _: None, entry_id="example-entry")
+    pause = AsyncMock()
+    client = DirectLife360(
+        hass, {}, lambda _: None, entry_id="example-entry", on_access_denied=pause
+    )
     client.api = RejectedAPI()
     with patch.object(hass.config_entries, "async_get_entry", return_value=entry):
         await client.async_refresh()
-    assert client.health_snapshot().state == "api_error"
+    assert client.health_snapshot().state == "access_denied"
     assert client.api is None
+    pause.assert_awaited_once_with()
     entry.async_start_reauth.assert_not_called()
+
+
+async def test_restored_provider_pause_prevents_startup_and_manual_io(hass):
+    pause = AsyncMock()
+    client = DirectLife360(
+        hass, {}, lambda _: None, is_paused=lambda: True, on_access_denied=pause
+    )
+    with (
+        patch("custom_components.homecircle.life360_direct.new_session") as session,
+        patch("custom_components.homecircle.life360_direct.authorized_client") as authorize,
+    ):
+        await client.async_start()
+        await client.async_refresh()
+        await client._interval(None)
+        assert await client.async_refresh_on_selection() == "unavailable"
+    session.assert_not_called()
+    authorize.assert_not_called()
+    pause.assert_not_awaited()
+    assert client._unsub is None
+    assert client._task is None
+    assert client.health_snapshot().state == "paused"
+
+
+async def test_pause_during_discovery_stops_before_next_provider_request(hass):
+    paused = False
+
+    class PausingAPI:
+        member_calls = 0
+
+        async def get_circles(self):
+            nonlocal paused
+            paused = True
+            return [{"id": "example-circle"}]
+
+        async def get_circle_members(self, _circle):
+            self.member_calls += 1
+            return []
+
+    api = PausingAPI()
+    client = DirectLife360(hass, {}, lambda _: None, is_paused=lambda: paused)
+    client.api = api
+    await client.async_refresh()
+    assert api.member_calls == 0
+    assert client.health_snapshot().state == "paused"
+
+
+async def test_denial_callback_can_stop_its_current_client_without_self_wait(hass):
+    class DeniedAPI:
+        async def get_circles(self):
+            raise Unauthorized("fictional access rejection", None)
+
+    async def stop_after_denial():
+        await client.async_stop()
+
+    client = DirectLife360(hass, {}, lambda _: None, on_access_denied=stop_after_denial)
+    client.api = DeniedAPI()
+    session = Mock(close=AsyncMock())
+    client.session = session
+    pending = asyncio.create_task(client.async_refresh())
+    client._task = pending
+    await pending
+    assert not pending.cancelled()
+    assert client._task is None
+    assert client.session is None
+    session.close.assert_awaited_once_with()
