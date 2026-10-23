@@ -241,6 +241,11 @@ async def test_unload_cancels_city_lookup_and_remove_deletes_cache(hass):
     await lookup.close()
     assert lookup.closed and lookup.task.cancelled()
     entry = MockConfigEntry(domain="homecircle")
+    removed_keys = []
+
+    async def record_removal(saved_store):
+        removed_keys.append(saved_store.key)
+
     with (
         patch(
             "custom_components.homecircle.frontend.async_unregister", new=AsyncMock()
@@ -250,11 +255,19 @@ async def test_unload_cancels_city_lookup_and_remove_deletes_cache(hass):
             new=AsyncMock(),
         ),
         patch(
-            "homeassistant.helpers.storage.Store.async_remove", new=AsyncMock()
-        ) as remove,
+            "homeassistant.helpers.storage.Store.async_remove", new=record_removal
+        ),
     ):
         await async_remove_entry(hass, entry)
-    assert remove.await_count == 4  # Also removes the Find My migration ledger.
+    expected_keys = {
+        f"homecircle.location_requests.{entry.entry_id}",
+        f"homecircle.activity.{entry.entry_id}",
+        f"homecircle.city_lookup.{entry.entry_id}",
+        f"homecircle.provider_controls.{entry.entry_id}",
+        f"homecircle_findmy_migration_{entry.entry_id}",
+    }
+    assert len(removed_keys) == len(expected_keys)
+    assert set(removed_keys) == expected_keys
 
 
 @pytest.mark.parametrize(
