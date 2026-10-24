@@ -49,11 +49,13 @@
     "canonical_archive_and_inventory_passed": true,
     "two_packages_byte_identical": true
   },
+  "post_publication_documentation_scope": "Normal follow-up documentation closure only; original v1.0.0 tag/source/artifacts and product bytes remain unchanged. The owner test instance remains on RC2; test/everyday upgrades are separate deployment decisions.",
   "proposed_release_disposition": "RELEASE-1.0-PROPOSED-DISPOSITION.md",
   "public_inputs_privacy_scan": {
     "expected_files": 411,
     "flagged_files": 0
   },
+  "publication_record": "RELEASE-1.0-PUBLICATION.json",
   "qualification_boundaries": {
     "RC2_exact_native_51_tests_and_ordinary_owner_cold_start": "Retain their original RC2 source/package scope; no new native runtime run is claimed for the stable version labels.",
     "actual_photo_persistence": "Unexercised; the test instance had no actual photos.",
@@ -63,8 +65,21 @@
   },
   "schema": 1,
   "stable_publication_approved": true,
-  "stable_tag_release_main_merge_and_production_actions": 0,
-  "status": "Maintainer approved this exact package and scope; merge and publication are pending execution.",
+  "stable_tag_release_main_merge_and_production_actions_at_preparation_checkpoint": 0,
+  "status": "Published stable v1.0.0; normal merge and anonymous public-asset verification completed. Original preparation counts and runtime evidence retain their checkpoint/source scope.",
+  "verified_publication": {
+    "anonymous_public_assets_exact": true,
+    "draft": false,
+    "everyday_instance_upgrade_actions": 0,
+    "latest": true,
+    "new_runtime_HACS_or_native_matrix_claims": false,
+    "prerelease": false,
+    "published_at": "2026-10-24T04:48:06Z",
+    "release_id": 422522039,
+    "source": "6984be7c6148c934e7f51e09e27db5b078fc022c",
+    "tag": "v1.0.0",
+    "test_instance_upgrade_actions": 0
+  },
   "version": "1.0.0",
   "version_only_comparison_to_RC2": {
     "all_licenses_notices_and_dependency_pins_unchanged": true,

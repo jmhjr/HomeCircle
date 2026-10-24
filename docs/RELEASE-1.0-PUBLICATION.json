@@ -1,0 +1,38 @@
+{
+  "HACS_filename_and_minimum_Core_match": true,
+  "approved_documentation_head": "9e1dc9f63ff4d2c1ccf67ab07e115bea4ccf18a8",
+  "approved_prepared_source": "89e25a406d893f99e9f6a173b149e3e7aaca4483",
+  "assets": {
+    "homecircle.zip": {
+      "anonymous_download_verified": true,
+      "id": 671294496,
+      "sha256": "a21aa690ed45aaa1e293fe33c6c9780f6a95ba6e7faa868e49856d4cd7fce932",
+      "size": 628273,
+      "url": "https://github.com/jmhjr/HomeCircle/releases/download/v1.0.0/homecircle.zip"
+    },
+    "inventory.json": {
+      "anonymous_download_verified": true,
+      "id": 671294546,
+      "sha256": "fb5098b327e656a44156b0634e9521c46ed68cd46dd883a2d86590b89a44808f",
+      "size": 16669,
+      "url": "https://github.com/jmhjr/HomeCircle/releases/download/v1.0.0/inventory.json"
+    }
+  },
+  "draft": false,
+  "everyday_instance_upgrade_actions": 0,
+  "latest": true,
+  "legacy_releases_unchanged": true,
+  "new_runtime_HACS_or_native_matrix_claims": false,
+  "owner_checkout_index_and_local_refs_preserved": true,
+  "prerelease": false,
+  "provider_or_author_outreach_actions": 0,
+  "published_at": "2026-10-24T04:48:06Z",
+  "release_id": 422522039,
+  "schema": 1,
+  "source": "6984be7c6148c934e7f51e09e27db5b078fc022c",
+  "tag": "v1.0.0",
+  "tag_points_to_verified_normal_merge": true,
+  "test_instance_upgrade_actions": 0,
+  "url": "https://github.com/jmhjr/HomeCircle/releases/tag/v1.0.0",
+  "whole_merged_tree_matches_approved_source": true
+}

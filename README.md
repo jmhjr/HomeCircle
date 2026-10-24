@@ -2,7 +2,7 @@
 
 Family location and presence for Home Assistant, independent of the tracking provider.
 
-**HomeCircle 1.0.0** is approved for publication with standard Home Assistant People and trackers plus optional, unofficial Apple Find My and Life360 connections. Use the [1.0.0 release page](https://github.com/jmhjr/HomeCircle/releases/tag/v1.0.0), [setup guide](docs/RELEASE-1.0-USER-GUIDE.md) and [approved release disposition](docs/RELEASE-1.0-PROPOSED-DISPOSITION.md). The [stable preparation record](docs/RELEASE-1.0-STABLE-PREPARATION.json) identifies the exact 112-file ZIP and inventory; approval and preparation do not themselves claim completed publication or installed stable-version verification.
+**HomeCircle 1.0.0 is published as the stable release.** Use the [release page](https://github.com/jmhjr/HomeCircle/releases/tag/v1.0.0) and [HACS installation guide](docs/RELEASE-1.0-USER-GUIDE.md), or download the exact [homecircle.zip](https://github.com/jmhjr/HomeCircle/releases/download/v1.0.0/homecircle.zip) and [inventory](https://github.com/jmhjr/HomeCircle/releases/download/v1.0.0/inventory.json). It supports standard Home Assistant People and trackers plus optional, unofficial Apple Find My and Life360 connections. The [publication record](docs/RELEASE-1.0-PUBLICATION.json) verifies the normal merge, stable tag and both anonymously downloaded public assets; the [preparation record](docs/RELEASE-1.0-STABLE-PREPARATION.json) and [approved disposition](docs/RELEASE-1.0-PROPOSED-DISPOSITION.md) retain the exact package and accepted limits. Publication is separate from installing or upgrading an HA instance.
 
 The first-release support target is **Home Assistant OS on Intel/AMD (amd64) and ARM64**, minimum Core **2026.9.4**, with **2026.10.2** as the current recorded qualification target. Home Assistant Container remains experimental. See the [support scope and exclusions](docs/RELEASE-1.0-SUPPORT-PROPOSAL.md) and [changelog](CHANGELOG.md).
 
@@ -14,7 +14,7 @@ The [RC2 acceptance record](docs/RELEASE-1.0-RC2-ACCEPTANCE.json) retains focuse
 
 ## Start here
 
-- [1.0.0 release](https://github.com/jmhjr/HomeCircle/releases/tag/v1.0.0), [approved disposition](docs/RELEASE-1.0-PROPOSED-DISPOSITION.md), [exact package preparation](docs/RELEASE-1.0-STABLE-PREPARATION.json) and [first-release tracker](docs/RELEASE-1.0-FIRST-RELEASE-TRACKER.md)
+- [1.0.0 release](https://github.com/jmhjr/HomeCircle/releases/tag/v1.0.0), [verified publication](docs/RELEASE-1.0-PUBLICATION.json), [approved disposition](docs/RELEASE-1.0-PROPOSED-DISPOSITION.md), [exact package preparation](docs/RELEASE-1.0-STABLE-PREPARATION.json) and [completed first-release tracker](docs/RELEASE-1.0-FIRST-RELEASE-TRACKER.md)
 - [HAOS support target](docs/RELEASE-1.0-SUPPORT-PROPOSAL.md) and [no-contact distribution decision record](docs/RELEASE-1.0-NO-OUTREACH-DECISION.md)
 - [First-release user guide](docs/RELEASE-1.0-USER-GUIDE.md), [maintenance and recovery](docs/RELEASE-1.0-MAINTENANCE.md), [privacy/support](docs/RELEASE-1.0-PRIVACY-SUPPORT.md) and [troubleshooting](docs/RELEASE-1.0-TROUBLESHOOTING.md)
 
@@ -38,9 +38,9 @@ The [RC2 acceptance record](docs/RELEASE-1.0-RC2-ACCEPTANCE.json) retains focuse
 
 ## Release and validation
 
-Maintainer: [@jmhjr](https://github.com/jmhjr). The approved [`v1.0.0`](https://github.com/jmhjr/HomeCircle/releases/tag/v1.0.0) package changes only the manifest, frontend resource and compiled card version labels from RC2; the other 109 packaged files match exactly. Canonical package builds and inventories match, and 126 frontend tests passed. See [stable preparation](docs/RELEASE-1.0-STABLE-PREPARATION.json) for exact hashes and evidence boundaries, then follow [HACS setup](docs/SETUP.md).
+Maintainer: [@jmhjr](https://github.com/jmhjr). Stable [`v1.0.0`](https://github.com/jmhjr/HomeCircle/releases/tag/v1.0.0) was published on October 24, 2026 at 04:48:06 UTC from normal merge `6984be7c6148c934e7f51e09e27db5b078fc022c`. The published package changes only the manifest, frontend resource and compiled card version labels from RC2; the other 109 packaged files match exactly. Canonical package builds and inventories match, and 126 frontend tests passed. Both public assets match their approved hashes after anonymous download. See [verified publication](docs/RELEASE-1.0-PUBLICATION.json) and [stable preparation](docs/RELEASE-1.0-STABLE-PREPARATION.json), then follow [HACS setup](docs/SETUP.md).
 
-RC2's 51 focused native exact-package cases and ordinary owner cold start keep their original source/package scope. RC1's full current-Core, focused minimum-Core and genuine HACS qualification also remain separately identified; failed and corrected attempts are preserved. No new stable HACS, native or full platform matrix is claimed by the version-only preparation. Published beta20 remains the historical upgrade baseline. The [release plan](docs/RELEASE-1.0-PLAN.md) records approval separately from publication and public-byte readback.
+RC2's 51 focused native exact-package cases and ordinary owner cold start keep their original source/package scope. RC1's full current-Core, focused minimum-Core and genuine HACS qualification also remain separately identified; failed and corrected attempts are preserved. No new stable HACS installation, native run or full platform matrix is claimed by publication. Published beta20 remains the historical upgrade baseline. The [release plan](docs/RELEASE-1.0-PLAN.md) records approval separately from verified publication and public-byte readback. The owner test instance remains on RC2; upgrading it or an everyday HA instance is a separate deployment decision, not an unfinished first-release gate.
 
 ## Repository
 

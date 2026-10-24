@@ -1,9 +1,14 @@
 # HomeCircle 1.0 release plan
 
-Started October20, 2026. The target is `v1.0.0`; the current published
-prerelease is `v1.0.0-rc.2`. Published beta20 remains the historical upgrade
-baseline. This is an execution tracker, not a stable-release declaration. Check a task only after linking its exact evidence. Retain
-failed attempts and record any accepted scope change instead of deleting a gate.
+Started October20, 2026. Stable `v1.0.0` was published at
+`2026-10-24T04:48:06Z` from normal merge
+`6984be7c6148c934e7f51e09e27db5b078fc022c`. The
+[publication record](RELEASE-1.0-PUBLICATION.json) verifies the stable tag, latest
+non-prerelease release and exact anonymous public-asset downloads. Published
+beta20 remains the historical upgrade baseline. The seven first-release items
+are complete at their accepted scopes. Dated failures, unobserved limits and
+source-bound evidence below remain unchanged; completed publication does not
+create new runtime or provider results.
 
 ## First-release decisions and active checklist
 
@@ -38,21 +43,24 @@ providers and the documented limits. This approves prepared source
 `a21aa690ed45aaa1e293fe33c6c9780f6a95ba6e7faa868e49856d4cd7fce932`
 and inventory `fb5098b327e656a44156b0634e9521c46ed68cd46dd883a2d86590b89a44808f`.
 The [approved disposition](RELEASE-1.0-PROPOSED-DISPOSITION.md) records the accepted
-inclusion/support scope and residual limits. Merge, tag and stable publication
-remain pending; no everyday HA upgrade, extra provider tests, recovery actions
-or outreach are authorized by this release decision.
+inclusion/support scope and residual limits. Normal merge, tag, stable publication
+and anonymous public-byte verification subsequently completed in the
+[publication record](RELEASE-1.0-PUBLICATION.json). No everyday HA upgrade, extra
+provider tests, recovery actions or outreach are authorized by this release
+decision. The test instance remains on RC2; a later test or everyday deployment
+is separate from the completed first-release gates.
 The frozen-RC engineering qualification, including the focused minimum-Core
 check and genuine HACS delivery, is accepted. Reuse existing architecture
 evidence; do not reopen completed ordinary restore, private-copy upgrade or
 current-Core checks for documentation edits.
-Final RC1 current/minimum qualification, public prerelease byte verification and genuine fourteen-phase HACS installed delivery passed at their recorded source/package scope. The RC2 phone confirmation is bounded display acceptance; the separate final maintainer approval does not create new runtime evidence. Stable publication remains pending. The detailed thirteen-stage history below retains
+Final RC1 current/minimum qualification, public prerelease byte verification and genuine fourteen-phase HACS installed delivery passed at their recorded source/package scope. The RC2 phone confirmation is bounded display acceptance; final approval and stable publication do not create new runtime evidence. The detailed thirteen-stage history below retains
 its dated outcomes; superseded scope/assurance proposals are historical.
 
-## Final candidate qualification status
+## Stable publication and retained qualification
 
-The prepared stable1.0 package has version-only differences from RC2 and is now approved at the exact source/artifact binding above. Its [preparation record](RELEASE-1.0-STABLE-PREPARATION.json) preserves the checks; the [approved final release decision](RELEASE-1.0-PROPOSED-DISPOSITION.md) records the subsequent maintainer inclusion/support and residual-scope disposition. Merge and publication are pending.
+The published stable1.0 package has version-only differences from RC2 and matches the exact approved artifact binding above. Its [preparation record](RELEASE-1.0-STABLE-PREPARATION.json) preserves the checks; the [approved final release decision](RELEASE-1.0-PROPOSED-DISPOSITION.md) records the subsequent maintainer inclusion/support and residual-scope disposition. The [publication record](RELEASE-1.0-PUBLICATION.json) verifies release `422522039`, normal merge and both anonymously downloaded public assets. This post-publication documentation closure is for a normal follow-up PR; the original stable tag, source and artifacts remain fixed.
 
-Current published prerelease RC2 is source `ae8081313cb4060123e200e0356a598c5a72d145`, ZIP `41240a77eb0f5950b47e3e926097751b243e3ace8161de948650b648910c865c`. Its [acceptance record](RELEASE-1.0-RC2-ACCEPTANCE.json) records exact public bytes, 126 frontend cases, 51 focused exact-package Linux cases and the real owner-instance cold restart. The owner confirmed both the Life360 person and AirTag display correctly on the iPhone map and both details open. Desktop observation also showed both members and details without HomeCircle conflicts, retaining stale source ages. This is bounded mobile/desktop display acceptance, with no separate physical-position recheck, forced refresh, reconnect or other manual provider action. New GPS reports, natural renewal and real-photo persistence remain unclaimed. Final stable approval is recorded separately above; publication remains pending.
+The earlier RC2 prerelease is source `ae8081313cb4060123e200e0356a598c5a72d145`, ZIP `41240a77eb0f5950b47e3e926097751b243e3ace8161de948650b648910c865c`. Its [acceptance record](RELEASE-1.0-RC2-ACCEPTANCE.json) records exact public bytes, 126 frontend cases, 51 focused exact-package Linux cases and the real owner-instance cold restart. The owner confirmed both the Life360 person and AirTag display correctly on the iPhone map and both details open. Desktop observation also showed both members and details without HomeCircle conflicts, retaining stale source ages. This is bounded mobile/desktop display acceptance, with no separate physical-position recheck, forced refresh, reconnect or other manual provider action. New GPS reports, natural renewal and real-photo persistence remain unclaimed. Final stable approval and verified publication are recorded separately above.
 
 The earlier RC1 [final qualification record](RELEASE-1.0-FINAL-QUALIFICATION.md) identifies frozen source b906 and the unchanged 112-member RC1 ZIP4f94. Focused minimum-Core run40002540583 is accepted with its actual C7 source: 20 tests, four real Core processes, matching runtime/package and verified cleanup. Full current-Core R3 run40010260549 passed 1,779 backend/126 frontend cases, exact collection, privacy and cleanup. The tagged RC1 and both public assets are verified. Genuine HACS R1 remains failed after four phases and a confirmed helper-only post-uninstall expectation. Corrected R2 run40013210859 passed all14 phases/23 normal Core actions with root/peer/CI agreement and cleanup. Product/RC1 bytes were unchanged within that qualification. Failed full and diagnostic attempts retain their actual scopes. The final b906 change is one test fixture correction; no runtime or package bytes changed. These results remain RC1 evidence, not a full RC2 rerun. Historical records below remain dated evidence.
 
