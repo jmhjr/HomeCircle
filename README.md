@@ -1,22 +1,21 @@
 # HomeCircle
 
-Development toward **HomeCircle 1.0.0** is tracked in the [1.0 release plan](docs/RELEASE-1.0-PLAN.md). The published [1.0.0-rc.1 prerelease](https://github.com/jmhjr/HomeCircle/releases/tag/v1.0.0-rc.1) has 112 package members. The [final qualification record](docs/RELEASE-1.0-FINAL-QUALIFICATION.md) identifies source b906 and the exact ZIP: current-Core full, focused minimum-Core and genuine fourteen-phase HACS acceptance passed. Stable-release approval remains separate. It includes corrections after beta20. The published beta 20 package and its historical validation remain unchanged.
-
 Family location and presence for Home Assistant, independent of the tracking provider.
 
-**Experimental development software — not a stable release.**
+**HomeCircle 1.0.0** is approved for publication with standard Home Assistant People and trackers plus optional, unofficial Apple Find My and Life360 connections. Use the [1.0.0 release page](https://github.com/jmhjr/HomeCircle/releases/tag/v1.0.0), [setup guide](docs/RELEASE-1.0-USER-GUIDE.md) and [approved release disposition](docs/RELEASE-1.0-PROPOSED-DISPOSITION.md). The [stable preparation record](docs/RELEASE-1.0-STABLE-PREPARATION.json) identifies the exact 112-file ZIP and inventory; approval and preparation do not themselves claim completed publication or installed stable-version verification.
 
-Use a test Home Assistant dashboard. Beta 20 hardens polling, native-worker cleanup, recovery safeguards and explicitly selected item identity continuity. It retains optional HA-only Apple Find My, existing HA trackers, Life360, places, pictures and source report times. Background iPhone departure/return and stable release gates remain open. See the [changelog](CHANGELOG.md).
+The first-release support target is **Home Assistant OS on Intel/AMD (amd64) and ARM64**, minimum Core **2026.9.4**, with **2026.10.2** as the current recorded qualification target. Home Assistant Container remains experimental. See the [support scope and exclusions](docs/RELEASE-1.0-SUPPORT-PROPOSAL.md) and [changelog](CHANGELOG.md).
 
-**Status: experimental 1.0.0-rc.1 prerelease; engineering qualification passed, stable-release approval remains pending.** HomeCircle is a working name; public naming remains a release decision.
+HomeCircle preserves explicit tracker selections, genuine source report times and local household settings. Reports may be stale; uninterrupted provider sessions, fresh GPS reports and emergency monitoring are not promised. The final owner round confirmed the Life360 person and AirTag display correctly and both details open on the phone; it does not establish new physical-position, natural renewal or real-photo persistence results.
 
 HomeCircle consumes standard HA `person` and `device_tracker` entities, with optional explicitly selected supporting sensors. Optional direct Life360 and Apple Find My connections use the built in tracker provider contract. Existing HA trackers remain selectable without a HomeCircle provider account.
 
-See [beta 20 validation](docs/BETA20-VALIDATION.md) for the versioned package boundary and remaining acceptance. Historical live Find My proof belongs to [beta 19](docs/BETA19-VALIDATION.md). Earlier features and their release checks are recorded in [beta 18 validation](docs/BETA18-VALIDATION.md).
+The [RC2 acceptance record](docs/RELEASE-1.0-RC2-ACCEPTANCE.json) retains focused exact-package checks and the real owner-instance cold restart. The earlier [RC1 final qualification record](docs/RELEASE-1.0-FINAL-QUALIFICATION.md) retains its full current-Core, focused minimum-Core and genuine fourteen-phase HACS evidence. These are source-bound results, not new stable-version native or HACS runs. Historical [beta 20](docs/BETA20-VALIDATION.md), [beta 19](docs/BETA19-VALIDATION.md) and [beta 18](docs/BETA18-VALIDATION.md) records remain unchanged at their original scopes.
 
 ## Start here
 
-- [First-release checklist](docs/RELEASE-1.0-FIRST-RELEASE-TRACKER.md), [HAOS support target](docs/RELEASE-1.0-SUPPORT-PROPOSAL.md) and [no-contact distribution decision record](docs/RELEASE-1.0-NO-OUTREACH-DECISION.md)
+- [1.0.0 release](https://github.com/jmhjr/HomeCircle/releases/tag/v1.0.0), [approved disposition](docs/RELEASE-1.0-PROPOSED-DISPOSITION.md), [exact package preparation](docs/RELEASE-1.0-STABLE-PREPARATION.json) and [first-release tracker](docs/RELEASE-1.0-FIRST-RELEASE-TRACKER.md)
+- [HAOS support target](docs/RELEASE-1.0-SUPPORT-PROPOSAL.md) and [no-contact distribution decision record](docs/RELEASE-1.0-NO-OUTREACH-DECISION.md)
 - [First-release user guide](docs/RELEASE-1.0-USER-GUIDE.md), [maintenance and recovery](docs/RELEASE-1.0-MAINTENANCE.md), [privacy/support](docs/RELEASE-1.0-PRIVACY-SUPPORT.md) and [troubleshooting](docs/RELEASE-1.0-TROUBLESHOOTING.md)
 
 - [Per-source report times](docs/PER-SOURCE-REPORTS.md)
@@ -25,7 +24,7 @@ See [beta 20 validation](docs/BETA20-VALIDATION.md) for the versioned package bo
 - [Step-by-step setup: iPhone, Life360, pets and supporting sensors](docs/SETUP.md)
 
 - [Product and 1.0 scope](docs/PRODUCT.md)
-- [Stable scope audit and remaining gates](docs/STABLE-SCOPE-AUDIT.md)
+- [Historical stable-scope audit](docs/STABLE-SCOPE-AUDIT.md)
 - [Architecture](docs/ARCHITECTURE.md) and [ADR-001](docs/adr/ADR-001-provider-independence.md)
 - [Troubleshooting built in tracker providers](docs/TRACKER-PROVIDER-ISSUES.md)
 - [Roadmap and acceptance gates](docs/ROADMAP.md)
@@ -37,9 +36,11 @@ See [beta 20 validation](docs/BETA20-VALIDATION.md) for the versioned package bo
 - [Milestone 1 validation and limitations](docs/MILESTONE-1-VALIDATION.md)
 - [Historical bootstrap validation](docs/BOOTSTRAP-VALIDATION.md)
 
-## Experimental release
+## Release and validation
 
-Maintainer: [@jmhjr](https://github.com/jmhjr). Version [`v1.0.0-rc.1`](https://github.com/jmhjr/HomeCircle/releases/tag/v1.0.0-rc.1) is an experimental prerelease. Its public ZIP/inventory are byte-verified and the genuine fourteen-phase HACS rehearsal passed on native amd64 HAOS. Failed R1 and the corrected R2 keep their separate records. Published beta20 remains the separate upgrade baseline. See [final qualification](docs/RELEASE-1.0-FINAL-QUALIFICATION.md) for exact results and limits, then follow [HACS setup](docs/SETUP.md).
+Maintainer: [@jmhjr](https://github.com/jmhjr). The approved [`v1.0.0`](https://github.com/jmhjr/HomeCircle/releases/tag/v1.0.0) package changes only the manifest, frontend resource and compiled card version labels from RC2; the other 109 packaged files match exactly. Canonical package builds and inventories match, and 126 frontend tests passed. See [stable preparation](docs/RELEASE-1.0-STABLE-PREPARATION.json) for exact hashes and evidence boundaries, then follow [HACS setup](docs/SETUP.md).
+
+RC2's 51 focused native exact-package cases and ordinary owner cold start keep their original source/package scope. RC1's full current-Core, focused minimum-Core and genuine HACS qualification also remain separately identified; failed and corrected attempts are preserved. No new stable HACS, native or full platform matrix is claimed by the version-only preparation. Published beta20 remains the historical upgrade baseline. The [release plan](docs/RELEASE-1.0-PLAN.md) records approval separately from publication and public-byte readback.
 
 ## Repository
 
@@ -58,7 +59,7 @@ HomeCircle/
 
 ## V0.1 outcome
 
-Install through HACS; add HomeCircle in HA; select or create an HA Person for each new member, assign a tracker, and choose Home and additional places. First setup creates a dashboard and card if none exists; the visual editor supports additional cards. No manual YAML is required in the validated storage-mode onboarding flow. Optional direct Life360 trackers and older tracker-only members are supported. The remaining stable-release gates are tracked in the [scope audit](docs/STABLE-SCOPE-AUDIT.md).
+Install through HACS; add HomeCircle in HA; select or create an HA Person for each new member, assign a tracker, and choose Home and additional places. First setup creates a dashboard and card if none exists; the visual editor supports additional cards. No manual YAML is required in the validated storage-mode onboarding flow. Optional direct Life360 trackers and older tracker-only members are supported. Follow the [user guide](docs/RELEASE-1.0-USER-GUIDE.md) and [maintenance/restore limits](docs/RELEASE-1.0-MAINTENANCE.md).
 
 HomeCircle is MIT licensed. Bundled third-party SDK, emulator and frontend components retain their original licenses and notices. See the [Find My runtime provenance](custom_components/homecircle/_findmy_runtime/PROVENANCE.md).
 
@@ -93,23 +94,24 @@ not bundle dependency wheels, native executables/libraries, Apple payloads or a
 container image. HA installs declared dependencies separately, and the optional
 Find My setup can download its pinned Apple runtime payload locally. The
 published OSS grants apply to their covered code; they do not license Apple's
-binary or provider services. See the [distribution basis and remaining
-maintainer decisions](docs/RELEASE-1.0-DISTRIBUTION-QUESTIONS.md).
+binary or provider services. See the [distribution facts and retained
+uncertainties](docs/RELEASE-1.0-DISTRIBUTION-QUESTIONS.md) and the
+[approved source-only disposition](docs/RELEASE-1.0-PROPOSED-DISPOSITION.md).
 
-The current source candidate implements administrator **Manage direct
+HomeCircle provides administrator **Manage direct
 connections** with **Pause** and **Resume**, plus account/provider stops after
 access denial. Open Options, choose the saved connection and an action; saved
 accounts, identities, selections and history are kept. Resume deliberately
 allows requests for that provider again, including denied accounts, and does not
-reset Find My recovery safeguards. The affected548-case native check and final full current/minimum-Core checks passed with their exact recorded sources. Genuine HACS qualification passed; remaining owner/release decisions are recorded in the [active tracker](docs/RELEASE-1.0-FIRST-RELEASE-TRACKER.md); source implementation alone is not acceptance. See the
+reset Find My recovery safeguards. The affected548-case native check and final full current/minimum-Core checks passed with their exact recorded sources. Genuine RC1 HACS qualification passed; the [active tracker](docs/RELEASE-1.0-FIRST-RELEASE-TRACKER.md) and [approved disposition](docs/RELEASE-1.0-PROPOSED-DISPOSITION.md) preserve those scopes and the final release decision. See the
 [decision record](docs/RELEASE-1.0-NO-OUTREACH-DECISION.md). For help, use
 [SUPPORT.md](SUPPORT.md) or [private security reporting](SECURITY.md); no raw
 account file, backup or diagnostic upload is required.
 
-## Experimental Apple Find My
+## Optional unofficial Apple Find My
 
-Beta 19 brings HA-only AirTag reporting into HomeCircle using a pinned MIT Python SDK and a local identity runtime. Setup prepares the runtime before asking for Apple credentials, creates an independent identity for each account, and saves only explicitly selected items in an encrypted account store. Accounts poll independently and items appear in their own category. No Mac, terminal, separate helper or manual YAML is required.
+The optional Apple Find My connection provides HA-only AirTag reporting using a pinned MIT Python SDK and a local identity runtime. Setup prepares the runtime before asking for Apple credentials, creates an independent identity for each account, and saves only explicitly selected items in an encrypted account store. Accounts poll independently and items appear in their own category. No Mac, terminal, separate helper or manual YAML is required.
 
-Packaged Apple sign-in, fresh discovery and selection, passwordless restart, and automatic decoded report delivery passed on the tested HA OS Raspberry Pi with two selected items. Broader platform and account coverage remain experimental. Report time and estimated accuracy stay visible because Apple reports can be delayed; new physical movement, current-position freshness and delivery latency have not been proven. See [packaging validation](docs/FINDMY-BETA19-PACKAGING-VALIDATION.md) for evidence and limitations.
+Historical beta19 packaged Apple sign-in, fresh discovery and selection, passwordless restart, and automatic decoded report delivery passed on the tested HAOS Raspberry Pi with two selected items. That result retains its original account/build scope; broader account and protected-format coverage is not established by the release label. Report time and estimated accuracy stay visible because Apple reports can be delayed; new physical movement, current-position freshness and delivery latency have not been proven by this final round. See [beta19 packaging validation](docs/FINDMY-BETA19-PACKAGING-VALIDATION.md) and [RC2 acceptance](docs/RELEASE-1.0-RC2-ACCEPTANCE.json) for their distinct evidence and limitations.
 
 The [Find My setup guide](docs/FINDMY-SETUP.md) covers Apple sign-in, trusted-device recovery, item selection, reconnect options and local storage.

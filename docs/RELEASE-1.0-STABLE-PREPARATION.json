@@ -44,6 +44,7 @@
     "scope": "Independent stdlib-only stable-package comparison, canonical byte/inventory rebuild and retained raw frontend-test evidence review",
     "status": "passed"
   },
+  "maintainer_approval_record": "RELEASE-1.0-MAINTAINER-APPROVAL.json",
   "package_validation": {
     "canonical_archive_and_inventory_passed": true,
     "two_packages_byte_identical": true
@@ -61,9 +62,9 @@
     "prior_broad_current_minimum_Core_and_HACS": "Retain original RC1 evidence scopes; not relabeled as stable runs."
   },
   "schema": 1,
-  "stable_publication_approved": false,
+  "stable_publication_approved": true,
   "stable_tag_release_main_merge_and_production_actions": 0,
-  "status": "Prepared for review; maintainer disposition and stable publication are pending.",
+  "status": "Maintainer approved this exact package and scope; merge and publication are pending execution.",
   "version": "1.0.0",
   "version_only_comparison_to_RC2": {
     "all_licenses_notices_and_dependency_pins_unchanged": true,

@@ -24,25 +24,35 @@ technical and distribution outcomes. On October 23 the maintainer requested a
 [no-contact implementation](RELEASE-1.0-NO-OUTREACH-DECISION.md): source-only HACS
 delivery, actual public OSS grants, complete retained notices, optional unofficial
 providers and local privacy/support. No permission letters or mandatory outreach
-are required. Exact Apple binary/service and Unicorn terms remain factual basis
-and residual-uncertainty questions for a maintainer scope decision; technical
+are required. Exact Apple binary/service and Unicorn terms retain their factual
+basis and residual uncertainty, accepted by the maintainer for the exact scope
+in the [approved release disposition](RELEASE-1.0-PROPOSED-DISPOSITION.md); technical
 review does not manufacture permission or legal clearance. Administrator
 Manage direct connections, Pause/Resume and stop-on-access-denial are implemented in the source candidate; affected runtime results remain tied to their exact recorded source.
 
-The bounded RC2 phone display check passed. Retain unobserved field-case limits
-and complete the remaining maintainer dispositions.
+The bounded RC2 phone display check passed. Unobserved field-case limits remain.
+On October 24, 2026 UTC (October 23 in America/Chicago), the maintainer explicitly
+replied “Do it” to final approval to publish 1.0 with both optional, unofficial
+providers and the documented limits. This approves prepared source
+`89e25a406d893f99e9f6a173b149e3e7aaca4483`, ZIP
+`a21aa690ed45aaa1e293fe33c6c9780f6a95ba6e7faa868e49856d4cd7fce932`
+and inventory `fb5098b327e656a44156b0634e9521c46ed68cd46dd883a2d86590b89a44808f`.
+The [approved disposition](RELEASE-1.0-PROPOSED-DISPOSITION.md) records the accepted
+inclusion/support scope and residual limits. Merge, tag and stable publication
+remain pending; no everyday HA upgrade, extra provider tests, recovery actions
+or outreach are authorized by this release decision.
 The frozen-RC engineering qualification, including the focused minimum-Core
 check and genuine HACS delivery, is accepted. Reuse existing architecture
 evidence; do not reopen completed ordinary restore, private-copy upgrade or
 current-Core checks for documentation edits.
-Final RC1 current/minimum qualification, public prerelease byte verification and genuine fourteen-phase HACS installed delivery passed at their recorded source/package scope. The RC2 phone confirmation is bounded display acceptance; residual maintainer dispositions and stable publication remain separate and open. The detailed thirteen-stage history below retains
+Final RC1 current/minimum qualification, public prerelease byte verification and genuine fourteen-phase HACS installed delivery passed at their recorded source/package scope. The RC2 phone confirmation is bounded display acceptance; the separate final maintainer approval does not create new runtime evidence. Stable publication remains pending. The detailed thirteen-stage history below retains
 its dated outcomes; superseded scope/assurance proposals are historical.
 
 ## Final candidate qualification status
 
-The proposed stable1.0 package is prepared for review with version-only differences from RC2. Its [preparation record](RELEASE-1.0-STABLE-PREPARATION.json) and [proposed final release decision](RELEASE-1.0-PROPOSED-DISPOSITION.md) keep publication and residual-scope acceptance pending.
+The prepared stable1.0 package has version-only differences from RC2 and is now approved at the exact source/artifact binding above. Its [preparation record](RELEASE-1.0-STABLE-PREPARATION.json) preserves the checks; the [approved final release decision](RELEASE-1.0-PROPOSED-DISPOSITION.md) records the subsequent maintainer inclusion/support and residual-scope disposition. Merge and publication are pending.
 
-Current RC2 is source `ae8081313cb4060123e200e0356a598c5a72d145`, ZIP `41240a77eb0f5950b47e3e926097751b243e3ace8161de948650b648910c865c`. Its [acceptance record](RELEASE-1.0-RC2-ACCEPTANCE.json) records exact public bytes, 126 frontend cases, 51 focused exact-package Linux cases and the real owner-instance cold restart. The owner confirmed both the Life360 person and AirTag display correctly on the iPhone map and both details open. Desktop observation also showed both members and details without HomeCircle conflicts, retaining stale source ages. This is bounded mobile/desktop display acceptance, with no separate physical-position recheck, forced refresh, reconnect or other manual provider action. New GPS reports, natural renewal and real-photo persistence remain unclaimed. Residual maintainer dispositions and final stable-release approval remain pending.
+Current published prerelease RC2 is source `ae8081313cb4060123e200e0356a598c5a72d145`, ZIP `41240a77eb0f5950b47e3e926097751b243e3ace8161de948650b648910c865c`. Its [acceptance record](RELEASE-1.0-RC2-ACCEPTANCE.json) records exact public bytes, 126 frontend cases, 51 focused exact-package Linux cases and the real owner-instance cold restart. The owner confirmed both the Life360 person and AirTag display correctly on the iPhone map and both details open. Desktop observation also showed both members and details without HomeCircle conflicts, retaining stale source ages. This is bounded mobile/desktop display acceptance, with no separate physical-position recheck, forced refresh, reconnect or other manual provider action. New GPS reports, natural renewal and real-photo persistence remain unclaimed. Final stable approval is recorded separately above; publication remains pending.
 
 The earlier RC1 [final qualification record](RELEASE-1.0-FINAL-QUALIFICATION.md) identifies frozen source b906 and the unchanged 112-member RC1 ZIP4f94. Focused minimum-Core run40002540583 is accepted with its actual C7 source: 20 tests, four real Core processes, matching runtime/package and verified cleanup. Full current-Core R3 run40010260549 passed 1,779 backend/126 frontend cases, exact collection, privacy and cleanup. The tagged RC1 and both public assets are verified. Genuine HACS R1 remains failed after four phases and a confirmed helper-only post-uninstall expectation. Corrected R2 run40013210859 passed all14 phases/23 normal Core actions with root/peer/CI agreement and cleanup. Product/RC1 bytes were unchanged within that qualification. Failed full and diagnostic attempts retain their actual scopes. The final b906 change is one test fixture correction; no runtime or package bytes changed. These results remain RC1 evidence, not a full RC2 rerun. Historical records below remain dated evidence.
 
