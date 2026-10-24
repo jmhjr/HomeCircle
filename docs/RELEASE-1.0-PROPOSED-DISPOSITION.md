@@ -1,6 +1,6 @@
 # HomeCircle 1.0 release decision
 
-Status: maintainer approved; merge and stable publication are pending.
+Status: maintainer approved; normal merge, stable publication and public-asset verification completed.
 
 ## Explicit final approval
 
@@ -10,7 +10,18 @@ unofficial providers and the documented limits. This records approval of prepare
 source `89e25a406d893f99e9f6a173b149e3e7aaca4483` and the exact ZIP and inventory
 below. The reviewed proposal is retained as the approved inclusion, support and
 residual-uncertainty disposition. Approval does not establish provider permission
-or legal clearance. It does not record a completed merge, tag or publication.
+or legal clearance. At that approval checkpoint, merge, tag and publication had
+not yet been executed; their subsequent result is recorded below.
+
+## Verified publication
+
+The [publication record](RELEASE-1.0-PUBLICATION.json) verifies stable release
+`v1.0.0` (release ID `422522039`), published at `2026-10-24T04:48:06Z` from normal
+merge `6984be7c6148c934e7f51e09e27db5b078fc022c`. The release is latest, not a
+draft or prerelease. Both anonymously downloaded public assets match the exact
+approved ZIP and inventory hashes below. The merged tree matches the approved
+source. Prior releases and the original stable tag/source/artifact records remain
+unchanged; this publication closure is a documentation-only follow-up.
 
 ## Exact package
 
@@ -33,6 +44,6 @@ Retain the accepted limited Claude AI review and its missing independent produce
 
 ## Actions authorized by final approval
 
-The maintainer authorized the above inclusion and support disposition, merging the reviewed release pull request through the normal repository checks, and publishing tag `v1.0.0` with the exact ZIP and inventory above as the stable GitHub/HACS release. These execution steps are pending. Verify the public asset bytes after publication and retain the original scope of prior platform, HACS and runtime evidence; no new native, HACS or platform result is created by this approval.
+The maintainer authorized the above inclusion and support disposition, merging the reviewed release pull request through the normal repository checks, and publishing tag `v1.0.0` with the exact ZIP and inventory above as the stable GitHub/HACS release. Normal merge, publication and anonymous public-byte verification are complete in the [publication record](RELEASE-1.0-PUBLICATION.json). Prior platform, HACS and runtime evidence retains its original scope; no new native run, HACS installation or platform result is created by approval or publication.
 
-An everyday Home Assistant upgrade is a separate deployment decision and is not authorized here. The test instance remains on RC2 while publication is pending. No additional provider tests, recovery actions or outreach are authorized by this release decision.
+An everyday Home Assistant upgrade is a separate deployment decision and is not authorized here. The test instance remains on RC2 after publication; these unperformed deployments are separate from the completed first-release gates. No additional provider tests, recovery actions or outreach are authorized by this release decision.
