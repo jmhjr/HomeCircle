@@ -33,7 +33,7 @@
   "evidence_boundaries": {
     "Apple_passcode_recovery_reconnect_discovery_reset_acknowledgement_or_forced_refresh_actions": 0,
     "actual_photo_persistence": "Not exercised; owner test instance had zero actual photos.",
-    "iPhone_owner_layout_and_expected_position_confirmation": "Pending owner response.",
+    "iPhone_owner_mobile_display_confirmation": "Passed bounded display check: the owner confirmed both the Life360 person and AirTag display correctly on the map and both details open. No separate physical-position recheck is claimed.",
     "new_FindMy_position_or_natural_session_renewal": "Not claimed by this bounded upgrade/startup check.",
     "new_provider_or_author_outreach": 0,
     "prior_RC1_broad_native_platform_minimum_Core_and_HACS_evidence": "Retains original exact source/package scope. RC2 uses focused affected-path/package and owner cold-start validation; no new full matrix or HACS rehearsal is claimed.",
@@ -70,9 +70,26 @@
     "version": "1.0.0-rc.2",
     "zip_sha256": "41240a77eb0f5950b47e3e926097751b243e3ace8161de948650b648910c865c"
   },
-  "next": "Finish bounded owner confirmation and maintainer release dispositions, then seek final stable-release approval.",
+  "next": "Review the prepared stable version-only package and proposed maintainer inclusion/support disposition, then seek final stable-release approval. Bounded owner phone display acceptance is passed; unobserved field limits remain.",
   "owner_upgrade": {
     "all_nonproduct_configuration_unchanged_during_replacement": true,
+    "bounded_display_acceptance": {
+      "agent_desktop": {
+        "HomeCircle_conflicts": 0,
+        "both_details_open": true,
+        "displayed_members": 2,
+        "expected_members": 2
+      },
+      "forced_refresh_reconnect_or_other_manual_provider_actions": 0,
+      "owner_iPhone": {
+        "Life360_person_and_AirTag_display_correctly_on_map": true,
+        "both_details_open": true
+      },
+      "physical_position_recheck_claimed": false,
+      "scope": "Bounded RC2 mobile and desktop display acceptance after the owner-instance cold restart; no new GPS report, natural renewal or real-photo persistence result.",
+      "source_report_ages_retained_and_shown_stale": true,
+      "status": "passed"
+    },
     "fresh_normal_Home_Assistant_Recorder_backup_verified_off_VM": true,
     "from": "1.0.0-rc.1",
     "matching_stopped_full_configuration_and_opaque_guard_checkpoint_verified_off_VM": true,

@@ -1,7 +1,7 @@
 # HomeCircle 1.0 release plan
 
 Started October20, 2026. The target is `v1.0.0`; the current published
-prerelease is `v1.0.0-rc.1`. Published beta20 remains the historical upgrade
+prerelease is `v1.0.0-rc.2`. Published beta20 remains the historical upgrade
 baseline. This is an execution tracker, not a stable-release declaration. Check a task only after linking its exact evidence. Retain
 failed attempts and record any accepted scope change instead of deleting a gate.
 
@@ -29,17 +29,22 @@ and residual-uncertainty questions for a maintainer scope decision; technical
 review does not manufacture permission or legal clearance. Administrator
 Manage direct connections, Pause/Resume and stop-on-access-denial are implemented in the source candidate; affected runtime results remain tied to their exact recorded source.
 
-Complete the remaining bounded owner acceptance and maintainer dispositions.
+The bounded RC2 phone display check passed. Retain unobserved field-case limits
+and complete the remaining maintainer dispositions.
 The frozen-RC engineering qualification, including the focused minimum-Core
 check and genuine HACS delivery, is accepted. Reuse existing architecture
 evidence; do not reopen completed ordinary restore, private-copy upgrade or
 current-Core checks for documentation edits.
-Final current/minimum RC qualification and public prerelease byte verification passed. Genuine fourteen-phase HACS installed delivery passed. Remaining owner acceptance and stable publication remain separate and open. The detailed thirteen-stage history below retains
+Final RC1 current/minimum qualification, public prerelease byte verification and genuine fourteen-phase HACS installed delivery passed at their recorded source/package scope. The RC2 phone confirmation is bounded display acceptance; residual maintainer dispositions and stable publication remain separate and open. The detailed thirteen-stage history below retains
 its dated outcomes; superseded scope/assurance proposals are historical.
 
 ## Final candidate qualification status
 
-The [final qualification record](RELEASE-1.0-FINAL-QUALIFICATION.md) identifies frozen source b906 and the unchanged 112-member RC ZIP4f94. Focused minimum-Core run40002540583 is accepted with its actual C7 source: 20 tests, four real Core processes, matching runtime/package and verified cleanup. Full current-Core R3 run40010260549 passed 1,779 backend/126 frontend cases, exact collection, privacy and cleanup. The tagged RC and both public assets are verified. Genuine HACS R1 remains failed after four phases and a confirmed helper-only post-uninstall expectation. Corrected R2 run40013210859 passed all14 phases/23 normal Core actions with root/peer/CI agreement and cleanup. Product/RC bytes are unchanged. Failed full and diagnostic attempts retain their actual scopes. The final b906 change is one test fixture correction; no runtime or package bytes changed. Historical records below remain dated evidence.
+The proposed stable1.0 package is prepared for review with version-only differences from RC2. Its [preparation record](RELEASE-1.0-STABLE-PREPARATION.json) and [proposed final release decision](RELEASE-1.0-PROPOSED-DISPOSITION.md) keep publication and residual-scope acceptance pending.
+
+Current RC2 is source `ae8081313cb4060123e200e0356a598c5a72d145`, ZIP `41240a77eb0f5950b47e3e926097751b243e3ace8161de948650b648910c865c`. Its [acceptance record](RELEASE-1.0-RC2-ACCEPTANCE.json) records exact public bytes, 126 frontend cases, 51 focused exact-package Linux cases and the real owner-instance cold restart. The owner confirmed both the Life360 person and AirTag display correctly on the iPhone map and both details open. Desktop observation also showed both members and details without HomeCircle conflicts, retaining stale source ages. This is bounded mobile/desktop display acceptance, with no separate physical-position recheck, forced refresh, reconnect or other manual provider action. New GPS reports, natural renewal and real-photo persistence remain unclaimed. Residual maintainer dispositions and final stable-release approval remain pending.
+
+The earlier RC1 [final qualification record](RELEASE-1.0-FINAL-QUALIFICATION.md) identifies frozen source b906 and the unchanged 112-member RC1 ZIP4f94. Focused minimum-Core run40002540583 is accepted with its actual C7 source: 20 tests, four real Core processes, matching runtime/package and verified cleanup. Full current-Core R3 run40010260549 passed 1,779 backend/126 frontend cases, exact collection, privacy and cleanup. The tagged RC1 and both public assets are verified. Genuine HACS R1 remains failed after four phases and a confirmed helper-only post-uninstall expectation. Corrected R2 run40013210859 passed all14 phases/23 normal Core actions with root/peer/CI agreement and cleanup. Product/RC1 bytes were unchanged within that qualification. Failed full and diagnostic attempts retain their actual scopes. The final b906 change is one test fixture correction; no runtime or package bytes changed. These results remain RC1 evidence, not a full RC2 rerun. Historical records below remain dated evidence.
 
 ## Current fixed candidate evidence
 
