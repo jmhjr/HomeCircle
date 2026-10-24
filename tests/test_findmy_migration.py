@@ -192,6 +192,7 @@ async def test_migration_validates_sdk_and_keeps_original_vault_unchanged(
     hass, tmp_path, monkeypatch
 ):
     from datetime import datetime, UTC
+    import threading
     from unittest.mock import AsyncMock, patch
     from homeassistant.helpers import entity_registry as er
     from pytest_homeassistant_custom_component.common import MockConfigEntry
@@ -202,6 +203,18 @@ async def test_migration_validates_sdk_and_keeps_original_vault_unchanged(
     )
     from custom_components.homecircle.findmy_vault import Vault
     from custom_components.homecircle.findmy_migration import migrate_account
+    from custom_components.homecircle import findmy_setup
+
+    loop_thread = threading.get_ident()
+    import_threads = []
+    original_sdk = findmy_setup.sdk
+
+    def worker_sdk():
+        import_threads.append(threading.get_ident())
+        assert import_threads[-1] != loop_thread
+        return original_sdk()
+
+    monkeypatch.setattr(findmy_setup, "sdk", worker_sdk)
 
     monkeypatch.setattr(
         hass.config, "path", lambda *parts: str(tmp_path.joinpath(*parts))
@@ -241,6 +254,7 @@ async def test_migration_validates_sdk_and_keeps_original_vault_unchanged(
         hass.config_entries, "async_set_disabled_by", new=AsyncMock(return_value=True)
     ):
         metadata = await migrate_account(hass, target, old, {})
+    assert len(import_threads) == 1
     assert (root / "session.vault").read_bytes() == before
     assert Vault(root).load()["version"] == 1
     assert metadata["storage_id"] != "legacy"

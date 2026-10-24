@@ -165,7 +165,8 @@ class DirectFindMy:
         self.controls = await async_get_controls(self.hass, self.entry_id)
         if self.controls.paused("findmy"):
             return
-        sdk()
+        # The cold SDK import reads installed-package metadata (anisette).
+        await self.hass.async_add_executor_job(sdk)
         from .findmy_reports import AccountClient, account_items
 
         entry = self.hass.config_entries.async_get_entry(self.entry_id)

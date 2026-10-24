@@ -117,7 +117,7 @@ async def migrate_account(hass, target, old, accounts):
     # Validate SDK restoration and every future unique ID before changing registry.
     from .findmy_setup import sdk
 
-    sdk()
+    await hass.async_add_executor_job(sdk)
     from .findmy_reports import AccountClient
 
     restored = await hass.async_add_executor_job(

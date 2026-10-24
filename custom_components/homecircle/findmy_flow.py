@@ -16,7 +16,7 @@ from homeassistant.helpers.event import async_call_later
 import voluptuous as vol
 
 from .const import CONF_FINDMY_ACCOUNTS, CONF_FINDMY_ENABLED
-from .findmy_setup import FindMySetup, FindMySetupError, safe_label
+from .findmy_setup import FindMySetup, FindMySetupError, safe_label, sdk
 from .findmy_vault import Vault, VaultError, account_identity
 from .findmy_provider import account_root
 from .findmy_resume import prepare_saved_setup, has_saved_report_capability
@@ -233,6 +233,7 @@ class FindMyFlow:
                         "account_identity"
                     ):
                         raise FindMySetupError("findmy_account_mismatch")
+                    await self.hass.async_add_executor_job(sdk)
                     from .findmy_reports import account_items
 
                     libraries = Path(
@@ -1598,17 +1599,20 @@ class FindMyFlow:
                         previous, previous["account_identity"]
                     )
                 ):
-                    from .findmy_reports import account_items
+                    def restore_previous():
+                        # Keep a cold import and compensating write in the same
+                        # drained job, including when cancellation caused rollback.
+                        sdk()
+                        from .findmy_reports import account_items
+
+                        Vault(root).save_account(
+                            latest["session"],
+                            account_items(latest),
+                            identity_state=latest.get("identity_state"),
+                        )
 
                     await _finish_saved_transaction(
-                        self.hass.async_add_executor_job(
-                            partial(
-                                Vault(root).save_account,
-                                latest["session"],
-                                account_items(latest),
-                                identity_state=latest.get("identity_state"),
-                            )
-                        )
+                        self.hass.async_add_executor_job(restore_previous)
                     )
                 raise
             finally:

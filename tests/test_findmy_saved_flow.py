@@ -106,8 +106,25 @@ def flow_for(hass, entry=None):
 
 
 async def test_saved_selection_needs_consent_and_never_reauthenticates(hass):
+    from custom_components.homecircle.findmy_setup import sdk
+
     flow, setup, _, _, current = flow_for(hass)
+    loop_thread = threading.get_ident()
+    import_threads, import_failures = [], []
+
+    def worker_sdk():
+        import_threads.append(threading.get_ident())
+        try:
+            assert import_threads[-1] != loop_thread
+            return sdk()
+        except Exception as error:
+            import_failures.append(type(error).__name__)
+            raise
+
     with (
+        patch(
+            "custom_components.homecircle.findmy_flow.sdk", new=worker_sdk
+        ),
         patch(
             "custom_components.homecircle.findmy_flow.Vault.load", return_value=current
         ) as load,
@@ -122,12 +139,49 @@ async def test_saved_selection_needs_consent_and_never_reauthenticates(hass):
         result = await flow.async_step_findmy_saved_items({"consent": False})
         assert result["errors"] == {"base": "findmy_consent_required"}
         load.assert_not_called()
+        assert not import_threads
         result = await flow.async_step_findmy_saved_items({"consent": True})
-        assert result["step_id"] == "findmy_select"
+        assert not import_failures, import_failures
+        assert import_threads and len(import_threads) == 1
+        assert result["step_id"] == "findmy_select", result
         prepare.assert_called_once()
         login_setup.assert_not_called()
         assert flow.findmy_saved_only is True
         await flow.finish_findmy_setup()
+
+
+async def test_disconnect_rollback_imports_and_restores_in_one_worker(hass):
+    flow, _, provider, paused, current = flow_for(hass)
+    loop_thread = threading.get_ident()
+    events = []
+
+    def deleted(*_args):
+        events.append(("deleted", threading.get_ident()))
+
+    def worker_sdk():
+        assert threading.get_ident() != loop_thread
+        events.append(("imported", threading.get_ident()))
+
+    def restored(*_args, **_kwargs):
+        assert threading.get_ident() != loop_thread
+        events.append(("restored", threading.get_ident()))
+
+    with (
+        patch("custom_components.homecircle.findmy_flow.sdk", side_effect=worker_sdk),
+        patch("custom_components.homecircle.findmy_flow.Vault.load", return_value=current),
+        patch("custom_components.homecircle.findmy_storage.delete_account", side_effect=deleted),
+        patch("custom_components.homecircle.findmy_flow.Vault.save_account", side_effect=restored) as write,
+        patch.object(hass.config_entries, "async_update_entry", side_effect=RuntimeError("synthetic metadata failure")),
+    ):
+        result = await flow.async_step_findmy_disconnect({"confirm": True})
+        assert result == {"reason": "findmy_storage_failed"}
+        write.assert_called_once_with(
+            current["session"], current["items"], identity_state=None
+        )
+    assert [event for event, _ in events] == ["deleted", "imported", "restored"]
+    assert events[1][1] == events[2][1]
+    provider.resume_account.assert_called_once_with(flow.findmy_account_id, paused)
+    paused.close.assert_not_awaited()
 
 
 async def test_saved_commit_keeps_latest_token_keys_reports_and_unique_id(hass):
