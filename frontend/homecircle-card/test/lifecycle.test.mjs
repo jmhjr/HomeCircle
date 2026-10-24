@@ -2835,7 +2835,7 @@ test("Skip this place submits only skip and bypasses incomplete review fields", 
   }
 });
 
-test("tracker picture upload previews a local HA image and saves or removes only the reference", async () => {
+test("tracker picture upload preserves selected filenames and saves or removes only the reference", async () => {
   const { openSettingsDialog } = await import("../src/settings-dialog.js");
   const prototype = dom.window.HTMLDialogElement.prototype;
   const show = prototype.showModal,
@@ -2874,11 +2874,18 @@ test("tracker picture upload previews a local HA image and saves or removes only
     },
   };
   const pick = (input, file) => {
+    if (input.value === file.name) return false;
+    Object.defineProperty(input, "value", {
+      value: file.name,
+      writable: true,
+      configurable: true,
+    });
     Object.defineProperty(input, "files", {
       value: [file],
       configurable: true,
     });
     input.dispatchEvent(new window.Event("change"));
+    return true;
   };
   const oldReader = globalThis.FileReader,
     oldImage = globalThis.Image;
@@ -2886,6 +2893,7 @@ test("tracker picture upload previews a local HA image and saves or removes only
   const oldContext = canvasPrototype.getContext,
     oldBlob = canvasPrototype.toBlob;
   const draws = [];
+  let decodeFails = false;
   globalThis.FileReader = class {
     readAsDataURL() {
       this.result = "data:image/png;base64,c3ludGhldGlj";
@@ -2896,7 +2904,8 @@ test("tracker picture upload previews a local HA image and saves or removes only
     naturalWidth = 800;
     naturalHeight = 400;
     set src(value) {
-      this.onload();
+      if (decodeFails) this.onerror();
+      else this.onload();
     }
   };
   canvasPrototype.getContext = () => ({
@@ -2920,13 +2929,53 @@ test("tracker picture upload previews a local HA image and saves or removes only
     await tick();
     assert.equal(uploads.length, 0);
     assert.ok(dialog.querySelector("img").src.includes(originalId));
-    pick(input, new File(["synthetic"], "example.png", { type: "image/png" }));
+    const file = new File(["synthetic"], "example.png", { type: "image/png" });
+    pick(input, file);
     await tick();
     assert.equal(uploads.length, 0, "choosing a file stays local");
+    const filename = () => dialog.querySelector(".picture-filename");
+    assert.equal(filename()?.textContent, "Selected picture: example.png");
+    assert.equal(filename().hidden, false);
+    assert.equal(
+      input.value,
+      "",
+      "the picker permits selecting the same file again",
+    );
+    assert.equal(button("Choose picture").disabled, false);
     const zoom = dialog.querySelector('input[aria-label="Zoom"]');
     zoom.value = "2";
     zoom.dispatchEvent(new window.Event("input"));
     assert.deepEqual(draws.at(-1).slice(1, 5), [200, 0, 400, 400]);
+    assert.equal(filename().textContent, "Selected picture: example.png");
+    assert.equal(
+      pick(input, file),
+      true,
+      "the same file can be selected again",
+    );
+    await tick();
+    assert.equal(zoom.value, "1", "reselecting reloads the same picture");
+    assert.equal(filename().textContent, "Selected picture: example.png");
+    let chooserOpens = 0;
+    input.addEventListener("click", () => chooserOpens++);
+    button("Choose picture").click();
+    assert.equal(
+      chooserOpens,
+      1,
+      "the visible chooser opens the native file input",
+    );
+    Object.defineProperty(input, "files", { value: [], configurable: true });
+    input.dispatchEvent(new window.Event("change"));
+    await tick();
+    assert.equal(filename().textContent, "Selected picture: example.png");
+    decodeFails = true;
+    pick(input, new File(["bad"], "undecodable.png", { type: "image/png" }));
+    await tick();
+    assert.match(dialog.textContent, /Could not open this picture/);
+    assert.equal(filename().textContent, "");
+    assert.equal(filename().hidden, true);
+    decodeFails = false;
+    pick(input, file);
+    await tick();
     button("Reset crop").click();
     assert.equal(zoom.value, "1");
     button("Save picture").click();
@@ -2939,9 +2988,17 @@ test("tracker picture upload previews a local HA image and saves or removes only
     );
     assert.equal(uploads[0].request.body.get("file").type, "image/jpeg");
     assert.deepEqual(submissions.at(-1).data, { picture_id: uploadedId });
+    assert.equal(filename().hidden, true);
+    assert.equal(filename().textContent, "");
+    input = dialog.querySelector('input[type="file"]');
+    pick(input, file);
+    await tick();
+    assert.equal(filename().textContent, "Selected picture: example.png");
     button("Remove picture").click();
     assert.equal(dialog.querySelector("img").hidden, true);
     assert.equal(dialog.querySelector("img").style.display, "none");
+    assert.equal(filename().hidden, true);
+    assert.equal(filename().textContent, "");
     button("Save picture").click();
     await tick();
     assert.deepEqual(submissions.at(-1).data, { picture_id: "" });
@@ -2952,6 +3009,8 @@ test("tracker picture upload previews a local HA image and saves or removes only
     button("Save picture").click();
     await tick();
     assert.match(dialog.textContent, /Could not upload this picture/);
+    assert.equal(filename().textContent, "Selected picture: example.png");
+    assert.equal(filename().hidden, false);
     assert.equal(dialog.querySelector('input[aria-label="Zoom"]').value, "1");
     assert.ok(dialog.querySelector("img").src.includes(originalId));
     let finishUpload;
@@ -2961,8 +3020,14 @@ test("tracker picture upload previews a local HA image and saves or removes only
       });
     button("Save picture").click();
     await tick();
+    const abandonedFilename = filename();
+    assert.equal(button("Choose picture").disabled, true);
     button("Back").click();
     await tick();
+    assert.equal(abandonedFilename.textContent, "");
+    assert.equal(abandonedFilename.hidden, true);
+    assert.equal(filename().textContent, "");
+    assert.equal(filename().hidden, true);
     const beforeFinish = submissions.length;
     finishUpload({ ok: true, json: async () => ({ id: uploadedId }) });
     await tick();
@@ -2971,7 +3036,17 @@ test("tracker picture upload previews a local HA image and saves or removes only
       beforeFinish,
       "an upload completing after Back must not submit to a different flow step",
     );
+    input = dialog.querySelector('input[type="file"]');
+    pick(input, file);
+    await tick();
+    const cancelledFilename = filename();
+    assert.equal(
+      cancelledFilename.textContent,
+      "Selected picture: example.png",
+    );
     dialog.close();
+    assert.equal(cancelledFilename.textContent, "");
+    assert.equal(cancelledFilename.hidden, true);
   } finally {
     globalThis.FileReader = oldReader;
     globalThis.Image = oldImage;
@@ -3006,3 +3081,372 @@ test("tracker cards show coarse battery warnings without synthesizing a percenta
   assert.equal(batteries[1].classList.contains("low"), false);
   value.remove();
 });
+
+{
+  const { openSettingsDialog } = await import("../src/settings-dialog.js");
+  const tick = () => new Promise((resolve) => setImmediate(resolve));
+  const deferred = () => {
+    let resolve;
+    let reject;
+    const promise = new Promise((yes, no) => {
+      resolve = yes;
+      reject = no;
+    });
+    return { promise, resolve, reject };
+  };
+  const response = (name = "old") => ({
+    schema_version: 1,
+    example_revision: name,
+    members:
+      name === "new"
+        ? [
+            {
+              id: "device_tracker.example_selected_tag",
+              name: "Example selected tag",
+              kind: "item",
+              presence: "unavailable",
+              focusable: false,
+              map_visible: true,
+              location: null,
+              driving: { value: null, status: "unknown" },
+            },
+          ]
+        : [],
+    counts: { home: 0, away: 0, driving: 0, unavailable: 0 },
+    focus_ids: {
+      overview: [],
+      home: [],
+      away: [],
+      driving: [],
+      unavailable: [],
+    },
+  });
+  function connection() {
+    const listeners = [];
+    return {
+      listeners,
+      subscribeEvents(callback, eventType) {
+        assert.equal(eventType, "homecircle_ready");
+        const listener = { callback, stops: 0 };
+        listeners.push(listener);
+        return Promise.resolve(() => {
+          listener.stops++;
+        });
+      },
+      ready() {
+        listeners.at(-1).callback({ event_type: "homecircle_ready", data: {} });
+      },
+    };
+  }
+  function card(conn = connection(), options = {}) {
+    dom.window.HTMLDialogElement.prototype.showModal = function () {
+      this.open = true;
+    };
+    dom.window.HTMLDialogElement.prototype.close = function () {
+      this.open = false;
+      this.dispatchEvent(new dom.window.Event("close"));
+    };
+    const hass = {
+      connection: conn,
+      connected: true,
+      user: { id: "example-owner", is_admin: true },
+      callWS: async (message) => {
+        assert.deepEqual(message, { type: "homecircle/snapshot" });
+        return response();
+      },
+      ...options,
+    };
+    const value = document.createElement("homecircle-card");
+    value._updateMap = () => {};
+    value.setConfig({ type: "custom:homecircle-card" });
+    value.hass = hass;
+    document.body.append(value);
+    return { value, hass, conn };
+  }
+
+  for (const staleError of [false, true])
+    test(`settings save queues one fresh snapshot after registration and ignores the old ${staleError ? "error" : "result"}`, async () => {
+      const { value, hass, conn } = card();
+      await tick();
+      const old = deferred();
+      const fresh = deferred();
+      let snapshots = 0;
+      let posts = 0;
+      hass.callWS = async (message) => {
+        if (message.type === "config_entries/get")
+          return [{ entry_id: "example-entry" }];
+        assert.deepEqual(message, { type: "homecircle/snapshot" });
+        snapshots++;
+        return snapshots === 1 ? old.promise : fresh.promise;
+      };
+      hass.callApi = async (method) => {
+        assert.equal(method, "POST");
+        return ++posts === 1
+          ? {
+              type: "form",
+              flow_id: "example-flow",
+              step_id: "confirm",
+              data_schema: [],
+            }
+          : { type: "create_entry", flow_id: "example-flow" };
+      };
+      const rendered = [];
+      const render = value._render.bind(value);
+      value._render = () => {
+        rendered.push(value._data?.example_revision);
+        render();
+      };
+      const inFlight = value._load();
+      await openSettingsDialog(value, hass);
+      [...document.querySelector("dialog").querySelectorAll("button")]
+        .find((control) => control.textContent === "Continue")
+        .click();
+      await tick();
+      assert.equal(document.querySelector("dialog"), null);
+      assert.equal(snapshots, 1); // The save's immediate _load was still busy.
+      conn.ready(); // HA finishes the scheduled reload and registers the tag.
+      conn.ready(); // Duplicate completion notices are coalesced.
+      assert.equal(snapshots, 1);
+      if (staleError) old.reject(new Error("Synthetic transport interruption"));
+      else old.resolve(response("stale"));
+      await inFlight;
+      await tick();
+      assert.equal(snapshots, 2);
+      assert.equal(value._data.example_revision, "old");
+      assert.deepEqual(rendered, []);
+      fresh.resolve(response("new"));
+      await tick();
+      assert.equal(snapshots, 2);
+      assert.equal(
+        value._data.members[0].id,
+        "device_tracker.example_selected_tag",
+      );
+      assert.match(value.shadowRoot.textContent, /Example selected tag/);
+      assert.equal(value._mode, "overview");
+      assert.equal(value._error, null);
+      assert.deepEqual(rendered, ["new"]);
+      value.remove();
+      await tick();
+      assert.equal(conn.listeners[0].stops, 1);
+    });
+
+  test("completion refreshes a previously accepted old household without changing selection", async () => {
+    const { value, hass, conn } = card();
+    await tick();
+    value._mode = "away";
+    let calls = 0;
+    hass.callWS = async (message) => {
+      assert.deepEqual(message, { type: "homecircle/snapshot" });
+      calls++;
+      return response("new");
+    };
+    conn.ready();
+    await tick();
+    assert.equal(calls, 1);
+    assert.equal(
+      value._data.members[0].id,
+      "device_tracker.example_selected_tag",
+    );
+    assert.equal(value._mode, "away");
+    value.remove();
+  });
+
+  test("subscription acknowledgement covers a reload missed while subscribing", async () => {
+    const ack = deferred();
+    const conn = { subscribeEvents: () => ack.promise };
+    let current = "old";
+    let calls = 0;
+    let stops = 0;
+    const { value } = card(conn, {
+      callWS: async () => {
+        calls++;
+        return response(current);
+      },
+    });
+    await tick();
+    assert.equal(value._data.example_revision, "old");
+    current = "new"; // Setup completed before the event listener was installed.
+    ack.resolve(() => stops++);
+    await tick();
+    assert.equal(calls, 2);
+    assert.equal(value._data.example_revision, "new");
+    value.remove();
+    await tick();
+    assert.equal(stops, 1);
+  });
+
+  test("closing a card before subscription acknowledgement unsubscribes and ignores late events", async () => {
+    const ack = deferred();
+    let ready;
+    let stops = 0;
+    let calls = 0;
+    const { value } = card(
+      {
+        subscribeEvents(callback) {
+          ready = callback;
+          return ack.promise;
+        },
+      },
+      {
+        callWS: async () => {
+          calls++;
+          return response();
+        },
+      },
+    );
+    await tick();
+    value.remove();
+    ack.resolve(() => stops++);
+    ready();
+    await tick();
+    assert.equal(stops, 1);
+    assert.equal(calls, 1);
+    assert.equal(value._data, null);
+  });
+
+  test("disconnect and same-connection reconnect replace the completion subscription", async () => {
+    const { value, hass, conn } = card();
+    await tick();
+    const oldListener = conn.listeners[0];
+    value.hass = { ...hass, connected: false };
+    await tick();
+    assert.equal(oldListener.stops, 1);
+    const revision = value._snapshotRevision;
+    oldListener.callback();
+    assert.equal(value._snapshotRevision, revision);
+    value.hass = hass;
+    await tick();
+    assert.equal(conn.listeners.length, 2);
+    hass.callWS = async () => response("new");
+    conn.ready();
+    await tick();
+    assert.equal(value._data.example_revision, "new");
+    value.remove();
+    await tick();
+    assert.equal(conn.listeners[1].stops, 1);
+  });
+
+  test("a replaced connection cannot request data using its stale completion callback", async () => {
+    const first = card();
+    await tick();
+    const second = connection();
+    first.value.hass = { ...first.hass, connection: second };
+    await tick();
+    const revision = first.value._snapshotRevision;
+    first.conn.listeners[0].callback();
+    assert.equal(first.value._snapshotRevision, revision);
+    assert.equal(first.conn.listeners[0].stops, 1);
+    first.value.remove();
+    await tick();
+    assert.equal(second.listeners[0].stops, 1);
+  });
+
+  for (const throws of [false, true])
+    test(`a ${throws ? "throwing" : "rejected"} subscription leaves the ordinary snapshot timer available`, async () => {
+      const originalInterval = globalThis.setInterval;
+      let refresh;
+      globalThis.setInterval = (callback, delay) => {
+        assert.equal(delay, 15000);
+        refresh = callback;
+      };
+      let calls = 0;
+      try {
+        const { value, hass } = card(
+          {
+            subscribeEvents() {
+              if (throws) throw new Error("Synthetic subscription failure");
+              return Promise.reject(
+                new Error("Synthetic subscription failure"),
+              );
+            },
+          },
+          {
+            callWS: async () => {
+              calls++;
+              return response();
+            },
+          },
+        );
+        await tick();
+        assert.equal(calls, 1);
+        hass.callWS = async () => {
+          calls++;
+          return response("new");
+        };
+        refresh();
+        await tick();
+        assert.equal(calls, 2);
+        assert.equal(value._data.example_revision, "new");
+        value.remove();
+      } finally {
+        globalThis.setInterval = originalInterval;
+      }
+    });
+
+  test("non-admin cards use snapshots without attempting the admin-only event subscription", async () => {
+    const { value, conn } = card(connection(), {
+      user: { id: "example-viewer", is_admin: false },
+    });
+    await tick();
+    assert.equal(conn.listeners.length, 0);
+    assert.ok(value._data);
+    value.remove();
+    const owner = card();
+    await tick();
+    const revision = owner.value._snapshotRevision;
+    owner.value.hass = {
+      ...owner.hass,
+      user: { id: "example-viewer", is_admin: false },
+    };
+    owner.conn.listeners[0].callback();
+    await tick();
+    assert.equal(owner.value._snapshotRevision, revision);
+    assert.equal(owner.conn.listeners[0].stops, 1);
+    assert.equal(owner.value._readySubscription, null);
+    owner.value.remove();
+  });
+
+  test("a fresh authorization refusal after completion still clears all displayed data", async () => {
+    const { value, hass, conn } = card();
+    await tick();
+    hass.callWS = async () => {
+      throw { code: "unauthorized" };
+    };
+    conn.ready();
+    await tick();
+    assert.equal(value._data, null);
+    assert.equal(value._signature, null);
+    assert.match(value.shadowRoot.textContent, /cannot view all selected/);
+    value.remove();
+  });
+
+  test("same-user stale security refusals clear displayed data before the queued snapshot completes", async () => {
+    for (const failure of ["unauthorized", "unsupported_schema"]) {
+      const { value, hass, conn } = card();
+      await tick();
+      const old = deferred();
+      const fresh = deferred();
+      let calls = 0;
+      hass.callWS = async () => (++calls === 1 ? old.promise : fresh.promise);
+      const inFlight = value._load();
+      conn.ready();
+      if (failure === "unauthorized") old.reject({ code: "unauthorized" });
+      else old.resolve({ ...response(), schema_version: 2 });
+      await inFlight;
+      await tick();
+      assert.equal(calls, 2);
+      assert.equal(value._data, null);
+      assert.equal(value._signature, null);
+      assert.match(
+        value.shadowRoot.textContent,
+        failure === "unauthorized"
+          ? /cannot view all selected/
+          : /Unsupported household data version/,
+      );
+      fresh.resolve(response("new"));
+      await tick();
+      assert.equal(value._data.example_revision, "new");
+      value.remove();
+    }
+  });
+}

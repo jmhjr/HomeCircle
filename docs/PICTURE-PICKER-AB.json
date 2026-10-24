@@ -1,0 +1,102 @@
+{
+  "cases": [
+    {
+      "cancel_event": true,
+      "case": "visible",
+      "chooser_opened": true,
+      "completed_native_selection": false,
+      "completion_return_attempts": 1,
+      "files_after_cancel": 0,
+      "markup": "<input type=\"file\" accept=\"image/*\" aria-label=\"Visible image input\">",
+      "observed_directory": "picture-browser",
+      "selected_ui_dimensions": [
+        400,
+        200
+      ],
+      "selected_ui_filename": "synthetic-picture.png",
+      "upload_enabled": false
+    },
+    {
+      "cancel_event": true,
+      "case": "hidden",
+      "chooser_opened": true,
+      "completed_native_selection": false,
+      "completion_return_attempts": 1,
+      "files_after_cancel": 0,
+      "markup": "<input type=\"file\" accept=\"image/*\" hidden> plus visible button calling input.click()",
+      "observed_directory": "picture-browser",
+      "selected_ui_dimensions": [
+        400,
+        200
+      ],
+      "selected_ui_filename": "synthetic-picture.png",
+      "upload_enabled": false
+    }
+  ],
+  "cleanup": {
+    "original_tab_count_after": 3,
+    "original_tab_count_before": 3,
+    "owned_listener_present_after": false,
+    "owned_server_exit_code": 0,
+    "owned_server_pid": 86075,
+    "owned_server_stopped": true,
+    "owned_tab_closed": true
+  },
+  "files": {
+    "harness.js": {
+      "bytes": 1318,
+      "sha256": "daf7688ab7b0db8c7625e51fbd75644493b5048430247fd0551215a1844ea89b"
+    },
+    "index.html": {
+      "bytes": 985,
+      "sha256": "933cc4d6159c27605cb0f26404bea1ca348c61831066e9b8b73346b2457fd73f"
+    },
+    "server-receipt.json": {
+      "bytes": 1453,
+      "sha256": "d07badfe891ad048c32aef6ea1fe0290949364edcaf79b2222a31106580798fa"
+    },
+    "server.mjs": {
+      "bytes": 3466,
+      "sha256": "664364f52810be454920d0a0b9bef523c36ff94b8fd1c00c7af1496c1c0e4899"
+    },
+    "synthetic-picture.png": {
+      "bytes": 1599,
+      "sha256": "0fca8defa31d84dfcd9320b6e53e9c0079f24b51cfbb630810758ef44a3f1584"
+    }
+  },
+  "fixture_bytes": 1599,
+  "fixture_dimensions": [
+    400,
+    200
+  ],
+  "fixture_sha256": "0fca8defa31d84dfcd9320b6e53e9c0079f24b51cfbb630810758ef44a3f1584",
+  "interpretation": {
+    "cause_proven": false,
+    "conclusion": "Both minimal patterns encountered the same native chooser completion limitation under the available automation. This provides no evidence of a hidden-input regression and does not prove native chooser completion or identify the underlying cause.",
+    "confirmed_product_defect": false,
+    "hidden_input_specific_regression_reproduced": false,
+    "native_picker_completion_qualified": false,
+    "shared_failure_under_available_cua_actions": true
+  },
+  "network": "owned_127.0.0.1_only",
+  "private_photos_or_accounts_used": false,
+  "product_files_changed": false,
+  "product_source_executed": false,
+  "protocol": [
+    "Open one new owned Safari tab at the loopback page.",
+    "A: activate the visible input with native CUA click.",
+    "Issue Command-Shift-G, paste the new fixture absolute path, Return.",
+    "Observe the existing picture-browser directory remained displayed, with its byte-identical synthetic-picture.png selected and Upload disabled.",
+    "Attempt one Return completion, observe chooser remains open, then Cancel.",
+    "B: activate the visible button which synchronously calls the hidden input click.",
+    "Repeat identical path/Return protocol, observe same selected PNG and disabled Upload, attempt one Return completion, then Cancel.",
+    "Verify two cancel events with files=0, no change events.",
+    "Close only the owned test tab and terminate only its owned server."
+  ],
+  "safari_reported_version": "27.2",
+  "schema": 1,
+  "scope": "bounded_native_safari_picker_ab_only",
+  "started_at": "2026-10-20T20:34:49.587Z",
+  "stopped_at": "2026-10-20T20:36:36.228Z",
+  "webkit_reported_version": "605.1.15"
+}

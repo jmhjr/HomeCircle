@@ -14,7 +14,7 @@ Do not use whole Home Assistant backups, `.storage`, databases, or credential-on
 
 ## Runtime requirements
 
-Use HA authentication and authorization. Do not expose unauthenticated household data. Existing HA tracker integrations keep their own provider credentials. Each enabled built in tracker connection owns its credentials in Home Assistant's config entry storage; the current Life360 path stores a password or access token and a hashed account identity there. Credentials and the identity fingerprint are not sent to the card, diagnostic snapshot, or repository. HA config storage is not encrypted by HomeCircle. No analytics by default, no background exports, no separate precise-location history store. Directly created tracker entities may be retained by Home Assistant Recorder under the user's Recorder settings. Redact diagnostics by allowlisting safe fields; never log raw entity attributes, coordinates, address strings, tokens or requests containing them.
+Use HA authentication and authorization. Do not expose unauthenticated household data. Existing HA tracker integrations keep their own provider credentials. Each enabled built in tracker connection owns its credentials in Home Assistant's config entry storage; the current Life360 path stores a password or access token and a hashed account identity there. Credentials and the identity fingerprint are not sent to the card, diagnostic snapshot, or repository. HA config storage is not encrypted by HomeCircle. No HomeCircle telemetry or automatic support uploads, no background exports, no separate precise-location history store. HomeCircle provides no hosted account relay or diagnostic-upload service; enabled providers and explicitly enabled external features still make the requests disclosed below. Directly created tracker entities may be retained by Home Assistant Recorder under the user's Recorder settings. Redact diagnostics by allowlisting safe fields; never log raw entity attributes, coordinates, address strings, tokens or requests containing them.
 
 Home Assistant's HomeCircle diagnostics export includes only provider status codes, aggregate tracker counts, and API operation times. It excludes the saved account configuration, member IDs, locations, raw responses, and exception text. Review any other Home Assistant diagnostics separately before sharing them.
 
@@ -66,6 +66,31 @@ Tracker-only photo selection and crop stay in the browser until Save. Only the r
 
 Life360 saved-place import is a separate administrator-initiated read through an existing saved connection. Authorization stays on the server. Circle names and saved-place coordinates/names/radii are retained in flow memory for review, then only explicitly confirmed places become editable HA zones. The importer neither synchronizes nor deletes existing zones; created zones remain after HomeCircle removal or a partial creation failure. No saved-place geocoding is performed.
 
+## Optional provider scope and pending controls
+
+Apple Find My and Life360 connections are optional and unofficial. Use accounts
+and data you are lawfully entitled to access; local consent is not represented
+as a provider permission grant. HomeCircle claims no Apple/Life360 affiliation,
+endorsement, approval or logo right. Reports can be stale or unavailable and are
+not an emergency or safety guarantee. The source-only package and remaining
+terms/distribution decisions are recorded in the
+[no-contact decision record](RELEASE-1.0-NO-OUTREACH-DECISION.md).
+
+The current source candidate implements administrator **Manage direct
+connections** in Options, with **Saved connection** and **Action → Pause/Resume**.
+Apple denial stops the denied account while healthy siblings can continue;
+Life360 denial stops that provider. Saved accounts, identities, selections and
+local history remain. Normally persisted pause state survives restart; a storage
+failure blocks current-process requests and shows a fixed error instead of
+success, with no persistence promise after process loss if all disk writes fail.
+Resume deliberately permits the selected provider again, including denied
+accounts. It does not acknowledge recovery or reset its safeguard. The controls
+cover HomeCircle polling and its manual/auxiliary requests, not another
+integration's polling, map/city choices or Recorder retention. No hosted remote
+kill switch is provided. Affected native validation and final qualification
+remain pending in the [active tracker](RELEASE-1.0-FIRST-RELEASE-TRACKER.md);
+source inspection does not establish a published-beta or native pass.
+
 ## Apple Find My connection
 
 Beta 19's experimental Find My connection signs in to Apple from HA and prepares a local identity runtime before asking for account credentials. It downloads required public Apple software when needed and maintains this connection's own client identity. Fresh discovery temporarily recovers broader Keychain material to find item keys, then saves only explicitly selected items. It does not join a new Keychain trust peer. See the [setup guide](FINDMY-SETUP.md), [runtime provenance](../custom_components/homecircle/_findmy_runtime/PROVENANCE.md) and [tested scope](FINDMY-BETA19-PACKAGING-VALIDATION.md).
@@ -73,5 +98,11 @@ Beta 19's experimental Find My connection signs in to Apple from HA and prepares
 Find My's minimized encrypted vault contains the account identifier/email, selected accessory keys, client identity and local provisioning state, and the report-service token. Other service grants and account details are removed. The decryption key is stored alongside the vault in HA storage. Anyone with sufficient access to that storage or its backups can recover the connection, so protect both. Apple passwords, verification codes and trusted-device unlock passcodes stay transient and are not saved in config entries or the vault. No credentials or recovered keys are sent to household browsers or sanitized diagnostics.
 
 Authorized household viewers can read the configured item locations. HomeCircle retains each selected item's last usable report, including its source time and estimated accuracy; an empty successful poll does not erase that older location or make its timestamp newer. HA Recorder and backups may retain tracker states and locations under the user's settings. Disconnecting deletes this connection's active HomeCircle session and keys, without deleting existing history or backups.
+
+The unreleased stable candidate also keeps an encrypted, account-bound identity ledger with keyed commitments of accessory key material and saved display settings. This supports reselecting an omitted item without keeping its tracking keys. Matching requires all three accessory secrets; names and old registry/history entries are not proof. The ledger and its random secret are deleted with the account vault on Disconnect, so a later re-add cannot always recover an old identity if the required proof is no longer available. Existing backups can retain both selected keys and prior ledgers.
+
+A separate owner-only recovery safeguard stores a hash of the authenticated account identifier and local counts of refused, uncertain and verified exchanges. This hash is pseudonymous, not anonymization. The safeguard contains no password, passcode, service token, accessory key or location. It survives setup cancellation, reconnect, HA restart, Disconnect and integration removal so these operations cannot silently replenish its local threshold. An explicit administrator acknowledgement clears local unresolved counts; verified counts remain. This does not reset or describe Apple's retry allowance. Unsafe or unreadable guard storage prevents another recovery proof, while an existing report-only connection can continue polling. The candidate additionally binds each account’s ledger entry and changing generation to a private continuity witness under `.cache/homecircle_findmy/recovery_guard`. Ordinary Home Assistant backups exclude `.cache`, and a configuration restore removes the live witness. A missing witness, an older ledger paired with a newer witness, or an older ledger format blocks new device-passcode recovery until that authenticated account is explicitly reviewed. Status checks and ordinary saved-item polling never recreate trust. First use, upgrade from the older safeguard, or cache cleanup can also require this review. Acknowledging one account does not acknowledge others. This blocks silent replenishment after an ordinary backup restore; it does not reconstruct lost observations. Protect the full live installation. A complete filesystem or VM snapshot can roll back both ledger and witness, and an older backup can also replace the fixed code with an older package. Those cases require reinstalling the fixed candidate and reviewing recovery before use; this local witness is not an external monotonic counter. Backups and local acknowledgement never reset Apple’s server-side allowance.
+
+Verified recovery material and an opened peer can remain in memory for the lifetime of a setup to finish a failed key download without another passcode proof. Reuse requires the same authenticated account and exact recovery record. Closing/expiring setup drops those references and broad key collections; this is not a guarantee of memory zeroization. The unreleased hardening candidate bounds recovery key-derivation work, runs it off the main loop, and drains it before returning cancellation. The affected Find My background failures are collected without asyncio automatically logging their raw exception details. Failed worker cleanup still retains the handle needed to retry reaping it while dropping the closed provider's transient cache and identity references.
 
 Find My diagnostics use allowlisted fixed statuses and aggregate counts. Raw account or item identifiers, keys, tokens, coordinates, response bodies and exception text are excluded. Review any other HA logs or screenshots before sharing them; do not share vault files or setup credentials.

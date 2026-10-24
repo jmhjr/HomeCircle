@@ -32,13 +32,17 @@ device whose escrow record is being recovered from. What it yields can be kept, 
 from __future__ import annotations
 
 import logging
+from copy import deepcopy
 from typing import TYPE_CHECKING
 
 from typing_extensions import Self, override
 
 from custom_components.homecircle._vendor_findmy.cloudkit.beacons import AsyncBeaconStore, BeaconExportError
 from custom_components.homecircle._vendor_findmy.keychain.items import VIEW_MANATEE, VIEW_PROTECTED_CLOUD_STORAGE
-from custom_components.homecircle._vendor_findmy.keychain.session import AsyncKeychainSession, KeychainSessionError
+from custom_components.homecircle._vendor_findmy.keychain.recovery import RecoveryProtocolError
+from custom_components.homecircle._vendor_findmy.keychain.session import (
+    AsyncKeychainSession, KeychainSessionError, recovery_account_binding,
+)
 from custom_components.homecircle._vendor_findmy.util.abc import Closable
 
 if TYPE_CHECKING:
@@ -82,6 +86,9 @@ class AsyncFindMyClient(Closable):
 
         self._keychain_keys: list[ec.EllipticCurvePrivateKey] = []
         self._zone_keys: list[ec.EllipticCurvePrivateKey] | None = None
+        self._recovered_peer = None
+        self._recovered_peer_record = None
+        self._recovered_peer_account = None
 
     @classmethod
     async def open(cls, account: AsyncAppleAccount) -> Self:
@@ -103,8 +110,13 @@ class AsyncFindMyClient(Closable):
     @override
     async def close(self) -> None:
         """Close everything this opened. Does not close the account."""
-        await self._store.close()
-        await self._session.close()
+        self._recovered_peer = self._recovered_peer_record = self._recovered_peer_account = None
+        self._keychain_keys.clear()
+        self._zone_keys = None
+        try:
+            await self._store.close()
+        finally:
+            await self._session.close()
 
     async def __aenter__(self) -> Self:
         """Enter a context that closes this client on exit."""
@@ -149,10 +161,23 @@ class AsyncFindMyClient(Closable):
         """
         return await self._session.recovery_options(refresh=refresh)
 
+    def can_resume_unlock(self, record: EscrowRecord) -> bool:
+        """Retry only the exact record's verified material, within this client."""
+        return (
+            self._peer_matches(record) or self._session.can_resume_recovery(record)
+        )
+
+    def _peer_matches(self, record: EscrowRecord) -> bool:
+        return (
+            self._recovered_peer is not None and self._recovered_peer_record == record
+            and self._recovered_peer_account is not None
+            and self._recovered_peer_account == recovery_account_binding(self._account)
+        )
+
     async def unlock(
         self,
         record: EscrowRecord,
-        passcode: str,
+        passcode: str = "",
         *,
         views: Sequence[str] = (VIEW_MANATEE, VIEW_PROTECTED_CLOUD_STORAGE),
     ) -> list[ec.EllipticCurvePrivateKey]:
@@ -171,12 +196,21 @@ class AsyncFindMyClient(Closable):
         diagnostics = getattr(self._account, "_recovery_diagnostics", None)
         if isinstance(diagnostics, dict):
             diagnostics["unlock_phase"] = "escrow_recovery"
-        peer = await self._session.recover(record, passcode)
+        if self._peer_matches(record):
+            peer = self._recovered_peer
+        else:
+            self._recovered_peer = self._recovered_peer_record = self._recovered_peer_account = None
+            peer = await self._session.recover(record, passcode)
+            self._recovered_peer = peer
+            self._recovered_peer_record = deepcopy(record)
+            self._recovered_peer_account = recovery_account_binding(self._account)
         if isinstance(diagnostics, dict):
             diagnostics["unlock_phase"] = "pcs_keys"
-        keys = await self._session.pcs_keys(peer, views=views)
-
-        self.use_keys(keys)
+        try:
+            keys = await self._session.pcs_keys(peer, views=views)
+            self.use_keys(keys)
+        except Exception:
+            raise RecoveryProtocolError("material", "verified") from None
         return keys
 
     async def resume(

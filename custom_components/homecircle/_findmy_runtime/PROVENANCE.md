@@ -46,3 +46,54 @@ Required library slice SHA-256:
 The library is a locally cached Apple binary, separate from the MIT emulator.
 The source license does not purport to license Apple's binary.
 Its acquisition and platform acceptance must be included in release validation.
+
+## Local hardening adaptations (unreleased stable candidate)
+
+The worker authenticates one bounded, regular-file descriptor snapshot and passes
+those exact immutable bytes to the emulator; the loader does not reopen the
+library pathname. The parent resolves the installed Unicorn package in an
+executor and passes only that package path to the child, including when Core
+uses a private dependency directory. This is synthetic import coverage, not
+qualification of native execution on every supported platform.
+
+Default and Mac random hooks use the host OS-backed `secrets` source and fail
+without a fallback pattern. Guest scratch, object and heap allocations are
+bounded; combined provisioning inputs and dispatcher metadata must fit the
+256 KiB scratch budget before writes. Guest output and random buffers are
+bounded before host allocation/read. The child retains its existing operation
+and process resource limits. Its Python audit hooks restrict ordinary Python
+network, subprocess and write operations; they are not an OS sandbox for native
+dependencies. See the repository's focused hardening validation for synthetic
+controls and the still-open real Apple provisioning/platform acceptance.
+
+## Supplemental dependency notices (prospective correction, October 20, 2026)
+
+[`LICENSE.md`](LICENSE.md) retains the complete pinned Unicorn 2.1.4 core
+`COPYING` and the Construct MIT notice for the code included in the inspected
+pyelftools 0.33 dependency. These are supplemental notices for separately
+fetched dependencies; HomeCircle does not bundle their wheels/native
+libraries or Apple's CoreADI binary. The bindings' precise BSD notice,
+corresponding-source/source-offer and combined distribution obligations,
+upstream packaging corrections and final installed-artifact notice locations
+remain open. This addition supplies no invented BSD text or source offer and
+does not establish Apple software/service authorization or stable-release
+clearance. The published beta 20 archive remains unchanged.
+
+## Current source-only distribution direction (October 23, 2026)
+
+The maintainer requested a no-contact implementation. HomeCircle relies on the
+actual published OSS grants for covered source and retains complete existing
+notices. The HACS ZIP contains no dependency wheel, native library/executable,
+Apple installer/library payload or provisioned identity; HA resolves declared
+dependencies separately and optional setup can acquire the pinned Apple payload
+locally. This does not make Apple's binary open source or settle its extraction,
+emulated-use or service terms.
+
+The exact Apple accompanying agreement/service basis and Unicorn core/binding
+terms remain recorded questions. No BSD text, source offer, Apple permission or
+legal clearance is invented. Separate dependency download and child-process
+execution alone do not answer combined-work/source obligations. The
+[decision record](../../../docs/RELEASE-1.0-NO-OUTREACH-DECISION.md) separates
+these facts and remaining maintainer scope decisions; it requires no permission
+letters or author/provider contact. Existing notices and dated evidence remain
+unchanged.

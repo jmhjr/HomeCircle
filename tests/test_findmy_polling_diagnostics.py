@@ -4,7 +4,7 @@ import asyncio
 from copy import deepcopy
 from datetime import datetime, timedelta, UTC
 from types import SimpleNamespace
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -122,7 +122,7 @@ async def test_failure_or_cancellation_does_not_reuse_previous_success(failure, 
     assert "canary" not in repr(value.poll_diagnostics()) + caplog.text
 
 
-async def test_partial_fetch_failure_keeps_partial_counts_but_no_committed_item_success():
+async def test_partial_fetch_failure_retains_committed_item_success():
     value = make_client(count=201)
     calls = 0
 
@@ -134,13 +134,15 @@ async def test_partial_fetch_failure_keeps_partial_counts_but_no_committed_item_
         return {keys[0]: report(datetime.now(UTC) - timedelta(minutes=1))}
 
     value.account.fetch_location.side_effect = fetch
-    with pytest.raises(RuntimeError):
-        await value.poll()
+    result = await value.poll()
     assert value.poll_diagnostics() == observation(
-        status="failed", fetch_calls=2, decoded_reports=1,
-        items_retaining_previous_report=0,
+        status="partial", fetch_calls=2, decoded_reports=1,
+        items_retaining_previous_report=0, items_with_returned_valid_reports=1,
+        items_with_advanced_reports=1,
     )
-    assert value.clients["private-item-canary"].report is None
+    assert result["private-item-canary"] == value.clients["private-item-canary"].report
+    assert value.clients["private-item-canary"].report is not None
+    assert value.failed_items == {"private-item-canary"}
 
 
 async def test_existing_lock_serializes_observations_and_active_cancel_is_terminal():
@@ -204,7 +206,7 @@ async def test_provider_aggregate_has_no_account_item_location_time_or_error_val
     result = provider.polling_snapshot()
     assert result == {
         "schema": 1, "accounts": 5, "accounts_without_observation": 2,
-        "status_counts": {"not_polled": 1, "in_progress": 0, "success": 1, "failed": 1, "cancelled": 0},
+        "status_counts": {"not_polled": 1, "in_progress": 0, "success": 1, "partial": 0, "failed": 1, "cancelled": 0},
         "fetch_calls": 2, "decoded_reports": 0, "selected_items": 3,
         "items_with_returned_valid_reports": 0, "items_with_advanced_reports": 0,
         "items_retaining_previous_report": 1, "items_without_report": 0,
@@ -244,3 +246,24 @@ async def test_optional_diagnostics_exports_only_valid_aggregate_without_trigger
 async def test_invalid_aggregate_cannot_export_raw_or_ambiguous_counts(hass, change):
     value = make_provider(hass, {}).polling_snapshot()
     assert validated_polling_snapshot({**value, **change}) is None
+
+
+async def test_paused_diagnostics_expose_only_fixed_controls_and_aggregate_counts(hass):
+    from custom_components.homecircle.provider_controls import ProviderControls
+
+    controls = ProviderControls(hass, "example-entry")
+    await controls.async_load()
+    with patch.object(hass.config_entries, "async_reload", new=AsyncMock(return_value=True)):
+        await controls.async_pause_denied("findmy", "private-account-canary")
+        await hass.async_block_till_done()
+    entry = SimpleNamespace(
+        data={"findmy_accounts": {"private-account-canary": {"items": {}}}},
+        options={},
+        runtime_data=SimpleNamespace(managed_trackers={}, provider_controls=controls),
+    )
+    result = await async_get_config_entry_diagnostics(hass, entry)
+    assert result["connection_controls"] == {
+        "findmy": {"paused": False, "paused_accounts": 1, "storage_available": True},
+    }
+    assert "private" not in repr(result)
+    assert "canary" not in repr(result)

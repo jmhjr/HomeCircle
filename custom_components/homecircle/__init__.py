@@ -27,6 +27,7 @@ from .location_requests import async_request_quiet_locations, restore_automatic_
 from .const import DOMAIN
 from .selection import selected_entities
 from .tracker_providers import TrackerClient, connected_providers
+from .provider_controls import ProviderControls, async_get_controls, async_remove_controls
 from . import api, dashboard_setup, frontend
 from homeassistant.components import websocket_api
 
@@ -47,6 +48,7 @@ class HomeCircleRuntime:
     missing: set[str] = field(default_factory=set)
     unavailable: set[str] = field(default_factory=set)
     managed_trackers: dict[str, TrackerClient] = field(default_factory=dict)
+    provider_controls: ProviderControls | None = None
     last_location_request: dict[str, datetime] = field(default_factory=dict)
     location_request_times: dict[str, list[datetime]] = field(default_factory=dict)
     automatic_location_requests: dict[str, dict] = field(default_factory=dict)
@@ -104,6 +106,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeCircleEntry) -> bool
         # must still work when Lovelace storage cannot be changed.
         _LOGGER.exception("Could not create the optional HomeCircle dashboard")
     runtime = entry.runtime_data = HomeCircleRuntime(dict(entry.options or entry.data))
+    # Load durable stop controls before forwarding any provider platform.
+    runtime.provider_controls = await async_get_controls(hass, entry.entry_id)
     if findmy_recovery_failed:
         try:
             pending = (
@@ -137,10 +141,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeCircleEntry) -> bool
         hass, Store(hass, 1, f"{DOMAIN}.city_lookup.{entry.entry_id}")
     )
     await runtime.city_lookup.load()
-    runtime.activity = ActivityLog(
-        runtime.config, Store(hass, 1, f"{DOMAIN}.activity.{entry.entry_id}")
-    )
-    await runtime.activity.load()
     runtime.location_request_store = Store(
         hass, 1, f"{DOMAIN}.location_requests.{entry.entry_id}"
     )
@@ -182,7 +182,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeCircleEntry) -> bool
     )
     if platforms:
         await hass.config_entries.async_forward_entry_setups(entry, platforms)
+    activity_fingerprint_config = runtime.config
     runtime.config = item_config(hass, runtime.config)
+    runtime.activity = ActivityLog(
+        runtime.config,
+        Store(hass, 1, f"{DOMAIN}.activity.{entry.entry_id}"),
+        fingerprint_config=activity_fingerprint_config,
+    )
+    await runtime.activity.load()
     entity_ids = selected_entities(runtime.config)
     issue_id = f"missing_entities_{entry.entry_id}"
 
@@ -277,6 +284,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeCircleEntry) -> bool
     )
     entry.async_on_unload(lambda: ir.async_delete_issue(hass, DOMAIN, issue_id))
     refresh()
+    # The options response can precede the scheduled reload and registration.
+    # Tell existing cards when the new household can actually be read.
+    hass.bus.async_fire("homecircle_ready")
     return True
 
 
@@ -330,6 +340,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: HomeCircleEntry) -> Non
     await Store(hass, 1, f"{DOMAIN}.location_requests.{entry.entry_id}").async_remove()
     await Store(hass, 1, f"{DOMAIN}.activity.{entry.entry_id}").async_remove()
     await Store(hass, 1, f"{DOMAIN}.city_lookup.{entry.entry_id}").async_remove()
+    await async_remove_controls(hass, entry.entry_id)
     from .findmy_storage import delete_account
     from homeassistant.helpers import issue_registry as ir
 

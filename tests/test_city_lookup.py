@@ -241,6 +241,11 @@ async def test_unload_cancels_city_lookup_and_remove_deletes_cache(hass):
     await lookup.close()
     assert lookup.closed and lookup.task.cancelled()
     entry = MockConfigEntry(domain="homecircle")
+    removed_keys = []
+
+    async def record_removal(saved_store):
+        removed_keys.append(saved_store.key)
+
     with (
         patch(
             "custom_components.homecircle.frontend.async_unregister", new=AsyncMock()
@@ -250,11 +255,19 @@ async def test_unload_cancels_city_lookup_and_remove_deletes_cache(hass):
             new=AsyncMock(),
         ),
         patch(
-            "homeassistant.helpers.storage.Store.async_remove", new=AsyncMock()
-        ) as remove,
+            "homeassistant.helpers.storage.Store.async_remove", new=record_removal
+        ),
     ):
         await async_remove_entry(hass, entry)
-    assert remove.await_count == 4  # Also removes the Find My migration ledger.
+    expected_keys = {
+        f"homecircle.location_requests.{entry.entry_id}",
+        f"homecircle.activity.{entry.entry_id}",
+        f"homecircle.city_lookup.{entry.entry_id}",
+        f"homecircle.provider_controls.{entry.entry_id}",
+        f"homecircle_findmy_migration_{entry.entry_id}",
+    }
+    assert len(removed_keys) == len(expected_keys)
+    assert set(removed_keys) == expected_keys
 
 
 @pytest.mark.parametrize(
@@ -330,3 +343,153 @@ async def test_close_waits_for_inflight_disk_save(hass):
     finish.set()
     await closing
     assert lookup.save_task.done() and not lookup.save_task.cancelled()
+
+
+@pytest.mark.parametrize("cancel_before_close", [True, False])
+async def test_close_handles_independently_cancelled_disk_save(
+    hass, cancel_before_close
+):
+    import asyncio
+
+    saved = store()
+    started = asyncio.Event()
+
+    async def blocked_save(data):
+        started.set()
+        await asyncio.Event().wait()
+
+    saved.async_save.side_effect = blocked_save
+    lookup = CityLookup(hass, saved)
+    lookup.task = asyncio.create_task(lookup.save())
+    await started.wait()
+    if cancel_before_close:
+        lookup.save_task.cancel()
+        await asyncio.sleep(0)
+    closing = asyncio.create_task(lookup.close())
+    if not cancel_before_close:
+        await asyncio.sleep(0)
+        await asyncio.sleep(0)
+        assert not closing.done()
+        lookup.save_task.cancel()
+    await closing
+    assert lookup.closed and lookup.save_task.cancelled()
+    assert not closing.cancelled()
+
+
+@pytest.mark.parametrize("cancel_stage", ["update", "save"])
+async def test_close_preserves_caller_cancellation_after_draining(hass, cancel_stage):
+    import asyncio
+
+    saved = store()
+    started, finish = asyncio.Event(), asyncio.Event()
+    update_draining = asyncio.Event()
+
+    async def blocked_save(data):
+        started.set()
+        await finish.wait()
+
+    saved.async_save.side_effect = blocked_save
+    lookup = CityLookup(hass, saved)
+    lookup.save_task = asyncio.create_task(saved.async_save({}))
+    await started.wait()
+    if cancel_stage == "update":
+
+        async def blocked_update():
+            try:
+                await asyncio.Event().wait()
+            except asyncio.CancelledError:
+                update_draining.set()
+                await finish.wait()
+                raise
+
+        lookup.task = asyncio.create_task(blocked_update())
+        await asyncio.sleep(0)
+    closing = asyncio.create_task(lookup.close())
+    if cancel_stage == "update":
+        await update_draining.wait()
+    else:
+        await asyncio.sleep(0)
+    assert not closing.done()
+    closing.cancel()
+    try:
+        await asyncio.sleep(0)
+        assert not closing.done()
+        assert not lookup.save_task.cancelled()
+        if cancel_stage == "update":
+            assert not lookup.task.done()
+    finally:
+        finish.set()
+    with pytest.raises(asyncio.CancelledError):
+        await closing
+    assert lookup.closed
+    assert lookup.save_task.done() and not lookup.save_task.cancelled()
+    if cancel_stage == "update":
+        assert lookup.task.done()
+
+
+async def test_close_preserves_failed_save_cleanup_disposition(hass):
+    saved = store()
+    saved.async_save.side_effect = OSError("synthetic store failure")
+    lookup = CityLookup(hass, saved)
+    with pytest.raises(OSError):
+        await lookup.save()
+    await lookup.close()
+    assert lookup.closed
+
+
+@pytest.mark.parametrize("cancel_close", [False, True])
+async def test_cancelled_city_save_failure_has_no_raw_loop_diagnostic(
+    hass, cancel_close
+):
+    import asyncio
+
+    loop = asyncio.get_running_loop()
+    original_handler = loop.get_exception_handler()
+    diagnostics = []
+    loop.set_exception_handler(lambda _loop, context: diagnostics.append(context))
+    started, finish = asyncio.Event(), asyncio.Event()
+    failure = OSError("synthetic private city storage failure canary")
+    saved = store()
+
+    async def blocked_save(data):
+        started.set()
+        await finish.wait()
+        raise failure
+
+    saved.async_save.side_effect = blocked_save
+    lookup = CityLookup(hass, saved)
+    lookup.task = asyncio.create_task(lookup.save())
+    closing = None
+    try:
+        await started.wait()
+        closing = asyncio.create_task(lookup.close())
+        await asyncio.sleep(0)
+        await asyncio.sleep(0)
+        if cancel_close:
+            closing.cancel()
+            await asyncio.sleep(0)
+        finish.set()
+        if cancel_close:
+            with pytest.raises(asyncio.CancelledError):
+                await closing
+        else:
+            await closing
+        assert lookup.closed and lookup.save_task.done()
+        assert not lookup.save_task.cancelled()
+
+        saved = store()
+        saved.async_save.side_effect = failure
+        direct = CityLookup(hass, saved)
+        with pytest.raises(OSError) as raised:
+            await direct.save()
+        assert raised.value is failure
+        await direct.close()
+        await asyncio.sleep(0)
+        await asyncio.sleep(0)
+        assert not any(context.get("exception") is failure for context in diagnostics)
+        assert not any("canary" in str(context) for context in diagnostics)
+    finally:
+        finish.set()
+        if closing is not None:
+            await asyncio.gather(closing, return_exceptions=True)
+        loop.set_exception_handler(original_handler)

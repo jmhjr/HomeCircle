@@ -1,6 +1,39 @@
 # Changelog
 
-## Unreleased
+## 1.0.0 — October 24, 2026 UTC
+
+Approved for stable publication with both optional, unofficial direct providers and the documented limits. See the [approved release decision](docs/RELEASE-1.0-PROPOSED-DISPOSITION.md), [exact package preparation](docs/RELEASE-1.0-STABLE-PREPARATION.json) and [setup guide](docs/RELEASE-1.0-USER-GUIDE.md). Publication and public-asset readback are recorded separately from approval.
+
+- Retain provider-independent HA People and explicitly selected trackers, guided storage-mode setup without manual YAML, people/pets/items, places, pictures, genuine source report times and local activity history.
+- Include optional direct Life360 and Apple Find My connections with explicit member/item selection and saved-account restart continuity. Keep provider names and local runtime acquisition transparent; do not bundle Apple payloads, provisioned identities or dependency wheels/native libraries.
+- Add persistent administrator Pause/Resume controls for saved and applicable external connections. Stop HomeCircle requests after access denial, isolate affected Apple accounts, drain in-flight work and preserve saved accounts, selections, identities and history. Resume is deliberate and does not reset recovery safeguards.
+- Harden account/session binding, protected-record authentication, recovery submission guards, rollback review/refusal and selected-item identity continuity. Preserve genuine older reports across later failures and retain source ages instead of manufacturing freshness.
+- Keep activity initialization aligned with projected Find My members, and retain the independently scoped ordinary partial-restore and private-upgrade evidence with their backup and history limits.
+- Move cold Find My SDK imports off the HA event loop in startup, migration and setup; drain the disconnect compensation work. Retain the picture filename, passive-residence fallback, unload/cancellation and notice corrections prepared for 1.0.
+- Support HAOS amd64 and ARM64 with minimum Core 2026.9.4 and current recorded target 2026.10.2; Container remains experimental. Keep optional-provider uncertainty, lawful access, non-affiliation, local privacy/support and no emergency guarantee explicit.
+- Validate two identical canonical 112-member stable packages/inventories and 126 frontend cases. Stable changes only three version-bearing members from RC2; 109 packaged members are unchanged. RC2's 51 focused native exact-package cases, real owner cold restart and bounded phone/desktop display checks retain their original scope. RC1's broad current-Core, focused minimum-Core and genuine fourteen-phase HACS qualification remain source-bound historical evidence; no new stable native, HACS or full-matrix run is claimed.
+- Keep fresh Find My position, natural long-term renewal and real-photo persistence unclaimed by the final owner round. The approved residual scope does not establish provider permission or resolve the recorded Apple/service/Unicorn uncertainties.
+
+## Historical 1.0 preparation notes
+
+- Keep the selected picture filename visible through cropping and unsuccessful uploads, with safe clearing on save, removal and navigation.
+- Exclude passive residences from the legacy geometric fallback while preserving explicit HA Person membership.
+- Drain owned city-cache work during unload and preserve actual caller cancellation; prevent raw shielded-write diagnostics after cancellation while retaining the existing disk-error cleanup policy.
+- Carry the separate inherited and supplemental notice corrections and narrowly recognize their exact public-license bytes in the privacy checker.
+- Track the [1.0 release plan](docs/RELEASE-1.0-PLAN.md), focused corrections and remaining acceptance. At that preparation checkpoint, no stable version or replacement beta20 package had been published.
+
+## 0.1.0-beta.20 — October 20, 2026
+
+Experimental prerelease; see the [versioned validation boundary](docs/BETA20-VALIDATION.md).
+This packages the separately reviewed hardening candidate. Publication and genuine HACS
+delivery/restart are separate acceptance steps; it is not a stable-release approval.
+
+- Preserve polling progress and older authenticated reports across later failures; isolate provider startup and shutdown failures.
+- Keep GSA/recovery SRP state separate, verify peer/key and account/session bindings, authenticate protected records, and bound recovery/native-worker resources.
+- Persist a separate recovery submission safeguard and preserve selected-item identities and safe display settings without keeping omitted tracking keys. Reject ambiguous identity matches and stale/concurrent selection saves.
+- Correct verified-byte worker loading, native cleanup, entropy and buffer bounds; retain complete inherited notices.
+- Document package-only rollback's identity-ledger limit and the requirement to preserve the newest independent recovery safeguard. Prepared disabled-entry Supervisor partial-backup/Recorder restoration passed with synthetic data; ordinary enabled-entry/full-system and owner recovery remain unqualified.
+- Retain the frozen V2 reference, ordinary HA tracker selection, existing provider choices and genuine source report times. No production rollout is part of this prerelease.
 
 ## 0.1.0-beta.19 — October 19, 2026
 

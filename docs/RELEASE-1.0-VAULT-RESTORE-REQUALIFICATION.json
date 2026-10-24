@@ -1,0 +1,709 @@
+{
+  "as_of_date": "2026-10-21",
+  "development_preview_unreleased": true,
+  "documentation_commit_is_tested_runtime": false,
+  "documentation_record": "RELEASE-1.0-VAULT-RESTORE-REQUALIFICATION.json",
+  "documentation_status": "final",
+  "draft_revision": "final_experimental_offline_restore",
+  "explicit_partial_restore": {
+    "actual_supervisor_partial_backup_and_restore": true,
+    "artifact": {
+      "api_digest_and_size_matched": true,
+      "bytes": 14317,
+      "id": 12386541614,
+      "members": {
+        "automatic_disabled.json": {
+          "bytes": 662,
+          "sha256": "420ca8ebb294f1b4f3abff51109a88187ad4f98cfa21b88e8745a825ab43a785"
+        },
+        "host.json": {
+          "bytes": 13902,
+          "sha256": "cd9e34bd172c48514325b862a026f396e977a54a32b4c293307e2fc59790983c"
+        },
+        "initial_restart.json": {
+          "bytes": 6385,
+          "sha256": "1e144cc6878d1b7b5ba173730931b7c02ca06f1c106903c057f3e97177298d25"
+        },
+        "initialize.json": {
+          "bytes": 6380,
+          "sha256": "ae02a35c41bc2b52cb21cfbe0d9691b5f45eca4a5afde1f18e19cfd6ace48f53"
+        },
+        "mutate.json": {
+          "bytes": 1387,
+          "sha256": "0e7a4aa52639d55202e2a2a13037c5ba13f91896a3e09592c2ef028c1beb1a22"
+        },
+        "quarantine.json": {
+          "bytes": 1516,
+          "sha256": "4746ef7541a43490c9a7c1a6fcf0789bf465a450f1808259ee91574541350942"
+        },
+        "reenabled.json": {
+          "bytes": 6499,
+          "sha256": "7fc39ec6222647e7da4699c0359c34ebcbb5ee82a7a40aa35a1fa4a89e6247c5"
+        },
+        "repaired_disabled.json": {
+          "bytes": 6030,
+          "sha256": "2ac5e1353b4d9ba693d46e46d6f92a99b01a21fd02af7fc438b3fa36eb90ecb3"
+        },
+        "restart.json": {
+          "bytes": 6435,
+          "sha256": "76f45a86ffd9a8ec9471cbaabb889bb7349950acec41e8785f888a1a39280c08"
+        }
+      },
+      "sha256": "eea9b7c087a1fd099d5b1b26de14e851ce89d1624a563b19259829fa3ede40a2"
+    },
+    "automatic_guard_antirollback": false,
+    "automatic_restored_entry_disabled_and_unimported": true,
+    "automatic_restored_old_guard_counter": 2,
+    "cleanup_failed": false,
+    "environment": {
+      "architecture": "amd64",
+      "core_api": "2026.10.2",
+      "core_container": "2026.10.2",
+      "haos": "18.3",
+      "kvm_verified": true,
+      "python": "3.14.6",
+      "supervisor": "2026.10.3"
+    },
+    "guard_contexts": [
+      {
+        "action": "export",
+        "image": "sha256:45f009d6ff1061971102e81f0802cf2762bdd5c5007231c938bd36030cbd0a12",
+        "local_image_verified": true,
+        "managed_core_same_stopped_process": true,
+        "maximum_total_seconds": 60,
+        "offline_network_none": true,
+        "outcome": "passed",
+        "owned_container_removed": true,
+        "owned_identity_security_mount_checked": true,
+        "schema": 1,
+        "unchanged_transfer_stdin": true
+      },
+      {
+        "action": "import",
+        "image": "sha256:45f009d6ff1061971102e81f0802cf2762bdd5c5007231c938bd36030cbd0a12",
+        "local_image_verified": true,
+        "managed_core_same_stopped_process": true,
+        "maximum_total_seconds": 60,
+        "offline_network_none": true,
+        "outcome": "passed",
+        "owned_container_removed": true,
+        "owned_identity_security_mount_checked": true,
+        "schema": 1,
+        "unchanged_transfer_stdin": true
+      }
+    ],
+    "guard_timeline": {
+      "automatic_disabled": 2,
+      "initial_restart": 2,
+      "initialize": 2,
+      "mutate": 3,
+      "quarantine": 2,
+      "reenabled": 3,
+      "repaired_disabled": 3,
+      "restart": 3
+    },
+    "guest_stopped": true,
+    "independent_audit": {
+      "bytes": 7494,
+      "sha256": "c546158bb02fad377d8c3baab468ac7f19085b2377291010d2a0aa3c87d0a641"
+    },
+    "newest_guard_counter": 3,
+    "newest_guard_repaired_before_enable": true,
+    "newest_guard_retained_outside_entire_guest": true,
+    "normal_managed_dependencies": true,
+    "offline_contracts_passed": 147,
+    "offline_contracts_skipped": 0,
+    "ordinary_enabled_restore_safety_accepted": false,
+    "owned_guard_containers_removed": true,
+    "owner_credentials_used": false,
+    "phase_names": [
+      "initialize",
+      "initial_restart",
+      "quarantine",
+      "mutate",
+      "automatic_disabled",
+      "repaired_disabled",
+      "reenabled",
+      "restart"
+    ],
+    "prepared_dependency_preload_used": false,
+    "private_workspace_removed": true,
+    "provider_accounts_configured": false,
+    "qa_head": "201438e28c8a5738c0c31193ba0b71d9f3451c51",
+    "recorder": {
+      "new_postrestore_rows_surviving_restart": 10,
+      "postbackup_marker_rows_removed": 10,
+      "postrestore_rows_sha256": "358d096015efa277e104f9983b5897bea41303747460974a550334ca9be3d31a",
+      "prebackup_rows_restored": 10,
+      "prebackup_rows_sha256": "298dd0935afc4e69976fc67a2d9a0c48fbe921a64c42d0c2d34f2fec0ce0db25"
+    },
+    "run_id": 39685041916,
+    "saved_provider_vault_restore_accepted": false,
+    "selection_place_portrait_identity_dashboard_continuity": true,
+    "snapshot_sha256": "57cafe4045debed7e0c43f5346accdbd1531c76a8cc110975e5d0f2531a8a5b2",
+    "source_commit": "91ae59106a661143b770d7a3564d363c7c11a7dd",
+    "status": "passed",
+    "url": "https://github.com/jmhjr/HomeCircle/actions/runs/39685041916"
+  },
+  "fix": {
+    "confirmed_owned_unreadable_store_disconnect_regression_passed": true,
+    "constructor_ValueError_normalized": true,
+    "load_preflight_OSError_normalized": true,
+    "malformed_key_replaced_by_load_or_save": false,
+    "real_Apple_service_failure_resolved_claimed": false,
+    "runtime_file": "findmy_vault.py",
+    "runtime_sha256": "1959c143d36c4f06aff13d85aed2886c32161de86680fd0567427bda418e12f5",
+    "scope": "malformed Apple vault key and load-preflight error normalization for explicit Disconnect",
+    "unsafe_and_legacy_store_disconnect_refusal_regression_passed": true
+  },
+  "fixture_compatibility_correction": {
+    "actual_R2_failure_cause_proven": false,
+    "allowed_managed_modes": [
+      "0600",
+      "0644"
+    ],
+    "atomic_new_config_mode": "0600",
+    "changed_existing_paths": [
+      ".github/workflows/native-release1-saved-storage-restore.yml",
+      "native-release1-saved-storage-restore/README.md",
+      "native-release1-saved-storage-restore/controller.py",
+      "native-release1-saved-storage-restore/guest_helper/homecircle_safe_restore_qa/__init__.py",
+      "native-release1-saved-storage-restore/storage_transfer.py",
+      "native-release1-saved-storage-restore/test_saved_storage.py",
+      "native-release1-saved-storage-restore/test_storage_transfer.py"
+    ],
+    "child_frozen_inputs": {
+      "bytes": 4257,
+      "sha256": "02b85324f86883a27d62fea30ac92681ad9579ee66286c7317cf78ba120a6162"
+    },
+    "confirmed_incompatibility_proof": {
+      "bytes": 611,
+      "sha256": "546f7eaf6d7e856a33dbce1c4aed08c013daadbcfa5c1f48249e94a3a4158519"
+    },
+    "global_private_reader_relaxed": false,
+    "local_contracts_passed": 97,
+    "managed_store_exact_names": [
+      "core.config_entries",
+      "core.entity_registry"
+    ],
+    "managed_store_nofollow_owner_singlelink_regular_size_checks_retained": true,
+    "new_paths": [],
+    "old87_case_identities_retained": true,
+    "ordinary_HA_writer_mode": "0644",
+    "parent_qa_head": "630fb69b7281c5d3030506dbd25802f1860ae1bc",
+    "primary_HA_version": "2026.10.2",
+    "primary_file_writer_sha256": "a712b90357c897ee72e454eb89a6e1f10e94e09eecf03f908838203f933b41dd",
+    "private_HA_writer_control_mode": "0600",
+    "private_pair_guard_and_proof_modes": "0600",
+    "product_runtime_changed": false,
+    "qa_head": "e44ae2a104e3d74bb2f3191810a5ed8ab2aa115b",
+    "raw_stderr_exception_paths_or_account_values_retained": false,
+    "removed_paths": [],
+    "safe_fixed_failure_action_stage_projection_added": true
+  },
+  "historical_evidence": {
+    "earlier_enabled_restore_negative_record": "RELEASE-1.0-HAOS-RESTORE.json",
+    "earlier_failed_runs_reclassified": false,
+    "previous_explicit_restore": {
+      "record": "RELEASE-1.0-EXPLICIT-RESTORE.json",
+      "run_id": 39674846677,
+      "source_commit": "f4da650e6e460382c6ee1f70827bddac43bf2780"
+    },
+    "unretained_historical_filesystem_cause_established_retroactively": false
+  },
+  "installed_runtime_changed": false,
+  "package": {
+    "backend_failed": 0,
+    "backend_passed": 1698,
+    "baseline_red": {
+      "all_expected_regressions_observed": true,
+      "baseline_source_commit": "fc0bba472cd60a06dac6bab30b7d011fd533624b",
+      "baseline_vault_sha256": "7c6a846cefba6a34647d84b7738a93d85738a948da32fbf752a96c4e1cf4c0f2",
+      "cause_verified": true,
+      "collection_errors": 0,
+      "combined_red_green_deadline_seconds": 900,
+      "expected_failure_cases": 14,
+      "fixed_source_unchanged": true,
+      "outcome": "passed",
+      "private_copy_removed": true,
+      "provider_or_owner_accounts_used": false,
+      "public_files_only_copy": true,
+      "schema": 1,
+      "skipped": 0
+    },
+    "existing_optional_skip": 1,
+    "frontend_passed": 122,
+    "full_canonical_files_verified": 363,
+    "independent_report": {
+      "bytes": 2528,
+      "sha256": "22c861632098c71d78b4f8051a3722579bacb8983d413931231ce867e2a2d27d"
+    },
+    "inventory": {
+      "bytes": 16823,
+      "sha256": "d7e70cb639d77836fa2ac15b26f95e2f31ea599dbfff580cfae60a5a827cfe5b"
+    },
+    "owner_accounts_used": false,
+    "production_configuration_used": false,
+    "public_source_files": 337,
+    "qa_head": "e2572b28812c1c152b40eb1a10e6d6e8d4cb8276",
+    "required_regression_functions": 36,
+    "root_report": {
+      "bytes": 1673,
+      "sha256": "1e12dc205f90505df5e9c0d275cda8fa60becbb4f91d497cd4cdb87e30b2be06"
+    },
+    "run_id": 39683890536,
+    "runtime_comparison": {
+      "baseline_source_commit": "f4da650e6e460382c6ee1f70827bddac43bf2780",
+      "changed_files": [
+        "findmy_vault.py"
+      ],
+      "served_frontend_sha256": "77f429fb1908acc21cde2c89614f05f12c60a09bb37fa6ca78a1830ec07c6f91",
+      "unchanged_runtime_members": 112
+    },
+    "sanitized_receipts": {
+      "frontend-summary.json": {
+        "bytes": 1367,
+        "sha256": "2fbd62d7fd4104a31057d4b05cd84efd1f96aa3b8bc48267068605bab3e0de5a"
+      },
+      "host.json": {
+        "bytes": 1430,
+        "sha256": "cf64bdb715800d6f6737ded531ace49b6432ed6dace7c08ed2b3c759dcc331dc"
+      },
+      "package-summary.json": {
+        "bytes": 9128,
+        "sha256": "5e6ce6e5b5f08d800f184d940567f091cb8e36b7f0f6d37623a70546ee3603a6"
+      },
+      "privacy-summary.json": {
+        "bytes": 456,
+        "sha256": "c15c6407401bbdedcafb9c25ea87668c614079dc6fafdfd4a976caebdf9b99ea"
+      },
+      "setup-summary.json": {
+        "bytes": 1877,
+        "sha256": "2564edb030e36b3dfd6f9368997d9edb3117581c0014f1f00712aaf98b2ac520"
+      },
+      "source-summary.json": {
+        "bytes": 435,
+        "sha256": "cbc5197d2e9b8f3647fd9372d7398e5273c6cdaf9a1e6c2da2d8180f0c59f494"
+      }
+    },
+    "source_archive_sha256": "ffac27457402e86ac8ffa6b6dc587304af20db3b443e9bc3b1555931e53a3144",
+    "source_commit": "91ae59106a661143b770d7a3564d363c7c11a7dd",
+    "source_inventory_sha256": "25874cd64372ec90a6ba955bb5b1e1e9892eeb5cfd52580dadb8955f07f503bd",
+    "status": "passed",
+    "url": "https://github.com/jmhjr/HomeCircle/actions/runs/39683890536",
+    "zip": {
+      "bytes": 617791,
+      "members": 113,
+      "sha256": "004c9bc4a968ad395e18033837cb42f5bd1d8719a8d90fc778fd20be4ff08f97"
+    }
+  },
+  "previous_private_draft_sha256": "f44a7b92c1c1fdfa61dad20480ca48d8cb129d772001789508abf643d1d72a74",
+  "privacy": {
+    "raw_account_data_in_documentation": false,
+    "raw_guard_state_in_documentation": false,
+    "raw_keys_or_ciphertext_in_documentation": false,
+    "raw_private_backup_or_logs_in_documentation": false
+  },
+  "release_published": false,
+  "remaining_gates": {
+    "addon_restore_accepted": false,
+    "automatic_guard_antirollback": false,
+    "experimental_disabled_saved_storage_restore_accepted": true,
+    "final_release_candidate_accepted": false,
+    "full_encrypted_cloud_backup_accepted": false,
+    "full_system_restore_accepted": false,
+    "hacs_delivery_accepted_for_candidate": false,
+    "ordinary_default_supervisor_restore_qualified": false,
+    "ordinary_enabled_restore_safety_accepted": false,
+    "real_account_authentication_after_restore": false,
+    "real_account_session_renewal_after_restore": false,
+    "release_zip_delivery_accepted_for_candidate": false,
+    "saved_provider_storage_restore_accepted": false,
+    "stable_release_approval": false
+  },
+  "saved_storage_acceptance_scope": "experimental_disabled_synthetic_only_with_temporary_global_Supervisor_internet_condition_override",
+  "saved_storage_history": [
+    {
+      "NIC_remained_closed": true,
+      "accepted": false,
+      "accepted_phases": 0,
+      "actual_runtime_failure_cause_proven": false,
+      "artifact": {
+        "bytes": 2299,
+        "id": 12385679450,
+        "members": {
+          "host.json": {
+            "bytes": 5205,
+            "sha256": "30bb62687b6d5f18f2a85b84025980f82fa7d7959b4424e6f92ade917ff5e994"
+          }
+        },
+        "sha256": "10fb025207e8ceeb94954c662b76538d9de254d4a289194cafdeef9179758b8a"
+      },
+      "backup_or_restore_requested": false,
+      "cleanup_accepted": true,
+      "failed_outcome_reclassified": false,
+      "guest_stopped": true,
+      "independent_negative_audit": {
+        "bytes": 2268,
+        "sha256": "685a493a7624cd99a1d8f70dea9693a603a26a13416226b49bf885ac98adc726"
+      },
+      "inner_failure_stage_retained": false,
+      "managed_core_same_stopped_process": true,
+      "observed_storage_contexts": 1,
+      "owned_seed_context_removed": true,
+      "private_workspace_removed": true,
+      "qa_head": "630fb69b7281c5d3030506dbd25802f1860ae1bc",
+      "run_id": 39685990663,
+      "seed_completed": false,
+      "source_commit": "91ae59106a661143b770d7a3564d363c7c11a7dd",
+      "status": "failed",
+      "storage_result_actions": [],
+      "url": "https://github.com/jmhjr/HomeCircle/actions/runs/39685990663"
+    },
+    {
+      "NIC_remained_closed": true,
+      "R2_cause_established_by_this_run": false,
+      "accepted": false,
+      "actual_Vault_Fernet_seed_and_mutation_passed": true,
+      "all_created_contexts_removed": true,
+      "archive_inspection_passed": true,
+      "artifact": {
+        "bytes": 4359,
+        "id": 12387710776,
+        "members": {
+          "baseline_disabled.json": {
+            "bytes": 1060,
+            "sha256": "71d080791b5bc9199c66eefcac51b4f7091fd917bbc05ee7963540073eb928f0"
+          },
+          "host.json": {
+            "bytes": 9434,
+            "sha256": "abb462584dd00f81daf4be74a2813b4963c167147be730f08346bc3ea00a31cf"
+          },
+          "mutated_disabled.json": {
+            "bytes": 1060,
+            "sha256": "c753667759669ea221fa0c20f0758829bd1a365a58271f06435443300bec9360"
+          }
+        },
+        "sha256": "ae2b621c09320634a268e24cabc54ac6693e24cbd952330ee551f4266f7b8dfd"
+      },
+      "cleanup_accepted": true,
+      "design_scope": "synthetic Apple session encrypted by actual HomeCircle Vault/Fernet; synthetic Life360 credentials in actual HA config-entry storage; managed HomeCircle disabled and unimported",
+      "failed_outcome_reclassified": false,
+      "guard_import_performed": false,
+      "guest_stopped": true,
+      "independent_negative_audit": {
+        "bytes": 2686,
+        "sha256": "117beac4f3fb0dd33f6da866659afbe79d2179615a1e10d69515733f23adb530"
+      },
+      "newest_guard_export_passed": true,
+      "newest_guard_retained_before_refusal": true,
+      "partial_backup_created": true,
+      "passed_phase_count": 2,
+      "passed_phase_names": [
+        "baseline_disabled",
+        "mutated_disabled"
+      ],
+      "postrestore_Vault_validation_performed": false,
+      "prepared_contracts": 97,
+      "private_workspace_removed": true,
+      "qa_head": "e44ae2a104e3d74bb2f3191810a5ed8ab2aa115b",
+      "restore_refusal": {
+        "category": "host_internet_unavailable",
+        "exact_job_id_returned": false
+      },
+      "restore_requested": true,
+      "restore_started": false,
+      "run_id": 39688084686,
+      "source_commit": "91ae59106a661143b770d7a3564d363c7c11a7dd",
+      "status": "failed",
+      "storage_result_actions": [
+        "seed",
+        "mutate"
+      ],
+      "synthetic_only": true,
+      "url": "https://github.com/jmhjr/HomeCircle/actions/runs/39688084686"
+    }
+  ],
+  "saved_storage_trial": {
+    "Life360_separate_encrypted_vault_exists": false,
+    "NIC_continuously_closed_required": true,
+    "QEMU_stopped": true,
+    "accepted": true,
+    "actual_closed_NIC_probe_observations": 24,
+    "actual_guard_timeline": {
+      "automatic_restored_disabled": 2,
+      "baseline_disabled": 2,
+      "mutated_disabled": 3,
+      "repaired_storage_disabled": 3,
+      "restart_disabled": 3
+    },
+    "actual_storage_results": {
+      "mutate": {
+        "action": "mutate",
+        "entry_disabled": true,
+        "managed_candidate_imported": false,
+        "outcome": "passed",
+        "private_proof_written": true,
+        "schema": 1,
+        "source_files_verified": true,
+        "storage_checks": {
+          "account_identity_bound": true,
+          "actual_fernet": true,
+          "baseline_proof_preserved": true,
+          "clones_removed": false,
+          "config_snapshots_equal": true,
+          "deselected_commitments": 1,
+          "discriminating_mutation": true,
+          "guard_counter": 3,
+          "main_store_preserved": false,
+          "negative_cases": 0,
+          "no_op_pair_preserved": false,
+          "pair_matches_baseline": false,
+          "pair_private": true,
+          "passwordless_session": true,
+          "selected_items": 2,
+          "selection_and_ledger_bound": true
+        },
+        "synthetic_only": true
+      },
+      "seed": {
+        "action": "seed",
+        "entry_disabled": true,
+        "managed_candidate_imported": false,
+        "outcome": "passed",
+        "private_proof_written": true,
+        "schema": 1,
+        "source_files_verified": true,
+        "storage_checks": {
+          "account_identity_bound": true,
+          "actual_fernet": true,
+          "baseline_proof_preserved": true,
+          "clones_removed": false,
+          "config_snapshots_equal": true,
+          "deselected_commitments": 1,
+          "discriminating_mutation": false,
+          "guard_counter": 2,
+          "main_store_preserved": false,
+          "negative_cases": 0,
+          "no_op_pair_preserved": false,
+          "pair_matches_baseline": true,
+          "pair_private": true,
+          "passwordless_session": true,
+          "selected_items": 2,
+          "selection_and_ledger_bound": true
+        },
+        "synthetic_only": true
+      },
+      "validate_restart": {
+        "action": "validate_restart",
+        "entry_disabled": true,
+        "managed_candidate_imported": false,
+        "outcome": "passed",
+        "private_proof_written": false,
+        "schema": 1,
+        "source_files_verified": true,
+        "storage_checks": {
+          "account_identity_bound": true,
+          "actual_fernet": true,
+          "baseline_proof_preserved": true,
+          "clones_removed": true,
+          "config_snapshots_equal": true,
+          "deselected_commitments": 1,
+          "discriminating_mutation": false,
+          "guard_counter": 3,
+          "main_store_preserved": true,
+          "negative_cases": 18,
+          "no_op_pair_preserved": true,
+          "pair_matches_baseline": true,
+          "pair_private": true,
+          "passwordless_session": true,
+          "selected_items": 2,
+          "selection_and_ledger_bound": true
+        },
+        "synthetic_only": true
+      },
+      "validate_restored": {
+        "action": "validate_restored",
+        "entry_disabled": true,
+        "managed_candidate_imported": false,
+        "outcome": "passed",
+        "private_proof_written": false,
+        "schema": 1,
+        "source_files_verified": true,
+        "storage_checks": {
+          "account_identity_bound": true,
+          "actual_fernet": true,
+          "baseline_proof_preserved": true,
+          "clones_removed": true,
+          "config_snapshots_equal": true,
+          "deselected_commitments": 1,
+          "discriminating_mutation": false,
+          "guard_counter": 3,
+          "main_store_preserved": true,
+          "negative_cases": 18,
+          "no_op_pair_preserved": true,
+          "pair_matches_baseline": true,
+          "pair_private": true,
+          "passwordless_session": true,
+          "selected_items": 2,
+          "selection_and_ledger_bound": true
+        },
+        "synthetic_only": true
+      }
+    },
+    "affirmative_apply_and_reset_ACKs_required": true,
+    "all_created_contexts_removed": true,
+    "all_other_job_conditions_retained": true,
+    "artifact": {
+      "bytes": 6591,
+      "id": 12388977554,
+      "members": {
+        "automatic_restored_disabled.json": {
+          "bytes": 500,
+          "sha256": "0c0ffcc5ac628674f0f80d143865f7d5b09597a314721906abdbdbc1cb42a455"
+        },
+        "baseline_disabled.json": {
+          "bytes": 1060,
+          "sha256": "b1cb565f16cf5f9c7d48f0754ce35d0d9c11b614dec6470ff6cef1fa54a478a4"
+        },
+        "host.json": {
+          "bytes": 14096,
+          "sha256": "7104ddb146dc5e7322d308b597e5f713a20bfe9262ff0015355a2493db83e621"
+        },
+        "mutated_disabled.json": {
+          "bytes": 1060,
+          "sha256": "9793a8f4f4735c5ae70ee3b1b84093f0554f06a54446f3d1d561bb72e0966d8f"
+        },
+        "repaired_storage_disabled.json": {
+          "bytes": 1125,
+          "sha256": "c5c7e39c8b246d610ad69128731048b5b11361c79028256b3eca275bdf739360"
+        },
+        "restart_disabled.json": {
+          "bytes": 1116,
+          "sha256": "95c41cdab5caddf5e94db2370cdcbc5cfaf467d29a3a87286834af6a3d20fa41"
+        }
+      },
+      "sha256": "b93ab07324a0361b2c23be8209df9c5ef918be778c4091231bcc91d769ca244b"
+    },
+    "cleanup_accepted": true,
+    "collector_verification": {
+      "bytes": 3407,
+      "sha256": "0e4473343d6d5c8375d2264ce917f3663095c291b412becd9bfb3e489da5aba8"
+    },
+    "design_scope": "synthetic Apple session encrypted by actual HomeCircle Vault/Fernet; synthetic Life360 credentials in actual HA config-entry storage; disabled entry and unimported managed HomeCircle throughout",
+    "effective_and_persisted_options_finally_required_empty": true,
+    "expected_phase_names": [
+      "baseline_disabled",
+      "mutated_disabled",
+      "automatic_restored_disabled",
+      "repaired_storage_disabled",
+      "restart_disabled"
+    ],
+    "foreign_options_overwrite_allowed": false,
+    "global_persisted_override": true,
+    "guard_repaired_before_storage_load": true,
+    "host_elapsed_seconds": 515.628,
+    "host_newest_guard_copy_outside_entire_guest": true,
+    "ignored_conditions": [
+      "internet_host",
+      "internet_system"
+    ],
+    "independent_audit": {
+      "bytes": 4604,
+      "sha256": "cb2cae2d257232a747668cdad7e9606f439e5df6944cc2840d6075e4c555d412"
+    },
+    "lost_ACK_qualifies_success": false,
+    "maximum_options_cleanup_seconds": 90,
+    "mode": "experimental_global_offline_conditions",
+    "native_contract_skips": 0,
+    "native_contracts_passed": 112,
+    "observed_phase_results": {
+      "automatic_restored_disabled": {
+        "bytes": 500,
+        "sha256": "0c0ffcc5ac628674f0f80d143865f7d5b09597a314721906abdbdbc1cb42a455"
+      },
+      "baseline_disabled": {
+        "bytes": 1060,
+        "sha256": "b1cb565f16cf5f9c7d48f0754ce35d0d9c11b614dec6470ff6cef1fa54a478a4"
+      },
+      "mutated_disabled": {
+        "bytes": 1060,
+        "sha256": "9793a8f4f4735c5ae70ee3b1b84093f0554f06a54446f3d1d561bb72e0966d8f"
+      },
+      "repaired_storage_disabled": {
+        "bytes": 1125,
+        "sha256": "c5c7e39c8b246d610ad69128731048b5b11361c79028256b3eca275bdf739360"
+      },
+      "restart_disabled": {
+        "bytes": 1116,
+        "sha256": "95c41cdab5caddf5e94db2370cdcbc5cfaf467d29a3a87286834af6a3d20fa41"
+      }
+    },
+    "offline_restore_conditions": {
+      "active_persisted_exact": true,
+      "all_other_job_conditions_retained": true,
+      "apply_ack": "confirmed",
+      "apply_requests": 1,
+      "cached_same_core_image_verified_after": true,
+      "cached_same_core_image_verified_before": true,
+      "candidate113_archive_verified": true,
+      "cleanup_failed": false,
+      "final_effective_empty_observed": true,
+      "final_persisted_empty": true,
+      "foreign_options_refused": false,
+      "global_persisted_override": true,
+      "maximum_cleanup_seconds": 90,
+      "mode": "experimental_global_offline_conditions",
+      "network_closed_after": true,
+      "network_closed_before": true,
+      "network_closed_during": true,
+      "only_two_internet_conditions_ignored": true,
+      "ordinary_default_restore_qualified": false,
+      "original_effective_empty": true,
+      "original_options_restored": true,
+      "original_persisted_empty_or_absent": true,
+      "relevant_visible_jobs_idle_before": true,
+      "reset_ack": "confirmed",
+      "reset_requests": 1,
+      "schema": 1,
+      "unsupported_conditions_override": true
+    },
+    "ordinary_default_supervisor_restore_qualified": false,
+    "prepared_contracts": 112,
+    "prior_options_required_empty": true,
+    "private_workspace_removed": true,
+    "provider_activation_after_restore_tested": false,
+    "provider_authentication_after_restore_tested": false,
+    "provider_session_renewal_tested": false,
+    "qa_head": "3c1e9e72e4ac2892b18b64473410987de237e427",
+    "real_provider_accounts_used": false,
+    "required_guard_contexts": [
+      "export",
+      "import"
+    ],
+    "required_public_receipts": 6,
+    "required_storage_contexts": [
+      "seed",
+      "mutate",
+      "validate_restored",
+      "validate_restart"
+    ],
+    "result_supplied_by_root": true,
+    "run_id": 39691770592,
+    "same_local_inspected_partial_archive_required": true,
+    "same_verified_cached_Core_image_required": true,
+    "source_commit": "91ae59106a661143b770d7a3564d363c7c11a7dd",
+    "stable_release_approval": false,
+    "status": "passed",
+    "system_marked_unsupported_while_active": true,
+    "url": "https://github.com/jmhjr/HomeCircle/actions/runs/39691770592"
+  },
+  "schema": 1,
+  "tested_runtime_source_commit": "91ae59106a661143b770d7a3564d363c7c11a7dd",
+  "unmeasured": {
+    "live_Apple_recovery_allowances": true,
+    "provider_request_attempt_counts": true,
+    "recovery_proof_attempt_counts": true
+  },
+  "version_label": "0.1.0-beta.20"
+}

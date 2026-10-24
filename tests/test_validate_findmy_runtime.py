@@ -12,7 +12,7 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 import build_release as build  # noqa: E402
-from test_release_package import fixture_source, write_member, manual_archive  # noqa: E402
+from tests.test_release_package import fixture_source, write_member, manual_archive  # noqa: E402
 
 SPEC = importlib.util.spec_from_file_location(
     "validate_findmy_runtime_test", ROOT / "scripts/validate_findmy_runtime.py"

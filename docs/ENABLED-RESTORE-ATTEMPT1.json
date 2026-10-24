@@ -1,0 +1,384 @@
+{
+  "outcome": "failed_or_incomplete",
+  "run": 39488244403,
+  "schema": 1,
+  "stable_release_approval": false,
+  "summaries": {
+    "host": {
+      "actual_kvm_confirmed": true,
+      "automatic_guard_antirollback_passed": false,
+      "automatic_guard_antirollback_tested": true,
+      "backup": {
+        "archive": {
+          "archive_bytes": 2846720,
+          "archive_sha256": "a60b40159b128312b5235aae9310762affd6e9d70f9983a5bfb605738b458bb0",
+          "candidate_match": true,
+          "database_included": true,
+          "enabled_entry": true,
+          "guard_sha256": "9df3bd3987e0b2e070259432ebd8c39b29b23c055e8788364af668907fbb0ba6",
+          "guard_unresolved": 2
+        },
+        "compressed": false,
+        "database_included": true,
+        "homeassistant_version": "2026.10.2",
+        "job": {
+          "done": true,
+          "error_count": 0,
+          "name": "backup_manager_partial_backup",
+          "nodes": 3
+        },
+        "protected": false,
+        "result": "ok",
+        "type": "partial"
+      },
+      "backup_requests": [
+        {
+          "action": "create",
+          "api_error": {
+            "categories": [],
+            "type": "unclassified"
+          },
+          "exact_job_id_returned": true,
+          "exit_code": 0,
+          "output_truncated": false,
+          "result": "ok",
+          "signal": null,
+          "stderr_error": {
+            "categories": [],
+            "type": "unclassified"
+          },
+          "stdout_json": true
+        },
+        {
+          "action": "restore",
+          "api_error": {
+            "categories": [],
+            "type": "unclassified"
+          },
+          "exact_job_id_returned": true,
+          "exit_code": 0,
+          "output_truncated": false,
+          "result": "ok",
+          "signal": null,
+          "stderr_error": {
+            "categories": [],
+            "type": "unclassified"
+          },
+          "stdout_json": true
+        }
+      ],
+      "candidate_hacs_download_tested": false,
+      "candidate_release_zip_transport_tested": false,
+      "candidate_transport": "stopped_verified_zip_files",
+      "cleanup_failed": false,
+      "cli_version_observed": "2026.09.0",
+      "confirmed_issue": null,
+      "container_core_version_after": "2026.10.2",
+      "container_core_version_before": "2026.10.2",
+      "core_actions": [
+        {
+          "action": "stop",
+          "relevant_core_jobs_idle": true,
+          "result": "ok",
+          "running_after": false,
+          "running_before": true,
+          "supervisor_running": true
+        },
+        {
+          "action": "start",
+          "relevant_core_jobs_idle": true,
+          "result": "ok",
+          "running_after": true,
+          "running_before": false,
+          "supervisor_running": true
+        }
+      ],
+      "core_update_result": "not_requested",
+      "core_version_after": "2026.10.2",
+      "core_version_before": "2026.10.2",
+      "core_version_target": "2026.10.2",
+      "diagnostic_completed": false,
+      "direct_candidate_installs": 1,
+      "enabled_entry_restore_tested": false,
+      "failure_code": "guest_acceptance_failed",
+      "failure_or_final_stage": "restored",
+      "failure_type": "Refused",
+      "guard_repair_before_first_enabled_boot": false,
+      "guest_github_token_used": false,
+      "host_elapsed_seconds": 526.898,
+      "initial_boot_observations": {
+        "jobs": [
+          {
+            "done": false,
+            "name": "home_assistant_core_install"
+          },
+          {
+            "done": false,
+            "name": "home_assistant_core_start"
+          }
+        ],
+        "supervisor": {
+          "healthy": true,
+          "result": "ok",
+          "state": null,
+          "supported": true
+        }
+      },
+      "initial_landingpage_seen": true,
+      "management_boundary_observations": {
+        "jobs": [
+          {
+            "done": true,
+            "name": "backup_manager_partial_restore"
+          },
+          {
+            "done": true,
+            "name": "backup_manager_partial_backup"
+          },
+          {
+            "done": true,
+            "name": "backup_restore_homeassistant"
+          },
+          {
+            "done": true,
+            "name": "backup_restore_supervisor_config"
+          },
+          {
+            "done": true,
+            "name": "home_assistant_core_start"
+          },
+          {
+            "done": true,
+            "name": "backup_store_homeassistant"
+          },
+          {
+            "done": true,
+            "name": "backup_store_supervisor_config"
+          }
+        ],
+        "relevant_core_jobs_idle": true,
+        "root": {
+          "result": "ok",
+          "state": "running",
+          "supervisor_version": "2026.10.2",
+          "supported": true
+        }
+      },
+      "manual_newest_guard_repair_passed": false,
+      "native_linux_amd64_kvm_required": true,
+      "network_boundary": {
+        "before_probe_connected": true,
+        "closed_probe_connected": false,
+        "closed_probe_observations": 2,
+        "guest_agent_remained_available": true,
+        "link_closed": true
+      },
+      "network_scope": "whole_owned_vm_closed_before_restore_until_cleanup",
+      "operational_restore_passed": false,
+      "ordinary_enabled_restore_safety_accepted": false,
+      "outcome": "failed_or_incomplete",
+      "owner_credentials_used": false,
+      "phases": 3,
+      "private_workspace_removed": true,
+      "production_configuration_used": false,
+      "provenance": {
+        "candidate_files": 112,
+        "candidate_source_commit": "d02a9bdb9027cb51c99165a09ba50d5b175f5fb9",
+        "candidate_zip_sha256": "fc0b365d9688459504f874af5c38393e24145d657f15f1def8ada9184f363285",
+        "controller_branch": "codex/native-amd64-validation",
+        "controller_branch_commit": "096df4a0ce14915f52f6177fb1c19bec6fb49895",
+        "controller_sha256": "6f0cf91d4c60144cc919cb9d9ab1aa2138b87692cb3cfb985dd316a2a8352bfb",
+        "core_version": "2026.10.2",
+        "haos_version": "18.3",
+        "haos_xz_sha256": "fae6a728768cc10aff60d4820bfcd40d64cd77fab82c8bd92af13b3d9d414090",
+        "helper_files_sha256": {
+          "homecircle_enabled_restore_qa/__init__.py": "c7b20692a3b6c43ef581e2f5105fd40a0753e0bd9243642737f5cef9adefab66",
+          "homecircle_enabled_restore_qa/manifest.json": "654a7d99dcad340688738cd717954ecc6d4a72b95332b20502a58d1bf2084ee3"
+        }
+      },
+      "provider_accounts_configured": false,
+      "provider_request_attempt_counts_measured": false,
+      "qemu_stopped": true,
+      "recovery_proof_attempt_counts_measured": false,
+      "restore": {
+        "automatic_boot": {
+          "automatic_guard_antirollback_passed": false,
+          "entry_disabled": false,
+          "entry_loaded_at_helper_observation": false,
+          "guard": {
+            "api_status_checked": true,
+            "blocked": false,
+            "pending": 0,
+            "rejected": 2,
+            "retained_bytes_checked": true,
+            "sha256": "9df3bd3987e0b2e070259432ebd8c39b29b23c055e8788364af668907fbb0ba6",
+            "uncertain": 0,
+            "unresolved": 2
+          },
+          "observation_scope": "earliest_helper_setup_not_candidate_import_order",
+          "process": {
+            "pid": 70,
+            "start_ticks": 19458
+          }
+        },
+        "enabled_entry_restore": true,
+        "job": {
+          "done": true,
+          "error_count": 0,
+          "name": "backup_manager_partial_restore",
+          "nodes": 4
+        },
+        "result": "ok"
+      },
+      "schema": 1,
+      "supervisor_full_backup_restore_tested": false,
+      "supervisor_partial_homeassistant_backup_tested": true,
+      "supervisor_partial_homeassistant_restore_tested": true,
+      "supervisor_version_observed": "2026.10.2"
+    },
+    "initialize": {
+      "entry_disabled": false,
+      "entry_loaded": true,
+      "generation": "before_restore",
+      "guard": {
+        "api_status_checked": true,
+        "blocked": false,
+        "pending": 0,
+        "rejected": 2,
+        "retained_bytes_checked": true,
+        "sha256": "9df3bd3987e0b2e070259432ebd8c39b29b23c055e8788364af668907fbb0ba6",
+        "uncertain": 0,
+        "unresolved": 2
+      },
+      "loaded_source_sha256": "d877f4132c8aeaf18af3e507129098a40e7262c3440d259c5646102ba8eaf946",
+      "nonempty_options": true,
+      "outcome": "passed",
+      "owned_resource_id_sha256": "1deeb5a5fa90a9926481ef22b23e39ad4a42b6aeaa50dbbb1453cb07c35ad482",
+      "package_files_count": 112,
+      "package_payload_sha256": "33a154968a0dd7d1e58d42a6a0aaf84d8be9cb0da49120477972ec872eba2c6a",
+      "phase": "initialize",
+      "process": {
+        "pid": 71,
+        "start_ticks": 15382
+      },
+      "recorder": {
+        "backup_platform_registered": true,
+        "commit_proven": true,
+        "integrity_ok": true,
+        "no_backup_failure_issue": true,
+        "postbackup_marker_absent": true,
+        "postbackup_marker_rows": 0,
+        "postrestore_exact_match": null,
+        "postrestore_rows": null,
+        "postrestore_sha256": null,
+        "prebackup_exact_match": true,
+        "prebackup_rows": 10,
+        "prebackup_sha256": "1302824bd7aac59925c584c9b2d50733ec3f0579cb3158bf408b04e1dc34af68"
+      },
+      "runtime_config_sha256": "50864d7a308bdd22330200b44b61c1367a629bfd9c2dacc71312e80b710d8e7c",
+      "schema": 1,
+      "served_bundle_sha256": "88caf611c1a640212e42a7b05e49ae64dce96b80d955ad407e3279a996701b4d",
+      "snapshot_sha256": "25f033b93cbfcc4eb3cdafdd1a98b7b07bece70287d37091e17bba45cd60a4f0",
+      "static_served_bundle_matches": true
+    },
+    "mutate": {
+      "entry_disabled": false,
+      "entry_loaded": true,
+      "generation": "before_restore",
+      "guard": {
+        "api_status_checked": true,
+        "blocked": true,
+        "pending": 0,
+        "rejected": 3,
+        "retained_bytes_checked": true,
+        "sha256": "6a539827f2c55dc92c6221bc2edee2ad3e18ada0a2bccf607f2f502b9c309106",
+        "uncertain": 0,
+        "unresolved": 3
+      },
+      "loaded_source_sha256": "d877f4132c8aeaf18af3e507129098a40e7262c3440d259c5646102ba8eaf946",
+      "nonempty_options": true,
+      "outcome": "passed",
+      "owned_resource_id_sha256": "1deeb5a5fa90a9926481ef22b23e39ad4a42b6aeaa50dbbb1453cb07c35ad482",
+      "package_files_count": 112,
+      "package_payload_sha256": "33a154968a0dd7d1e58d42a6a0aaf84d8be9cb0da49120477972ec872eba2c6a",
+      "phase": "mutate",
+      "process": {
+        "pid": 71,
+        "start_ticks": 15382
+      },
+      "recorder": {
+        "backup_platform_registered": true,
+        "commit_proven": true,
+        "integrity_ok": true,
+        "no_backup_failure_issue": true,
+        "postbackup_marker_absent": false,
+        "postbackup_marker_rows": 10,
+        "postrestore_exact_match": null,
+        "postrestore_rows": null,
+        "postrestore_sha256": null,
+        "prebackup_exact_match": true,
+        "prebackup_rows": 10,
+        "prebackup_sha256": "1302824bd7aac59925c584c9b2d50733ec3f0579cb3158bf408b04e1dc34af68"
+      },
+      "runtime_config_sha256": "9cb595b526db2e749b98ac674f62eb684e5471d70e4f3a4c9c7d36288867131d",
+      "schema": 1,
+      "served_bundle_sha256": "88caf611c1a640212e42a7b05e49ae64dce96b80d955ad407e3279a996701b4d",
+      "snapshot_sha256": "b212e42fae87e05b943edc6a3a30305174136dac52b5c21a1a725b3a332c707b",
+      "static_served_bundle_matches": true
+    },
+    "prebackup": {
+      "entry_disabled": false,
+      "entry_loaded": true,
+      "generation": "before_restore",
+      "guard": {
+        "api_status_checked": true,
+        "blocked": false,
+        "pending": 0,
+        "rejected": 2,
+        "retained_bytes_checked": true,
+        "sha256": "9df3bd3987e0b2e070259432ebd8c39b29b23c055e8788364af668907fbb0ba6",
+        "uncertain": 0,
+        "unresolved": 2
+      },
+      "loaded_source_sha256": "d877f4132c8aeaf18af3e507129098a40e7262c3440d259c5646102ba8eaf946",
+      "nonempty_options": true,
+      "outcome": "passed",
+      "owned_resource_id_sha256": "1deeb5a5fa90a9926481ef22b23e39ad4a42b6aeaa50dbbb1453cb07c35ad482",
+      "package_files_count": 112,
+      "package_payload_sha256": "33a154968a0dd7d1e58d42a6a0aaf84d8be9cb0da49120477972ec872eba2c6a",
+      "persisted_storage_checked": true,
+      "phase": "prebackup",
+      "process": {
+        "pid": 71,
+        "start_ticks": 15382
+      },
+      "recorder": {
+        "backup_platform_registered": true,
+        "commit_proven": true,
+        "integrity_ok": true,
+        "no_backup_failure_issue": true,
+        "postbackup_marker_absent": true,
+        "postbackup_marker_rows": 0,
+        "postrestore_exact_match": null,
+        "postrestore_rows": null,
+        "postrestore_sha256": null,
+        "prebackup_exact_match": true,
+        "prebackup_rows": 10,
+        "prebackup_sha256": "1302824bd7aac59925c584c9b2d50733ec3f0579cb3158bf408b04e1dc34af68"
+      },
+      "runtime_config_sha256": "50864d7a308bdd22330200b44b61c1367a629bfd9c2dacc71312e80b710d8e7c",
+      "schema": 1,
+      "served_bundle_sha256": "88caf611c1a640212e42a7b05e49ae64dce96b80d955ad407e3279a996701b4d",
+      "snapshot_sha256": "25f033b93cbfcc4eb3cdafdd1a98b7b07bece70287d37091e17bba45cd60a4f0",
+      "static_served_bundle_matches": true
+    },
+    "restored": {
+      "failure_type": "TimeoutError",
+      "generation": "after_restore",
+      "outcome": "failed",
+      "phase": "restored",
+      "schema": 1,
+      "stage": "restored_external_proof"
+    }
+  }
+}

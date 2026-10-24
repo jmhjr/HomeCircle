@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from contextlib import asynccontextmanager
+from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 import math
 
@@ -17,7 +18,7 @@ from ._vendor_findmy.errors import (
 )
 
 POLL_LIMIT = 1000000
-POLL_STATUSES = ("not_polled", "in_progress", "success", "failed", "cancelled")
+POLL_STATUSES = ("not_polled", "in_progress", "success", "partial", "failed", "cancelled")
 POLL_COUNTERS = (
     "fetch_calls", "decoded_reports", "selected_items",
     "items_with_returned_valid_reports", "items_with_advanced_reports",
@@ -44,14 +45,14 @@ def validated_poll_diagnostics(value):
             or any(value[key] > value["selected_items"] for key in _ITEM_OUTCOMES)
             or value["items_with_advanced_reports"] > value["items_with_returned_valid_reports"]
             or value["items_retaining_previous_report"] + value["items_without_report"] > value["selected_items"]
-            or (value["status"] != "success" and any(value[key] for key in _ITEM_OUTCOMES))):
+            or (value["status"] not in ("success", "partial") and any(value[key] for key in _ITEM_OUTCOMES))):
         return None
     return {"schema": 1, "status": value["status"], **{key: value[key] for key in POLL_COUNTERS}}
 
 
 @asynccontextmanager
 async def _observe_poll(client):
-    """Observe the existing locked operation without changing its request lifecycle."""
+    """Observe one serialized account poll without exporting item or error values."""
     current = _new_poll_diagnostics(len(client.clients))
     current["status"] = "in_progress"
     client._poll_diagnostics = current
@@ -68,7 +69,7 @@ async def _observe_poll(client):
             current[key] = 0
         raise
     else:
-        current["status"] = "success"
+        current["status"] = "partial" if client.failed_items else "success"
 
 
 class ReauthenticationRequired(RuntimeError):
@@ -187,6 +188,49 @@ def indexed_keys(accessory, indices):
     return mapping
 
 
+@dataclass
+class _ItemSearch:
+    key_indices: dict
+    historical_indices: dict
+    first: int
+    last: int
+    before: int | None = None
+    lower: int | None = None
+
+    def cursor_after(self, completed_keys):
+        """Advance only past indices whose primary AND secondary keys completed."""
+        remaining = (index for key, index in self.historical_indices.items()
+                     if key not in completed_keys)
+        position = max(remaining, default=self.lower - 1) + 1
+        return position if position > max(0, self.first) else self.last + 1
+
+
+def _item_search(accessory, now, saved_cursor):
+    """Prepare bounded key batches and conservative cursor requirements off-loop."""
+    first, last = report_window(accessory, now)
+    if last < first:
+        raise ValueError("Accessory key window is outside bounded polling limits")
+    before = lower = None
+    indices = range(max(0, first), last + 1)
+    if last - first > 8192:
+        before = saved_cursor
+        if type(before) is not int or not first < before <= last + 1:
+            before = last + 1
+        lower = max(0, first, before - 4096)
+        indices = sorted(set(range(lower, before)) | set(
+            range(max(0, first, last - 671), last + 1)
+        ))
+    mapping, historical = {}, {}
+    for index in indices:
+        for key in accessory.keys_at(index):
+            # A secondary key may match two primary buckets: keep alignment low,
+            # but require every historical occurrence before skipping an index.
+            mapping[key] = min(index, mapping.get(key, index))
+            if before is not None and lower <= index < before:
+                historical[key] = max(index, historical.get(key, index))
+    return _ItemSearch(mapping, historical, first, last, before, lower)
+
+
 class AccountClient:
     """One session per account, with separately attributed accessory reports."""
 
@@ -203,6 +247,8 @@ class AccountClient:
         }
         self.lock = asyncio.Lock()
         self._poll_diagnostics = _new_poll_diagnostics(len(self.clients))
+        self.failed_items = set()
+        self.poll_progress = False
 
     def poll_diagnostics(self):
         """Describe only the latest poll, not tracker availability or location age.
@@ -210,6 +256,8 @@ class AccountClient:
         Fetch calls count SDK invocations, not HTTP requests. Decoded reports count
         non-null latest-per-key values returned by that SDK, not all historical
         records. An equal timestamp can be returned again without advancing it.
+        Partial status means at least one item failed after some batch completed;
+        cached locations and valid completed results are still retained.
         """
         return (
             validated_poll_diagnostics(getattr(self, "_poll_diagnostics", None))
@@ -227,113 +275,89 @@ class AccountClient:
 
     async def poll(self):
         async with self.lock, _observe_poll(self) as observation:
-            # Query bounded batches so a growing item count never creates a giant request.
+            self.failed_items = set()
+            self.poll_progress = False
+            completed_batches = 0
+            last_error = None
             now = datetime.now(timezone.utc)
-            item_keys = {}
-            key_indices = {}
-            cursors = {}
-            for identifier, client in self.clients.items():
-                first, last = report_window(client.accessory, now)
-                if last < first:
-                    raise ValueError(
-                        "Accessory key window is outside bounded polling limits"
-                    )
-                indices = range(max(0, first), last + 1)
-                cursor = None
-                if last - first > 8192:
-                    # A stale alignment is uncertainty, not a reason to query
-                    # years of keys at once. Resume a descending bounded search
-                    # and also check the estimated recent window on each poll.
-                    before = self.items[identifier].get("search_before", last + 1)
-                    if type(before) is not int or not first < before <= last + 1:
-                        before = last + 1
-                    lower = max(0, first, before - 4096)
-                    indices = set(range(lower, before)) | set(
-                        range(max(0, first, last - 671), last + 1)
-                    )
-                    cursor = lower if lower > first else last + 1
-                # Secondary keys cover several indices. Use the lowest match
-                # so recovered alignment stays conservative.
-                mapping = await asyncio.to_thread(
-                    indexed_keys, client.accessory, indices
-                )
-                item_keys[identifier] = set(mapping)
-                key_indices[identifier] = mapping
-                cursors[identifier] = cursor
-            combined = list(set().union(*item_keys.values()))
-            found = {}
-            try:
-                async with asyncio.timeout(120):
-                    for offset in range(0, len(combined), 200):
-                        observation["fetch_calls"] = min(observation["fetch_calls"] + 1, POLL_LIMIT)
-                        found.update(
-                            await self.account.fetch_location(
-                                combined[offset : offset + 200]
-                            )
-                        )
-            except (InvalidCredentialsError, InvalidStateError, UnauthorizedError):
-                raise ReauthenticationRequired("Apple session expired") from None
-            except ValueError as error:
-                if str(error) == "No username or password specified":
-                    raise ReauthenticationRequired("Apple session expired") from None
-                raise
-            finally:
-                observation["decoded_reports"] = min(
-                    sum(value is not None for value in found.values()), POLL_LIMIT
-                )
             results = {}
-            # Commit results together only after all item reports validate successfully.
             for identifier, client in self.clients.items():
-                candidates = []
-                for key in item_keys[identifier]:
-                    if found.get(key) is None:
-                        continue
-                    try:
-                        candidates.append(report_mapping(found[key]))
-                    except (ValueError, TypeError, AttributeError, OverflowError):
-                        continue
-                candidate = max(
-                    candidates,
-                    key=lambda value: datetime.fromisoformat(value["last_seen"]),
-                    default=None,
-                )
-                previous = client.report
-                accepted = False
-                if candidate is not None:
-                    observation["items_with_returned_valid_reports"] += 1
-                    if previous is None or datetime.fromisoformat(candidate["last_seen"]) > datetime.fromisoformat(previous["last_seen"]):
-                        observation["items_with_advanced_reports"] += 1
-                if candidate is not None and (
-                    previous is None
-                    or datetime.fromisoformat(candidate["last_seen"])
-                    >= datetime.fromisoformat(previous["last_seen"])
-                ):
-                    previous = candidate
-                    accepted = True
-                if previous is not None and not accepted:
-                    observation["items_retaining_previous_report"] += 1
-                if previous is None:
-                    observation["items_without_report"] += 1
-                results[identifier] = previous
-            for identifier, report in results.items():
-                self.clients[identifier].report = report
-                self.items[identifier]["report"] = report
-                client = self.clients[identifier]
-                if report is not None and hasattr(client.accessory, "update_alignment"):
-                    matches = [
-                        (value.timestamp, key_indices[identifier][key])
-                        for key, value in found.items()
-                        if key in key_indices[identifier]
-                        and value is not None
-                        and value.timestamp.isoformat() == report["last_seen"]
-                    ]
-                    for timestamp, index in sorted(matches):
-                        client.accessory.update_alignment(timestamp, index)
-                    self.items[identifier]["accessory"] = client.accessory.to_json()
-                if cursors[identifier] is None:
-                    self.items[identifier].pop("search_before", None)
-                else:
-                    self.items[identifier]["search_before"] = cursors[identifier]
+                found = {}
+                search = None
+                completed_keys = set()
+                try:
+                    search = await asyncio.to_thread(
+                        _item_search, client.accessory, now,
+                        self.items[identifier].get("search_before"),
+                    )
+                    # Descending batches retain the completed prefix of a stale
+                    # search, while the recent window is checked on every poll.
+                    keys = sorted(search.key_indices, key=search.key_indices.get, reverse=True)
+                    async with asyncio.timeout(120):
+                        for offset in range(0, len(keys), 200):
+                            batch = keys[offset:offset + 200]
+                            observation["fetch_calls"] = min(observation["fetch_calls"] + 1, POLL_LIMIT)
+                            found.update(await self.account.fetch_location(batch))
+                            completed_keys.update(batch)
+                            completed_batches += 1
+                            self.poll_progress = True
+                except (InvalidCredentialsError, InvalidStateError, UnauthorizedError):
+                    raise ReauthenticationRequired("Apple session expired") from None
+                except ValueError as error:
+                    if str(error) == "No username or password specified":
+                        raise ReauthenticationRequired("Apple session expired") from None
+                    self.failed_items.add(identifier)
+                    last_error = error
+                except Exception as error:
+                    self.failed_items.add(identifier)
+                    last_error = error
+                finally:
+                    # Commit completed batches even if a later batch, authentication
+                    # exchange or cancellation interrupts this item. Never skip keys
+                    # from a failed batch when advancing the historical cursor.
+                    if search is not None and completed_keys:
+                        if search.before is None:
+                            self.items[identifier].pop("search_before", None)
+                        else:
+                            self.items[identifier]["search_before"] = search.cursor_after(completed_keys)
+                    mapping = search.key_indices if search is not None else {}
+                    candidates = []
+                    valid = {}
+                    for key, value in found.items():
+                        if key not in mapping or value is None:
+                            continue
+                        observation["decoded_reports"] = min(observation["decoded_reports"] + 1, POLL_LIMIT)
+                        try:
+                            candidate = report_mapping(value)
+                        except (ValueError, TypeError, AttributeError, OverflowError):
+                            continue
+                        candidates.append(candidate)
+                        valid[key] = value
+                    candidate = max(candidates, key=lambda value: datetime.fromisoformat(value["last_seen"]), default=None)
+                    previous = client.report
+                    accepted = candidate is not None and (
+                        previous is None or datetime.fromisoformat(candidate["last_seen"]) >= datetime.fromisoformat(previous["last_seen"])
+                    )
+                    if candidate is not None:
+                        observation["items_with_returned_valid_reports"] += 1
+                        if previous is None or datetime.fromisoformat(candidate["last_seen"]) > datetime.fromisoformat(previous["last_seen"]):
+                            observation["items_with_advanced_reports"] += 1
+                    if accepted:
+                        client.report = candidate
+                    elif previous is not None:
+                        observation["items_retaining_previous_report"] += 1
+                    if client.report is None:
+                        observation["items_without_report"] += 1
+                    results[identifier] = client.report
+                    self.items[identifier]["report"] = client.report
+                    if accepted and hasattr(client.accessory, "update_alignment"):
+                        matches = [(value.timestamp, mapping[key]) for key, value in valid.items()
+                                   if value.timestamp.isoformat() == candidate["last_seen"]]
+                        for timestamp, index in sorted(matches):
+                            client.accessory.update_alignment(timestamp, index)
+                        self.items[identifier]["accessory"] = client.accessory.to_json()
+            if last_error is not None and not completed_batches:
+                raise last_error
             return results
 
     async def close(self):

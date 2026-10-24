@@ -1,8 +1,11 @@
 """HA websocket authorization and owned-resource lifecycle acceptance."""
 
+import asyncio
 from dataclasses import replace
 from unittest.mock import AsyncMock, patch
 from types import SimpleNamespace
+
+import pytest
 
 from homeassistant.components.lovelace.const import LOVELACE_DATA
 from homeassistant.components.lovelace.resources import ResourceYAMLCollection
@@ -19,13 +22,83 @@ from custom_components.homecircle.api import (
     snapshot,
 )
 from custom_components.homecircle.tracker_providers import ProviderHealth
-from test_config_flow import start, finish
+from tests.test_config_flow import start, finish
 
 
 async def setup(hass, household):
     result = await finish(hass, await start(hass, household))
     await hass.async_block_till_done()
     return result["result"]
+
+
+@pytest.mark.parametrize("registration_fails", [False, True])
+async def test_ready_event_waits_for_selected_tracker_registration(
+    hass, household, registration_fails
+):
+    """A save response is not evidence that asynchronous tracker setup finished."""
+    entry = await setup(hass, household)
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    tracker_id = "device_tracker.example_phone"
+    hass.states.async_remove(tracker_id)
+    started = asyncio.Event()
+    release = asyncio.Event()
+    observed = []
+
+    def ready(event):
+        runtime = entry.runtime_data
+        observed.append(
+            (dict(event.data), runtime.states.get(tracker_id), runtime.household)
+        )
+
+    unsubscribe = hass.bus.async_listen("homecircle_ready", ready)
+
+    async def register_trackers(current_entry, platforms):
+        assert current_entry is entry
+        assert platforms == ["device_tracker"]
+        started.set()
+        await release.wait()
+        if registration_fails:
+            raise RuntimeError("Synthetic registration failure")
+        hass.states.async_set(
+            tracker_id,
+            "not_home",
+            {"source_type": "gps", ATTR_LATITUDE: 1.0, ATTR_LONGITUDE: 2.0},
+        )
+
+    try:
+        with (
+            patch(
+                "custom_components.homecircle.connected_providers",
+                return_value=[SimpleNamespace(platform="device_tracker")],
+            ),
+            patch.object(
+                hass.config_entries,
+                "async_forward_entry_setups",
+                side_effect=register_trackers,
+            ),
+        ):
+            task = hass.async_create_task(
+                hass.config_entries.async_setup(entry.entry_id)
+            )
+            await asyncio.wait_for(started.wait(), 5)
+            assert observed == []
+            assert entry.runtime_data.household is None
+            release.set()
+            assert await task == (not registration_fails)
+            await hass.async_block_till_done()
+        if registration_fails:
+            assert observed == []
+        else:
+            assert len(observed) == 1
+            data, tracker, household_data = observed[0]
+            assert data == {}
+            assert tracker.entity_id == tracker_id
+            assert tracker.state == "not_home"
+            assert household_data is not None
+            assert set(entry.runtime_data.states) >= {tracker_id}
+    finally:
+        release.set()
+        unsubscribe()
 
 
 async def test_first_setup_creates_one_dashboard_and_card(hass, household):

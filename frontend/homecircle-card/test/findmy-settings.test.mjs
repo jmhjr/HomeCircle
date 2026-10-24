@@ -35,11 +35,9 @@ test("Find My settings renders only supported native account actions", async () 
   };
   await openSettingsDialog({ _hass: hass }, hass);
   const dialog = document.querySelector("dialog");
-  const actions = [...dialog.querySelectorAll("button")].filter(
-    (control) => control.classList.contains("choice"),
-  ).map(
-    (control) => control.textContent,
-  );
+  const actions = [...dialog.querySelectorAll("button")]
+    .filter((control) => control.classList.contains("choice"))
+    .map((control) => control.textContent);
   assert.deepEqual(actions, [
     "findmy_saved_items",
     "findmy_reconnect",
@@ -126,3 +124,38 @@ for (const progressType of ["progress", "progress_done"])
     document.querySelector("dialog").close();
     assert.equal(calls.at(-1).method, "DELETE");
   });
+
+test("existing Find My choices stay preselected until deliberately cleared", async () => {
+  const hass = {
+    ...base,
+    callApi: async () => ({
+      type: "form",
+      flow_id: "example-existing-flow",
+      step_id: "findmy_select",
+      data_schema: [
+        {
+          name: "items",
+          default: ["example-existing"],
+          selector: {
+            select: {
+              multiple: true,
+              options: [
+                { value: "example-existing", label: "Existing item" },
+                { value: "example-new", label: "New item" },
+              ],
+            },
+          },
+        },
+      ],
+    }),
+  };
+  await openSettingsDialog({ _hass: hass }, hass);
+  const dialog = document.querySelector("dialog");
+  const form = dialog.querySelector("ha-form");
+  assert.deepEqual(form.data.items, ["example-existing"]);
+  [...dialog.querySelectorAll("button")]
+    .find((control) => control.textContent === "Clear selection")
+    .click();
+  assert.deepEqual(form.data.items, []);
+  dialog.close();
+});

@@ -178,6 +178,9 @@ def test_device_labels_explain_missing_names_without_inventing_association():
 
 def test_replacement_namespace_and_logs_are_isolated():
     import logging
+    from pathlib import Path
+    import subprocess
+    import sys
     from custom_components.homecircle.findmy_setup import sdk
 
     _, _, _, client = sdk()
@@ -185,6 +188,31 @@ def test_replacement_namespace_and_logs_are_isolated():
     assert logging.getLogger(
         "custom_components.homecircle._vendor_findmy.reports.account"
     ).disabled
+    # A fresh interpreter proves the supported SDK does not rely on cached
+    # imports of the retired local-Mac CLI/decryptor.
+    code = """
+import importlib.abc
+import sys
+retired = {
+    'custom_components.homecircle._vendor_findmy.plist',
+    'custom_components.homecircle._vendor_findmy.__main__',
+}
+class RejectRetired(importlib.abc.MetaPathFinder):
+    def find_spec(self, fullname, path=None, target=None):
+        if fullname in retired:
+            raise AssertionError('retired local-Mac module imported')
+sys.meta_path.insert(0, RejectRetired())
+from custom_components.homecircle.findmy_setup import sdk
+*_, client = sdk()
+assert client.__module__ == 'custom_components.homecircle._vendor_findmy.icloud'
+assert not retired.intersection(sys.modules)
+"""
+    result = subprocess.run(
+        [sys.executable, "-I", "-c", "import sys; sys.path.insert(0, sys.argv[1]); " + code,
+         str(Path(__file__).resolve().parents[1])],
+        capture_output=True, timeout=30, check=False,
+    )
+    assert result.returncode == 0, "supported SDK must import without retired local-Mac modules"
 
 
 async def test_missing_accessory_ids_use_distinct_stable_keys():
@@ -213,7 +241,7 @@ async def test_duplicate_identity_does_not_silently_drop_an_item():
     first = client.accessories.return_value[0]
     client.accessories.return_value = [first, first]
     await flow.open_recovery()
-    with pytest.raises(FindMySetupError, match="findmy_recovery_failed"):
+    with pytest.raises(FindMySetupError, match="findmy_duplicate_item"):
         await flow.discover("0", "synthetic-passcode")
     assert not flow.accessories
     await flow.close()
@@ -243,7 +271,8 @@ def test_reconnection_reuses_identity_and_discards_old_login(monkeypatch):
         "login": {"state": 3, "data": {"example": True}},
         "anisette": {},
     }
-    FindMySetup.create("example-libraries", session)
+    created = FindMySetup.create("example-libraries", session)
+    assert created.recovery_guard_required
     assert seen["ids"] == session["ids"]
     assert seen["login"] == {"state": 0, "data": {}}
     assert seen["account"]["info"] is None
@@ -252,16 +281,17 @@ def test_reconnection_reuses_identity_and_discards_old_login(monkeypatch):
 
 async def test_recovery_preserves_migrated_identifiers_and_actual_report():
     flow, _, client = setup()
+    material = {"master_key": "01" * 28, "skn": "02" * 32, "sks": "03" * 32}
     client.accessories.return_value = [
         SimpleNamespace(
             identifier="new-sdk-identity",
             name="Renamed item",
-            to_json=lambda: {"master_key": "example-key-a"},
+            to_json=lambda: deepcopy(material),
         )
     ]
     flow.previous_items = {
         "legacy": {
-            "accessory": {"master_key": "example-key-a"},
+            "accessory": deepcopy(material),
             "report": {"last_seen": "2026-10-01T12:00:00+00:00"},
         }
     }
@@ -569,3 +599,308 @@ async def test_settings_pair_comparison_restores_rejected_tokens_and_never_recov
         assert flow.unlock_attempts == 0
     finally:
         await flow.close()
+
+
+@pytest.mark.parametrize("reason,expected", [
+    ("missing_password", "findmy_recovery_signin_required"),
+    ("factor_required", "findmy_recovery_signin_required"),
+    ("credentials", "findmy_recovery_signin_required"),
+    ("identity_mismatch", "findmy_account_mismatch"),
+    ("transient", "findmy_recovery_transient"),
+    ("protocol", "findmy_recovery_protocol"),
+])
+async def test_recovery_credential_failure_after_verification_keeps_actionable_error(reason, expected, caplog):
+    from custom_components.homecircle._findmy_runtime.onboarding import RecoveryPETError
+
+    flow, account, client = setup()
+    flow.factor = SimpleNamespace(submit=AsyncMock(return_value=STATES.LOGGED_IN))
+    factor = flow.factor
+    flow.prepare_recovery = AsyncMock(side_effect=RecoveryPETError(reason))
+    with pytest.raises(FindMySetupError, match="^" + expected + "$"):
+        await flow.verify_code("synthetic-private-code")
+    factor.submit.assert_awaited_once_with("synthetic-private-code")
+    flow.prepare_recovery.assert_awaited_once_with()
+    account.login.assert_not_awaited()
+    client.unlock.assert_not_awaited()
+    assert "synthetic-private-code" not in caplog.text
+    await flow.close()
+
+
+@pytest.mark.parametrize("reason", [
+    "missing_password", "factor_required", "credentials", "identity_mismatch", "transient", "protocol",
+])
+async def test_recovery_bootstrap_logs_only_fixed_credential_reason_and_status(reason, caplog):
+    from custom_components.homecircle._findmy_runtime.onboarding import RecoveryPETError
+
+    flow, account, client = setup()
+    error = RecoveryPETError(reason, http_status=503)
+    async def open_client(current):
+        current._recovery_diagnostics.update(phase="pet_refresh", private="synthetic-private-response")
+        raise error
+    flow.client_factory = AsyncMock(side_effect=open_client)
+    with pytest.raises(RecoveryPETError) as caught:
+        await flow.open_recovery()
+    assert caught.value is error
+    flow.client_factory.assert_awaited_once_with(account)
+    assert "'recovery_credential_reason': '" + reason + "'" in caplog.text
+    assert "'recovery_credential_http': 503" in caplog.text
+    assert "'error_class': 'RecoveryPETError'" in caplog.text
+    assert "synthetic-private" not in caplog.text
+    assert account._password is None
+    assert account._recovery_pet is None
+    account.login.assert_not_awaited()
+    client.unlock.assert_not_awaited()
+    await flow.close()
+
+
+async def test_recovery_bootstrap_rejects_unknown_credential_metadata(caplog):
+    from custom_components.homecircle._findmy_runtime.onboarding import RecoveryPETError
+
+    flow, account, client = setup()
+    error = RecoveryPETError("protocol")
+    error.reason = "synthetic-private-reason"
+    error.http_status = True
+    flow.client_factory = AsyncMock(side_effect=error)
+    with pytest.raises(RecoveryPETError) as caught:
+        await flow.open_recovery()
+    assert caught.value is error
+    assert "'recovery_credential_reason': None" in caplog.text
+    assert "'recovery_credential_http': None" in caplog.text
+    assert "synthetic-private" not in caplog.text
+    account.login.assert_not_awaited()
+    client.unlock.assert_not_awaited()
+    await flow.close()
+
+
+@pytest.mark.parametrize("phase", ["init", "complete"])
+async def test_recovery_bootstrap_logs_current_pet_phase_and_bounded_retry_only(phase, caplog):
+    from custom_components.homecircle._findmy_runtime.onboarding import RecoveryPETError
+
+    flow, account, _ = setup()
+    error = RecoveryPETError("transient", http_status=429, auth_phase=phase, retry_after=12.25)
+    account._signin_diagnostics = {"phase": "init", "http": 200, "retry_after": 999,
+                                    "body": "synthetic-private-response-canary"}
+    flow.client_factory.side_effect = error
+    with pytest.raises(RecoveryPETError) as caught:
+        await flow.open_recovery()
+    assert caught.value is error
+    assert "'recovery_credential_phase': '" + phase + "'" in caplog.text
+    assert "'recovery_credential_http': 429" in caplog.text
+    assert "'recovery_credential_retry_after_seconds': 13" in caplog.text
+    assert "synthetic-private" not in caplog.text and "999" not in caplog.text
+    await flow.close()
+
+
+@pytest.mark.parametrize("phase,retry", [
+    (True, True), ("synthetic-private-phase", "synthetic-private-header"),
+    ("init", -1), ("complete", 86401), (None, float("nan")), (None, 1.0),
+])
+async def test_recovery_bootstrap_revalidates_mutated_pet_error_context(phase, retry, caplog):
+    from custom_components.homecircle._findmy_runtime.onboarding import RecoveryPETError
+
+    flow, _, _ = setup()
+    error = RecoveryPETError("transient", http_status=429)
+    error.auth_phase, error.retry_after_seconds = phase, retry
+    flow.client_factory.side_effect = error
+    with pytest.raises(RecoveryPETError) as caught:
+        await flow.open_recovery()
+    assert caught.value is error
+    expected = phase if type(phase) is str and phase in ("init", "complete") else None
+    assert "'recovery_credential_phase': " + repr(expected) in caplog.text
+    assert "'recovery_credential_retry_after_seconds': None" in caplog.text
+    assert "synthetic-private" not in caplog.text
+    await flow.close()
+
+
+def _synthetic_discovery_exception(error_type=RuntimeError, *, filename="pcs.py",
+                                   function="unwrap_zone", module=None, offset=0):
+    """Actual tracebacks with synthetic private data; no provider code executes."""
+    import ast
+
+    module = module or "custom_components.homecircle._vendor_findmy.cloudkit." + filename[:-3]
+    source = "/synthetic-private-path/custom_components/homecircle/_vendor_findmy/cloudkit/" + filename
+    program = ast.parse("def " + function + "():\n"
+                        "    private_key = 'synthetic-private-key-canary'\n"
+                        "    raise error_type('synthetic-private-response-canary')\n")
+    ast.increment_lineno(program, offset)
+    namespace = {"__name__": module, "error_type": error_type}
+    exec(compile(program, source, "exec"), namespace)
+    try:
+        namespace[function]()
+    except Exception as error:
+        return error
+    raise AssertionError("synthetic exception was not raised")
+
+
+@pytest.mark.parametrize("filename,function", [("pcs.py", "unwrap_zone"), ("beacons.py", "zone_keys")])
+def test_discovery_error_site_reports_only_bound_own_source(filename, function):
+    from custom_components.homecircle.findmy_setup import _discovery_failure_site
+
+    safe = _discovery_failure_site(_synthetic_discovery_exception(filename=filename, function=function))
+    assert safe == {
+        "error_module": "custom_components.homecircle._vendor_findmy.cloudkit." + filename[:-3],
+        "error_file": filename, "error_function": function, "error_line": 3,
+    }
+    assert "synthetic-private" not in repr(safe)
+
+
+@pytest.mark.parametrize("change", ["module", "filename", "function", "line"])
+def test_discovery_error_site_rejects_unbound_or_oversized_sites(change):
+    from custom_components.homecircle.findmy_setup import _discovery_failure_site
+
+    arguments = {
+        "module": {"module": "synthetic.private.module"},
+        "filename": {"filename": "synthetic-private-file.py",
+                     "module": "custom_components.homecircle._vendor_findmy.cloudkit.pcs"},
+        "function": {"function": "synthetic_private_function"},
+        "line": {"offset": 100000},
+    }[change]
+    safe = _discovery_failure_site(_synthetic_discovery_exception(**arguments))
+    assert safe == {"error_module": None, "error_file": None,
+                    "error_function": None, "error_line": None}
+    assert "synthetic-private" not in repr(safe)
+
+
+def test_discovery_error_site_prefers_innermost_allowlisted_frame():
+    from custom_components.homecircle.findmy_setup import _discovery_failure_site
+
+    namespace = {"__name__": "custom_components.homecircle._vendor_findmy.cloudkit.pcs"}
+    source = "/synthetic-private-path/custom_components/homecircle/_vendor_findmy/cloudkit/pcs.py"
+    exec(compile("def unwrap_protection():\n    return unwrap_zone()\n"
+                 "def unwrap_zone():\n    raise RuntimeError('synthetic-private-response-canary')\n",
+                 source, "exec"), namespace)
+    try:
+        namespace["unwrap_protection"]()
+    except RuntimeError as error:
+        safe = _discovery_failure_site(error)
+    assert safe["error_function"] == "unwrap_zone" and safe["error_line"] == 4
+    assert "synthetic-private" not in repr(safe)
+
+
+@pytest.mark.parametrize("name", ["PCSError", "MissingKeyError", "BeaconExportError", "SyntheticPrivateError"])
+async def test_discovery_logs_fixed_pcs_subclass_and_site_without_retry(name, caplog):
+    flow, account, client = setup()
+    await flow.open_recovery()
+    flow.keys_recovered = True
+    account._recovery_diagnostics.update(recovered_keys_present=True, operation_http=200,
+                                         operation_type=201, private="synthetic-private-diagnostic-canary")
+    error_type = type(name, (RuntimeError,), {})
+    client.accessories.side_effect = _synthetic_discovery_exception(error_type)
+    with pytest.raises(FindMySetupError, match="^findmy_recovery_failed$"):
+        await flow.retry_discovery()
+    expected = name if name != "SyntheticPrivateError" else "other"
+    assert "'error_class': '" + expected + "'" in caplog.text
+    assert "'error_file': 'pcs.py'" in caplog.text
+    assert "'error_function': 'unwrap_zone'" in caplog.text
+    assert "'error_line': 3" in caplog.text
+    assert "'recovered_keys_present': True" in caplog.text
+    assert "synthetic-private" not in caplog.text
+    assert "SyntheticPrivateError" not in caplog.text
+    assert flow.keys_recovered is True and account._password is None
+    assert flow.unlock_attempts == 0
+    client.unlock.assert_not_awaited()
+    client.accessories.assert_awaited_once_with()
+    account.login.assert_not_awaited()
+    await flow.close()
+
+
+_OUTER_AUTH_TEST_CODES = (
+    "owner_review_context_required", "outer_digest_unsupported", "outer_signer_mismatch",
+    "outer_covered_data_unreadable", "outer_signature_rejected",
+)
+
+
+@pytest.mark.parametrize("reason", _OUTER_AUTH_TEST_CODES)
+def test_outer_auth_reason_sanitizer_accepts_only_exact_pcs_codes(reason):
+    from custom_components.homecircle._vendor_findmy.cloudkit.pcs import PCSError
+    from custom_components.homecircle.findmy_setup import _outer_auth_failure_reason
+
+    error = PCSError("synthetic-private-response-canary")
+    error._homecircle_outer_auth_reason = reason
+    assert _outer_auth_failure_reason(error) == reason
+
+
+@pytest.mark.parametrize("case", [
+    "missing", "none", "bool", "number", "dict", "secret", "unknown",
+    "str_subclass", "property_value", "dict_subclass", "name_impostor", "pcs_subclass",
+])
+def test_outer_auth_reason_sanitizer_redacts_mutated_or_spoofed_metadata(case):
+    from custom_components.homecircle._vendor_findmy.cloudkit.pcs import PCSError
+    from custom_components.homecircle.findmy_setup import _outer_auth_failure_reason
+
+    calls = []
+    def forbidden(*args):
+        calls.append("synthetic-private-property-canary")
+        raise AssertionError("metadata accessor executed untrusted code")
+    class SecretString(str):
+        __eq__ = forbidden
+    class SecretDict(dict):
+        get = forbidden
+    error = PCSError("synthetic-private-response-canary")
+    if case == "dict_subclass":
+        error.__dict__ = SecretDict(_homecircle_outer_auth_reason=_OUTER_AUTH_TEST_CODES[0])
+    elif case == "name_impostor":
+        error = type("PCSError", (RuntimeError,), {"__getattribute__": forbidden})("synthetic-private-response")
+    elif case == "pcs_subclass":
+        class Derived(PCSError):
+            __getattribute__ = forbidden
+            _homecircle_outer_auth_reason = property(forbidden)
+        error = Derived("synthetic-private-response")
+    elif case != "missing":
+        error._homecircle_outer_auth_reason = {
+            "none": None, "bool": True, "number": 1, "dict": {"secret": "synthetic-private-key-canary"},
+            "secret": "synthetic-private-reason-canary", "unknown": "unknown",
+            "str_subclass": SecretString(_OUTER_AUTH_TEST_CODES[0]), "property_value": property(forbidden),
+        }[case]
+    assert _outer_auth_failure_reason(error) is None
+    assert calls == []
+
+
+@pytest.mark.parametrize("reason", [*_OUTER_AUTH_TEST_CODES, "invalid", "spoofed"])
+async def test_discovery_logs_only_fixed_outer_auth_reason_without_reproof(reason, caplog):
+    from custom_components.homecircle._vendor_findmy.cloudkit.pcs import PCSError
+
+    flow, account, client = setup()
+    await flow.open_recovery()
+    flow.keys_recovered = True
+    error_type = type("PCSError", (RuntimeError,), {}) if reason == "spoofed" else PCSError
+    error = _synthetic_discovery_exception(error_type)
+    error._homecircle_outer_auth_reason = reason if reason in _OUTER_AUTH_TEST_CODES else "synthetic-private-reason-canary"
+    client.accessories.side_effect = error
+    with pytest.raises(FindMySetupError, match="^findmy_recovery_failed$"):
+        await flow.retry_discovery()
+    expected = reason if reason in _OUTER_AUTH_TEST_CODES else None
+    assert "'outer_auth_reason': " + repr(expected) in caplog.text
+    assert "synthetic-private" not in caplog.text
+    assert flow.keys_recovered is True and flow.unlock_attempts == 0 and account._password is None
+    client.unlock.assert_not_awaited()
+    client.accessories.assert_awaited_once_with()
+    account.login.assert_not_awaited()
+    await flow.close()
+
+
+async def test_outer_auth_import_failure_preserves_original_discovery_failure(monkeypatch, caplog):
+    import builtins
+
+    flow, account, client = setup()
+    await flow.open_recovery()
+    flow.keys_recovered = True
+    client.accessories.side_effect = RuntimeError("synthetic-private-original-canary")
+    original_import = builtins.__import__
+    calls = []
+    def unavailable(name, *args, **kwargs):
+        if name.endswith("cloudkit.pcs"):
+            calls.append(name)
+            raise RuntimeError("synthetic-private-dependency-canary")
+        return original_import(name, *args, **kwargs)
+    with monkeypatch.context() as context:
+        context.setattr(builtins, "__import__", unavailable)
+        with pytest.raises(FindMySetupError, match="^findmy_recovery_failed$"):
+            await flow.retry_discovery()
+    assert len(calls) == 1
+    assert "'outer_auth_reason': None" in caplog.text
+    assert "synthetic-private" not in caplog.text
+    assert flow.keys_recovered is True and flow.unlock_attempts == 0 and account._password is None
+    client.unlock.assert_not_awaited()
+    account.login.assert_not_awaited()
+    await flow.close()

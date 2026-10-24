@@ -1,0 +1,342 @@
+{
+  "actual_trial": {
+    "accepted_phase_names": [
+      "baseline_disabled",
+      "mutated_disabled",
+      "automatic_restored_disabled",
+      "repaired_storage_disabled",
+      "restart_disabled"
+    ],
+    "all10_qualified_package_Git_blobs_preserved": true,
+    "all11_historical_qualification_and_outcome_files_preserved": true,
+    "all22_fixture_Git_blobs_verified": true,
+    "all_five_closed_boot_grants_verified": true,
+    "artifact": {
+      "API_digest_and_size_match": true,
+      "bytes": 6727,
+      "id": 12392290513,
+      "sha256": "090dee1da28481f17f5d106aaa81f86d4230655fb4366dd58931b615a47104cf"
+    },
+    "cleanup_failed": false,
+    "clones_removed": true,
+    "closed_network_probe_observations": 32,
+    "contract_skips": 0,
+    "contracts_verified": 118,
+    "default_network_window_closed_before_private_reads": true,
+    "default_restore_conditions": {
+      "cached_same_core_image_verified_after": true,
+      "cached_same_core_image_verified_before": true,
+      "candidate113_archive_verified": true,
+      "cleanup_failed": false,
+      "closed_boot_grant_written": true,
+      "disabled_unimported_config_verified": true,
+      "final_effective_empty_observed": true,
+      "final_persisted_empty_or_absent": true,
+      "foreign_options_refused": false,
+      "global_persisted_override": false,
+      "jobs_option_mutation_requests": 0,
+      "maximum_cleanup_seconds": 90,
+      "maximum_network_readiness_seconds": 90,
+      "mode": "default_conditions_disabled_saved_storage",
+      "network_close_acknowledged": true,
+      "network_close_requests": 1,
+      "network_closed_after": true,
+      "network_closed_before": true,
+      "network_info_requests": 1,
+      "network_open_acknowledged": true,
+      "network_open_positive_control": true,
+      "network_open_requests": 1,
+      "original_effective_empty": true,
+      "original_persisted_empty_or_absent": true,
+      "relevant_visible_jobs_idle_before": true,
+      "restore_completed": true,
+      "schema": 1,
+      "supervisor_host_internet_true": true,
+      "supervisor_internet_true": true,
+      "unsupported_conditions_override": false
+    },
+    "guard_contexts": 2,
+    "guard_timeline": {
+      "automatic_restored_disabled": 2,
+      "baseline_disabled": 2,
+      "mutated_disabled": 3,
+      "repaired_storage_disabled": 3,
+      "restart_disabled": 3
+    },
+    "host_elapsed_seconds": 535.006,
+    "host_receipt_sha256": "846eed710e23a9a39da2163b7d5ebcd2cc5b04470724a5ef7d036e8f4c62f222",
+    "independent_audit_sha256": "5e136cc8a1451e69e064d965b49176c91542832151ce7a346ea53a5fcb90a23b",
+    "inputs_sha256": "353312d29b3cbf2462924eccaffcc1c94cbc873f76c0ce23ae64e58da17c04d2",
+    "manual_guard_repair_before_first_restored_vault_load": true,
+    "negative_clone_cases_per_restored_and_restart_validator": 18,
+    "network_transitions": [
+      "closed_before_saved_storage",
+      "opened_for_default_restore",
+      "closed_after_default_restore"
+    ],
+    "newest_guard_retained_outside_entire_guest": true,
+    "no_op_pair_and_main_store_preserved": true,
+    "platform": {
+      "Core": "2026.10.2",
+      "Core_Python": "3.14.6",
+      "HAOS": "18.3",
+      "KVM": true,
+      "Supervisor": "2026.10.3",
+      "architecture": "amd64"
+    },
+    "private_workspace_removed": true,
+    "qa_commit": "18cdbf68819608180289bcfff9723e3cd5754fe9",
+    "qemu_stopped": true,
+    "qualification_sha256": "ec7f132316e89d3aa864f1f5d061098a9f749e7ec068441a9422b3946d2806c7",
+    "receipt_sha256": {
+      "automatic_restored_disabled.json": "97a8cafda4c7ffa31f764c65dc26f5cac2b6ca49dba1f9e4b669116fac101dcf",
+      "baseline_disabled.json": "7a7a05fb0c689ad677c220c2e468a6555a804ff313dad81798eb53c986dfabad",
+      "host.json": "846eed710e23a9a39da2163b7d5ebcd2cc5b04470724a5ef7d036e8f4c62f222",
+      "mutated_disabled.json": "8043954a3b518036c5844376433f6484ac23b9a8837cbc2e1ad1ce0bea5fa2f2",
+      "repaired_storage_disabled.json": "98394cd47be1b69eb00c76a9382e40aeabccef2ba475d2d568fea686542ae52a",
+      "restart_disabled.json": "a28bf5aa85a06b714830af359a95e4847ea9216067121b72e95e91ac084662a4"
+    },
+    "recorder": {
+      "postbackup_marker_rows_after_restore": 0,
+      "postbackup_marker_rows_before_restore": 6,
+      "postrestore_rows_retained_across_restart": 6,
+      "prebackup_rows_restored": 6,
+      "restart_exact_match": true
+    },
+    "run_id": 39697883468,
+    "status": "accepted_default_disabled_synthetic_manual_guard_repair_only",
+    "storage_contexts": 4,
+    "workflow_conclusion": "success"
+  },
+  "as_of_date": "2026-10-21",
+  "default_conditions_disabled_synthetic_restore_qualified": true,
+  "default_supervisor_conditions_used": true,
+  "development_preview_unreleased": true,
+  "documentation_commit_is_tested_runtime": false,
+  "documentation_status": "final",
+  "evidence_roles": {
+    "native": {
+      "audit_bytes": 2528,
+      "audit_sha256": "22c861632098c71d78b4f8051a3722579bacb8983d413931231ce867e2a2d27d",
+      "qa_commit": "e2572b28812c1c152b40eb1a10e6d6e8d4cb8276",
+      "run_id": 39683890536,
+      "scope": "native_package_1698_frontend122_required36_baseline14_causes"
+    },
+    "r1": {
+      "audit_bytes": 7494,
+      "audit_sha256": "c546158bb02fad377d8c3baab468ac7f19085b2377291010d2a0aa3c87d0a641",
+      "qa_commit": "201438e28c8a5738c0c31193ba0b71d9f3451c51",
+      "run_id": 39685041916,
+      "scope": "account_free_explicit_eight_phase_partial_restore"
+    },
+    "r2": {
+      "audit_bytes": 2268,
+      "audit_sha256": "685a493a7624cd99a1d8f70dea9693a603a26a13416226b49bf885ac98adc726",
+      "qa_commit": "630fb69b7281c5d3030506dbd25802f1860ae1bc",
+      "run_id": 39685990663,
+      "scope": "negative_seed_failure_inner_cause_unknown"
+    },
+    "r3": {
+      "audit_bytes": 2686,
+      "audit_sha256": "117beac4f3fb0dd33f6da866659afbe79d2179615a1e10d69515733f23adb530",
+      "qa_commit": "e44ae2a104e3d74bb2f3191810a5ed8ab2aa115b",
+      "run_id": 39688084686,
+      "scope": "negative_restore_internet_condition_refusal"
+    },
+    "r4": {
+      "audit_bytes": 4604,
+      "audit_sha256": "cb2cae2d257232a747668cdad7e9606f439e5df6944cc2840d6075e4c555d412",
+      "qa_commit": "3c1e9e72e4ac2892b18b64473410987de237e427",
+      "run_id": 39691770592,
+      "scope": "accepted_experimental_global_override_disabled_synthetic"
+    },
+    "r5": {
+      "audit_bytes": 2943,
+      "audit_sha256": "839d616e295bf63d0973c2772157ad293e1bcb7826008b66637bdc9c92059e3f",
+      "qa_commit": "e163bf4f18530543072a03ec690f8573dacef046",
+      "run_id": 39696526162,
+      "scope": "negative_first_boot_inner_command_site_unretained"
+    },
+    "r6": {
+      "audit_bytes": 5158,
+      "audit_sha256": "5e136cc8a1451e69e064d965b49176c91542832151ce7a346ea53a5fcb90a23b",
+      "qa_commit": "18cdbf68819608180289bcfff9723e3cd5754fe9",
+      "run_id": 39697883468,
+      "scope": "accepted_default_conditions_disabled_synthetic_manual_guard_repair"
+    }
+  },
+  "historical_documentation_commit": "decdc32f49fe7371526dae884e8c6a0020d3d4b2",
+  "historical_trials": {
+    "R2": {
+      "accepted_phases": 0,
+      "actual_cause_inferred_from_HA_mode_defect": false,
+      "audit_sha256": "685a493a7624cd99a1d8f70dea9693a603a26a13416226b49bf885ac98adc726",
+      "outcome": "failed",
+      "precise_inner_cause_known": false,
+      "qa_commit": "630fb69b7281c5d3030506dbd25802f1860ae1bc",
+      "run_id": 39685990663
+    },
+    "R3": {
+      "accepted_phases": [
+        "baseline_disabled",
+        "mutated_disabled"
+      ],
+      "audit_sha256": "117beac4f3fb0dd33f6da866659afbe79d2179615a1e10d69515733f23adb530",
+      "outcome": "failed",
+      "qa_commit": "e44ae2a104e3d74bb2f3191810a5ed8ab2aa115b",
+      "restore_accepted": false,
+      "restore_error_category": "host_internet_unavailable",
+      "run_id": 39688084686,
+      "seed_mutation_partial_backup_archive_guard_export_passed": true
+    },
+    "R4": {
+      "accepted_phases": 5,
+      "audit_sha256": "cb2cae2d257232a747668cdad7e9606f439e5df6944cc2840d6075e4c555d412",
+      "cleanup_verified": true,
+      "contracts": 112,
+      "guard_contexts": 2,
+      "ordinary_default_restore_qualified": false,
+      "outcome": "passed_experimental_only",
+      "qa_commit": "3c1e9e72e4ac2892b18b64473410987de237e427",
+      "run_id": 39691770592,
+      "storage_contexts": 4,
+      "temporary_global_persisted_unsupported_override_used": true
+    },
+    "R5": {
+      "NIC_closed_after_seed": true,
+      "accepted_phases": 0,
+      "actual_synthetic_seed_and_Fernet_passed": true,
+      "artifact": {
+        "bytes": 2677,
+        "id": 12391431855,
+        "sha256": "3299f149543f3b037fd1b0605f35597666ea7ad32ef17b00a03707f7d0ab01bc"
+      },
+      "audit_sha256": "839d616e295bf63d0973c2772157ad293e1bcb7826008b66637bdc9c92059e3f",
+      "backup_or_restore_requests": 0,
+      "cleanup_failed": false,
+      "confirmed_source_defect_proves_actual_inner_failure": false,
+      "guard_transfer_contexts": 0,
+      "host_elapsed_seconds": 222.782,
+      "host_failure_code": "guest_command_failed",
+      "host_receipt_sha256": "3b3ed42cd7861008b60de8d680acf08253e00e004c9fe867a65d1d9143870f5b",
+      "host_stage": "baseline_disabled",
+      "new_default_window_and_grant_contracts": 19,
+      "original_applicable_core_contracts": 97,
+      "outcome": "failed",
+      "precise_inner_failure_site_retained": false,
+      "prepared_fixture_contracts": 116,
+      "private_workspace_removed": true,
+      "qa_commit": "e163bf4f18530543072a03ec690f8573dacef046",
+      "qemu_stopped": true,
+      "replaced_R4_override_specific_contracts": 15,
+      "restore_window_opened": false,
+      "run_id": 39696526162,
+      "storage_result_actions": [
+        "seed"
+      ]
+    }
+  },
+  "installed_runtime_changed": false,
+  "manual_newest_guard_repair_required": true,
+  "namespace_fixture_correction": {
+    "actual_R5_inner_failure_cause_proven": false,
+    "actual_helper_consumed_correct_private_grant": true,
+    "confirmed_source_bug": true,
+    "destination_only_positive_control_succeeded": true,
+    "emitted_host_config_path_in_Supervisor_container": true,
+    "host_precheck_and_boot_request_paths_unchanged": true,
+    "independent_reproduction_report_sha256": "312252f80b1fd03afd95bb0ce0a40cccf91df4f2573e7fc98688bfc75d26c2ca",
+    "old_exact_emitted_program_failed_in_namespace_model": true,
+    "old_local_test_collapsed_host_and_container_namespaces": true,
+    "only_controller_change": "grant writer destination expression",
+    "reproduction_report_sha256": "c92681ff26b53a9088cdd32d159de8364007af831098c2359b53dfc847a7c2f8",
+    "required_container_config_root": "/data/homeassistant"
+  },
+  "owner_instance_runtime_evidence_source_commit": "f4da650e6e460382c6ee1f70827bddac43bf2780",
+  "planned_scope": {
+    "Apple_actual_vault_Fernet": true,
+    "Life360_actual_HA_config_entry_credentials": true,
+    "Life360_separate_encrypted_vault_exists": false,
+    "all_guard_and_vault_contexts_NIC_closed": true,
+    "automatic_postrestore_grant_requires_affirmative_restore_and_finally_close": true,
+    "default_Supervisor_conditions_required": true,
+    "entry_remains_disabled_and_managed_candidate_unimported": true,
+    "every_helper_boot_requires_exact_process_one_use_closed_network_grant": true,
+    "global_or_unsupported_conditions_override_permitted": false,
+    "jobs_option_mutations_permitted": 0,
+    "manual_newest_external_guard_repair_required": true,
+    "network_window_only_for_disposable_guest_restore": true,
+    "procedure": "default_conditions_disabled_synthetic_saved_account_partial_restore",
+    "restore_retry_permitted": false,
+    "synthetic_accounts_only": true
+  },
+  "prepared_fixture": {
+    "actual_trial_qualification_from_local_contracts": false,
+    "applicable_prior_contracts_retained": 116,
+    "clone_negative_cases_per_postrestore_validator": 18,
+    "controller_sha256": "4f0240d16c6bae91fc5aae635666e9a3e22055ff7ef334503b1801c265a72977",
+    "guard_contexts_required": 2,
+    "local_contracts_passed": 118,
+    "local_contracts_skipped": 0,
+    "new_namespace_contracts": 2,
+    "operational_phases_required": 5,
+    "parent_input_map_sha256": "3b5448c7fb45a97f752d881d445d67c81f98c9506ec72cec1ae768bd19a05e6f",
+    "parent_qa_commit": "e163bf4f18530543072a03ec690f8573dacef046",
+    "prior_test_body_changed_for_namespace_preserving_regression": 1,
+    "protected_infrastructure_methods_retained": 32,
+    "storage_contexts_required": 4
+  },
+  "privacy": {
+    "production_configuration_used": false,
+    "raw_keys_sessions_credentials_identifiers_or_private_fingerprint_proofs_published": false,
+    "real_owner_credentials_used": false
+  },
+  "qualification_claims": {
+    "automatic_guard_antirollback": false,
+    "candidate_hacs_download_tested": false,
+    "default_conditions_disabled_synthetic_restore_qualified": true,
+    "documentation_commit_is_tested_runtime": false,
+    "full_encrypted_cloud_backup_tested": false,
+    "full_system_restore_tested": false,
+    "installed_runtime_changed": false,
+    "ordinary_default_supervisor_restore_qualified": false,
+    "ordinary_enabled_restore_safety_accepted": false,
+    "provider_activation_after_restore_tested": false,
+    "provider_authentication_after_restore_tested": false,
+    "provider_session_renewal_tested": false,
+    "stable_release_approval": false
+  },
+  "qualification_scope": "default_conditions_disabled_synthetic_saved_storage",
+  "r4_outcome": "accepted_experimental",
+  "r5_outcome": "verified_negative",
+  "r6_outcome": "accepted_default_disabled",
+  "release_published": false,
+  "remaining_release_gates": [
+    "enabled_provider_restore_safety",
+    "real_account_authentication_after_restore",
+    "provider_session_renewal",
+    "automatic_guard_antirollback",
+    "full_system_addon_encrypted_cloud_backup",
+    "HACS_release_delivery",
+    "final_RC_acceptance",
+    "stable_release_approval"
+  ],
+  "runtime_package": {
+    "bytes": 617791,
+    "files": 113,
+    "inventory_sha256": "d7e70cb639d77836fa2ac15b26f95e2f31ea599dbfff580cfae60a5a827cfe5b",
+    "runtime_change_for_this_procedure": false,
+    "sha256": "004c9bc4a968ad395e18033837cb42f5bd1d8719a8d90fc778fd20be4ff08f97"
+  },
+  "schema": 1,
+  "source_security_module_sha256": {
+    "findmy_identity.py": "0a020ad7f319b4d13686b7c2c177b762a4aabf30420164bf037cda1b8a7bc7c5",
+    "findmy_recovery_guard.py": "c8abe90b71c216e14d63b8d7382f377128aa0cce83ce53e553039fee3005ea6a",
+    "findmy_vault.py": "1959c143d36c4f06aff13d85aed2886c32161de86680fd0567427bda418e12f5"
+  },
+  "tested_runtime_source_commit": "91ae59106a661143b770d7a3564d363c7c11a7dd",
+  "unmeasured": [
+    "provider_request_attempt_counts",
+    "recovery_proof_attempt_counts"
+  ]
+}

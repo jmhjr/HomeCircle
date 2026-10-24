@@ -1,0 +1,105 @@
+{
+  "new_confirmed_issue": {
+    "fix": "Load SDK in executor before startup, migration and saved-item imports; keep disconnect compensation import and write in one drained executor job.",
+    "independent_source_review": "No confirmed blocker; executor and cancellation behavior reviewed.",
+    "native_focused_validation": {
+      "architecture": "aarch64",
+      "baseline_cold_exit": 1,
+      "baseline_event_loop_import_detected": true,
+      "core": "2026.10.2",
+      "errors": 0,
+      "exact_current_public_source_inputs": true,
+      "failures": 0,
+      "fixed_cold_exit": 0,
+      "fixed_event_loop_import_detected": false,
+      "owner_accounts_used": false,
+      "provider_calls_permitted": false,
+      "python": "3.14.6",
+      "skipped": 0,
+      "source_files": 402,
+      "source_input_files": 402,
+      "test_plugin": "0.13.373",
+      "tests": 51
+    },
+    "problem": "Cold Find My SDK import synchronously reads package metadata on the Home Assistant event loop.",
+    "product_files": [
+      "custom_components/homecircle/findmy_provider.py",
+      "custom_components/homecircle/findmy_migration.py",
+      "custom_components/homecircle/findmy_flow.py"
+    ],
+    "scope_limit": "Focused source validation; no new release artifact or owner cold restart of patched product yet.",
+    "test_container_no_network_and_no_host_mounts": true,
+    "test_container_removed": true,
+    "test_files": [
+      "tests/test_findmy_provider.py",
+      "tests/test_findmy_migration.py",
+      "tests/test_findmy_saved_flow.py"
+    ]
+  },
+  "owner_upgrade": {
+    "FindMy_preserved_original_source_report_time": true,
+    "Life360_Pause_then_Resume_UI_verified": true,
+    "Life360_new_report_after_Resume_observed": true,
+    "after_controls": {
+      "FindMy_remained_active": true,
+      "Life360_restored_active": true,
+      "legacy_witness_absence_preserved": true,
+      "opaque_guard_pair_unchanged_after_controls": true,
+      "settings_selections_accounts_unchanged_after_controls": true,
+      "test_instance_remains_exact_RC1": true
+    },
+    "configuration_replaced_outside_product_directory": false,
+    "consistent_stopped_full_config_checkpoint_verified_off_VM": true,
+    "forced_refresh_reconnect_discovery_or_recovery_actions": 0,
+    "method": "manual exact package replacement; HACS not installed in test instance",
+    "normal_Supervisor_backup_verified_off_VM": true,
+    "normal_configuration_check_and_Core_start_passed": true,
+    "preservation": {
+      "activity_history_preserved_with_documented_freshness_limit": true,
+      "activity_store_unchanged": false,
+      "actual_photo_files_after": 0,
+      "actual_photo_files_before": 0,
+      "device_identity_preserved": true,
+      "entity_identity_and_links_preserved": true,
+      "exact_retained_activity_events": 47,
+      "homecircle_entry_count": 1,
+      "homecircle_settings_and_selections_preserved": true,
+      "installed_exact_published_package_after_start": true,
+      "missing_legacy_witness_state_preserved": true,
+      "oldest_freshness_events_normally_evicted": 2,
+      "person_and_dashboard_records_preserved": true,
+      "previous_activity_events": 49,
+      "recorder_recent_committed_rows_preserved": true,
+      "recorder_row_cohort": 20,
+      "recovery_guard_file_count": 3,
+      "recovery_guard_files_unchanged": true,
+      "resource_count": 1,
+      "saved_account_files_present": true,
+      "saved_account_key_files_unchanged": true,
+      "served_bundle_matches_candidate": true,
+      "served_resource_requests_rc1": true
+    },
+    "recovery_acknowledgements_or_resets": 0
+  },
+  "privacy": "No account identifiers, credentials, passcodes, locations, vault bytes or private backup references in this record.",
+  "published_RC1": {
+    "replaced_or_retagged": false,
+    "source": "b906d3ee51711d3455a497cc265fd3bc18f3adec",
+    "version": "1.0.0-rc.1",
+    "zip_sha256": "4f94a18e2f7862e9bd7f4c85250e5f10e4b8e1292ea9d7b263b441d2e1b77dd9"
+  },
+  "release_status": {
+    "everyday_Home_Assistant_modified": false,
+    "main_merged": false,
+    "next": "Package the startup fix as a new candidate and check its ordinary cold restart before stable approval.",
+    "stable_published": false
+  },
+  "remaining_owner_checks": {
+    "iPhone_RC1_layout_and_expected_map_positions": "pending owner response",
+    "long_lived_provider_session_renewal": "not observed in this bounded window",
+    "new_FindMy_GPS_report_freshness": "not claimed; old provider report time retained",
+    "real_photo_persistence": "not exercised; this test instance has zero actual photos"
+  },
+  "schema": 1,
+  "scope": "RC1 owner test upgrade and post-qualification startup fix"
+}

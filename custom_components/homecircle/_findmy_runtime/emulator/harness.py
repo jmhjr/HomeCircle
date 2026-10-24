@@ -20,6 +20,7 @@ a per-symbol 8-byte cell so normal dereferences see a plausible object.
 from __future__ import annotations
 
 import logging
+import secrets
 import struct
 from collections.abc import Callable
 from typing import Any
@@ -74,6 +75,9 @@ STUB_SIZE = 0x00020000
 DATA_ADDRESS = 0x60020000
 DATA_SIZE = 0x00020000
 SCRATCH_ADDRESS = 0x60040000
+# Keep this 256 KiB region disjoint from guest objects. The worker's individual
+# 128 KiB field limit is not a combined-operation allowance: input alignment,
+# dispatcher payload and parameter cells must all fit before an operation writes.
 SCRATCH_SIZE = 0x00040000
 OBJECT_ADDRESS = 0x60080000
 OBJECT_SIZE = 0x00040000
@@ -119,7 +123,12 @@ class UnmappedAccess(EmulationError):
 class MachOImage:
     def __init__(self, path: str, data: bytes | None = None) -> None:
         self.path = path
-        self.data = data if data is not None else open(path, "rb").read()
+        if data is not None and type(data) is not bytes:
+            raise EmulationError("emulator image bytes refused")
+        if data is None:
+            with open(path, "rb") as stream:
+                data = stream.read()
+        self.data = data
         self.macho = MachO(self.data, path)
 
     def map_into(self, uc: Uc) -> None:
@@ -222,7 +231,10 @@ class Harness:
             self.register(name, lambda h: 0)
         self.register("getuid", lambda h: 501)  # _fpsd-ish uid; deterministic
         self.register("umask", lambda h: 0o022)
-        self.register("arc4random", lambda h: 0x12345678)
+        self.register("arc4random", lambda h: h.random_u32())
+        self.register("arc4random_buf", lambda h: h.random_buffer(
+            h.uc.reg_read(UC_X86_REG_RDI), h.uc.reg_read(UC_X86_REG_RSI)
+        ))
         self.register("gethostuuid", self._gethostuuid)
         self.register("gettimeofday", self._gettimeofday)
         self.register("___error", self._errno_ptr)
@@ -268,17 +280,75 @@ class Harness:
             out += b
         return out.decode("utf-8", "replace")
 
+    @staticmethod
+    def _aligned_size(size: int, minimum: int = 0) -> int:
+        if type(size) is not int or size < 0:
+            raise EmulationError("emulator allocation refused")
+        return (max(size, minimum) + 0xF) & ~0xF
+
+    def _allocate(self, cursor: str, base: int, capacity: int, size: int, minimum: int = 0) -> int:
+        amount = self._aligned_size(size, minimum)
+        address = getattr(self, cursor)
+        if not base <= address <= base + capacity or amount > base + capacity - address:
+            raise EmulationError("emulator allocation exhausted")
+        setattr(self, cursor, address + amount)
+        return address
+
+    def require_scratch(self, *sizes: int) -> None:
+        """Refuse an operation before writes if its aligned temporaries will not fit."""
+        needed = sum(self._aligned_size(size) for size in sizes)
+        if (
+            not SCRATCH_ADDRESS <= self._scratch_cur <= SCRATCH_ADDRESS + SCRATCH_SIZE
+            or needed > SCRATCH_ADDRESS + SCRATCH_SIZE - self._scratch_cur
+        ):
+            raise EmulationError("emulator allocation exhausted")
+
     def scratch(self, size: int) -> int:
-        size = (size + 0xF) & ~0xF
-        addr = self._scratch_cur
-        self._scratch_cur += size
-        return addr
+        return self._allocate("_scratch_cur", SCRATCH_ADDRESS, SCRATCH_SIZE, size)
 
     def object(self, size: int) -> int:
-        size = (size + 0xF) & ~0xF
-        addr = self._obj_cur
-        self._obj_cur += size
-        return addr
+        return self._allocate("_obj_cur", OBJECT_ADDRESS, OBJECT_SIZE, size)
+
+    def checked_buffer(self, address: int, size: int) -> None:
+        """Bound host allocation and require a wholly mapped guest buffer."""
+        if (
+            type(address) is not int or type(size) is not int
+            or not 0 <= address < 2**64 or not 0 <= size <= HEAP_SIZE
+            or address + size > 2**64
+        ):
+            raise EmulationError("emulator buffer refused")
+        if size == 0:
+            return
+        remaining = address
+        for begin, end, _permissions in sorted(self.uc.mem_regions()):
+            if begin <= remaining <= end:
+                remaining = end + 1
+                if remaining >= address + size:
+                    return
+            elif begin > remaining:
+                break
+        raise EmulationError("emulator buffer refused")
+
+    @staticmethod
+    def _entropy(size: int) -> bytes:
+        try:
+            value = secrets.token_bytes(size)
+            if type(value) is not bytes or len(value) != size:
+                raise ValueError
+            return value
+        except Exception:
+            # A host entropy failure must stop the invocation; never use a fixture
+            # pattern or leak the host exception as a substitute randomness source.
+            raise EmulationError("emulator entropy unavailable") from None
+
+    def random_u32(self) -> int:
+        return int.from_bytes(self._entropy(4), "little")
+
+    def random_buffer(self, address: int, size: int) -> int:
+        self.checked_buffer(address, size)
+        if size:
+            self.mem_write(address, self._entropy(size))
+        return 0
 
     def invoke(self, address: int, args: list[int], *, permissive: bool = False, max_faults: int = 64) -> int:
         uc = self.uc
@@ -294,6 +364,9 @@ class Harness:
         self._faults = 0
         try:
             uc.emu_start(address, RETURN_ADDRESS, timeout=0, count=0)
+        except EmulationError:
+            self.fault = None
+            raise
         except Exception as exc:  # noqa: BLE001
             fault = self.fault
             self.fault = None
@@ -371,9 +444,7 @@ class Harness:
 
     def _malloc(self, h: Harness) -> int:
         size = h.uc.reg_read(UC_X86_REG_RDI)
-        addr = h._heap_cur
-        h._heap_cur = (h._heap_cur + max(size, 0x20) + 0xF) & ~0xF
-        return addr
+        return h._allocate("_heap_cur", HEAP_ADDRESS, HEAP_SIZE, size, minimum=0x20)
 
     def _free(self, h: Harness) -> int:
         return 0

@@ -5,7 +5,8 @@ Implements steps 2 to 4 of Stage 3 §6.7 of the Find My key-export protocol spec
 deriving the three keys a bottle is sealed under, checking them against the bottle, and
 opening it. What comes out is the sponsoring peer's own private keys.
 
-Vouching and joining -- step 5 -- are elsewhere and are not wired up.
+Vouching and joining -- step 5 -- are separate SDK operations. HomeCircle recovery
+uses recovered material without joining a new peer.
 
 **What a bottle is, and why the sequence is not one step.** Recovering an escrow record
 does not yield the keychain. It yields a *bottled peer*: the sealed identity of a device
@@ -387,6 +388,9 @@ class OpenedBottle:
     escrowed_key_verified: bool = False
     """Whether the bottle's signature under its own escrowed signing key verified."""
 
+    peer_key_verified: bool = False
+    """Whether the recovered keys match the bottle's public keys and its peer signature."""
+
 
 def open_bottle(
     bottle: cf.Bottle,
@@ -395,6 +399,7 @@ def open_bottle(
     verify_keys: bool = True,
     sponsor: Peer | None = None,
     require_sponsor: bool = False,
+    require_signatures: bool = False,
 ) -> OpenedBottle:
     """
     Open a bottle with the keys derived from its entropy.
@@ -416,6 +421,10 @@ def open_bottle(
     :param sponsor: The peer that sponsored this bottle, from the trust circle. None when
         the circle could not be read.
     :param require_sponsor: Refuse a bottle whose sponsoring peer is not in the circle.
+    :param require_signatures: Require both signatures and matching recovered/public peer
+        keys. A known directory sponsor must also match; a departed sponsor can still be
+        authenticated with the recovered signing key. Recovery enables this; the default
+        preserves the standalone helper's diagnostic verification flags.
     :raises BottleError: If the keys do not match, the sponsor is unknown and required, or
         the bottle does not authenticate.
     """
@@ -453,11 +462,17 @@ def open_bottle(
         encoding = signing_match
 
     escrowed_verified, sponsor_verified = _verify_signatures(bottle, inner, sponsor)
+    if require_signatures and (
+        not escrowed_verified or (sponsor is not None and not sponsor_verified)
+    ):
+        raise BottleError("The bottle's required signature did not verify")
 
     sealed = inner.ciphertext
     if not sealed.ciphertext:
         msg = "This bottle carries no ciphertext to open"
         raise BottleError(msg)
+    if len(sealed.authentication_code) != GCM_TAG_LENGTH:
+        raise BottleError("The bottle must carry a complete 16-byte authentication tag")
 
     # The tag is carried beside the ciphertext rather than appended to it, so it is
     # supplied to a detached-tag interface rather than concatenated.
@@ -466,7 +481,6 @@ def open_bottle(
         modes.GCM(
             sealed.initialization_vector,
             sealed.authentication_code,
-            min_tag_length=min(GCM_TAG_LENGTH, len(sealed.authentication_code)),
         ),
     ).decryptor()
 
@@ -487,6 +501,32 @@ def open_bottle(
         msg = f"A bottle opened but its contents did not decode: {e}"
         raise BottleError(msg) from None
 
+    peer_key_verified = False
+    if require_signatures:
+        signing = parse_peer_private_key(contents.signing_key.key_data)
+        encryption = parse_peer_private_key(contents.encryption_key.key_data)
+        signing_public = load_public_key(inner.peer_signing_key)
+        encryption_public = load_public_key(inner.peer_encryption_key)
+        if (
+            signing_public is None
+            or encryption_public is None
+            or signing.public_key().public_numbers() != signing_public.public_numbers()
+            or encryption.public_key().public_numbers() != encryption_public.public_numbers()
+        ):
+            raise BottleError("The recovered peer keys do not match the bottle's public keys")
+        if sponsor is not None:
+            sponsor_encryption = load_public_key(sponsor.encryption_key)
+            if (
+                sponsor_encryption is None
+                or encryption_public.public_numbers() != sponsor_encryption.public_numbers()
+            ):
+                raise BottleError("The recovered encryption key does not match the directory peer")
+        # Apple's BottledPeer reader verifies this even after the creator has left the
+        # directory. Escrow authenticity does not stand in for the peer's signature.
+        peer_key_verified = _verify(bottle.peer_key_signature, bottle.bottle, signing_public)
+        if not peer_key_verified:
+            raise BottleError("The bottle's recovered peer signature did not verify")
+
     return OpenedBottle(
         signing_key=contents.signing_key.key_data,
         encryption_key=contents.encryption_key.key_data,
@@ -496,6 +536,7 @@ def open_bottle(
         sponsor_known=sponsor is not None,
         sponsor_verified=sponsor_verified,
         escrowed_key_verified=escrowed_verified,
+        peer_key_verified=peer_key_verified,
     )
 
 

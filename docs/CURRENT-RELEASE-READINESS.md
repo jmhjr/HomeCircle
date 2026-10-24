@@ -1,10 +1,185 @@
-# Current beta 18 release record
+# Current release readiness — beta 20 and 1.0 preparation
 
-See [beta 18 validation](BETA18-VALIDATION.md) and [October 11 changes](RECENT-CHANGES-2026-10-11.md) for the current candidate. The material below is historical through October 10. Stable release gates remain open.
+Development toward 1.0 is tracked in the [release plan](RELEASE-1.0-PLAN.md).
+The canonical development branch consolidates beta 20 hardening, notice text
+and the [focused corrections](RELEASE-1.0-TRIAGE.md), with the
+[picture regression](PICTURE-FILENAME-VALIDATION.md) separately documented.
+Its [exact-source native validation](RELEASE-1.0-CORE-VALIDATION.md) passed at
+source `9bf03eb45d2cf43274074534e9dfe2de841f4011`: 1,452 backend tests,
+110 frontend tests, 337-file privacy and a deterministic 113-file preview.
+[Desktop Safari picture acceptance](PICTURE-BROWSER-VALIDATION.md) adds a scoped
+real-browser check. [Minimum](RELEASE-1.0-MINIMUM-LIFECYCLE.md) and
+[current](RELEASE-1.0-CURRENT-LIFECYCLE.md) native QA-container lifecycle checks
+passed on both CPUs. The [exact-preview managed HAOS investigation](RELEASE-1.0-HAOS-RESTORE.md)
+completed operational restore and manual repair, while automatic guard protection
+failed. The [minimum-Core amd64 managed witness](RELEASE-1.0-MINIMUM-HAOS.md)
+passed normal dependency setup and exact-preview startup/restart. The
+[eight consumer and seven local ARM negative results](RELEASE-1.0-INCOMPLETE-PILOTS.md)
+remain preserved. The subsequent [four native consumer entrypoint witnesses](RELEASE-1.0-INCOMPLETE-PILOTS.md#scoped-consumer-followup-four-native-cells-passed) passed startup/restart and
+identity continuity at both Core endpoints on both CPUs, with prepared
+normal-config dependencies and offline acceptance. Subsequent [ARM managed
+followups](RELEASE-1.0-INCOMPLETE-PILOTS.md#scoped-arm-managed-followup-both-core-endpoints-passed) passed normal requirements and exact-preview startup/restart at both
+Core endpoints, preserving settings/source/served identities with graceful
+cleanup. Bootstrap read-only transport attempts are separate from zero-failure
+continuations. Eight restore-procedure runs remain incomplete: the first seven
+accepted no phases; the eighth passed initialization, managed restart, quarantine
+and mutate, including the corrected portrait selection and normal dependency
+checks. It then failed host-held newest-guard retention; the cause remains
+unidentified and the full restore gate is false at the October 21, 01:02 UTC
+cutoff. Fresh online consumer resolution, provider accounts,
+restore safety, final RC/HACS and broader release gates remain open.
+The [compatibility disposition](RELEASE-1.0-COMPATIBILITY.md) retains the
+remaining target gaps. Both direct providers remain selected for 1.0. This is not a
+published release, and the
+beta 20 evidence below retains its original artifact scope.
 
-# Current release readiness — through 2026-10-10
+Updated October 20, 2026. The published experimental prerelease is
+[v0.1.0-beta.20](https://github.com/jmhjr/HomeCircle/releases/tag/v0.1.0-beta.20),
+from source commit `d02a9bdb9027cb51c99165a09ba50d5b175f5fb9`. Both direct providers are selected for 1.0, with their validation still open.
+No stable release or production rollout has been approved. The existing working
+checkout and installed configuration were preserved during validation.
 
-Current published experimental prerelease: [beta 17](https://github.com/jmhjr/HomeCircle/releases/tag/v0.1.0-beta.17), packaging the [October 8–10 consolidated changes](RECENT-CHANGES-2026-10-10.md). The security fixes pass 238 backend and 86 frontend tests, formatting/lint/privacy checks and isolated package install/upgrade/restart/removal. The reconciled behavior candidate passed live browser/API and physical DAKboard checks before versioning and the additional security fixes. The production beta 17 upgrade initially matched all 25 published files and the served card. A subsequently authorized unpublished [assigned-tracker refresh candidate](ASSIGNED-FAMILY-REFRESH-VALIDATION.md) is now installed and runtime-verified after restart; the original release remains immutable. The participant reported that the physical DAKboard map, member selection, radar and family-refresh controls all pass. The maintainer authorized beta 17 publication after the initial Claude security/privacy review and implemented fixes; the first follow-up attempt stopped at a usage limit. A subsequent actual Claude Opus 5.5 static recheck completed after publication, confirmed all six earlier fixes and found no code-level security or privacy blocker. Its minor settings-description display issue is recorded for the next release. The published ZIP download matched the tested archive, and an actual disposable HACS beta 16 → beta 17 upgrade passed after restart with saved selections, member states, all 25 package files and unrelated resources preserved. See the [beta 17 validation report](BETA17-VALIDATION.md). Older dated sections below describe their own historical builds and limits.
+The public 112-file `homecircle.zip` is 604,937 bytes, SHA-256
+`fc0b365d9688459504f874af5c38393e24145d657f15f1def8ada9184f363285`.
+It differs from the unreleased frozen 112-file parent only by three version-label
+substitutions; the published beta 19 baseline is a separate earlier 109-file
+package. See the [beta 20 validation boundary](https://github.com/jmhjr/HomeCircle/blob/d02a9bdb9027cb51c99165a09ba50d5b175f5fb9/docs/BETA20-VALIDATION.md) and
+[publication validation](BETA20-PUBLICATION-VALIDATION.md) for the exact inputs.
+
+| Completed beta 20 scope | Evidence and limits |
+| --- | --- |
+| Native package and publication | [Run 39460044306](https://github.com/jmhjr/HomeCircle/actions/runs/39460044306): 1,443 backend tests passed with one named optional fixture skipped on native amd64 Core 2026.9.4/Python 3.14.6 Alpine/musl; 110 frontend tests and the 327-file privacy check passed. Public source, inventory, deterministic ZIP and fresh downloads matched. |
+| Genuine HACS delivery, upgrade, rollback and re-upgrade | [Run 39461573392](https://github.com/jmhjr/HomeCircle/actions/runs/39461573392): all eight phases and 45 controller contracts passed on native amd64/KVM HAOS 18.3, Core/Supervisor 2026.10.2 and official HACS 2.0.5. HACS downloaded both published releases, with zero direct candidate installs. Real restarts, explicitly selected synthetic People/trackers, saved settings/identities, exact served frontend bytes and manual newest-guard preservation passed. This establishes synthetic release transport, not current production or owner-account acceptance. |
+| Active Ubuntu/glibc runtime | [Run 39474571811](https://github.com/jmhjr/HomeCircle/actions/runs/39474571811): all 48 harness contracts, native worker/provider lifecycle, two real Core startup processes and 1,443 backend tests passed, with one named optional fixture skipped. The exact published ZIP ran on native amd64 Ubuntu 24.04/glibc 2.39, source-built Python 3.14.6 and Core 2026.10.2. [Ubuntu/glibc validation](BETA20-GLIBC-VALIDATION.md) retains all four earlier failed attempts and the narrow QA corrections. |
+
+The HACS and glibc results apply to the exact published beta 20 bytes and their
+recorded synthetic paths. Earlier upgrade/full-recovery and prepared Supervisor
+partial-backup/Recorder results below retain their frozen-parent inputs,
+procedures and limitations; the beta 20 runs do not repeat or expand them. Glibc
+acceptance covers one amd64 Ubuntu/Core target, not every distribution,
+architecture, Core version or installation method. Python execution for these
+beta 20 runs occurred only inside Linux, with no new Mac Python crash reports.
+
+## Third-party inventory and notice disposition
+
+The scoped technical review records the published bundled source/notices,
+frontend runtime assets and 24 observed manifest-dependency distributions. It is
+an inventory and evidence check, not closure of notice, source-availability,
+permission or service-use obligations. It does not cover every Home Assistant,
+operating-system or development-tool component or every nested license.
+
+A confirmed **GrandSlam notice omission affects the published beta 20 ZIP**:
+inherited GrandSlam-derived source is present, while its separate MIT notice is
+absent. The separate [notice correction](https://github.com/jmhjr/HomeCircle/commit/9466eef45ecac16f05f25d4455d705383f7c91ff)
+retains the complete upstream text and passed [Linux archive validation](https://github.com/jmhjr/HomeCircle/actions/runs/39479412715).
+It has not been published as a release or installed; the immutable beta 20 tag
+and assets remain unchanged. Existing FindMy.py, OpenTagViewer, emulator and Leaflet notices do not
+settle this additional inherited-source finding or the rest of the origin chain.
+
+Two other confirmed findings concern **separately fetched dependency wheels**,
+not files inside HomeCircle's ZIP. The inspected Unicorn 2.1.4 Linux wheel lacks
+standalone native-core license/notice materials; bindings metadata does not
+settle its GPLv2 native-core source/distribution obligations. The inspected
+pyelftools 0.33 wheel contains Construct code but omits its referenced MIT
+notice. Exact installed-artifact/notice paths, upstream corrections and the
+applicable source/distribution disposition remain release gates. The 24-package
+runtime closure and passing tests do not close them. See the
+[beta 20 readiness and provenance audit](BETA20-READINESS-PROVENANCE-AUDIT.md) for
+the source chain, correction candidate, verified evidence and remaining actions.
+
+## Remaining stable acceptance
+
+Remaining stable-release gates include the final supported-platform/provider
+scope, external cryptographic assurance and independent format fixtures,
+controlled owner sign-in/recovery, long multi-item and movement/latency field
+acceptance, fresh production installed-state upgrades and physical-display
+acceptance, ordinary enabled-entry/full-system/add-on/encrypted/cloud restore,
+and licensing/service-use/branding disposition. Manual newest-guard retention is
+still required; no automatic anti-rollback guarantee is established. See the
+[current stable checklist](STABLE-RELEASE-CHECKLIST.md) and
+[beta 20 readiness and provenance audit](BETA20-READINESS-PROVENANCE-AUDIT.md).
+
+The sections below preserve dated checkpoints. References there to an unreleased
+candidate, an older current beta or then-open HACS/glibc work describe the state
+at that checkpoint; the current beta 20 results and limits above take precedence.
+
+# Historical preparation — October 19–20, before beta 20 publication
+
+At this checkpoint, the published experimental prerelease was beta 19; see [beta 19 validation](BETA19-VALIDATION.md) and [publication validation](BETA19-PUBLICATION-VALIDATION.md). The older beta records below retain their dated scope. Stable preparation now includes a local [polling isolation and test-baseline candidate](https://github.com/jmhjr/HomeCircle/blob/d02a9bdb9027cb51c99165a09ba50d5b175f5fb9/docs/STABLE-MILESTONE1-VALIDATION.md); it has not been released or installed in production. A follow-up [combined isolation candidate](https://github.com/jmhjr/HomeCircle/blob/d02a9bdb9027cb51c99165a09ba50d5b175f5fb9/docs/STABLE-ISOLATION-VALIDATION.md) implements SRP and provider-startup isolation. The next local [recovery and identity candidate](https://github.com/jmhjr/HomeCircle/blob/d02a9bdb9027cb51c99165a09ba50d5b175f5fb9/docs/RECOVERY-IDENTITY-VALIDATION.md) adds persistent submission safeguards and selection continuity. The [focused hardening candidate](https://github.com/jmhjr/HomeCircle/blob/d02a9bdb9027cb51c99165a09ba50d5b175f5fb9/docs/FOCUSED-HARDENING-VALIDATION.md) addresses confirmed runtime, storage, recovery authentication and cleanup defects. The latest local [independent cryptographic review candidate](https://github.com/jmhjr/HomeCircle/blob/d02a9bdb9027cb51c99165a09ba50d5b175f5fb9/docs/INDEPENDENT-CRYPTO-VALIDATION.md) further fixes peer/key binding, protected-record authentication, resource/cancellation and saved account/session binding issues. The subsequent [platform, upgrade and recovery validation](PLATFORM-UPGRADE-RECOVERY-VALIDATION.md) checks both local Core targets, exact beta 19/recorded-patch upgrade and backup recovery.
+
+The [Linux/HAOS validation phase](LINUX-HAOS-VALIDATION.md) passed synthetic native/lifecycle checks and 1,443 backend tests with one optional fixture skipped on ARM64 Core 2026.9.4, ARM64 Core 2026.10.2 and emulated AMD64 Core 2026.10.2. Both ARM64 targets also passed synthetic upgrade/recovery sequences. Actual HAOS-managed Core 2026.10.2 installed the exact candidate's dependencies, loaded an explicitly selected synthetic Person/tracker through the real flow and retained all 112 file hashes plus each instance's saved configuration/resource/dashboard identities across restart on ARM64 and emulated AMD64. Native checks in both managed containers passed. The first failed AMD64 suite invocation and corrected QA aggregate deadline remain recorded. The separate October 20 native AMD64 Core 2026.10.2 container run now passes both exact-baseline upgrade/rollback sequences and full synthetic recovery. The subsequent native AMD64 Core 2026.9.4 container run passed the full backend suite, native worker/lifecycle, both upgrade baselines and full recovery; see the minimum-Core result below. The subsequent native AMD64 HAOS rehearsal also passed eight synthetic managed-service phases, followed by six prepared Supervisor partial-backup/Recorder restore phases with manual newest-guard preservation, as recorded below. At this checkpoint, glibc Core, additional runtime scopes, candidate HACS delivery and production acceptance remained open. The later beta 20 HACS and Ubuntu/glibc results above supersede those two broad open items within their recorded scopes. The [current stable checklist](STABLE-RELEASE-CHECKLIST.md) tracks remaining external-assurance/platform/field/upgrade/license acceptance. No stable version or final provider scope has been chosen.
+
+The [October 19 emulated AMD64 upgrade/rollback and full recovery follow-up](LINUX-HAOS-VALIDATION.md#october-19-follow-up-amd64-upgrade-rollback-and-full-recovery) **failed and remains unqualified within that emulated scope** on the disposable HAOS 18.3 x86_64/Core 2026.10.2 runner. Both upgrade attempts timed out in the older published baseline's first child at its unchanged 180-second bound, without a completed phase receipt; the reconstructed baseline was not reached. Independent recovery failed at its first 45-second child deadline with zero phases completed, so no full 20-process/40-probe result is claimed for those attempts. The bounded diagnostic recorded `acceptance_pass: false` and left the timeout cause unconfirmed. Exact archive/script/112-file source inputs matched before and after that diagnostic; the candidate is unchanged. Its disposition required a faster/native AMD64 runner or a confirmed runner issue and fix before another attempt, without blind reruns or relaxed limits. Prior passing checks, the first failed AMD64 backend audit and all remaining release gates retain their scope.
+
+Cleanup then confirmed an AMD64 guest clock-integrity issue, making elapsed-time evidence from that boot unreliable. The disposable VM alone was changed to enable HPET and passed a reviewed host-clock gate for runner clock behavior; the first gate's QA-criterion failure remains recorded. The corrected-clock upgrade attempt then **failed after 260.377106 host seconds** despite all eight workload clock checks passing with TSC selected. The older published baseline's first child still exceeded its unchanged 180-second deadline, with no completed phase or candidate result. The single corrected-clock recovery attempt also **failed after 110.627503 host seconds**, with all three workload clock checks passing/TSC retained but its first child timing out at the unchanged 45-second bound, killed with exit -9. Zero recovery phases completed, so no 20-process/40-probe result is claimed for that attempt. Input pins remained unchanged and exact QA-container stop was confirmed after each attempt without host cleanup failures. Both emulated full scopes remain unqualified; no candidate bug or sole timeout cause is established. No further emulated retries were made. See [runner clock incident and gate scope](LINUX-HAOS-VALIDATION.md#runner-clock-incident-and-gated-retry) and the [corrected-clock outcomes](LINUX-HAOS-VALIDATION.md#corrected-clock-upgrade-and-recovery-outcomes).
+
+The separate [October 20 native AMD64 container validation](LINUX-HAOS-VALIDATION.md#october-20-native-amd64-container-upgrade-and-recovery), [Actions run 39426549335](https://github.com/jmhjr/HomeCircle/actions/runs/39426549335) at revision `50f9fa38ca3f88e68a9734637ec1ec84203ce8dc`, **passed in 223.990 host seconds**, including preparation and cleanup. On the native x86_64 Ubuntu 24.04 runner, the pinned official Core 2026.10.2/Python 3.14.6 Alpine/musl container passed ten upgrade/rollback phases from each exact baseline, then twenty full-recovery processes and all 40 network-denial probes, with zero unexpected network attempts or Apple requests. The 112-file candidate digest `f0477a91e78181fe1f8d80ada176a1739e10a7502abe7ee6ee2240571280d1f5`, baseline/script/inventory pins and 24-package Core-constrained dependency closure matched; acceptance ran with Docker networking disconnected. Acceptance and runner exited zero, the owned container stopped and was removed, and cleanup reported no failure. No candidate runtime fix or limit change was needed.
+
+The maintainer authorized publishing the frozen validation payload and workflow on `codex/native-amd64-validation` (commits `2623de5` and `50f9fa3`); main and the local working checkout/HEAD, release/tag/version and production remain unchanged. Three sanitized JSON summaries were uploaded successfully and downloaded locally, with seven-day CI retention. Raw synthetic configurations, logs and per-phase receipts were collected inside the ephemeral runner but not persisted in the artifact. A nonblocking upload-action Node 20 deprecation/forced-Node-24 annotation did not prevent the successful upload. This native run did not rerun the 1,443-test backend suite, separate worker/lifecycle checks or anonymous Apple runtime; it adds no native HAOS-managed service, glibc Core, owner/live recovery, production/HACS, Recorder, physical-display, long-term field or license/service acceptance. The package-only rollback identity-ledger limit and latest-recovery-guard requirement remain. No Mac Python or owner/production configuration was used.
+
+The [minimum-Core native AMD64 validation](LINUX-HAOS-VALIDATION.md#october-20-minimum-core-native-amd64-validation),
+[run 39433931788](https://github.com/jmhjr/HomeCircle/actions/runs/39433931788)
+at revision `c92a0c579ea7c03dd0ed238dfb5ede2c7661d73b`, **passed in 534.500 host
+seconds** on Core **2026.9.4**/Python **3.14.6** in the official native AMD64
+musl container. It passed **1,443 backend tests** with one named optional public
+fixture skipped, separate actual packaged-worker/native lifecycle checks,
+both ten-phase exact-baseline upgrade/rollback sequences and full twenty-process
+synthetic recovery with all **40 probes blocked**. The 112-file candidate,
+24-package Core-constrained closure and input/source pins matched. Acceptance
+ran offline and owned-container cleanup passed. Two earlier source-staging
+failures remain documented; their fix changed test-container staging, with no
+candidate or inner-limit change. The three downloaded sanitized summaries
+matched the retained artifact digest. Managed HAOS/HACS, glibc Core, live Apple,
+production/Recorder/field and licensing gates remain separate; the candidate is
+still unreleased and no Mac Python was used.
+
+The [native HAOS/HACS rehearsal](LINUX-HAOS-VALIDATION.md#october-20-native-haos-and-hacs-rehearsal),
+[run 39441631322](https://github.com/jmhjr/HomeCircle/actions/runs/39441631322)
+at revision 80af07bb829c68bda93269c2726d8549aca3338a, **passed eight phases
+in 344.041 host seconds**, plus all 23 controller contracts. Native x86_64/KVM
+HAOS 18.3 with managed Core 2026.10.2 and unmodified HACS 2.0.5 passed genuine
+HACS beta 19 install/rollback and two stopped exact-112-file candidate installs.
+Persistent selections, nonempty options/reload, registry/resource/dashboard
+identities, exact served bundle and real restarts passed. Matching stopped state
+restoration retained the newest guard; the actual candidate API remained blocked
+at three after reinstallation. Owned VM/private cleanup passed. The linked
+record retains the verified eleven-receipt artifact, five earlier incomplete
+runs, and supported catalog-refresh/active-port helper corrections. Candidate
+code and all inner limits are unchanged. HACS resolved the candidate branch to
+main, so candidate HACS delivery/release-ZIP transport remains open. OAuth,
+Supervisor backups, Recorder, live owner/Apple, production, field, glibc and
+remaining release/licensing gates are separate. No Mac Python was used.
+
+The [prepared Supervisor backup/Recorder restore](LINUX-HAOS-VALIDATION.md#october-20-guarded-supervisor-backup-and-recorder-restore),
+[run 39452393848](https://github.com/jmhjr/HomeCircle/actions/runs/39452393848),
+**passed six phases in 309.430 host seconds**, plus **42 offline contracts**.
+Actual native KVM HAOS 18.3/Core and Supervisor 2026.10.2 partial backup/restore
+included Recorder. Original committed history returned exactly, post-backup
+markers disappeared and new post-restore recording survived restart with SQLite
+integrity verified. Saved selections/options/identities/dashboard and unrelated
+resources were restored; the owned card resource was recreated on enable and
+retained through restart. Supervisor's automatic restored boot remained disabled
+and unloaded, with no candidate import, before manual preservation of the newest
+external guard. The actual guard API remained blocked at three after enable and
+restart. Cleanup passed; all seven sanitized artifact members were independently
+verified. The first failed backup CLI attempt and helper corrections are retained
+in the linked record; candidate bytes and limits are unchanged. This qualifies
+the prepared disabled-entry partial protocol only. Ordinary enabled-entry/full/
+add-on restoration, encrypted/cloud portability, automatic anti-rollback,
+production history, candidate HACS delivery and other remaining gates stay open.
+No Mac Python, owner, production, release or tag change was involved.
+
+# October 19 licensing and service terms release gates
+
+The [stable release checklist](STABLE-SCOPE-AUDIT.md#licensing-and-service-terms-release-checklist) now records the beta 19 license and service-terms findings, required evidence and open acceptance criteria. These include the inherited MIT notice, source provenance, Unicorn licensing, Apple and Life360 permissions, service policies and branding. The inherited OpenTagViewer notice is restored and archive-tested in the local candidate; the remaining gates stay open. [Beta 19 publication validation](BETA19-PUBLICATION-VALIDATION.md) records the published experimental package; the older release and field records below retain their dated scope.
+
+# Historical beta 18 release record
+
+See [beta 18 validation](BETA18-VALIDATION.md) and [October 11 changes](RECENT-CHANGES-2026-10-11.md) for that dated candidate. The material below is historical through October 10. Stable release gates remain open.
+
+# Historical release readiness — through 2026-10-10
+
+Published experimental prerelease at that checkpoint: [beta 17](https://github.com/jmhjr/HomeCircle/releases/tag/v0.1.0-beta.17), packaging the [October 8–10 consolidated changes](RECENT-CHANGES-2026-10-10.md). The security fixes pass 238 backend and 86 frontend tests, formatting/lint/privacy checks and isolated package install/upgrade/restart/removal. The reconciled behavior candidate passed live browser/API and physical DAKboard checks before versioning and the additional security fixes. The production beta 17 upgrade initially matched all 25 published files and the served card. A subsequently authorized unpublished [assigned-tracker refresh candidate](ASSIGNED-FAMILY-REFRESH-VALIDATION.md) is now installed and runtime-verified after restart; the original release remains immutable. The participant reported that the physical DAKboard map, member selection, radar and family-refresh controls all pass. The maintainer authorized beta 17 publication after the initial Claude security/privacy review and implemented fixes; the first follow-up attempt stopped at a usage limit. A subsequent actual Claude Opus 5.5 static recheck completed after publication, confirmed all six earlier fixes and found no code-level security or privacy blocker. Its minor settings-description display issue is recorded for the next release. The published ZIP download matched the tested archive, and an actual disposable HACS beta 16 → beta 17 upgrade passed after restart with saved selections, member states, all 25 package files and unrelated resources preserved. See the [beta 17 validation report](BETA17-VALIDATION.md). Older dated sections below describe their own historical builds and limits.
 
 A combined-source departure/return was observed using retained Life360 times as reference. Recording gaps prevent exact HomeCircle latency claims, and the iPhone-only field test remains open. Source settings and the capture deadline were preserved through the planned restart. Adaptive stale thresholds remain a proposal.
 

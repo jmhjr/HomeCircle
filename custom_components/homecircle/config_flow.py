@@ -2,11 +2,13 @@
 
 from copy import deepcopy
 from collections import Counter
+from contextlib import nullcontext
 import re
 from typing import Any
 
 import voluptuous as vol
 from homeassistant import config_entries
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.core import callback
 from homeassistant.helpers import selector
 from homeassistant.helpers import entity_registry as er
@@ -28,6 +30,7 @@ from .const import (
     CONF_SHOW_ON_MAP,
     CONF_AUTO_REQUEST_LOCATION,
     CONF_FAMILY_REFRESH_ENABLED,
+    CONF_ACKNOWLEDGE_UNOFFICIAL,
 )
 from .normalize import normalize_household, normalize_member
 from .selection import (
@@ -51,6 +54,7 @@ from . import frontend
 from .life360_direct import validate_account
 from .tracker_providers import disconnected_owned_entities
 from . import tracker_providers
+from .provider_controls import PROVIDERS, async_get_controls, ProviderControlsError, ProviderPaused
 from .zone_setup import async_create_zone, zone_error
 from .person_setup import (
     async_create_person,
@@ -151,6 +155,9 @@ def life360_account_schema(*, legacy_replacement: bool = False):
             vol.Required("secret"): selector.TextSelector(
                 selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
             ),
+            vol.Required(
+                CONF_ACKNOWLEDGE_UNOFFICIAL, default=False
+            ): selector.BooleanSelector(),
             **(
                 {
                     vol.Optional(
@@ -166,6 +173,8 @@ def life360_account_schema(*, legacy_replacement: bool = False):
 
 async def checked_life360_account(user_input):
     """Return a verified account or a safe, user-facing failure code."""
+    if user_input.get(CONF_ACKNOWLEDGE_UNOFFICIAL) is not True:
+        return None, "provider_acknowledgement_required"
     method = user_input.get("method")
     username = (user_input.get("username") or "").strip()
     secret = (user_input.get("secret") or "").strip()
@@ -477,6 +486,56 @@ def review_summary(hass, draft: dict[str, Any], pending_links=None) -> dict[str,
 
 class SelectionFlow:
     """Shared draft editor; cancellation never modifies a config entry."""
+
+    async def _async_connection_controls(self):
+        entry = getattr(self, "config_entry", None)
+        if entry is None and getattr(self, "source", None) == config_entries.SOURCE_RECONFIGURE:
+            entry = self._get_reconfigure_entry()
+        if entry is None and getattr(self, "source", None) == config_entries.SOURCE_REAUTH:
+            entry = self._get_reauth_entry()
+        if entry is None:
+            return None
+        return await async_get_controls(self.hass, entry.entry_id)
+
+    async def _async_connection_paused(self, provider_id):
+        controls = await self._async_connection_controls()
+        return controls is not None and controls.paused(provider_id)
+
+    async def _async_checked_life360(self, user_input, previous, *, verify_old=True):
+        """Fence both new credential validation and legacy continuity probes."""
+        controls = await self._async_connection_controls()
+        try:
+            async with controls.operation("life360") if controls else nullcontext():
+                account, error = await checked_life360_account(user_input)
+                if not error:
+                    error = await life360_continuity_error(
+                        previous, account,
+                        bool(user_input.get(CONFIRM_SAME_ACCOUNT)),
+                        verify_old=verify_old,
+                    )
+                return account, error
+        except ProviderPaused:
+            return None, "provider_paused"
+
+    def _reset_findmy_snapshot(self):
+        """A household draft may not undo a later confirmed item selection."""
+        entry = self._findmy_config_entry()
+        key = "findmy_accounts"
+        self._findmy_accounts_at_start = deepcopy(
+            (entry.options or entry.data).get(key, {})
+        )
+        self._findmy_data_at_start = deepcopy(entry.data.get(key, {}))
+
+    def _findmy_snapshot_current(self):
+        if not hasattr(self, "_findmy_accounts_at_start"):
+            return True
+        entry = self._findmy_config_entry()
+        key = "findmy_accounts"
+        return (
+            (entry.options or entry.data).get(key, {})
+            == self._findmy_accounts_at_start
+            and entry.data.get(key, {}) == self._findmy_data_at_start
+        )
 
     def start(self, config: dict[str, Any]) -> None:
         self.draft = deepcopy(dict(config))
@@ -1017,17 +1076,13 @@ class SelectionFlow:
 
     async def async_step_life360_account(self, user_input=None):
         """Verify an optional account before saving it in HA's config entry."""
+        if await self._async_connection_paused("life360"):
+            return self.async_abort(reason="provider_paused")
         errors = {}
         previous = self.draft.get(CONF_LIFE360_ACCOUNT, {})
         legacy_replacement = bool(previous and not previous.get("account_id_hash"))
         if user_input is not None:
-            account, error = await checked_life360_account(user_input)
-            if not error:
-                error = await life360_continuity_error(
-                    previous,
-                    account,
-                    bool(user_input.get(CONFIRM_SAME_ACCOUNT)),
-                )
+            account, error = await self._async_checked_life360(user_input, previous)
             if error:
                 errors[
                     CONFIRM_SAME_ACCOUNT
@@ -1554,6 +1609,7 @@ class SelectionFlow:
 
     async def async_step_confirm_save(self, user_input=None):
         """Validate the final draft before persisting it."""
+        self.draft = item_config(self.hass, self.draft)
         dependencies = selected_entities(self.draft)
         for person_id in self.draft.get(CONF_PEOPLE, []):
             linked, active = person_tracker_references(self.hass, person_id)
@@ -1585,14 +1641,19 @@ class SelectionFlow:
                     result = await self.async_step_household()
                     result["errors"] = {"base": link_error}
                     return result
+        async def finalize():
+            for person_id, trackers in self.pending_person_links.items():
+                for tracker_id in trackers:
+                    await async_link_tracker(self.hass, person_id, tracker_id)
+            return self.save()
+
         try:
-            await self.async_commit_findmy()
+            checker = getattr(self, "_findmy_snapshot_current", None)
+            if checker is not None and not checker():
+                return self.async_abort(reason="findmy_settings_changed")
+            return await self.async_commit_findmy(finalizer=finalize)
         except Exception:
             return self.async_abort(reason="findmy_storage_failed")
-        for person_id, trackers in self.pending_person_links.items():
-            for tracker_id in trackers:
-                await async_link_tracker(self.hass, person_id, tracker_id)
-        return self.save()
 
 
 class HomeCircleConfigFlow(
@@ -1612,6 +1673,7 @@ class HomeCircleConfigFlow(
 
     async def async_step_reconfigure(self, user_input=None):
         entry = self._get_reconfigure_entry()
+        self._reset_findmy_snapshot()
         self.start(entry.options or entry.data)
         return await self.async_step_household(user_input)
 
@@ -1627,6 +1689,8 @@ class HomeCircleConfigFlow(
         return await getattr(self, self.reauth_provider.reauth_step)()
 
     async def async_step_reauth_confirm(self, user_input=None):
+        if await self._async_connection_paused("life360"):
+            return self.async_abort(reason="provider_paused")
         errors = {}
         entry = self._get_reauth_entry()
         previous = (entry.options or entry.data).get(
@@ -1634,14 +1698,9 @@ class HomeCircleConfigFlow(
         )
         legacy_replacement = bool(previous and not previous.get("account_id_hash"))
         if user_input is not None:
-            account, error = await checked_life360_account(user_input)
-            if not error:
-                error = await life360_continuity_error(
-                    previous,
-                    account,
-                    bool(user_input.get(CONFIRM_SAME_ACCOUNT)),
-                    verify_old=False,
-                )
+            account, error = await self._async_checked_life360(
+                user_input, previous, verify_old=False
+            )
             if error:
                 errors[
                     CONFIRM_SAME_ACCOUNT
@@ -1667,6 +1726,16 @@ class HomeCircleConfigFlow(
     @callback
     def save(self):
         if self.source == config_entries.SOURCE_RECONFIGURE:
+            if not self._findmy_snapshot_current():
+                return self.async_abort(reason="findmy_settings_changed")
+            if getattr(self, "_findmy_defer_save", False):
+                # Internal draft result consumed by the guarded staged commit;
+                # Core forbids async_create_entry during Reconfigure.
+                return {
+                    "type": FlowResultType.CREATE_ENTRY,
+                    "title": "",
+                    "data": self.draft,
+                }
             entry = self._get_reconfigure_entry()
             # HA reloads after Reconfigure even when the saved selection is identical.
             frontend.preserve_for_reload(self.hass, entry.entry_id)
@@ -1689,7 +1758,34 @@ class HomeCircleOptionsFlow(
 ):
     """Persist a complete selection snapshot; reload only after saving."""
 
+    async def _async_connection_control_choices(self):
+        """Keep local stops reachable even after their saved account is gone."""
+        controls = await async_get_controls(self.hass, self.config_entry.entry_id)
+        config = self.config_entry.options or self.config_entry.data
+        registry = er.async_get(self.hass)
+        selected_platforms = {
+            registered.platform
+            for member in config.get(CONF_MEMBERS, {}).values()
+            if isinstance(member, dict)
+            for entity_id in member.get(CONF_TRACKERS, [])
+            if isinstance(entity_id, str)
+            and (registered := registry.async_get(entity_id)) is not None
+        }
+        providers = tuple(
+            provider
+            for provider in tracker_providers.TRACKER_PROVIDERS
+            if provider.id in PROVIDERS
+            and (
+                provider.connected(config)
+                or controls.summary(provider.id)["paused"]
+                or controls.summary(provider.id)["paused_accounts"]
+                or selected_platforms.intersection(provider.external_platforms)
+            )
+        )
+        return controls, providers
+
     async def async_step_init(self, user_input=None):
+        self._reset_findmy_snapshot()
         self.start(
             item_config(self.hass, self.config_entry.options or self.config_entry.data)
         )
@@ -1704,9 +1800,68 @@ class HomeCircleOptionsFlow(
             menu_options.insert(0, "tracker_member_choice")
         if self.draft.get(CONF_TRACKER_PEOPLE) or self.draft.get(CONF_PETS):
             menu_options.insert(-1, "convert_legacy_member")
+        _controls, control_choices = await self._async_connection_control_choices()
+        if control_choices:
+            menu_options.append("connections")
         return self.async_show_menu(
             step_id="init",
             menu_options=menu_options,
+        )
+
+    async def async_step_connections(self, user_input=None):
+        """Change durable stop controls without saving an old household draft."""
+        # HA restricts integration Options to administrators. Also reject an
+        # explicitly supplied non-admin context rather than accepting it here.
+        if user_id := self.context.get("user_id"):
+            user = await self.hass.auth.async_get_user(user_id)
+            if user is None or not user.is_admin:
+                return self.async_abort(reason="not_admin")
+        controls, providers = await self._async_connection_control_choices()
+        errors = {}
+        if user_input is not None:
+            provider_id, action = user_input.get("provider"), user_input.get("action")
+            if provider_id not in {provider.id for provider in providers} or action not in ("pause", "resume"):
+                errors["base"] = "invalid_provider_control"
+            else:
+                try:
+                    await controls.async_set_paused(provider_id, action == "pause")
+                except ProviderPaused:
+                    errors["base"] = "provider_paused"
+                except ProviderControlsError:
+                    errors["base"] = "provider_controls_storage_failed"
+                else:
+                    # No options entry is created: controls were saved directly,
+                    # and are never copied into or out of self.draft.
+                    return self.async_abort(reason="provider_control_saved")
+        status = []
+        config = self.config_entry.options or self.config_entry.data
+        for provider in providers:
+            summary = controls.summary(provider.id)
+            state = "paused" if summary["paused"] else "active"
+            if not summary["paused"] and summary["paused_accounts"]:
+                state = "partially paused"
+            if not summary["storage_available"]:
+                state = "storage unavailable; paused"
+            saved = "saved" if provider.connected(config) else "no saved HomeCircle account"
+            status.append(
+                f"{provider.display_name}: {saved}, {state}; "
+                f"{summary['paused_accounts']} account(s) paused."
+            )
+        return self.async_show_form(
+            step_id="connections",
+            data_schema=vol.Schema({
+                vol.Required("provider"): selector.SelectSelector(
+                    selector.SelectSelectorConfig(options=[
+                        {"value": provider.id, "label": provider.display_name}
+                        for provider in providers
+                    ])
+                ),
+                vol.Required("action", default="pause"): selector.SelectSelector(
+                    selector.SelectSelectorConfig(options=["pause", "resume"])
+                ),
+            }),
+            errors=errors,
+            description_placeholders={"connection_status": " ".join(status)},
         )
 
     async def async_step_city_lookup(self, user_input=None):
@@ -2137,6 +2292,10 @@ class HomeCircleOptionsFlow(
 
     @callback
     def save(self):
+        if not self._findmy_snapshot_current():
+            return self.async_abort(reason="findmy_settings_changed")
+        if getattr(self, "_findmy_defer_save", False):
+            return self.async_create_entry(title="", data=self.draft)
         if self.draft != dict(self.config_entry.options):
             frontend.preserve_for_reload(self.hass, self.config_entry.entry_id)
         # Options hold the effective snapshot. Keep entry.data free of old

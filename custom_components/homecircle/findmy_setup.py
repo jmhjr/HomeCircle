@@ -13,6 +13,61 @@ from .findmy_profile import configure_account
 _LOGGER = logging.getLogger(__name__)
 
 
+def _outer_auth_failure_reason(error):
+    """Accept only the exact PCS exception's fixed metadata, without properties."""
+    try:
+        from ._vendor_findmy.cloudkit.pcs import PCSError
+    except Exception:
+        return None
+
+    if type(error) is not PCSError:
+        return None
+    data = error.__dict__
+    if type(data) is not dict:
+        return None
+    reason = data.get("_homecircle_outer_auth_reason")
+    return reason if type(reason) is str and reason in (
+        "owner_review_context_required", "outer_digest_unsupported", "outer_signer_mismatch",
+        "outer_covered_data_unreadable", "outer_signature_rejected",
+    ) else None
+
+
+def _discovery_failure_site(error):
+    """Return only a fixed own-code site, never traceback paths or local values."""
+    sites = {
+        "pcs.py": {
+            "from_der", "unwrap_zone", "unwrap_protection", "_find_our_key",
+            "unwrap_share_key", "_split_wrapped_key", "_unframe_master_key",
+            "read_meta", "parse_meta", "_identity_keys", "master_ec_keys",
+        },
+        "beacons.py": {
+            "zone_keys", "fetch_accessories", "fetch_records",
+            "zone_record_defaults", "decrypt_record", "decrypt_records",
+            "accessories_from_records",
+        },
+    }
+    result = {"error_module": None, "error_file": None,
+              "error_function": None, "error_line": None}
+    site = error.__traceback__
+    for _ in range(64):
+        if site is None:
+            break
+        code = site.tb_frame.f_code
+        for filename, functions in sites.items():
+            suffix = "/custom_components/homecircle/_vendor_findmy/cloudkit/" + filename
+            module = "custom_components.homecircle._vendor_findmy.cloudkit." + filename[:-3]
+            if (
+                code.co_filename.replace("\\", "/").endswith(suffix)
+                and site.tb_frame.f_globals.get("__name__") == module
+                and code.co_name in functions
+                and type(site.tb_lineno) is int and 0 < site.tb_lineno <= 100000
+            ):
+                result = {"error_module": module, "error_file": filename, "error_function": code.co_name,
+                          "error_line": site.tb_lineno}
+        site = site.tb_next
+    return result
+
+
 def require_nonempty_report_grant(account, session=None):
     """A completed Apple login alone cannot authorize a Find My connection."""
     try:
@@ -36,6 +91,10 @@ def require_nonempty_report_grant(account, session=None):
 
 def signin_error(error, stage):
     """Map failures to fixed codes; never expose exception text or responses."""
+    if stage == "recovery":
+        code = recovery_error(error)
+        _LOGGER.warning("Find My setup failed: stage=recovery code=%s", code)
+        return code
     from aiohttp import ClientError
     from ._vendor_findmy.errors import (
         InvalidCredentialsError,
@@ -97,6 +156,53 @@ def signin_error(error, stage):
 
 class FindMySetupError(RuntimeError):
     """Only fixed error codes may reach the UI."""
+
+
+def recovery_error(error):
+    """Use structured outcomes, never a provider message or old diagnostics."""
+    from aiohttp import ClientError
+    from .findmy_identity import IdentityError
+    from .findmy_recovery_guard import (
+        RecoveryGuardBlocked,
+        RecoveryGuardReviewRequired,
+        RecoveryGuardStorageError,
+    )
+    from ._findmy_runtime.onboarding import RecoveryPETError
+    from ._vendor_findmy.errors import UnauthorizedError
+    from ._vendor_findmy.keychain.recovery import RecoveryProtocolError
+
+    if isinstance(error, RecoveryGuardReviewRequired):
+        return "findmy_recovery_review"
+    if isinstance(error, RecoveryGuardBlocked):
+        return "findmy_recovery_limit"
+    if isinstance(error, RecoveryGuardStorageError):
+        return "findmy_recovery_storage"
+    if isinstance(error, IdentityError):
+        return str(error) if str(error) in {
+            "findmy_identity_unavailable", "findmy_duplicate_item",
+            "findmy_missing_item_identity",
+        } else "findmy_identity_unavailable"
+    if isinstance(error, RecoveryPETError):
+        if error.reason == "transient" and type(error.http_status) is int and error.http_status == 429:
+            return "findmy_recovery_rate_limited"
+        return {
+            "identity_mismatch": "findmy_account_mismatch",
+            "transient": "findmy_recovery_transient",
+            "protocol": "findmy_recovery_protocol",
+        }.get(error.reason, "findmy_recovery_signin_required")
+    if isinstance(error, RecoveryProtocolError):
+        if error.dispatch_state == "not_dispatched" and error.reason == "transient":
+            return "findmy_recovery_transient"
+        return {
+            "refused": "findmy_recovery_refused",
+            "uncertain": "findmy_recovery_uncertain",
+            "verified": "findmy_recovery_material_failed",
+        }.get(error.dispatch_state, "findmy_recovery_protocol")
+    if isinstance(error, (TimeoutError, ClientError, OSError)):
+        return "findmy_recovery_transient"
+    if isinstance(error, UnauthorizedError):
+        return "findmy_recovery_signin_required"
+    return "findmy_recovery_failed"
 
 
 def log_identity_failure(account):
@@ -221,6 +327,9 @@ class FindMySetup:
         self.factor = None
         self.closed = False
         self.unlock_attempts = 0
+        self.recovery_guard = None
+        self.recovery_guard_required = False
+        self.recovery_outcome = None
         self.previous_items = {}
         self.discover_new = True
         self.account_guard = None
@@ -281,6 +390,7 @@ class FindMySetup:
                 )
             account = account_type.from_json(state, anisette_libs_path=libraries)
         setup = cls(account, client_type.open, states)
+        setup.recovery_guard_required = True
         configure_account(account)
         return setup
 
@@ -432,7 +542,7 @@ class FindMySetup:
                 "delegate": "findmy_code_delegate_failed",
             }.get(phase, "findmy_code_failed")
             if stage == "recovery":
-                failure = "findmy_recovery_failed"
+                failure = recovery_error(error)
             raise FindMySetupError(failure) from None
 
     async def ensure_report_access(self):
@@ -657,9 +767,28 @@ class FindMySetup:
             for key in ("database_url_shape", "share_url_shape"):
                 value = raw.get(key)
                 safe[key] = value if value in ("string", "object", "missing", "other") else None
+            from ._findmy_runtime.onboarding import RecoveryPETError
+
+            if isinstance(error, RecoveryPETError):
+                reason = error.reason
+                safe["recovery_credential_reason"] = reason if type(reason) is str and reason in (
+                    "missing_password", "factor_required", "identity_mismatch",
+                    "transient", "protocol", "credentials",
+                ) else None
+                status = error.http_status
+                safe["recovery_credential_http"] = status if type(status) is int and 100 <= status <= 599 else None
+                auth_phase = error.auth_phase
+                safe["recovery_credential_phase"] = (
+                    auth_phase if type(auth_phase) is str and auth_phase in ("init", "complete") else None
+                )
+                retry = error.retry_after_seconds
+                safe["recovery_credential_retry_after_seconds"] = (
+                    retry if type(retry) is int and 0 <= retry <= 86400 else None
+                )
             name = type(error).__name__
             safe["error_class"] = name if name in (
                 "AttributeError", "TypeError", "KeyError", "ValueError", "KeychainSessionError",
+                "RecoveryPETError",
                 "UnhandledProtocolError", "UnauthorizedError", "TimeoutError", "ClientError",
             ) else "other"
             site = error.__traceback__
@@ -684,48 +813,107 @@ class FindMySetup:
             for i, record in enumerate(self.records)
         ]
 
+    async def _unlock(self, index, passcode):
+        """Scope the durable proof guard to one authenticated account's unlock."""
+        from .findmy_identity import authenticated_identity
+
+        self.recovery_outcome = None
+        guard = self.recovery_guard
+        if guard is None and self.recovery_guard_required:
+            raise FindMySetupError("findmy_recovery_storage")
+        self.unlock_attempts += 1  # Invocation diagnostic, not Apple's attempt count.
+        record = self.records[int(index)]
+        if guard is None:
+            return await self.client.unlock(record, passcode)
+        identity = authenticated_identity(self.account.to_json())
+        if identity is None or (
+            self.account_guard and not self.account_guard(self.account.to_json())
+        ):
+            raise FindMySetupError("findmy_account_mismatch")
+        self.account._homecircle_recovery_guard_required = True
+        async with guard.attempt(identity) as attempt:
+            self.account._homecircle_recovery_attempt = attempt
+            try:
+                keys = await self.client.unlock(record, passcode)
+                self.recovery_outcome = getattr(attempt, "outcome", None)
+                return keys
+            except BaseException:
+                self.recovery_outcome = getattr(attempt, "outcome", None) or (
+                    "uncertain" if getattr(attempt, "ready", False)
+                    else "not_dispatched"
+                )
+                raise
+            finally:
+                self.account._homecircle_recovery_attempt = None
+
+    def can_resume_recovery(self, index):
+        """Only the SDK's same-record verified in-memory material permits retry."""
+        checker = getattr(self.client, "can_resume_unlock", None)
+        try:
+            return callable(checker) and checker(self.records[int(index)]) is True
+        except (ValueError, TypeError, IndexError):
+            return False
+
     async def discover(self, index, passcode):
-        if self.closed or (not self.keys_recovered and self.unlock_attempts >= 3):
+        if self.closed:
+            raise FindMySetupError("findmy_setup_closed")
+        if (
+            self.recovery_guard is None and not self.keys_recovered
+            and self.unlock_attempts >= 3
+        ):
             raise FindMySetupError("findmy_recovery_limit")
-        if not self.keys_recovered:
-            self.unlock_attempts += 1
         self.account._recovery_diagnostics["unlock_phase"] = "unlock"
         try:
             async with asyncio.timeout(120):
                 if not self.keys_recovered:
                     self.account._recovery_diagnostics.pop("recovered_keys_present", None)
-                    keys = await self.client.unlock(self.records[int(index)], passcode)
+                    keys = await self._unlock(index, passcode)
                     self.account._recovery_diagnostics["recovered_keys_present"] = bool(keys)
                     if not keys:
                         from ._vendor_findmy.keychain import KeychainSessionError
 
                         self.account._recovery_diagnostics["unlock_phase"] = "pcs_keys"
+                        if self.recovery_outcome == "verified":
+                            from ._vendor_findmy.keychain.recovery import RecoveryProtocolError
+
+                            raise RecoveryProtocolError("material", "verified")
                         raise KeychainSessionError("Recovery returned no keychain keys")
                     self.keys_recovered = True
                 self.account._recovery_diagnostics["unlock_phase"] = "accessories"
                 found = await self.client.accessories()
                 if self.closed:
                     raise FindMySetupError("findmy_setup_closed")
+                from .findmy_identity import (
+                    accessory_material, new_state, prepare_state, resolve_identifier,
+                )
+
+                session = self.account.to_json()
+                self.identity_state = prepare_state(
+                    session, self.previous_items, {}, getattr(self, "identity_state", None)
+                )
+                if self.identity_state is None and any(
+                    accessory_material(item.to_json()) for item in found
+                ):
+                    self.identity_state = new_state(session)
                 discovered = {}
+                discovered_material = set()
                 for item in found:
-                    identifier = accessory_id(item)
                     exported = item.to_json()
-                    matches = [
-                        key
-                        for key, saved in self.previous_items.items()
-                        if saved["accessory"].get("master_key")
-                        and saved["accessory"].get("master_key")
-                        == exported.get("master_key")
-                    ]
-                    if len(matches) > 1:
-                        raise FindMySetupError("findmy_duplicate_item")
-                    if matches:
-                        identifier = matches[0]
+                    material = accessory_material(exported)
+                    if material is not None:
+                        if material in discovered_material:
+                            raise FindMySetupError("findmy_duplicate_item")
+                        discovered_material.add(material)
+                    identifier = resolve_identifier(
+                        exported, accessory_id(item), self.previous_items, self.identity_state
+                    )
                     if identifier in discovered:
                         raise FindMySetupError("findmy_duplicate_item")
                     discovered[identifier] = item
                 self.accessories = discovered
             return self.item_choices()
+        except FindMySetupError:
+            raise
         except Exception as error:
             raw = self.account._recovery_diagnostics
             phase = raw.get("unlock_phase")
@@ -734,7 +922,9 @@ class FindMySetup:
             present = raw.get("recovered_keys_present")
             safe["recovered_keys_present"] = present if type(present) is bool else None
             name = type(error).__name__
-            safe["error_class"] = name if name in ("EscrowError", "RecoveryError", "KeychainSessionError", "CloudKitError", "UnauthorizedError", "UnhandledProtocolError", "InvalidTag", "InvalidSignature", "ValueError", "KeyError", "TypeError", "DecodeError", "TimeoutError") else "other"
+            safe["error_class"] = name if name in ("EscrowError", "RecoveryError", "KeychainSessionError", "CloudKitError", "UnauthorizedError", "UnhandledProtocolError", "PCSError", "MissingKeyError", "BeaconExportError", "InvalidTag", "InvalidSignature", "ValueError", "KeyError", "TypeError", "DecodeError", "TimeoutError") else "other"
+            safe.update(_discovery_failure_site(error))
+            safe["outer_auth_reason"] = _outer_auth_failure_reason(error)
             for key in ("escrow_http", "operation_http"):
                 value = raw.get(key)
                 safe[key] = value if type(value) is int and 100 <= value <= 599 else None
@@ -743,7 +933,19 @@ class FindMySetup:
             value = raw.get("escrow_code")
             safe["escrow_code"] = value if type(value) is int and abs(value) <= 1000000 else None
             _LOGGER.warning("Find My item recovery failed: diagnostics=%s", safe)
-            raise FindMySetupError("findmy_recovery_failed") from None
+            code = recovery_error(error)
+            if self.recovery_outcome == "uncertain" and isinstance(error, TimeoutError):
+                code = "findmy_recovery_uncertain"
+            if not self.keys_recovered and (
+                code == "findmy_recovery_material_failed" or (
+                    isinstance(error, TimeoutError) and self.recovery_outcome == "verified"
+                )
+            ):
+                code = (
+                    "findmy_recovery_resume" if self.can_resume_recovery(index)
+                    else "findmy_recovery_material_failed"
+                )
+            raise FindMySetupError(code) from None
         finally:
             # Report fetching must never silently retry using a retained password.
             if hasattr(self.account, "_password"):
@@ -766,7 +968,7 @@ class FindMySetup:
         require_nonempty_report_grant(self.account)
         session = passwordless(self.account.to_json())
         require_nonempty_report_grant(self.account, session)
-        return session, {
+        items = {
             identifier: {
                 "accessory": self.accessories[identifier].to_json(),
                 "report": deepcopy(
@@ -775,12 +977,20 @@ class FindMySetup:
             }
             for identifier in chosen
         }
+        from .findmy_identity import selection_state
+
+        self.identity_state = selection_state(
+            session, items, {}, getattr(self, "identity_state", None)
+        )
+        return session, items
 
     async def close(self):
         if self.closed:
             return
         self.closed = True
         self.keys_recovered = False
+        self.account._homecircle_recovery_attempt = None
+        self.identity_state = None
         self.accessories.clear()
         self.previous_items.clear()
         self.records.clear()

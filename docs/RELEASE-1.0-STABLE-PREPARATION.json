@@ -1,0 +1,86 @@
+{
+  "artifact": {
+    "archive_bytes": 628273,
+    "archive_sha256": "a21aa690ed45aaa1e293fe33c6c9780f6a95ba6e7faa868e49856d4cd7fce932",
+    "inventory_sha256": "fb5098b327e656a44156b0634e9521c46ed68cd46dd883a2d86590b89a44808f",
+    "members": 112,
+    "version": "1.0.0"
+  },
+  "base_source_commit": "90abe29d507cb907dc3f6150e10546f8732c4c8f",
+  "documentation_overlay_completed": true,
+  "frontend_validation": {
+    "behavior_source_unchanged_from_RC2": true,
+    "cancelled": 0,
+    "failures": 0,
+    "generated_assets": {
+      "LEAFLET-LICENSE.txt": {
+        "bytes": 1395,
+        "sha256": "53e8dc25862014e4324741ca18fbe3611e11d42ef69f59f86ea8c5389647d4cb"
+      },
+      "homecircle-card.js": {
+        "bytes": 277176,
+        "sha256": "74eaafdc0ec74dd19999eac0e42e2f00c51d00a4bc5af546b73f7fdff6cab2a1"
+      }
+    },
+    "javascript_delta_from_RC2": "exact version string substitution only",
+    "node": "23.7.0",
+    "npm": "11.1.0",
+    "outcome": "passed",
+    "passed": 126,
+    "schema": 1,
+    "skipped": 0,
+    "test_log_format": "Node spec summary",
+    "test_log_sha256": "9b19d6338d90a7813f98af73f147e6a561f62cdfb7a702630e90ca51133221b5",
+    "tests": 126,
+    "todo": 0,
+    "two_builds_identical": true
+  },
+  "independent_package_review": {
+    "all_inventory_members_checked": 112,
+    "canonical_rebuild_byte_identical": true,
+    "no_new_runtime_HACS_or_platform_proof_inferred": true,
+    "raw_frontend_pass_lines": 126,
+    "retained_raw_record_sha256": "8472e88f78ee82e34d10a0e56392773d971cca0ebee9c831c7994660a2dad9d2",
+    "scope": "Independent stdlib-only stable-package comparison, canonical byte/inventory rebuild and retained raw frontend-test evidence review",
+    "status": "passed"
+  },
+  "maintainer_approval_record": "RELEASE-1.0-MAINTAINER-APPROVAL.json",
+  "package_validation": {
+    "canonical_archive_and_inventory_passed": true,
+    "two_packages_byte_identical": true
+  },
+  "proposed_release_disposition": "RELEASE-1.0-PROPOSED-DISPOSITION.md",
+  "public_inputs_privacy_scan": {
+    "expected_files": 411,
+    "flagged_files": 0
+  },
+  "qualification_boundaries": {
+    "RC2_exact_native_51_tests_and_ordinary_owner_cold_start": "Retain their original RC2 source/package scope; no new native runtime run is claimed for the stable version labels.",
+    "actual_photo_persistence": "Unexercised; the test instance had no actual photos.",
+    "bounded_owner_phone_display": "Passed: both Life360 person and AirTag display correctly on the map and both details open.",
+    "new_FindMy_position_or_natural_session_renewal": "Unclaimed by this final round.",
+    "prior_broad_current_minimum_Core_and_HACS": "Retain original RC1 evidence scopes; not relabeled as stable runs."
+  },
+  "schema": 1,
+  "stable_publication_approved": true,
+  "stable_tag_release_main_merge_and_production_actions": 0,
+  "status": "Maintainer approved this exact package and scope; merge and publication are pending execution.",
+  "version": "1.0.0",
+  "version_only_comparison_to_RC2": {
+    "all_licenses_notices_and_dependency_pins_unchanged": true,
+    "changed_members": [
+      "frontend.py",
+      "frontend/homecircle-card.js",
+      "manifest.json"
+    ],
+    "intentional_effects": [
+      "version display",
+      "frontend resource cache URL"
+    ],
+    "only_exact_version_substitutions": true,
+    "provider_and_vendor_code_identical": true,
+    "reference_source": "ae8081313cb4060123e200e0356a598c5a72d145",
+    "reference_zip_sha256": "41240a77eb0f5950b47e3e926097751b243e3ace8161de948650b648910c865c",
+    "unchanged_members": 109
+  }
+}

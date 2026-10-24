@@ -13,6 +13,9 @@ from hashlib import sha256
 from cryptography.fernet import Fernet
 
 
+_PRESERVE_IDENTITY = object()
+
+
 class VaultError(RuntimeError):
     """The local store cannot be safely opened."""
 
@@ -66,11 +69,22 @@ class Vault:
                 stream.flush()
                 os.fsync(stream.fileno())
         self._check(self.key_path)
-        return Fernet(self.key_path.read_bytes())
+        key = self.key_path.read_bytes()
+        try:
+            return Fernet(key)
+        except ValueError:
+            raise VaultError(
+                "Session encryption key is invalid; it was not replaced"
+            ) from None
 
     def load(self) -> dict:
-        cipher = self._cipher()
-        self._check(self.data_path)
+        try:
+            cipher = self._cipher()
+            self._check(self.data_path)
+        except OSError:
+            raise VaultError(
+                "Session store is unreadable; it was not replaced"
+            ) from None
         try:
             data = json.loads(cipher.decrypt(self.data_path.read_bytes()))
             if (
@@ -86,6 +100,10 @@ class Vault:
                         item["accessory"], dict
                     ):
                         raise ValueError
+                if "identity_state" in data:
+                    from .findmy_identity import validate_state
+
+                    validate_state(data["identity_state"], data["session"])
             return data
         except Exception:
             raise VaultError(
@@ -105,18 +123,33 @@ class Vault:
         }
         self._write(payload)
 
-    def save_account(self, session: dict, items: dict) -> None:
+    def save_account(
+        self, session: dict, items: dict, *, identity_state=_PRESERVE_IDENTITY
+    ) -> None:
         if not items:
             raise VaultError(
                 "An account must contain at least one explicitly selected item"
             )
-        self._write({"version": 2, "session": passwordless(session), "items": items})
+        if identity_state is _PRESERVE_IDENTITY:
+            identity_state = None
+            if self.data_path.exists() or self.data_path.is_symlink():
+                identity_state = self.load().get("identity_state")
+        payload = {"version": 2, "session": passwordless(session), "items": items}
+        if identity_state is not None:
+            from .findmy_identity import validate_state
+
+            payload["identity_state"] = validate_state(identity_state, session)
+        self._write(payload)
 
     def _write(self, payload: dict) -> None:
         cipher = self._cipher(create=True)
+        serialized = json.dumps(payload, sort_keys=True).encode()
         if self.data_path.exists() or self.data_path.is_symlink():
-            self.load()  # Never overwrite unreadable or unsafe recovery state.
-        encrypted = cipher.encrypt(json.dumps(payload).encode())
+            # Validate existing recovery state even when no write is necessary.
+            existing = self.load()
+            if json.dumps(existing, sort_keys=True).encode() == serialized:
+                return
+        encrypted = cipher.encrypt(serialized)
         fd, filename = tempfile.mkstemp(prefix=".session-", dir=self.root)
         try:
             with os.fdopen(fd, "wb") as stream:

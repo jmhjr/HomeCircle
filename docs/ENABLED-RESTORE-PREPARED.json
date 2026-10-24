@@ -1,0 +1,827 @@
+{
+  "controller_commit": "c367ee6ccb3224e1b47bcea96611be188cd24ff3",
+  "independent_verification": {
+    "actual_archive_bytes": 76748800,
+    "actual_archive_sha256": "2f9466474fd8c159e22d8db6fd7721231663d3489451c69edaa911a5fea8bd43",
+    "cleanup_verified": true,
+    "closure_metadata_records": 24,
+    "default_dependency_reinstallation_tested": false,
+    "guard_after_repair": 3,
+    "guard_after_restore": 2,
+    "guard_before_backup": 2,
+    "guard_newest": 3,
+    "host_elapsed_seconds": 354.509,
+    "life360_module_observed_loaded_from_prepared_library": true,
+    "local_guard_rollback_observed": true,
+    "manual_guard_repair": true,
+    "ordinary_restore_safety_accepted": false,
+    "phases": 6,
+    "postbackup_history_rows": 10,
+    "postrestore_history_rows": 10,
+    "prebackup_history_rows": 10,
+    "prepared_dependency_bytes": 71689643,
+    "prepared_dependency_files": 1002,
+    "prepared_dependency_inventory_sha256": "b20c91d32d02a2436003779a1ef0369f4f7da45e0975044469acc365e336d85f",
+    "prepared_operational_restore": true,
+    "prepared_restore_safety_accepted": false,
+    "remaining_direct_package_origins_import_spec_only": 5,
+    "review_status": "independently_verified",
+    "schema": 1,
+    "source_commit": "c367ee6ccb3224e1b47bcea96611be188cd24ff3"
+  },
+  "product_source_commit": "d02a9bdb9027cb51c99165a09ba50d5b175f5fb9",
+  "run": 39492348166,
+  "schema": 1,
+  "stable_release_approval": false,
+  "summaries": {
+    "host": {
+      "actual_kvm_confirmed": true,
+      "automatic_guard_antirollback_passed": false,
+      "automatic_guard_antirollback_tested": true,
+      "backup": {
+        "archive": {
+          "archive_bytes": 76748800,
+          "archive_sha256": "2f9466474fd8c159e22d8db6fd7721231663d3489451c69edaa911a5fea8bd43",
+          "candidate_match": true,
+          "database_included": true,
+          "enabled_entry": true,
+          "guard_sha256": "9df3bd3987e0b2e070259432ebd8c39b29b23c055e8788364af668907fbb0ba6",
+          "guard_unresolved": 2,
+          "prepared_dependency_files": 1002,
+          "prepared_dependency_sha256": "b20c91d32d02a2436003779a1ef0369f4f7da45e0975044469acc365e336d85f"
+        },
+        "compressed": false,
+        "database_included": true,
+        "homeassistant_version": "2026.10.2",
+        "job": {
+          "done": true,
+          "error_count": 0,
+          "name": "backup_manager_partial_backup",
+          "nodes": 3
+        },
+        "protected": false,
+        "result": "ok",
+        "type": "partial"
+      },
+      "backup_requests": [
+        {
+          "action": "create",
+          "api_error": {
+            "categories": [],
+            "type": "unclassified"
+          },
+          "exact_job_id_returned": true,
+          "exit_code": 0,
+          "output_truncated": false,
+          "result": "ok",
+          "signal": null,
+          "stderr_error": {
+            "categories": [],
+            "type": "unclassified"
+          },
+          "stdout_json": true
+        },
+        {
+          "action": "restore",
+          "api_error": {
+            "categories": [],
+            "type": "unclassified"
+          },
+          "exact_job_id_returned": true,
+          "exit_code": 0,
+          "output_truncated": false,
+          "result": "ok",
+          "signal": null,
+          "stderr_error": {
+            "categories": [],
+            "type": "unclassified"
+          },
+          "stdout_json": true
+        }
+      ],
+      "candidate_hacs_download_tested": false,
+      "candidate_release_zip_transport_tested": false,
+      "candidate_transport": "stopped_verified_zip_files",
+      "cleanup_failed": false,
+      "cli_version_observed": "2026.09.0",
+      "confirmed_issue": "older_backup_decreased_local_recovery_guard",
+      "container_core_version_after": "2026.10.2",
+      "container_core_version_before": "2026.10.2",
+      "core_actions": [
+        {
+          "action": "stop",
+          "relevant_core_jobs_idle": true,
+          "result": "ok",
+          "running_after": false,
+          "running_before": true,
+          "supervisor_running": true
+        },
+        {
+          "action": "start",
+          "relevant_core_jobs_idle": true,
+          "result": "ok",
+          "running_after": true,
+          "running_before": false,
+          "supervisor_running": true
+        },
+        {
+          "action": "stop",
+          "relevant_core_jobs_idle": true,
+          "result": "ok",
+          "running_after": false,
+          "running_before": true,
+          "supervisor_running": true
+        },
+        {
+          "action": "start",
+          "relevant_core_jobs_idle": true,
+          "result": "ok",
+          "running_after": true,
+          "running_before": false,
+          "supervisor_running": true
+        },
+        {
+          "action": "stop",
+          "relevant_core_jobs_idle": true,
+          "result": "ok",
+          "running_after": false,
+          "running_before": true,
+          "supervisor_running": true
+        },
+        {
+          "action": "start",
+          "relevant_core_jobs_idle": true,
+          "result": "ok",
+          "running_after": true,
+          "running_before": false,
+          "supervisor_running": true
+        },
+        {
+          "action": "stop",
+          "relevant_core_jobs_idle": true,
+          "result": "ok",
+          "running_after": false,
+          "running_before": true,
+          "supervisor_running": true
+        }
+      ],
+      "core_update_result": "not_requested",
+      "core_version_after": "2026.10.2",
+      "core_version_before": "2026.10.2",
+      "core_version_target": "2026.10.2",
+      "diagnostic_completed": true,
+      "direct_candidate_installs": 1,
+      "enabled_entry_restore_tested": true,
+      "failure_code": null,
+      "failure_or_final_stage": "diagnostic_complete",
+      "failure_type": null,
+      "guard_repair_before_first_enabled_boot": false,
+      "guest_github_token_used": false,
+      "host_elapsed_seconds": 354.509,
+      "initial_boot_observations": {
+        "jobs": [],
+        "supervisor": {
+          "healthy": true,
+          "result": "ok",
+          "state": null,
+          "supported": true
+        }
+      },
+      "initial_landingpage_seen": true,
+      "management_boundary_observations": {
+        "jobs": [
+          {
+            "done": true,
+            "name": "backup_manager_partial_restore"
+          },
+          {
+            "done": true,
+            "name": "backup_manager_partial_backup"
+          },
+          {
+            "done": true,
+            "name": "backup_restore_homeassistant"
+          },
+          {
+            "done": true,
+            "name": "backup_restore_supervisor_config"
+          },
+          {
+            "done": true,
+            "name": "home_assistant_core_start"
+          },
+          {
+            "done": true,
+            "name": "backup_store_homeassistant"
+          },
+          {
+            "done": true,
+            "name": "backup_store_supervisor_config"
+          }
+        ],
+        "relevant_core_jobs_idle": true,
+        "root": {
+          "result": "ok",
+          "state": "running",
+          "supervisor_version": "2026.10.2",
+          "supported": true
+        }
+      },
+      "manual_newest_guard_repair_passed": true,
+      "native_linux_amd64_kvm_required": true,
+      "network_boundary": {
+        "before_probe_connected": true,
+        "closed_probe_connected": false,
+        "closed_probe_observations": 4,
+        "guest_agent_remained_available": true,
+        "link_closed": true
+      },
+      "network_scope": "whole_owned_vm_closed_before_restore_until_cleanup",
+      "operational_restore_passed": true,
+      "ordinary_default_dependency_reinstallation_tested": false,
+      "ordinary_enabled_restore_safety_accepted": false,
+      "outcome": "confirmed_safety_issue",
+      "owner_credentials_used": false,
+      "phases": 6,
+      "prepared_dependency_enabled_partial_restore": true,
+      "prepared_dependency_fixture": {
+        "closure": {
+          "aiohappyeyeballs": "2.7.1",
+          "aiohttp": "3.14.5",
+          "aiosignal": "1.4.0",
+          "anisette": "1.2.4",
+          "appdirs": "1.4.4",
+          "attrs": "26.1.0",
+          "beautifulsoup4": "4.13.3",
+          "certifi": "2026.10.19",
+          "frozenlist": "1.8.0",
+          "fs": "2.4.16",
+          "idna": "3.20",
+          "life360": "7.2.0",
+          "multidict": "7.1.0",
+          "propcache": "0.5.4",
+          "protobuf": "7.36.0",
+          "pyelftools": "0.33",
+          "setuptools": "84.0.0",
+          "six": "1.17.0",
+          "soupsieve": "3.0.3",
+          "srp": "1.0.22",
+          "typing-extensions": "4.16.0",
+          "unicorn": "2.1.4",
+          "urllib3": "2.8.0",
+          "yarl": "1.25.1"
+        },
+        "closure_count": 24,
+        "constraints_sha256": "7baa9a8f39ddeb9c5bb60a1036f6d5e33f4b84267f151f53cc2b95ef031a21b5",
+        "core": "2026.10.2",
+        "inventory_bytes": 71689643,
+        "inventory_files": 1002,
+        "inventory_scope": "dependency_regular_files_excluding_generated_bytecode",
+        "inventory_sha256": "b20c91d32d02a2436003779a1ef0369f4f7da45e0975044469acc365e336d85f",
+        "normal_bootstrap_library": true,
+        "outcome": "passed",
+        "python": "3.14.6",
+        "requirements": [
+          "life360==7.2.0",
+          "protobuf>=6.32.0,<8.0.0",
+          "anisette==1.2.4",
+          "unicorn==2.1.4",
+          "srp==1.0.22",
+          "beautifulsoup4==4.13.3"
+        ],
+        "schema": 1,
+        "site": "/config/deps/lib/python3.14/site-packages",
+        "virtual_env": false
+      },
+      "prepared_enabled_restore_safety_accepted": false,
+      "private_workspace_removed": true,
+      "production_configuration_used": false,
+      "provenance": {
+        "candidate_files": 112,
+        "candidate_source_commit": "d02a9bdb9027cb51c99165a09ba50d5b175f5fb9",
+        "candidate_zip_sha256": "fc0b365d9688459504f874af5c38393e24145d657f15f1def8ada9184f363285",
+        "controller_branch": "codex/native-amd64-validation",
+        "controller_branch_commit": "c367ee6ccb3224e1b47bcea96611be188cd24ff3",
+        "controller_sha256": "ac18c4cbd5676ca7597dbd0d10a50e5895133ce274250fac14930fa2e3b0cb61",
+        "core_version": "2026.10.2",
+        "dependency_preparer_sha256": "df492a082a8f668a2f175aaf39e3eaf4ae8205684e7c3495854591449fb11835",
+        "haos_version": "18.3",
+        "haos_xz_sha256": "fae6a728768cc10aff60d4820bfcd40d64cd77fab82c8bd92af13b3d9d414090",
+        "helper_files_sha256": {
+          "homecircle_enabled_restore_qa/__init__.py": "5e704553230a6833b9d8727c9f57370a71993090aba819e0d8e644796d3c88c6",
+          "homecircle_enabled_restore_qa/manifest.json": "654a7d99dcad340688738cd717954ecc6d4a72b95332b20502a58d1bf2084ee3"
+        }
+      },
+      "provider_accounts_configured": false,
+      "provider_request_attempt_counts_measured": false,
+      "qemu_stopped": true,
+      "recovery_proof_attempt_counts_measured": false,
+      "restore": {
+        "automatic_boot": {
+          "automatic_guard_antirollback_passed": false,
+          "entry_disabled": false,
+          "entry_loaded_at_helper_observation": true,
+          "guard": {
+            "api_status_checked": true,
+            "blocked": false,
+            "pending": 0,
+            "rejected": 2,
+            "retained_bytes_checked": true,
+            "sha256": "9df3bd3987e0b2e070259432ebd8c39b29b23c055e8788364af668907fbb0ba6",
+            "uncertain": 0,
+            "unresolved": 2
+          },
+          "observation_scope": "earliest_helper_setup_not_candidate_import_order",
+          "process": {
+            "pid": 71,
+            "start_ticks": 19837
+          }
+        },
+        "enabled_entry_restore": true,
+        "guard_sha256_before_manual_repair": "9df3bd3987e0b2e070259432ebd8c39b29b23c055e8788364af668907fbb0ba6",
+        "job": {
+          "done": true,
+          "error_count": 0,
+          "name": "backup_manager_partial_restore",
+          "nodes": 4
+        },
+        "manual_newest_guard_sha256": "6a539827f2c55dc92c6221bc2edee2ad3e18ada0a2bccf607f2f502b9c309106",
+        "result": "ok"
+      },
+      "schema": 1,
+      "supervisor_full_backup_restore_tested": false,
+      "supervisor_partial_homeassistant_backup_tested": true,
+      "supervisor_partial_homeassistant_restore_tested": true,
+      "supervisor_version_observed": "2026.10.2"
+    },
+    "initialize": {
+      "entry_disabled": false,
+      "entry_loaded": true,
+      "generation": "before_restore",
+      "guard": {
+        "api_status_checked": true,
+        "blocked": false,
+        "pending": 0,
+        "rejected": 2,
+        "retained_bytes_checked": true,
+        "sha256": "9df3bd3987e0b2e070259432ebd8c39b29b23c055e8788364af668907fbb0ba6",
+        "uncertain": 0,
+        "unresolved": 2
+      },
+      "loaded_source_sha256": "d877f4132c8aeaf18af3e507129098a40e7262c3440d259c5646102ba8eaf946",
+      "nonempty_options": true,
+      "outcome": "passed",
+      "owned_resource_id_sha256": "a82f026ef6f43af808f3545bfccd7935cdd05490bd1bce3125a476f5634e3574",
+      "package_files_count": 112,
+      "package_payload_sha256": "33a154968a0dd7d1e58d42a6a0aaf84d8be9cb0da49120477972ec872eba2c6a",
+      "phase": "initialize",
+      "prepared_dependencies": {
+        "inventoried_non_bytecode_bytes_checked": true,
+        "inventory_scope": "dependency_regular_files_excluding_generated_bytecode",
+        "inventory_sha256": "b20c91d32d02a2436003779a1ef0369f4f7da45e0975044469acc365e336d85f",
+        "normal_bootstrap_library": true,
+        "origins_config_deps": true,
+        "skip_pip": false
+      },
+      "process": {
+        "pid": 71,
+        "start_ticks": 15797
+      },
+      "recorder": {
+        "backup_platform_registered": true,
+        "commit_proven": true,
+        "integrity_ok": true,
+        "no_backup_failure_issue": true,
+        "postbackup_marker_absent": true,
+        "postbackup_marker_rows": 0,
+        "postrestore_exact_match": null,
+        "postrestore_rows": null,
+        "postrestore_sha256": null,
+        "prebackup_exact_match": true,
+        "prebackup_rows": 10,
+        "prebackup_sha256": "4c6150fa8df913a07fd8cfe54024dd11dce1ba2c930d2d36c944a4eb44edeca0"
+      },
+      "runtime_config_sha256": "50864d7a308bdd22330200b44b61c1367a629bfd9c2dacc71312e80b710d8e7c",
+      "schema": 1,
+      "served_bundle_sha256": "88caf611c1a640212e42a7b05e49ae64dce96b80d955ad407e3279a996701b4d",
+      "snapshot_sha256": "166161c3dcf8ef4afb4a10245bdc25c521c638546dff6363b8d481f881452900",
+      "static_served_bundle_matches": true
+    },
+    "investigation": {
+      "automatic_guard_antirollback_passed": false,
+      "controller_exit_code": 1,
+      "controller_outcome": "confirmed_safety_issue",
+      "interpretation": "older_backup_rolls_back_local_guard_requires_release_disposition",
+      "investigation_completed": true,
+      "manual_newest_guard_repair_passed": true,
+      "operational_restore_passed": true,
+      "ordinary_default_dependency_reinstallation_tested": false,
+      "ordinary_enabled_restore_safety_accepted": false,
+      "prepared_dependency_enabled_partial_restore": true,
+      "prepared_enabled_restore_safety_accepted": false,
+      "schema": 1,
+      "stable_release_approval": false
+    },
+    "mutate": {
+      "entry_disabled": false,
+      "entry_loaded": true,
+      "generation": "before_restore",
+      "guard": {
+        "api_status_checked": true,
+        "blocked": true,
+        "pending": 0,
+        "rejected": 3,
+        "retained_bytes_checked": true,
+        "sha256": "6a539827f2c55dc92c6221bc2edee2ad3e18ada0a2bccf607f2f502b9c309106",
+        "uncertain": 0,
+        "unresolved": 3
+      },
+      "loaded_source_sha256": "d877f4132c8aeaf18af3e507129098a40e7262c3440d259c5646102ba8eaf946",
+      "nonempty_options": true,
+      "outcome": "passed",
+      "owned_resource_id_sha256": "a82f026ef6f43af808f3545bfccd7935cdd05490bd1bce3125a476f5634e3574",
+      "package_files_count": 112,
+      "package_payload_sha256": "33a154968a0dd7d1e58d42a6a0aaf84d8be9cb0da49120477972ec872eba2c6a",
+      "phase": "mutate",
+      "prepared_dependencies": {
+        "inventoried_non_bytecode_bytes_checked": true,
+        "inventory_scope": "dependency_regular_files_excluding_generated_bytecode",
+        "inventory_sha256": "b20c91d32d02a2436003779a1ef0369f4f7da45e0975044469acc365e336d85f",
+        "normal_bootstrap_library": true,
+        "origins_config_deps": true,
+        "skip_pip": false
+      },
+      "process": {
+        "pid": 71,
+        "start_ticks": 15797
+      },
+      "recorder": {
+        "backup_platform_registered": true,
+        "commit_proven": true,
+        "integrity_ok": true,
+        "no_backup_failure_issue": true,
+        "postbackup_marker_absent": false,
+        "postbackup_marker_rows": 10,
+        "postrestore_exact_match": null,
+        "postrestore_rows": null,
+        "postrestore_sha256": null,
+        "prebackup_exact_match": true,
+        "prebackup_rows": 10,
+        "prebackup_sha256": "4c6150fa8df913a07fd8cfe54024dd11dce1ba2c930d2d36c944a4eb44edeca0"
+      },
+      "runtime_config_sha256": "9cb595b526db2e749b98ac674f62eb684e5471d70e4f3a4c9c7d36288867131d",
+      "schema": 1,
+      "served_bundle_sha256": "88caf611c1a640212e42a7b05e49ae64dce96b80d955ad407e3279a996701b4d",
+      "snapshot_sha256": "a5f28fa25aa11d291e7a797b4e4a2a31ca8b9a82aa585bc45bff14a458d82c0e",
+      "static_served_bundle_matches": true
+    },
+    "prebackup": {
+      "entry_disabled": false,
+      "entry_loaded": true,
+      "generation": "before_restore",
+      "guard": {
+        "api_status_checked": true,
+        "blocked": false,
+        "pending": 0,
+        "rejected": 2,
+        "retained_bytes_checked": true,
+        "sha256": "9df3bd3987e0b2e070259432ebd8c39b29b23c055e8788364af668907fbb0ba6",
+        "uncertain": 0,
+        "unresolved": 2
+      },
+      "loaded_source_sha256": "d877f4132c8aeaf18af3e507129098a40e7262c3440d259c5646102ba8eaf946",
+      "nonempty_options": true,
+      "outcome": "passed",
+      "owned_resource_id_sha256": "a82f026ef6f43af808f3545bfccd7935cdd05490bd1bce3125a476f5634e3574",
+      "package_files_count": 112,
+      "package_payload_sha256": "33a154968a0dd7d1e58d42a6a0aaf84d8be9cb0da49120477972ec872eba2c6a",
+      "persisted_storage_checked": true,
+      "phase": "prebackup",
+      "prepared_dependencies": {
+        "inventoried_non_bytecode_bytes_checked": true,
+        "inventory_scope": "dependency_regular_files_excluding_generated_bytecode",
+        "inventory_sha256": "b20c91d32d02a2436003779a1ef0369f4f7da45e0975044469acc365e336d85f",
+        "normal_bootstrap_library": true,
+        "origins_config_deps": true,
+        "skip_pip": false
+      },
+      "process": {
+        "pid": 71,
+        "start_ticks": 15797
+      },
+      "recorder": {
+        "backup_platform_registered": true,
+        "commit_proven": true,
+        "integrity_ok": true,
+        "no_backup_failure_issue": true,
+        "postbackup_marker_absent": true,
+        "postbackup_marker_rows": 0,
+        "postrestore_exact_match": null,
+        "postrestore_rows": null,
+        "postrestore_sha256": null,
+        "prebackup_exact_match": true,
+        "prebackup_rows": 10,
+        "prebackup_sha256": "4c6150fa8df913a07fd8cfe54024dd11dce1ba2c930d2d36c944a4eb44edeca0"
+      },
+      "runtime_config_sha256": "50864d7a308bdd22330200b44b61c1367a629bfd9c2dacc71312e80b710d8e7c",
+      "schema": 1,
+      "served_bundle_sha256": "88caf611c1a640212e42a7b05e49ae64dce96b80d955ad407e3279a996701b4d",
+      "snapshot_sha256": "166161c3dcf8ef4afb4a10245bdc25c521c638546dff6363b8d481f881452900",
+      "static_served_bundle_matches": true
+    },
+    "repair": {
+      "entry_disabled": false,
+      "entry_loaded": true,
+      "generation": "after_restore",
+      "guard": {
+        "api_status_checked": true,
+        "blocked": true,
+        "pending": 0,
+        "rejected": 3,
+        "retained_bytes_checked": true,
+        "sha256": "6a539827f2c55dc92c6221bc2edee2ad3e18ada0a2bccf607f2f502b9c309106",
+        "uncertain": 0,
+        "unresolved": 3
+      },
+      "loaded_source_sha256": "d877f4132c8aeaf18af3e507129098a40e7262c3440d259c5646102ba8eaf946",
+      "nonempty_options": true,
+      "outcome": "passed",
+      "owned_resource_id_sha256": "a82f026ef6f43af808f3545bfccd7935cdd05490bd1bce3125a476f5634e3574",
+      "package_files_count": 112,
+      "package_payload_sha256": "33a154968a0dd7d1e58d42a6a0aaf84d8be9cb0da49120477972ec872eba2c6a",
+      "phase": "repair",
+      "prepared_dependencies": {
+        "inventoried_non_bytecode_bytes_checked": true,
+        "inventory_scope": "dependency_regular_files_excluding_generated_bytecode",
+        "inventory_sha256": "b20c91d32d02a2436003779a1ef0369f4f7da45e0975044469acc365e336d85f",
+        "normal_bootstrap_library": true,
+        "origins_config_deps": true,
+        "skip_pip": false
+      },
+      "process": {
+        "pid": 71,
+        "start_ticks": 30060
+      },
+      "recorder": {
+        "backup_platform_registered": true,
+        "commit_proven": true,
+        "integrity_ok": true,
+        "no_backup_failure_issue": true,
+        "postbackup_marker_absent": true,
+        "postbackup_marker_rows": 0,
+        "postrestore_exact_match": true,
+        "postrestore_rows": 10,
+        "postrestore_sha256": "ea7f10096b77cdd2f80186e3a49107e471e4f1e3ffe96417c4dc9d4b8077a0d9",
+        "prebackup_exact_match": true,
+        "prebackup_rows": 10,
+        "prebackup_sha256": "4c6150fa8df913a07fd8cfe54024dd11dce1ba2c930d2d36c944a4eb44edeca0"
+      },
+      "runtime_config_sha256": "50864d7a308bdd22330200b44b61c1367a629bfd9c2dacc71312e80b710d8e7c",
+      "schema": 1,
+      "served_bundle_sha256": "88caf611c1a640212e42a7b05e49ae64dce96b80d955ad407e3279a996701b4d",
+      "snapshot_sha256": "166161c3dcf8ef4afb4a10245bdc25c521c638546dff6363b8d481f881452900",
+      "static_served_bundle_matches": true
+    },
+    "restart": {
+      "entry_disabled": false,
+      "entry_loaded": true,
+      "generation": "after_restore",
+      "guard": {
+        "api_status_checked": true,
+        "blocked": true,
+        "pending": 0,
+        "rejected": 3,
+        "retained_bytes_checked": true,
+        "sha256": "6a539827f2c55dc92c6221bc2edee2ad3e18ada0a2bccf607f2f502b9c309106",
+        "uncertain": 0,
+        "unresolved": 3
+      },
+      "loaded_source_sha256": "d877f4132c8aeaf18af3e507129098a40e7262c3440d259c5646102ba8eaf946",
+      "nonempty_options": true,
+      "outcome": "passed",
+      "owned_resource_id_sha256": "a82f026ef6f43af808f3545bfccd7935cdd05490bd1bce3125a476f5634e3574",
+      "package_files_count": 112,
+      "package_payload_sha256": "33a154968a0dd7d1e58d42a6a0aaf84d8be9cb0da49120477972ec872eba2c6a",
+      "phase": "restart",
+      "prepared_dependencies": {
+        "inventoried_non_bytecode_bytes_checked": true,
+        "inventory_scope": "dependency_regular_files_excluding_generated_bytecode",
+        "inventory_sha256": "b20c91d32d02a2436003779a1ef0369f4f7da45e0975044469acc365e336d85f",
+        "normal_bootstrap_library": true,
+        "origins_config_deps": true,
+        "skip_pip": false
+      },
+      "process": {
+        "pid": 71,
+        "start_ticks": 31520
+      },
+      "recorder": {
+        "backup_platform_registered": true,
+        "commit_proven": true,
+        "integrity_ok": true,
+        "no_backup_failure_issue": true,
+        "postbackup_marker_absent": true,
+        "postbackup_marker_rows": 0,
+        "postrestore_exact_match": true,
+        "postrestore_rows": 10,
+        "postrestore_sha256": "ea7f10096b77cdd2f80186e3a49107e471e4f1e3ffe96417c4dc9d4b8077a0d9",
+        "prebackup_exact_match": true,
+        "prebackup_rows": 10,
+        "prebackup_sha256": "4c6150fa8df913a07fd8cfe54024dd11dce1ba2c930d2d36c944a4eb44edeca0"
+      },
+      "runtime_config_sha256": "50864d7a308bdd22330200b44b61c1367a629bfd9c2dacc71312e80b710d8e7c",
+      "schema": 1,
+      "served_bundle_sha256": "88caf611c1a640212e42a7b05e49ae64dce96b80d955ad407e3279a996701b4d",
+      "snapshot_sha256": "166161c3dcf8ef4afb4a10245bdc25c521c638546dff6363b8d481f881452900",
+      "static_served_bundle_matches": true
+    },
+    "restored": {
+      "automatic_guard_antirollback_passed": false,
+      "entry_disabled": false,
+      "entry_loaded": true,
+      "generation": "after_restore",
+      "guard": {
+        "api_status_checked": true,
+        "blocked": false,
+        "pending": 0,
+        "rejected": 2,
+        "retained_bytes_checked": true,
+        "sha256": "9df3bd3987e0b2e070259432ebd8c39b29b23c055e8788364af668907fbb0ba6",
+        "uncertain": 0,
+        "unresolved": 2
+      },
+      "loaded_source_sha256": "d877f4132c8aeaf18af3e507129098a40e7262c3440d259c5646102ba8eaf946",
+      "nonempty_options": true,
+      "operational_restore_passed": true,
+      "outcome": "passed",
+      "owned_resource_id_sha256": "a82f026ef6f43af808f3545bfccd7935cdd05490bd1bce3125a476f5634e3574",
+      "package_files_count": 112,
+      "package_payload_sha256": "33a154968a0dd7d1e58d42a6a0aaf84d8be9cb0da49120477972ec872eba2c6a",
+      "phase": "restored",
+      "prepared_dependencies": {
+        "inventoried_non_bytecode_bytes_checked": true,
+        "inventory_scope": "dependency_regular_files_excluding_generated_bytecode",
+        "inventory_sha256": "b20c91d32d02a2436003779a1ef0369f4f7da45e0975044469acc365e336d85f",
+        "normal_bootstrap_library": true,
+        "origins_config_deps": true,
+        "skip_pip": false
+      },
+      "process": {
+        "pid": 71,
+        "start_ticks": 19837
+      },
+      "recorder": {
+        "backup_platform_registered": true,
+        "commit_proven": true,
+        "integrity_ok": true,
+        "no_backup_failure_issue": true,
+        "postbackup_marker_absent": true,
+        "postbackup_marker_rows": 0,
+        "postrestore_exact_match": true,
+        "postrestore_rows": 10,
+        "postrestore_sha256": "ea7f10096b77cdd2f80186e3a49107e471e4f1e3ffe96417c4dc9d4b8077a0d9",
+        "prebackup_exact_match": true,
+        "prebackup_rows": 10,
+        "prebackup_sha256": "4c6150fa8df913a07fd8cfe54024dd11dce1ba2c930d2d36c944a4eb44edeca0"
+      },
+      "runtime_config_sha256": "50864d7a308bdd22330200b44b61c1367a629bfd9c2dacc71312e80b710d8e7c",
+      "schema": 1,
+      "served_bundle_sha256": "88caf611c1a640212e42a7b05e49ae64dce96b80d955ad407e3279a996701b4d",
+      "snapshot_sha256": "166161c3dcf8ef4afb4a10245bdc25c521c638546dff6363b8d481f881452900",
+      "startup_diagnostics": {
+        "before_entry_wait": {
+          "config_deps_on_path": true,
+          "entry_disabled": false,
+          "entry_state": "loaded",
+          "packages": {
+            "anisette": {
+              "available": true,
+              "loaded_module_present": false,
+              "metadata_error": false,
+              "origin_config_deps": true,
+              "origin_probe": "import_spec",
+              "satisfies_requirement": true,
+              "version": "1.2.4"
+            },
+            "beautifulsoup4": {
+              "available": true,
+              "loaded_module_present": false,
+              "metadata_error": false,
+              "origin_config_deps": true,
+              "origin_probe": "import_spec",
+              "satisfies_requirement": true,
+              "version": "4.13.3"
+            },
+            "life360": {
+              "available": true,
+              "loaded_module_present": true,
+              "metadata_error": false,
+              "origin_config_deps": true,
+              "origin_probe": "loaded_module",
+              "satisfies_requirement": true,
+              "version": "7.2.0"
+            },
+            "protobuf": {
+              "available": true,
+              "loaded_module_present": false,
+              "metadata_error": false,
+              "origin_config_deps": true,
+              "origin_probe": "import_spec",
+              "satisfies_requirement": true,
+              "version": "7.36.0"
+            },
+            "srp": {
+              "available": true,
+              "loaded_module_present": false,
+              "metadata_error": false,
+              "origin_config_deps": true,
+              "origin_probe": "import_spec",
+              "satisfies_requirement": true,
+              "version": "1.0.22"
+            },
+            "unicorn": {
+              "available": true,
+              "loaded_module_present": false,
+              "metadata_error": false,
+              "origin_config_deps": true,
+              "origin_probe": "import_spec",
+              "satisfies_requirement": true,
+              "version": "2.1.4"
+            }
+          },
+          "person_sources_match": 2,
+          "person_states_present": 2,
+          "skip_pip": false,
+          "tracker_states_present": 2
+        },
+        "before_sources_wait": {
+          "config_deps_on_path": true,
+          "entry_disabled": false,
+          "entry_state": "loaded",
+          "packages": {
+            "anisette": {
+              "available": true,
+              "loaded_module_present": false,
+              "metadata_error": false,
+              "origin_config_deps": true,
+              "origin_probe": "import_spec",
+              "satisfies_requirement": true,
+              "version": "1.2.4"
+            },
+            "beautifulsoup4": {
+              "available": true,
+              "loaded_module_present": false,
+              "metadata_error": false,
+              "origin_config_deps": true,
+              "origin_probe": "import_spec",
+              "satisfies_requirement": true,
+              "version": "4.13.3"
+            },
+            "life360": {
+              "available": true,
+              "loaded_module_present": true,
+              "metadata_error": false,
+              "origin_config_deps": true,
+              "origin_probe": "loaded_module",
+              "satisfies_requirement": true,
+              "version": "7.2.0"
+            },
+            "protobuf": {
+              "available": true,
+              "loaded_module_present": false,
+              "metadata_error": false,
+              "origin_config_deps": true,
+              "origin_probe": "import_spec",
+              "satisfies_requirement": true,
+              "version": "7.36.0"
+            },
+            "srp": {
+              "available": true,
+              "loaded_module_present": false,
+              "metadata_error": false,
+              "origin_config_deps": true,
+              "origin_probe": "import_spec",
+              "satisfies_requirement": true,
+              "version": "1.0.22"
+            },
+            "unicorn": {
+              "available": true,
+              "loaded_module_present": false,
+              "metadata_error": false,
+              "origin_config_deps": true,
+              "origin_probe": "import_spec",
+              "satisfies_requirement": true,
+              "version": "2.1.4"
+            }
+          },
+          "person_sources_match": 2,
+          "person_states_present": 2,
+          "skip_pip": false,
+          "tracker_states_present": 2
+        }
+      },
+      "startup_guard_unchanged_after_load": true,
+      "static_served_bundle_matches": true
+    }
+  }
+}

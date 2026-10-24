@@ -1,5 +1,6 @@
 """Import previews, cancellation, duplicate protection and retry behavior."""
 
+import asyncio
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -7,7 +8,7 @@ from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
 from homeassistant.data_entry_flow import FlowResultType, InvalidData
 
 from custom_components.homecircle.place_import import parse_places
-from test_config_flow import create, start_options
+from tests.test_config_flow import create, start_options
 
 
 PLACES = [
@@ -21,6 +22,70 @@ PLACES = [
     {"name": "Home", ATTR_LATITUDE: "0", ATTR_LONGITUDE: "0", "radius": "100"},
     {"name": "Bad place", ATTR_LATITUDE: "nan", ATTR_LONGITUDE: "0", "radius": "100"},
 ]
+
+
+async def test_paused_place_import_never_opens_provider_fetch(hass, household):
+    from custom_components.homecircle.provider_controls import async_get_controls
+
+    entry, flow = await begin(hass, household)
+    controls = await async_get_controls(hass, entry.entry_id)
+    with (
+        patch.object(hass.config_entries, "async_reload", new=AsyncMock()),
+        patch("custom_components.homecircle.place_import.fetch", new=AsyncMock()) as fetch,
+    ):
+        await controls.async_set_paused("life360", True)
+        flow = await hass.config_entries.options.async_configure(flow["flow_id"], {"account": "0"})
+    assert flow["errors"] == {"base": "provider_paused"}
+    fetch.assert_not_awaited()
+
+
+async def test_pause_cancels_and_drains_inflight_place_fetch(hass, household):
+    from custom_components.homecircle.provider_controls import async_get_controls
+
+    entry, flow = await begin(hass, household)
+    controls = await async_get_controls(hass, entry.entry_id)
+    entered, drained = asyncio.Event(), asyncio.Event()
+
+    async def pending(*_args):
+        entered.set()
+        try:
+            await asyncio.Event().wait()
+        finally:
+            await asyncio.sleep(0)
+            drained.set()
+
+    with (
+        patch.object(hass.config_entries, "async_reload", new=AsyncMock()),
+        patch("custom_components.homecircle.place_import.fetch", side_effect=pending),
+    ):
+        task = asyncio.create_task(hass.config_entries.options.async_configure(flow["flow_id"], {"account": "0"}))
+        await entered.wait()
+        await controls.async_set_paused("life360", True)
+        result = await task
+        assert result["errors"] == {"base": "provider_paused"}
+        assert drained.is_set()
+    hass.config_entries.options.async_abort(flow["flow_id"])
+    assert not controls._operations
+
+
+async def test_denied_place_fetch_persists_stop_and_repeated_form_cannot_retry(hass, household):
+    from life360 import Unauthorized
+    from custom_components.homecircle.provider_controls import ProviderControls, async_get_controls
+
+    entry, flow = await begin(hass, household)
+    with (
+        patch.object(hass.config_entries, "async_reload", new=AsyncMock()),
+        patch("custom_components.homecircle.place_import.fetch", new=AsyncMock(side_effect=Unauthorized("fictional", None))) as fetch,
+    ):
+        for _ in range(2):
+            flow = await hass.config_entries.options.async_configure(flow["flow_id"], {"account": "0"})
+            assert flow["errors"] == {"base": "provider_paused"}
+        await hass.async_block_till_done()
+    fetch.assert_awaited_once()
+    assert (await async_get_controls(hass, entry.entry_id)).paused("life360")
+    restored = ProviderControls(hass, entry.entry_id)
+    await restored.async_load()
+    assert restored.paused("life360")
 
 
 def test_parse_places_rejects_bad_values_and_discards_private_extras():

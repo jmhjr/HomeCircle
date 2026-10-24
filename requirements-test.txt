@@ -1,6 +1,18 @@
 # Tested with CPython 3.14.7; HA requires >=3.14.2.
 homeassistant==2026.9.4
+# Match this Core target's package constraints, including anisette's closure.
+setuptools==81.0.0
 home-assistant-frontend==20260826.7
 pytest-homeassistant-custom-component==0.13.367
 ruff==0.15.7
 life360==7.2.0
+# Integration imports occur during test collection, before HA installs requirements.
+# Protobuf follows this Core target's package constraints; other pins match manifest.
+protobuf==6.32.0
+anisette==1.2.4
+unicorn==2.1.4
+srp==1.0.22
+beautifulsoup4==4.13.3
+
+# Reference package used only by the legacy export/namespace compatibility test.
+findmy==0.10.2

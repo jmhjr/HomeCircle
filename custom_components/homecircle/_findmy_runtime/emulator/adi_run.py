@@ -112,14 +112,19 @@ class Result:
 class CoreADI:
     """A live Mac ADI dispatcher running on a synthetic macOS."""
 
-    def __init__(self, path: Path = COREADI, *, log: bool = False) -> None:
-        self.harness = Harness(MachOImage(str(path)))
+    def __init__(
+        self, path: Path = COREADI, *, log: bool = False, image_bytes: bytes | None = None,
+    ) -> None:
+        # The worker supplies the exact immutable bytes it verified; do not reopen
+        # their former pathname and turn verification into a check/use race.
+        self.harness = Harness(MachOImage(str(path), data=image_bytes))
         self.stubs = MacStubs(self.harness, log=log)
         self.last_insns = 0
 
     # -- low level --------------------------------------------------------
     def _dispatch(self, name: str, message: bytes) -> tuple[int, int, int]:
         h = self.harness
+        h.require_scratch(max(0x800, 8 + len(message)), 0x20)
         buf = bytearray(max(0x800, 8 + len(message)))
         buf[3] = 1  # encryption_type = Clear
         buf[7] = 1  # marker = 1
@@ -161,6 +166,7 @@ class CoreADI:
         length = self._read_u32(len_addr)
         if not ptr or not length:
             return b""
+        self.harness.checked_buffer(ptr, length)
         return bytes(self.harness.mem_read(ptr, length))
 
     # -- operations -------------------------------------------------------
@@ -215,6 +221,7 @@ class CoreADI:
         )
 
     def provisioning_start(self, ds_id: int, spim: bytes = b"") -> Result:
+        self.harness.require_scratch(max(len(spim), 16), 8, 8, 8, 0x800, 0x20)
         spim_buf = self.harness.scratch(max(len(spim), 16))
         if spim:
             self.harness.mem_write(spim_buf, spim)
@@ -243,6 +250,7 @@ class CoreADI:
         )
 
     def provisioning_end(self, session: int, ptm: bytes, tk: bytes) -> Result:
+        self.harness.require_scratch(max(len(ptm), 16), max(len(tk), 16), 0x800, 0x20)
         ptm_buf = self.harness.scratch(max(len(ptm), 16))
         if ptm:
             self.harness.mem_write(ptm_buf, ptm)
@@ -265,6 +273,7 @@ class CoreADI:
         )
 
     def synchronize(self, ds_id: int, sim: bytes) -> Result:
+        self.harness.require_scratch(max(len(sim), 16), 8, 8, 8, 8, 0x800, 0x20)
         sim_buf = self.harness.scratch(max(len(sim), 16))
         if sim:
             self.harness.mem_write(sim_buf, sim)

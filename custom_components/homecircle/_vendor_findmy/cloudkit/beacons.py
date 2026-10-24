@@ -204,7 +204,10 @@ def decrypt_record(
     if record.protection_info is None:
         return _decrypt_with_zone_default(record, default_master_keys)
 
-    unwrapped = unwrap_protection(ShareProtection.from_der(record.protection_info), private_keys)
+    unwrapped = unwrap_protection(
+        ShareProtection.from_der(record.protection_info), private_keys,
+        require_hmac=True, require_signature=True,
+    )
 
     return _decrypt_fields(record, unwrapped)
 
@@ -271,6 +274,13 @@ def _decrypt_fields(record: CloudKitRecord, unwrapped: UnwrappedProtection) -> D
 
     for name, field_value in record.fields.items():
         if not field_value.is_encrypted:
+            if name in {
+                "privateKey", "sharedSecret", "sharedSecret2", "secureLocationsSharedSecret"
+            }:
+                # The transport flag is not authenticated. Secret key material
+                # must pass field AEAD before it can enter an accessory export.
+                undecryptable[name] = "secret field requires authenticated encryption"
+                continue
             values[name] = field_value.raw
             continue
         if field_value.raw is None:
@@ -1059,7 +1069,10 @@ class AsyncBeaconStore:
             )
             raise BeaconExportError(msg)
 
-        unwrapped = unwrap_protection(ShareProtection.from_der(naming.protection_info), zone_keys)
+        unwrapped = unwrap_protection(
+            ShareProtection.from_der(naming.protection_info), zone_keys,
+            require_hmac=True, require_signature=True,
+        )
 
         # The whole record as it arrived, with only the named fields replaced. Rebuilding
         # it from the parts this library models would drop everything it does not.

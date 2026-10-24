@@ -1,10 +1,80 @@
 """Account isolation and shutdown, using synthetic sessions and report clients."""
 
+import asyncio
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 from custom_components.homecircle.findmy_provider import DirectFindMy
 from custom_components.homecircle.findmy_reports import ReauthenticationRequired
+
+
+def test_cold_startup_imports_sdk_off_event_loop():
+    """A fresh interpreter exposes dependency imports hidden by test collection."""
+    from pathlib import Path
+    import subprocess
+    import sys
+
+    code = """
+import asyncio
+import importlib.abc
+import socket
+import sys
+import threading
+from types import SimpleNamespace
+
+loop_thread = threading.get_ident()
+imports = []
+
+class RequireWorkerImport(importlib.abc.MetaPathFinder):
+    def find_spec(self, fullname, path=None, target=None):
+        if fullname == 'anisette':
+            current = threading.get_ident()
+            imports.append(current)
+            assert current != loop_thread, 'cold anisette import ran on the event loop'
+
+def no_network(*args, **kwargs):
+    raise AssertionError('startup import must not contact a provider')
+
+socket.socket.connect = no_network
+socket.socket.connect_ex = no_network
+socket.create_connection = no_network
+socket.getaddrinfo = no_network
+assert 'anisette' not in sys.modules
+sys.meta_path.insert(0, RequireWorkerImport())
+from custom_components.homecircle import findmy_provider
+assert not imports
+
+class SyntheticHass:
+    config_entries = SimpleNamespace(async_get_entry=lambda _: None)
+
+    async def async_add_executor_job(self, target, *args):
+        return await asyncio.get_running_loop().run_in_executor(None, target, *args)
+
+async def controls(*args):
+    return SimpleNamespace(paused=lambda *args: False)
+
+findmy_provider.async_get_controls = controls
+findmy_provider.er.async_get = lambda _: None
+findmy_provider.async_track_time_interval = lambda *args: lambda: None
+
+async def main():
+    provider = findmy_provider.DirectFindMy(SyntheticHass(), {}, lambda _: None, 'synthetic')
+    try:
+        await provider.async_start()
+        assert imports and all(current != loop_thread for current in imports)
+        assert not provider.clients and not provider.tasks and not provider.trackers
+    finally:
+        await provider.async_stop()
+
+asyncio.run(main())
+"""
+    result = subprocess.run(
+        [sys.executable, "-I", "-B", "-c",
+         "import sys; sys.path.insert(0, sys.argv[1]); " + code,
+         str(Path(__file__).resolve().parents[1])],
+        capture_output=True, timeout=60, check=False,
+    )
+    assert result.returncode == 0, "cold Find My SDK import must run off the event loop"
 
 
 async def test_one_expired_account_does_not_stop_other_accounts(hass):
@@ -53,6 +123,7 @@ async def test_one_expired_account_does_not_stop_other_accounts(hass):
     entities = []
     provider = DirectFindMy(hass, accounts, entities.extend, entry.entry_id)
     with (
+        patch.object(hass.config_entries, "async_reload", new=AsyncMock(return_value=True)),
         patch(
             "custom_components.homecircle.findmy_provider.Vault.load", return_value=data
         ),
@@ -65,13 +136,15 @@ async def test_one_expired_account_does_not_stop_other_accounts(hass):
         ),
     ):
         await provider.async_start()
+        await asyncio.wait_for(asyncio.gather(*provider.tasks.values()), 5)
         await hass.async_block_till_done()
-        assert provider.states[first] == "auth_required"
+        assert provider.states[first] == "paused"
         assert provider.states[second] == "connected"
         assert provider.health_snapshot().state == "partial"
         assert len(entities) == 2
         save.assert_called_once()
         provider.interval()
+        await asyncio.wait_for(asyncio.gather(*provider.tasks.values()), 5)
         await hass.async_block_till_done()
         assert clients[0].poll.await_count == 1
         assert clients[1].poll.await_count == 2

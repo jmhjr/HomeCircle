@@ -25,7 +25,6 @@ from typing import (
 )
 
 import bs4
-import srp._pysrp as srp
 from typing_extensions import NotRequired, ParamSpec, override
 
 from custom_components.homecircle._vendor_findmy import util
@@ -40,6 +39,7 @@ from custom_components.homecircle._vendor_findmy.errors import (
     is_service_unavailable,
     parse_retry_after,
 )
+from custom_components.homecircle._vendor_findmy.util.srp import gsa as srp
 
 from .anisette import AnisetteMapping, get_provider_from_mapping
 from .endpoint_policy import EndpointPolicy, MAC_POLICY_ID, restore_policy
@@ -128,9 +128,6 @@ def _refused(
     )
 
 
-srp.rfc5054_enable()
-srp.no_username_in_x()
-
 # Which Apple daemon a request claims to be, in the trailing group of a client info and
 # the leading token of a user agent. Only the bundle differs between them -- the device
 # is one device, and comes from :attr:`BaseAppleAccount.identity`.
@@ -161,6 +158,31 @@ def _bounded_gsa_challenge(value: dict[str, Any]) -> bool:
         and type(value.get("c")) is str and 1 <= len(value["c"]) <= 4096
         and value.get("sp") in ("s2k", "s2k_fo")
     )
+
+
+async def _encrypt_password_off_loop(
+    password: str, salt: bytes, iterations: int, protocol: str,
+) -> bytes:
+    """Finish bounded password work before releasing a cancelled sign-in."""
+    # Shield a non-raising outcome so Python 3.14 cannot log a worker failure
+    # while a cancelled caller is draining it. Native PBKDF2 cannot be stopped.
+    task = asyncio.gather(asyncio.to_thread(
+        util.crypto.encrypt_password, password, salt, iterations, protocol,
+    ), return_exceptions=True)
+    cancellation = None
+    while not task.done():
+        try:
+            await asyncio.shield(task)
+        except asyncio.CancelledError as error:
+            if cancellation is None:
+                cancellation = error
+    if cancellation is not None:
+        task.result()  # Consume any failure before the first cancellation wins.
+        raise cancellation
+    result = task.result()[0]
+    if isinstance(result, BaseException):
+        raise result
+    return result
 
 
 class _AccountInfo(TypedDict):
@@ -1504,16 +1526,33 @@ class AsyncAppleAccount(BaseAppleAccount):
             msg = f"Failed to fetch reports: {resp.get('statusCode')}"
             raise UnhandledProtocolError(msg)
 
-        # parse reports
+        # Validate the response envelope as a batch, but isolate malformed rows
+        # and payloads so valid neighboring reports remain usable.
+        rows = resp.get("acsnLocations", {}).get("locationPayload", [])
+        if not isinstance(rows, list):
+            raise UnhandledProtocolError("Invalid report response envelope")
         reports: list[LocationReport] = []
-        for key_reports in resp.get("acsnLocations", {}).get("locationPayload", []):
-            hashed_adv_key_bytes = base64.b64decode(key_reports["id"])
-
-            for report in key_reports.get("locationInfo", []):
-                payload = base64.b64decode(report)
-                loc_report = LocationReport(payload, hashed_adv_key_bytes)
-
-                reports.append(loc_report)
+        for key_reports in rows:
+            if not isinstance(key_reports, dict):
+                continue
+            identifier = key_reports.get("id")
+            payloads = key_reports.get("locationInfo", [])
+            if not isinstance(identifier, str) or not isinstance(payloads, list):
+                continue
+            try:
+                hashed_adv_key_bytes = base64.b64decode(identifier, validate=True)
+            except ValueError:
+                continue
+            if len(hashed_adv_key_bytes) != 32:
+                continue
+            for report in payloads:
+                if not isinstance(report, str):
+                    continue
+                try:
+                    payload = base64.b64decode(report, validate=True)
+                except ValueError:
+                    continue
+                reports.append(LocationReport(payload, hashed_adv_key_bytes))
 
         return reports
 
@@ -1641,8 +1680,8 @@ class AsyncAppleAccount(BaseAppleAccount):
         logger.debug("Attempting password challenge")
 
         if self._endpoint_policy is not None:
-            usr.p = await asyncio.to_thread(
-                util.crypto.encrypt_password, self._password, r["s"], r["i"], sp
+            usr.p = await _encrypt_password_off_loop(
+                self._password, r["s"], r["i"], sp
             )
         else:
             usr.p = util.crypto.encrypt_password(self._password, r["s"], r["i"], sp)

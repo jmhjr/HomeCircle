@@ -6,7 +6,7 @@ from aiohttp import FormData
 from homeassistant.data_entry_flow import FlowResultType
 from custom_components.homecircle.api import snapshot
 from custom_components.homecircle.pictures import picture_url
-from test_config_flow import legacy_tracker_entry, start_options, configure_empty
+from tests.test_config_flow import legacy_tracker_entry, start_options, configure_empty
 
 TRACKER = "device_tracker.example_picture_tag"
 

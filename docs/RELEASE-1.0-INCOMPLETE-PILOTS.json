@@ -1,0 +1,3272 @@
+{
+  "arm_managed_candidate_accepted": false,
+  "arm_managed_candidate_accepted_scope": "Broad final platform claim, including final RC/provider/native/HACS/removal disposition; separate two-cell managed startup/restart scope now accepted.",
+  "arm_managed_normal_requirements_startup_restart_matrix_accepted": true,
+  "arm_managed_scoped_successes": [
+    {
+      "HACS_tested": false,
+      "actual_Core_actions": [
+        "stop",
+        "start",
+        "stop",
+        "start",
+        "stop"
+      ],
+      "after_exact_metadata_closure": 24,
+      "after_metadata_stable_across_restart": true,
+      "all_owned_graceful_cleanup_passed": true,
+      "attempt": 7,
+      "bootstrap_host_calls": 49,
+      "bootstrap_read_only_host_nonzero_attempts": 7,
+      "cleanup": {
+        "clean_guest_shutdown": true,
+        "no_owned_process_or_listener": true,
+        "owned_private_files_removed": true,
+        "owned_vm_removed": true,
+        "owned_vm_stopped": true
+      },
+      "completed_Core_actions": 5,
+      "continuation_host_calls": 368,
+      "continuation_read_only_host_nonzero_attempts": 0,
+      "endpoint": "current",
+      "entry_scope_initial": {
+        "other": 0,
+        "system": 3,
+        "user_homecircle": 0
+      },
+      "entry_scope_restart": {
+        "other": 0,
+        "system": 3,
+        "user_homecircle": 1
+      },
+      "exact_loaded_and_served_bytes": true,
+      "forced_cleanup": false,
+      "fresh_reset": {
+        "bytes": 294198,
+        "candidate_previously_present": false,
+        "children": 13,
+        "files": 24,
+        "fresh_config_reset": true,
+        "mount_directory_preserved": true,
+        "owner_accounts_found": false
+      },
+      "independent_verification_sha256": "69db38b1f42614d38600b7aa9891e9aeb1efe0fb5b5d9364f1809990dac18924",
+      "initial_missing_direct_dependencies": [
+        "anisette",
+        "life360",
+        "unicorn"
+      ],
+      "narrow_receipt_count": 21,
+      "native_worker_tested": false,
+      "nonempty_options_and_explicit_source_selection_continuity": true,
+      "normal_dependency_preload": false,
+      "ordinary_managed_requirements_startup_restart_accepted": true,
+      "original_registry_and_known_QA_metadata_preserved": true,
+      "outcome": "verified_pass",
+      "package_files": 113,
+      "package_sha256": "c4530d94be3b2996f8d6c8948db88a51868566047d68558eefde7967f270a861",
+      "provider_accounts_tested": false,
+      "raw_private_bytes_deleted_not_independently_rehashed": true,
+      "receipt_bindings": {
+        "01-import.json": {
+          "bytes": 494,
+          "sha256": "841d0c41a75c53800829fd5d0e254e4e6f5e9b855cddb8c9cdf3922d93061139"
+        },
+        "02-export.json": {
+          "bytes": 695,
+          "sha256": "7fc4bed5212ea4eb2d503a6ae3f43c657d9e04e423d5f4be4b22d4f08b0af63b"
+        },
+        "03-offline-start.json": {
+          "bytes": 403,
+          "sha256": "06641ea559be07ce215bf1dd9b7dda484771b31461b171e9e1bc4f63ca1527cc"
+        },
+        "03b-observed-hvf.json": {
+          "bytes": 254,
+          "sha256": "303cdea1dee9f699d5f937a086a28b80bc1e8fab2bf66725ccd214bff3cf21fe"
+        },
+        "04-offline-check.json": {
+          "bytes": 847,
+          "sha256": "23a158ac93e67278c44d5e6028b89b8369c936e716f04cdd5d7075e152da6c30"
+        },
+        "05-offline-stop-request.json": {
+          "bytes": 408,
+          "sha256": "7d69e5c3246f9a6476db337f5d049d828e128dc70afb47108a05e6ea83fd092c"
+        },
+        "05b-offline-stopped.json": {
+          "bytes": 303,
+          "sha256": "37992e5b42f741a46ee42ad703c759711a8a3f2310727cfd1d584374dcf5c5be"
+        },
+        "05c-offline-guest-shutdown.json": {
+          "bytes": 591,
+          "sha256": "cc3e8196b64c2de0bc45662ab294f00774e32be0abf303ba8fb9695bbd0f305b"
+        },
+        "06-network-update.applescript": {
+          "bytes": 664,
+          "sha256": "2006160eadcd4d490a1db77af1ad23c5a7113110ac15eecff4771a278e7c74a1"
+        },
+        "06-network-update.json": {
+          "bytes": 1077,
+          "sha256": "f1ab7487eb3713775e78bda8464879422e5ed616a47782263ed32bea7e69626c"
+        },
+        "07-online-export.applescript": {
+          "bytes": 637,
+          "sha256": "0e316ccdb2f017f87ee179e44dd46b0868191b72d62110ef45e6035c35744d2c"
+        },
+        "07-online-export.json": {
+          "bytes": 799,
+          "sha256": "be0a324e3802a5cb6915b08946995b725307a46eef9e11961ca1773c31c3020d"
+        },
+        "08-online-start.json": {
+          "bytes": 512,
+          "sha256": "811a51b6d385b31519403585fc959b2e82ef6b40a1cffa2bb3eb0e0ac83421c9"
+        },
+        "09-guest-readiness.json": {
+          "bytes": 2115,
+          "sha256": "d5ddcefb87e2e1b8adebe9d348433c56ff12ce57b4e48dc2b6dfba3379aeb0da"
+        },
+        "bootstrap-results/bootstrap-driver.json": {
+          "bytes": 34569,
+          "sha256": "cf0e007e91b765e68688ebbcd6e5c2fdd026d20cef3c118193a3da970bfdff6c"
+        },
+        "bootstrap-results/last-read-only-host-failure.json": {
+          "bytes": 714,
+          "sha256": "e19f70b850b528cd823aedb11be4c725605d2f07b9660852522e61349fc3d13e"
+        },
+        "continuation/acceptance.json": {
+          "bytes": 672,
+          "sha256": "88d0e5f9cb2e448259c669dabddc4211b9fc7b27c2241991c9663c86a1935578"
+        },
+        "continuation/host.json": {
+          "bytes": 15139,
+          "sha256": "d54cfdea0e7d693430bf8bba7f347444dfb7d199330e802d5607f4b9a0d78aad"
+        },
+        "continuation/initial.json": {
+          "bytes": 4769,
+          "sha256": "c23e196e34fb30f2db4be4e3eaadba4dd1bc392f4ae457ce4ff4eabfd4085d93"
+        },
+        "continuation/restart.json": {
+          "bytes": 4956,
+          "sha256": "ca1ea95ef1b385e1c8a3f85af8468e101bf797d93f394d38ed231c4b38ab09d7"
+        },
+        "offline.json": {
+          "bytes": 228,
+          "sha256": "19f2205ee6e70409a7d439e3c1a891e73df7d5130285990f8cc475e148021700"
+        }
+      },
+      "restore_safety_tested": false,
+      "runtime": {
+        "Core": "2026.10.2",
+        "HAOS": "18.3",
+        "Python": "3.14.6",
+        "Supervisor": "2026.10.2",
+        "machine": "aarch64",
+        "native_HVF": true
+      },
+      "skip_pip": false,
+      "source_bindings_sha256": "fb9e5de98c324049378fb40d094f8abc6081c91d9392663087e534f7fbb44dcb",
+      "source_commit": "9bf03eb45d2cf43274074534e9dfe2de841f4011",
+      "stable_release_approval": false,
+      "strict_machine_specific_OCI22_metadata_verified": true,
+      "uninspected_original_disk_snapshot_bytes_verified": false,
+      "zero_read_failure_scope": "continuation_only"
+    },
+    {
+      "HACS_tested": false,
+      "actual_Core_actions": [
+        "stop",
+        "start",
+        "stop",
+        "start",
+        "stop",
+        "start",
+        "stop"
+      ],
+      "after_exact_metadata_closure": 24,
+      "after_metadata_stable_across_restart": true,
+      "all_owned_graceful_cleanup_passed": true,
+      "attempt": 4,
+      "bootstrap_host_calls": 56,
+      "bootstrap_read_only_host_nonzero_attempts": 11,
+      "cleanup": {
+        "clean_guest_shutdown": true,
+        "no_owned_process_or_listener": true,
+        "owned_private_files_removed": true,
+        "owned_vm_removed": true,
+        "owned_vm_stopped": true
+      },
+      "completed_Core_actions": 7,
+      "continuation_host_calls": 1404,
+      "continuation_read_only_host_nonzero_attempts": 0,
+      "endpoint": "minimum",
+      "entry_scope_initial": {
+        "other": 0,
+        "system": 3,
+        "user_homecircle": 0
+      },
+      "entry_scope_restart": {
+        "other": 0,
+        "system": 3,
+        "user_homecircle": 1
+      },
+      "exact_loaded_and_served_bytes": true,
+      "forced_cleanup": false,
+      "fresh_reset": {
+        "bytes": 302384,
+        "candidate_previously_present": false,
+        "children": 13,
+        "files": 24,
+        "fresh_config_reset": true,
+        "mount_directory_preserved": true,
+        "owner_accounts_found": false
+      },
+      "independent_verification_sha256": "0cd9671a08aaa5825750f7a90c35ebd022f547f2461ba20896b8d0ede3da1c45",
+      "initial_missing_direct_dependencies": [
+        "anisette",
+        "life360",
+        "unicorn"
+      ],
+      "minimum_selection": {
+        "accepted_minimum_Core_version": "2026.9.4",
+        "complete_Core_action_count": 7,
+        "fresh_configuration_reset": {
+          "bytes": 302384,
+          "candidate_previously_present": false,
+          "children": 13,
+          "files": 24,
+          "fresh_config_reset": true,
+          "mount_directory_preserved": true,
+          "owner_accounts_found": false
+        },
+        "initial_stock_Core_API_and_container_version": "2026.10.2",
+        "observed_postselection_state": "not_created",
+        "stock_readiness_alone_is_minimum_acceptance": false,
+        "strict_machine_specific_OCI22_metadata_verified": true,
+        "supported_version_requests": 1
+      },
+      "narrow_receipt_count": 21,
+      "native_worker_tested": false,
+      "nonempty_options_and_explicit_source_selection_continuity": true,
+      "normal_dependency_preload": false,
+      "ordinary_managed_requirements_startup_restart_accepted": true,
+      "original_registry_and_known_QA_metadata_preserved": true,
+      "outcome": "verified_pass",
+      "package_files": 113,
+      "package_sha256": "c4530d94be3b2996f8d6c8948db88a51868566047d68558eefde7967f270a861",
+      "provider_accounts_tested": false,
+      "raw_private_bytes_deleted_not_independently_rehashed": true,
+      "receipt_bindings": {
+        "01-import.json": {
+          "bytes": 495,
+          "sha256": "7837ed429286bfaa541a23e690c2b3dedf777d8312ddc96859f84b6a31ec0127"
+        },
+        "02-export.json": {
+          "bytes": 692,
+          "sha256": "fa1e260da976db0d97b3aae1c2fd8732b7c8c5f50413f985d1125d6bcf680d89"
+        },
+        "03-offline-start.json": {
+          "bytes": 403,
+          "sha256": "30a66afef39de39a96c6c80bbb6e737e1db4b48fc5bddaec2bd400d41719e2c7"
+        },
+        "03b-observed-hvf.json": {
+          "bytes": 254,
+          "sha256": "41d94cf2a2cf7d6a21d22dde62adf859afcb683af81c12029605c5c5aba8dbc5"
+        },
+        "04-offline-check.json": {
+          "bytes": 849,
+          "sha256": "0ad86c0fa31219572141e25d6e5687f686b68cde24208e596202331db1d603bd"
+        },
+        "05-offline-stop-request.json": {
+          "bytes": 407,
+          "sha256": "babb1a21735341b374b510b8f983a809e38130631a4b9a0d7962da9a4f99b31d"
+        },
+        "05b-offline-stopped.json": {
+          "bytes": 303,
+          "sha256": "e6aa1f9fe7910499220bcbef93d2e765885a491cd94ade506aca7d1b625dd95b"
+        },
+        "05c-offline-guest-shutdown.json": {
+          "bytes": 592,
+          "sha256": "a879281dbc2d952669a1755e105aa062e94a5393d77344fed6cb75d70f388dbf"
+        },
+        "06-network-update.applescript": {
+          "bytes": 664,
+          "sha256": "02573d785906e04a39a66b28506ae934c19c4550bdae6d6c38e995529bca43f0"
+        },
+        "06-network-update.json": {
+          "bytes": 1076,
+          "sha256": "f76c8de8277806ceed93a91f994030da64fdc85e2f0fbd4284872da7014d6594"
+        },
+        "07-online-export.applescript": {
+          "bytes": 645,
+          "sha256": "905faa560eadd32e62dbe660a99466bc8f23053c4fbc1c1e86593c72aafd210c"
+        },
+        "07-online-export.json": {
+          "bytes": 798,
+          "sha256": "615eb089f9e985d08a5e256baf93a93540e6f2e289881ed2017ee157959dd739"
+        },
+        "08-online-start.json": {
+          "bytes": 513,
+          "sha256": "ae89cf9c49e58af8cb806162115303b7d1b265d21054b5c34d64e9f08ec1c038"
+        },
+        "09-guest-readiness.json": {
+          "bytes": 2117,
+          "sha256": "024698941033bd444a79e463edaf06f873cd0fa80ac18d653c4d21d2dfd802ed"
+        },
+        "bootstrap-results/bootstrap-driver.json": {
+          "bytes": 39455,
+          "sha256": "bc6ea359b78dd31a804567c4df1ab11103827095d01169610a974aaf8a1bf90c"
+        },
+        "bootstrap-results/last-read-only-host-failure.json": {
+          "bytes": 714,
+          "sha256": "538bf1f64c3e36898e32ea386808fccb9af40d175486f75ea763badfcfe38db5"
+        },
+        "continuation/acceptance.json": {
+          "bytes": 629,
+          "sha256": "f83870b4e19a930e6a809b5c12593f8492b95cf7d984d4ca52d972c4993927c1"
+        },
+        "continuation/host.json": {
+          "bytes": 18744,
+          "sha256": "000c3079070234381610956aa0337862ce6a26a34fc430178c0a12b56d27b356"
+        },
+        "continuation/initial.json": {
+          "bytes": 4768,
+          "sha256": "2634ea82dd612072cca42917b3d5aa2c14d9797b8bde3bd4003df6a5fc2a1591"
+        },
+        "continuation/restart.json": {
+          "bytes": 4955,
+          "sha256": "4d1762156b418e30e66d7f10b8e3855e235892d36515638256a04d380001b4ce"
+        },
+        "offline.json": {
+          "bytes": 228,
+          "sha256": "063ad480223886ec43609534c9d7d5076c78579ce702e383602e80df13a3a845"
+        }
+      },
+      "restore_safety_tested": false,
+      "runtime": {
+        "Core": "2026.9.4",
+        "HAOS": "18.3",
+        "Python": "3.14.6",
+        "Supervisor": "2026.10.2",
+        "machine": "aarch64",
+        "native_HVF": true
+      },
+      "skip_pip": false,
+      "source_bindings_sha256": "464092adf8c12ecd42058ce696a30ea7b51875c4e2c63690f7e4f4c921758253",
+      "source_commit": "9bf03eb45d2cf43274074534e9dfe2de841f4011",
+      "stable_release_approval": false,
+      "strict_machine_specific_OCI22_metadata_verified": true,
+      "uninspected_original_disk_snapshot_bytes_verified": false,
+      "zero_read_failure_scope": "continuation_only"
+    }
+  ],
+  "authenticated_provider_behavior_tested": false,
+  "candidate_package_files": 113,
+  "candidate_zip_sha256": "c4530d94be3b2996f8d6c8948db88a51868566047d68558eefde7967f270a861",
+  "consumer_compatibility_accepted": false,
+  "consumer_current_amd64_prepared_cache_entrypoint_accepted": true,
+  "consumer_fresh_online_normal_installer_accepted": false,
+  "consumer_preparation_diagnosis": {
+    "confirmed_missing_synthetic_config_marker": ".HA_VERSION",
+    "exact_current_bootstrap_calls_upgrade_before_cache_mount": true,
+    "existing_45_versions_and_metadata_origin_predicate_unchanged": true,
+    "following_scoped_success_marker_readback": true,
+    "following_scoped_success_run": 39516737435,
+    "marker_revision_pilot_outcome": "failed_or_incomplete",
+    "marker_revision_pilot_run": 39513706335,
+    "missing_marker_legacy_version": "0.7.7",
+    "official_config_sha256": {
+      "2026.10.2": "c196cf81792f2d8d998b2595ff9d5d3ed8be3628327dde1d4720860c4f3bba2b",
+      "2026.9.4": "7f62be48f6030f63abc59c73afbbf69f6d4c6dda2a081f60e6382554e9c53d35"
+    },
+    "retained_runtime_marker_readback_receipt": false,
+    "runtime_cache_deletion_directly_observed": false,
+    "scope": "source-control-flow and actual extracted-function temporary-files regression; not direct runtime deletion observation",
+    "upgrade_function_source_sha256": "6ba6c3754ec05aa0b5d304513ee638e23555cbcb4adfb0dc8fc61cbf73bf0cd1"
+  },
+  "consumer_prepared_cache_entrypoint_matrix_accepted": true,
+  "consumer_remaining_standard_entrypoint_cells": [],
+  "consumer_remaining_standard_entrypoint_scope": "original entrypoint with prepared normal-config dependencies",
+  "consumer_resource_projection_source_defect": {
+    "actual_missing_key_text_observed": false,
+    "actual_runtime_exception_type": "KeyError",
+    "actual_runtime_failure_stage": "resource_identity",
+    "actual_schema_validator_executed_in_pure_probe": false,
+    "both_tags_create_method_source_identical": true,
+    "create_method_source_bytes": 220,
+    "create_method_source_sha256": "ed9ae7f3b46e76f8893a3ddbe184947154e42609a9ea8f8da76e502f9a9eabfe",
+    "following_runtime_pass_run": 39516737435,
+    "new_Core_or_native_runtime_executed": false,
+    "old_mapper_exact_source_sha256": "5e91ab452d42b0961cf6e467e82d056ba6f806e7b603adc2f4bfd20038258d97",
+    "prepared_correction_runtime_pass": true,
+    "prepared_read_correction": "read stored type; retain semantic res_type output",
+    "scope": "exact tagged create-transform and actual mapper regression on known-valid synthetic records; schema stub, no HA runtime",
+    "source_objects": {
+      "core-const-current.py": {
+        "bytes": 30747,
+        "sha256": "47c73a748faa89c05c722f788a832a1de0f62f4ec9c4ad098954cb97747c2e2d",
+        "url": "https://raw.githubusercontent.com/home-assistant/core/2026.10.2/homeassistant/const.py"
+      },
+      "core-const-minimum.py": {
+        "bytes": 30712,
+        "sha256": "3914e64322a5c5b3effb6cd4a1dca25f3ebca59381aea1a679d6be27bff89f8f",
+        "url": "https://raw.githubusercontent.com/home-assistant/core/2026.9.4/homeassistant/const.py"
+      },
+      "lovelace-const-current.py": {
+        "bytes": 2678,
+        "sha256": "745c7070d90914f8758f3af8092ab16b052653d8ac3096cc3033e432ac87d362",
+        "url": "https://raw.githubusercontent.com/home-assistant/core/2026.10.2/homeassistant/components/lovelace/const.py"
+      },
+      "lovelace-const-minimum.py": {
+        "bytes": 2582,
+        "sha256": "d71383fb88ad6b7c47e65aad14e645f042b20c0e11dbdad168a7f1c1b2dc5390",
+        "url": "https://raw.githubusercontent.com/home-assistant/core/2026.9.4/homeassistant/components/lovelace/const.py"
+      },
+      "resources-current.py": {
+        "bytes": 5773,
+        "sha256": "02aff4794cf3bb7ed82a747a703a94281423a05f8a09b5a7c7395783636477ac",
+        "url": "https://raw.githubusercontent.com/home-assistant/core/2026.10.2/homeassistant/components/lovelace/resources.py"
+      },
+      "resources-minimum.py": {
+        "bytes": 5757,
+        "sha256": "278b03f7b8f9d85948be365f9916d1e8138fea93d5e1681f700b97c61a357f88",
+        "url": "https://raw.githubusercontent.com/home-assistant/core/2026.9.4/homeassistant/components/lovelace/resources.py"
+      }
+    }
+  },
+  "consumer_runs": [
+    {
+      "archive_crc_verified": true,
+      "artifact_bytes": 937,
+      "artifact_id": 12301231947,
+      "artifact_sha256": "adb4c2bcafa21627f004cf6abd7a5a53d82e666f1013b2d97c6576412a572e2b",
+      "failure": {
+        "failure_type": "Refused",
+        "outcome": "failed",
+        "schema": 1
+      },
+      "host": {
+        "acceptance_startups": 0,
+        "both_containers_offline_during_acceptance": false,
+        "cleanup_failed": false,
+        "exit_code": 1,
+        "final_clean_stop": false,
+        "first_service_phase": false,
+        "fresh_online_resolution_claimed": false,
+        "native_apple_worker_executed": false,
+        "outcome": "failed_or_incomplete",
+        "owned_containers_removed": true,
+        "owned_containers_stopped": true,
+        "owned_volume_removed": true,
+        "owner_accounts_used": false,
+        "pins_sha256": "55a47c56973a6708362575c67cce2114b9330e95d2c0253ee3a06215ff2ab9f0",
+        "prepared_config_cache": true,
+        "private_workspace_removed": true,
+        "restart_service_phase": false,
+        "schema": 1,
+        "stage": "preparer",
+        "target": "current-amd64",
+        "tests_repeated": false
+      },
+      "members": [
+        {
+          "bytes": 180,
+          "crc32_verified": true,
+          "path": "source-summary.json",
+          "sha256": "e5e68303524ef81c480a7bb618f0904b119ebb2f99f9caa79d9783f1b8a29301"
+        },
+        {
+          "bytes": 732,
+          "crc32_verified": true,
+          "path": "host.json",
+          "sha256": "2263c20f57602d0b189e7a1cea613468bfc87512f968f1b36fbe5a4971bfe993"
+        },
+        {
+          "bytes": 70,
+          "crc32_verified": true,
+          "path": "failure-summary.json",
+          "sha256": "35a57ea405822fec559a302a1e398056870aebd10cd6d7f9600cf062d99d4fb3"
+        }
+      ],
+      "outcome": "failed_or_incomplete",
+      "raw_logs_downloaded": false,
+      "remote_rerun_or_mutation": false,
+      "run_id": 39502196796,
+      "run_url": "https://github.com/jmhjr/HomeCircle/actions/runs/39502196796",
+      "success_scope_claimed": false,
+      "validation_control_commit": "5869404df86af21d39da079b2f7e71ecf3311a0c"
+    },
+    {
+      "archive_crc_verified": true,
+      "artifact_bytes": 991,
+      "artifact_id": 12303111835,
+      "artifact_sha256": "6b44e0140ff1fc93b18d129ba5e756b8d9664568efb67c7ab88eab09ac963ff3",
+      "failure": {
+        "failure_code": "owned_child_descendants_not_reaped",
+        "failure_type": "Refused",
+        "outcome": "failed",
+        "schema": 1,
+        "setup_stage": "cache_install"
+      },
+      "host": {
+        "acceptance_startups": 0,
+        "both_containers_offline_during_acceptance": false,
+        "cleanup_failed": false,
+        "exit_code": 1,
+        "final_clean_stop": false,
+        "first_service_phase": false,
+        "fresh_online_resolution_claimed": false,
+        "native_apple_worker_executed": false,
+        "outcome": "failed_or_incomplete",
+        "owned_containers_removed": true,
+        "owned_containers_stopped": true,
+        "owned_volume_removed": true,
+        "owner_accounts_used": false,
+        "pins_sha256": "5a60f31354c4c45b64608a9e15b2306c65626dd55bd9d2ccf4243cb44f46deff",
+        "prepared_config_cache": true,
+        "private_workspace_removed": true,
+        "restart_service_phase": false,
+        "schema": 1,
+        "stage": "preparer",
+        "target": "current-amd64",
+        "tests_repeated": false
+      },
+      "members": [
+        {
+          "bytes": 180,
+          "crc32_verified": true,
+          "path": "source-summary.json",
+          "sha256": "e5e68303524ef81c480a7bb618f0904b119ebb2f99f9caa79d9783f1b8a29301"
+        },
+        {
+          "bytes": 160,
+          "crc32_verified": true,
+          "path": "failure-summary.json",
+          "sha256": "b5501b06b74ee2da9aae9833c369cd446514e74637759bbaeb065f62ab2dcc3b"
+        },
+        {
+          "bytes": 732,
+          "crc32_verified": true,
+          "path": "host.json",
+          "sha256": "07bda383fdb8cc2a67284f45215625762478a08651e29dd92a2584842a88eb29"
+        }
+      ],
+      "outcome": "failed_or_incomplete",
+      "raw_logs_downloaded": false,
+      "remote_rerun_or_mutation": false,
+      "run_id": 39503727211,
+      "run_url": "https://github.com/jmhjr/HomeCircle/actions/runs/39503727211",
+      "success_scope_claimed": false,
+      "validation_control_commit": "c24bf18696c1fb8e651874f668347b50fb3607f4"
+    },
+    {
+      "actual_linux_fork_cases_passed": 7,
+      "archive_crc_verified": true,
+      "artifact_bytes": 1272,
+      "artifact_id": 12304050399,
+      "artifact_sha256": "5a68f7f5cdb17a97d7012d93063e01f8b490984bf121a5d4c8230593dd8f897a",
+      "cache_child_summary": {
+        "adopted_children_reaped": 1,
+        "descendant_deadline_exceeded": false,
+        "outcome": "failed",
+        "owned_descendants_drained": true,
+        "primary_exit_code": 1,
+        "primary_timed_out": false,
+        "schema": 1,
+        "stage": "cache_install",
+        "subreaper_verified": true
+      },
+      "failure": {
+        "failure_code": "cache_preparation_refused",
+        "failure_type": "Refused",
+        "outcome": "failed",
+        "schema": 1,
+        "setup_stage": "cache_install"
+      },
+      "host": {
+        "acceptance_startups": 0,
+        "both_containers_offline_during_acceptance": false,
+        "cleanup_failed": false,
+        "exit_code": 1,
+        "final_clean_stop": false,
+        "first_service_phase": false,
+        "fresh_online_resolution_claimed": false,
+        "native_apple_worker_executed": false,
+        "outcome": "failed_or_incomplete",
+        "owned_containers_removed": true,
+        "owned_containers_stopped": true,
+        "owned_volume_removed": true,
+        "owner_accounts_used": false,
+        "pins_sha256": "e4d438155defbde2e8cc82d5c7c71353f350550ae8c7ae850a53d9571375e1d6",
+        "prepared_config_cache": true,
+        "private_workspace_removed": true,
+        "restart_service_phase": false,
+        "schema": 1,
+        "stage": "preparer",
+        "target": "current-amd64",
+        "tests_repeated": false
+      },
+      "linux_skipped": 0,
+      "members": [
+        {
+          "bytes": 245,
+          "crc32_verified": true,
+          "path": "cache-child-summary.json",
+          "sha256": "0750a90a6cc789f391d4a9e8cfab90923d155af8a3bfa7c96252a7a7074bac5b"
+        },
+        {
+          "bytes": 732,
+          "crc32_verified": true,
+          "path": "host.json",
+          "sha256": "be4cd64f9d6bf8b58ec30c43a69eb86fbb8f95064a5855806d545bae1c30032e"
+        },
+        {
+          "bytes": 180,
+          "crc32_verified": true,
+          "path": "source-summary.json",
+          "sha256": "e5e68303524ef81c480a7bb618f0904b119ebb2f99f9caa79d9783f1b8a29301"
+        },
+        {
+          "bytes": 151,
+          "crc32_verified": true,
+          "path": "failure-summary.json",
+          "sha256": "f6046b825ea5272866a641214d1e571c3e33a53aafec1ff72394b97ce2b031f5"
+        }
+      ],
+      "outcome": "failed_or_incomplete",
+      "raw_logs_downloaded": false,
+      "remote_rerun_or_mutation": false,
+      "run_id": 39505904554,
+      "run_url": "https://github.com/jmhjr/HomeCircle/actions/runs/39505904554",
+      "standalone_contracts_passed": 24,
+      "success_scope_claimed": false,
+      "validation_control_commit": "80d6872775f60121995972cf88d45efaf69b9306"
+    },
+    {
+      "actual_linux_fork_cases_passed": 7,
+      "architecture": "amd64",
+      "archive_crc_verified": true,
+      "artifact_bytes": 1472,
+      "artifact_id": 12303902768,
+      "artifact_sha256": "845b3a6b260b1fcd9e85b00117431cdbba2ca4741c6e8b5a9ff1d03c021dbd72",
+      "cache_child_summary": {
+        "adopted_children_reaped": 0,
+        "descendant_deadline_exceeded": false,
+        "outcome": "passed",
+        "owned_descendants_drained": true,
+        "primary_exit_code": 0,
+        "primary_timed_out": false,
+        "schema": 1,
+        "stage": "cache_install",
+        "subreaper_verified": true
+      },
+      "canonical_source_blobs": 337,
+      "core": "2026.10.2",
+      "exact_local_published_fixture_files_verified": 19,
+      "failure": {
+        "failure_code": "guest_cached_distribution_origin_refused",
+        "failure_type": "Refused",
+        "outcome": "failed",
+        "schema": 1
+      },
+      "failures": {
+        "failure-summary.json": {
+          "failure_code": "consumer_guest_failed",
+          "failure_type": "Refused",
+          "outcome": "failed",
+          "schema": 1
+        },
+        "guest-failure.json": {
+          "failure_code": "guest_cached_distribution_origin_refused",
+          "failure_type": "Refused",
+          "outcome": "failed",
+          "schema": 1
+        }
+      },
+      "host": {
+        "acceptance_startups": 1,
+        "both_containers_offline_during_acceptance": true,
+        "cleanup_failed": false,
+        "exit_code": 1,
+        "final_clean_stop": false,
+        "first_service_phase": false,
+        "fresh_online_resolution_claimed": false,
+        "native_apple_worker_executed": false,
+        "outcome": "failed_or_incomplete",
+        "owned_containers_removed": true,
+        "owned_containers_stopped": true,
+        "owned_volume_removed": true,
+        "owner_accounts_used": false,
+        "pins_sha256": "92edd4b6431b653b2a145eef68b700dde9f320ee175ff6e9ddbcfe9d023646a9",
+        "prepared_config_cache": true,
+        "private_workspace_removed": true,
+        "restart_service_phase": false,
+        "schema": 1,
+        "stage": "first-service",
+        "target": "current-amd64",
+        "tests_repeated": false
+      },
+      "image_configuration_digest": "sha256:7a41708235a75f9408f174f346d573cc209f48c7f110fcba699a2e46e8335a3b",
+      "image_digest": "sha256:33afb0659d786213264c2211f8d91c5fe87461c56eba6a3a546eb05fc71e89f4",
+      "image_repository": "ghcr.io/home-assistant/home-assistant",
+      "linux_skipped": 0,
+      "members": [
+        {
+          "bytes": 245,
+          "crc32_verified": true,
+          "path": "cache-child-summary.json",
+          "sha256": "c65abe0ec36969bfb610dcb5b4ff3690c9a0506e536b10c47c33a89957d34d1a"
+        },
+        {
+          "bytes": 180,
+          "crc32_verified": true,
+          "path": "source-summary.json",
+          "sha256": "e5e68303524ef81c480a7bb618f0904b119ebb2f99f9caa79d9783f1b8a29301"
+        },
+        {
+          "bytes": 736,
+          "crc32_verified": true,
+          "path": "host.json",
+          "sha256": "96b025a64f4f633cd2c59ec194c9157382258a72caa87e23aa7c0d1f220750d4"
+        },
+        {
+          "bytes": 113,
+          "crc32_verified": true,
+          "path": "failure-summary.json",
+          "sha256": "577a6e94680e2273c453a53e38d7ea61a5008c937475d318f71ed71d374614b8"
+        },
+        {
+          "bytes": 132,
+          "crc32_verified": true,
+          "path": "guest-failure.json",
+          "sha256": "acc5f3b735f90d04d21d9dec8d1143c49bea891bab5d2bb475650357dbdaf0d9"
+        }
+      ],
+      "outcome": "failed_or_incomplete",
+      "package_sha256": "c4530d94be3b2996f8d6c8948db88a51868566047d68558eefde7967f270a861",
+      "pins_sha256": "92edd4b6431b653b2a145eef68b700dde9f320ee175ff6e9ddbcfe9d023646a9",
+      "product_source_commit": "9bf03eb45d2cf43274074534e9dfe2de841f4011",
+      "python": "3.14.6",
+      "raw_logs_downloaded": false,
+      "remote_rerun_or_mutation": false,
+      "run_id": 39507545357,
+      "run_url": "https://github.com/jmhjr/HomeCircle/actions/runs/39507545357",
+      "runner_label": "ubuntu-24.04",
+      "source_control_verification": {
+        "Core_constraints_retained": true,
+        "HA_or_provider_imported": false,
+        "actual_setup_uses_verified_helper": true,
+        "driver_sha256": "95553632c3fb062436d5d3f5e940cde3277a2a9dbb9a1b762a522cc682281978",
+        "exact_pure_cache_argv_verified": true,
+        "fixed_catalog_labels": 153,
+        "fixed_extra_index": "https://wheels.home-assistant.io/musllinux-index/",
+        "fixed_primary_index": "https://pypi.org/simple",
+        "fixed_setup_stages": 11,
+        "full_control_module_imported": false,
+        "metadata_scope": "committed source and pure argv only; not observed installer stdout or actual HTTP-source selection",
+        "package_versions": 45,
+        "schema": 1,
+        "validation_control_commit": "28c72ccd51d122442541b542c3f27820f9d931f6"
+      },
+      "standalone_contracts_passed": 26,
+      "success_scope_claimed": false,
+      "validation_control_commit": "28c72ccd51d122442541b542c3f27820f9d931f6",
+      "workflow_sha256": "c39c8c3bedd3b3c5d0c29e6675db6ff88163a225f1943b221c47f3ddaecf96d1"
+    },
+    {
+      "actual_linux_fork_cases_passed": 7,
+      "architecture": "amd64",
+      "archive_crc_verified": true,
+      "artifact_bytes": 1575,
+      "artifact_id": 12305095673,
+      "artifact_sha256": "d75ad1485af6614b18faeabb5a583965744dcc5392d9a8a62e23dbcfdd882069",
+      "cache_child_summary": {
+        "adopted_children_reaped": 0,
+        "descendant_deadline_exceeded": false,
+        "outcome": "passed",
+        "owned_descendants_drained": true,
+        "primary_exit_code": 0,
+        "primary_timed_out": false,
+        "schema": 1,
+        "stage": "cache_install",
+        "subreaper_verified": true
+      },
+      "canonical_source_blobs": 337,
+      "core": "2026.10.2",
+      "exact_local_published_fixture_files_verified": 19,
+      "failure": {
+        "distribution_check": {
+          "cache_precedes_system": true,
+          "expected_version_matches": true,
+          "observed_version": "2.7.1",
+          "origin": "system",
+          "sorted_package_index": 0,
+          "system_precedes_cache": false
+        },
+        "failure_code": "guest_cached_distribution_origin_refused",
+        "failure_type": "Refused",
+        "outcome": "failed",
+        "schema": 1
+      },
+      "failures": {
+        "failure-summary.json": {
+          "failure_code": "consumer_guest_failed",
+          "failure_type": "Refused",
+          "outcome": "failed",
+          "schema": 1
+        },
+        "guest-failure.json": {
+          "distribution_check": {
+            "cache_precedes_system": true,
+            "expected_version_matches": true,
+            "observed_version": "2.7.1",
+            "origin": "system",
+            "sorted_package_index": 0,
+            "system_precedes_cache": false
+          },
+          "failure_code": "guest_cached_distribution_origin_refused",
+          "failure_type": "Refused",
+          "outcome": "failed",
+          "schema": 1
+        }
+      },
+      "first_failing_pinned_distribution": {
+        "cache_precedes_system": true,
+        "expected_version": "2.7.1",
+        "expected_version_matches": true,
+        "observed_version": "2.7.1",
+        "origin": "system",
+        "pinned_package": "aiohappyeyeballs",
+        "sorted_package_index": 0,
+        "system_precedes_cache": false
+      },
+      "host": {
+        "acceptance_startups": 1,
+        "both_containers_offline_during_acceptance": true,
+        "cleanup_failed": false,
+        "exit_code": 1,
+        "final_clean_stop": false,
+        "first_service_phase": false,
+        "fresh_online_resolution_claimed": false,
+        "native_apple_worker_executed": false,
+        "outcome": "failed_or_incomplete",
+        "owned_containers_removed": true,
+        "owned_containers_stopped": true,
+        "owned_volume_removed": true,
+        "owner_accounts_used": false,
+        "pins_sha256": "3557954379655dc526d3da9c6c4edaa7933470a24bb992db23c9b2d856fb9153",
+        "prepared_config_cache": true,
+        "private_workspace_removed": true,
+        "restart_service_phase": false,
+        "schema": 1,
+        "stage": "first-service",
+        "target": "current-amd64",
+        "tests_repeated": false
+      },
+      "image_configuration_digest": "sha256:7a41708235a75f9408f174f346d573cc209f48c7f110fcba699a2e46e8335a3b",
+      "image_digest": "sha256:33afb0659d786213264c2211f8d91c5fe87461c56eba6a3a546eb05fc71e89f4",
+      "image_repository": "ghcr.io/home-assistant/home-assistant",
+      "linux_skipped": 0,
+      "members": [
+        {
+          "bytes": 245,
+          "crc32_verified": true,
+          "path": "cache-child-summary.json",
+          "sha256": "c65abe0ec36969bfb610dcb5b4ff3690c9a0506e536b10c47c33a89957d34d1a"
+        },
+        {
+          "bytes": 180,
+          "crc32_verified": true,
+          "path": "source-summary.json",
+          "sha256": "e5e68303524ef81c480a7bb618f0904b119ebb2f99f9caa79d9783f1b8a29301"
+        },
+        {
+          "bytes": 736,
+          "crc32_verified": true,
+          "path": "host.json",
+          "sha256": "47e10e5c11cda37a8a3b28abdbccbe75c7b2fd46fce2c246d98baa623c4b12f8"
+        },
+        {
+          "bytes": 113,
+          "crc32_verified": true,
+          "path": "failure-summary.json",
+          "sha256": "577a6e94680e2273c453a53e38d7ea61a5008c937475d318f71ed71d374614b8"
+        },
+        {
+          "bytes": 359,
+          "crc32_verified": true,
+          "path": "guest-failure.json",
+          "sha256": "02d32a9b19e3b4f1139486c5968bc176ef75d7746aafb5e2bff98ded92b4613b"
+        }
+      ],
+      "outcome": "failed_or_incomplete",
+      "package_sha256": "c4530d94be3b2996f8d6c8948db88a51868566047d68558eefde7967f270a861",
+      "pins_sha256": "3557954379655dc526d3da9c6c4edaa7933470a24bb992db23c9b2d856fb9153",
+      "product_source_commit": "9bf03eb45d2cf43274074534e9dfe2de841f4011",
+      "python": "3.14.6",
+      "raw_logs_downloaded": false,
+      "remote_rerun_or_mutation": false,
+      "run_id": 39509292483,
+      "run_url": "https://github.com/jmhjr/HomeCircle/actions/runs/39509292483",
+      "runner_label": "ubuntu-24.04",
+      "source_control_verification": {
+        "Core_constraints_retained": true,
+        "HA_or_provider_imported": false,
+        "actual_setup_uses_verified_helper": true,
+        "driver_sha256": "95553632c3fb062436d5d3f5e940cde3277a2a9dbb9a1b762a522cc682281978",
+        "exact_pure_cache_argv_verified": true,
+        "fixed_catalog_labels": 154,
+        "fixed_extra_index": "https://wheels.home-assistant.io/musllinux-index/",
+        "fixed_primary_index": "https://pypi.org/simple",
+        "fixed_setup_stages": 11,
+        "full_control_module_imported": false,
+        "metadata_scope": "committed source and pure argv only; not observed installer stdout or actual HTTP-source selection",
+        "package_versions": 45,
+        "schema": 1,
+        "validation_control_commit": "96c042b8fa82e53df2cd2397d7e745015011433e"
+      },
+      "standalone_contracts_passed": 31,
+      "success_scope_claimed": false,
+      "validation_control_commit": "96c042b8fa82e53df2cd2397d7e745015011433e",
+      "workflow_sha256": "53d314ac690ab511f4670876e58acc30d6327ffcd48d6625f4e9c7c9aad98957"
+    },
+    {
+      "actual_linux_fork_cases_passed": 7,
+      "architecture": "amd64",
+      "archive_crc_verified": true,
+      "artifact_bytes": 1565,
+      "artifact_id": 12306491046,
+      "artifact_sha256": "b1028b739f3831f01718a5e701aabbb4c4a1d16daf833e8f9a5ecb1230d70632",
+      "cache_child_summary": {
+        "adopted_children_reaped": 0,
+        "descendant_deadline_exceeded": false,
+        "outcome": "passed",
+        "owned_descendants_drained": true,
+        "primary_exit_code": 0,
+        "primary_timed_out": false,
+        "schema": 1,
+        "stage": "cache_install",
+        "subreaper_verified": true
+      },
+      "canonical_source_blobs": 337,
+      "core": "2026.10.2",
+      "exact_local_published_fixture_files_verified": 19,
+      "failure": {
+        "distribution_check": {
+          "cache_precedes_system": true,
+          "expected_version_matches": false,
+          "observed_version": "unavailable",
+          "origin": "missing",
+          "sorted_package_index": 4,
+          "system_precedes_cache": false
+        },
+        "failure_type": "OtherError",
+        "outcome": "failed",
+        "schema": 1
+      },
+      "failures": {
+        "failure-summary.json": {
+          "failure_code": "consumer_guest_failed",
+          "failure_type": "Refused",
+          "outcome": "failed",
+          "schema": 1
+        },
+        "guest-failure.json": {
+          "distribution_check": {
+            "cache_precedes_system": true,
+            "expected_version_matches": false,
+            "observed_version": "unavailable",
+            "origin": "missing",
+            "sorted_package_index": 4,
+            "system_precedes_cache": false
+          },
+          "failure_type": "OtherError",
+          "outcome": "failed",
+          "schema": 1
+        }
+      },
+      "first_failing_pinned_distribution": {
+        "cache_precedes_system": true,
+        "expected_version": "1.2.4",
+        "expected_version_matches": false,
+        "observed_version": "unavailable",
+        "origin": "missing",
+        "pinned_package": "anisette",
+        "sorted_package_index": 4,
+        "system_precedes_cache": false
+      },
+      "host": {
+        "acceptance_startups": 1,
+        "both_containers_offline_during_acceptance": true,
+        "cleanup_failed": false,
+        "exit_code": 1,
+        "final_clean_stop": false,
+        "first_service_phase": false,
+        "fresh_online_resolution_claimed": false,
+        "native_apple_worker_executed": false,
+        "outcome": "failed_or_incomplete",
+        "owned_containers_removed": true,
+        "owned_containers_stopped": true,
+        "owned_volume_removed": true,
+        "owner_accounts_used": false,
+        "pins_sha256": "b3f13eedb83b838efd9471959f3de7ca1f60d22f58a1a5073e0a66cec28a52f7",
+        "prepared_config_cache": true,
+        "private_workspace_removed": true,
+        "restart_service_phase": false,
+        "schema": 1,
+        "stage": "first-service",
+        "target": "current-amd64",
+        "tests_repeated": false
+      },
+      "image_configuration_digest": "sha256:7a41708235a75f9408f174f346d573cc209f48c7f110fcba699a2e46e8335a3b",
+      "image_digest": "sha256:33afb0659d786213264c2211f8d91c5fe87461c56eba6a3a546eb05fc71e89f4",
+      "image_repository": "ghcr.io/home-assistant/home-assistant",
+      "linux_skipped": 0,
+      "members": [
+        {
+          "bytes": 245,
+          "crc32_verified": true,
+          "path": "cache-child-summary.json",
+          "sha256": "c65abe0ec36969bfb610dcb5b4ff3690c9a0506e536b10c47c33a89957d34d1a"
+        },
+        {
+          "bytes": 736,
+          "crc32_verified": true,
+          "path": "host.json",
+          "sha256": "0c6e5daab569498a373f57e2cb5fe74bc478d5a0c5641b68ee4ceecd4b04a420"
+        },
+        {
+          "bytes": 180,
+          "crc32_verified": true,
+          "path": "source-summary.json",
+          "sha256": "e5e68303524ef81c480a7bb618f0904b119ebb2f99f9caa79d9783f1b8a29301"
+        },
+        {
+          "bytes": 113,
+          "crc32_verified": true,
+          "path": "failure-summary.json",
+          "sha256": "577a6e94680e2273c453a53e38d7ea61a5008c937475d318f71ed71d374614b8"
+        },
+        {
+          "bytes": 308,
+          "crc32_verified": true,
+          "path": "guest-failure.json",
+          "sha256": "c07b30271cd96de78c115559a554b2c84e8cbe2d06f107fb082c5d7824da317e"
+        }
+      ],
+      "outcome": "failed_or_incomplete",
+      "package_sha256": "c4530d94be3b2996f8d6c8948db88a51868566047d68558eefde7967f270a861",
+      "pins_sha256": "b3f13eedb83b838efd9471959f3de7ca1f60d22f58a1a5073e0a66cec28a52f7",
+      "product_source_commit": "9bf03eb45d2cf43274074534e9dfe2de841f4011",
+      "python": "3.14.6",
+      "raw_logs_downloaded": false,
+      "remote_rerun_or_mutation": false,
+      "run_id": 39510994867,
+      "run_url": "https://github.com/jmhjr/HomeCircle/actions/runs/39510994867",
+      "runner_label": "ubuntu-24.04",
+      "source_control_verification": {
+        "Core_constraints_retained": true,
+        "HA_or_provider_imported": false,
+        "actual_setup_uses_verified_helper": true,
+        "driver_sha256": "95553632c3fb062436d5d3f5e940cde3277a2a9dbb9a1b762a522cc682281978",
+        "exact_pure_cache_argv_verified": true,
+        "fixed_catalog_labels": 154,
+        "fixed_extra_index": "https://wheels.home-assistant.io/musllinux-index/",
+        "fixed_primary_index": "https://pypi.org/simple",
+        "fixed_setup_stages": 11,
+        "full_control_module_imported": false,
+        "metadata_scope": "committed source and pure argv only; not observed installer stdout or actual HTTP-source selection",
+        "package_versions": 45,
+        "schema": 1,
+        "validation_control_commit": "383e618ff8ce3290029f729c3912979245bc889f"
+      },
+      "standalone_contracts_passed": 33,
+      "success_scope_claimed": false,
+      "validation_control_commit": "383e618ff8ce3290029f729c3912979245bc889f",
+      "workflow_sha256": "f332f33570d18dd74af015ad2acb0d0e0e2a814411acf4b66379e745f504b534"
+    },
+    {
+      "actual_linux_fork_cases_passed": 7,
+      "architecture": "amd64",
+      "archive_crc_verified": true,
+      "artifact_bytes": 1443,
+      "artifact_id": 12307266035,
+      "artifact_sha256": "d368cd0bb4d641aabdba6b824781dbcd8921b08b3bd88f9386b80b911b87bc39",
+      "cache_child_summary": {
+        "adopted_children_reaped": 0,
+        "descendant_deadline_exceeded": false,
+        "outcome": "passed",
+        "owned_descendants_drained": true,
+        "primary_exit_code": 0,
+        "primary_timed_out": false,
+        "schema": 1,
+        "stage": "cache_install",
+        "subreaper_verified": true
+      },
+      "canonical_source_blobs": 337,
+      "core": "2026.10.2",
+      "exact_local_published_fixture_files_verified": 19,
+      "failure": {
+        "failure_type": "OtherError",
+        "outcome": "failed",
+        "schema": 1
+      },
+      "failures": {
+        "failure-summary.json": {
+          "failure_code": "consumer_guest_failed",
+          "failure_type": "Refused",
+          "outcome": "failed",
+          "schema": 1
+        },
+        "guest-failure.json": {
+          "failure_type": "OtherError",
+          "outcome": "failed",
+          "schema": 1
+        }
+      },
+      "first_failing_pinned_distribution": null,
+      "host": {
+        "acceptance_startups": 1,
+        "both_containers_offline_during_acceptance": true,
+        "cleanup_failed": false,
+        "exit_code": 1,
+        "final_clean_stop": false,
+        "first_service_phase": false,
+        "fresh_online_resolution_claimed": false,
+        "native_apple_worker_executed": false,
+        "outcome": "failed_or_incomplete",
+        "owned_containers_removed": true,
+        "owned_containers_stopped": true,
+        "owned_volume_removed": true,
+        "owner_accounts_used": false,
+        "pins_sha256": "09e537f3709896a3a7641afc8741047fa266cb94d8f04fd059a2248445f5b4b5",
+        "prepared_config_cache": true,
+        "private_workspace_removed": true,
+        "restart_service_phase": false,
+        "schema": 1,
+        "stage": "first-service",
+        "target": "current-amd64",
+        "tests_repeated": false
+      },
+      "image_configuration_digest": "sha256:7a41708235a75f9408f174f346d573cc209f48c7f110fcba699a2e46e8335a3b",
+      "image_digest": "sha256:33afb0659d786213264c2211f8d91c5fe87461c56eba6a3a546eb05fc71e89f4",
+      "image_repository": "ghcr.io/home-assistant/home-assistant",
+      "linux_skipped": 0,
+      "members": [
+        {
+          "bytes": 245,
+          "crc32_verified": true,
+          "path": "cache-child-summary.json",
+          "sha256": "c65abe0ec36969bfb610dcb5b4ff3690c9a0506e536b10c47c33a89957d34d1a"
+        },
+        {
+          "bytes": 736,
+          "crc32_verified": true,
+          "path": "host.json",
+          "sha256": "66b0a196ee365e88b16be7c8c5631c956d7da73e87f674f8fc66663daed9914c"
+        },
+        {
+          "bytes": 180,
+          "crc32_verified": true,
+          "path": "source-summary.json",
+          "sha256": "e5e68303524ef81c480a7bb618f0904b119ebb2f99f9caa79d9783f1b8a29301"
+        },
+        {
+          "bytes": 113,
+          "crc32_verified": true,
+          "path": "failure-summary.json",
+          "sha256": "577a6e94680e2273c453a53e38d7ea61a5008c937475d318f71ed71d374614b8"
+        },
+        {
+          "bytes": 73,
+          "crc32_verified": true,
+          "path": "guest-failure.json",
+          "sha256": "499400cb376b80f5d18ed8f657f6d6410f7d7c85fdafc05c3ad695822c9b92b6"
+        }
+      ],
+      "outcome": "failed_or_incomplete",
+      "package_sha256": "c4530d94be3b2996f8d6c8948db88a51868566047d68558eefde7967f270a861",
+      "pins_sha256": "09e537f3709896a3a7641afc8741047fa266cb94d8f04fd059a2248445f5b4b5",
+      "product_source_commit": "9bf03eb45d2cf43274074534e9dfe2de841f4011",
+      "python": "3.14.6",
+      "raw_logs_downloaded": false,
+      "remote_rerun_or_mutation": false,
+      "run_id": 39513706335,
+      "run_url": "https://github.com/jmhjr/HomeCircle/actions/runs/39513706335",
+      "runner_label": "ubuntu-24.04",
+      "source_control_verification": {
+        "Core_constraints_retained": true,
+        "HA_or_provider_imported": false,
+        "actual_setup_uses_verified_helper": true,
+        "driver_sha256": "c98388c57c0ba7bf25d70d78940391f5d78717ae582f0075bd99387ebaf0a5d4",
+        "exact_current_Core_config_source_pin_verified": true,
+        "exact_prepared_config_marker_helper_and_call_verified": true,
+        "exact_pure_cache_argv_verified": true,
+        "fixed_catalog_labels": 155,
+        "fixed_extra_index": "https://wheels.home-assistant.io/musllinux-index/",
+        "fixed_primary_index": "https://pypi.org/simple",
+        "fixed_setup_stages": 11,
+        "full_control_module_imported": false,
+        "metadata_scope": "committed source and pure argv only; not observed installer stdout or actual HTTP-source selection",
+        "package_versions": 45,
+        "schema": 1,
+        "validation_control_commit": "669cb2745f3c352d1956d3c7dc1600d26c3e12e9"
+      },
+      "standalone_contracts_passed": 39,
+      "success_scope_claimed": false,
+      "validation_control_commit": "669cb2745f3c352d1956d3c7dc1600d26c3e12e9",
+      "workflow_sha256": "e8537ed4a1ec7661b5ee385ee8560072083914ba0bb80c0c25639ed2280df278"
+    },
+    {
+      "actual_linux_fork_cases_passed": 7,
+      "architecture": "amd64",
+      "archive_crc_verified": true,
+      "artifact_bytes": 1484,
+      "artifact_id": 12307563292,
+      "artifact_sha256": "105fd943c7ccdeb8f95075086915884c1704c6456e008bf55b6b9190ccbae8b6",
+      "cache_child_summary": {
+        "adopted_children_reaped": 0,
+        "descendant_deadline_exceeded": false,
+        "outcome": "passed",
+        "owned_descendants_drained": true,
+        "primary_exit_code": 0,
+        "primary_timed_out": false,
+        "schema": 1,
+        "stage": "cache_install",
+        "subreaper_verified": true
+      },
+      "canonical_source_blobs": 337,
+      "core": "2026.10.2",
+      "exact_local_published_fixture_files_verified": 19,
+      "failure": {
+        "exception_type": "KeyError",
+        "exercise_stage": "resource_identity",
+        "failure_type": "OtherError",
+        "outcome": "failed",
+        "schema": 1
+      },
+      "failures": {
+        "failure-summary.json": {
+          "failure_code": "consumer_guest_failed",
+          "failure_type": "Refused",
+          "outcome": "failed",
+          "schema": 1
+        },
+        "guest-failure.json": {
+          "exception_type": "KeyError",
+          "exercise_stage": "resource_identity",
+          "failure_type": "OtherError",
+          "outcome": "failed",
+          "schema": 1
+        }
+      },
+      "first_failing_pinned_distribution": null,
+      "host": {
+        "acceptance_startups": 1,
+        "both_containers_offline_during_acceptance": true,
+        "cleanup_failed": false,
+        "exit_code": 1,
+        "final_clean_stop": false,
+        "first_service_phase": false,
+        "fresh_online_resolution_claimed": false,
+        "native_apple_worker_executed": false,
+        "outcome": "failed_or_incomplete",
+        "owned_containers_removed": true,
+        "owned_containers_stopped": true,
+        "owned_volume_removed": true,
+        "owner_accounts_used": false,
+        "pins_sha256": "2fab48ad440c46a161fedc94ecc226e7d4f34a190c02ded15dc2b8c905a65cd3",
+        "prepared_config_cache": true,
+        "private_workspace_removed": true,
+        "restart_service_phase": false,
+        "schema": 1,
+        "stage": "first-service",
+        "target": "current-amd64",
+        "tests_repeated": false
+      },
+      "image_configuration_digest": "sha256:7a41708235a75f9408f174f346d573cc209f48c7f110fcba699a2e46e8335a3b",
+      "image_digest": "sha256:33afb0659d786213264c2211f8d91c5fe87461c56eba6a3a546eb05fc71e89f4",
+      "image_repository": "ghcr.io/home-assistant/home-assistant",
+      "linux_skipped": 0,
+      "members": [
+        {
+          "bytes": 245,
+          "crc32_verified": true,
+          "path": "cache-child-summary.json",
+          "sha256": "c65abe0ec36969bfb610dcb5b4ff3690c9a0506e536b10c47c33a89957d34d1a"
+        },
+        {
+          "bytes": 180,
+          "crc32_verified": true,
+          "path": "source-summary.json",
+          "sha256": "e5e68303524ef81c480a7bb618f0904b119ebb2f99f9caa79d9783f1b8a29301"
+        },
+        {
+          "bytes": 736,
+          "crc32_verified": true,
+          "path": "host.json",
+          "sha256": "8fd015fd59c02365d3b15e68df1a408de5072a308c0aa285f95db5e5bbff7203"
+        },
+        {
+          "bytes": 113,
+          "crc32_verified": true,
+          "path": "failure-summary.json",
+          "sha256": "577a6e94680e2273c453a53e38d7ea61a5008c937475d318f71ed71d374614b8"
+        },
+        {
+          "bytes": 146,
+          "crc32_verified": true,
+          "path": "guest-failure.json",
+          "sha256": "b6b86e293a32a2160f98b19c601098bae57fcb59fbdd6dca88a881005388e887"
+        }
+      ],
+      "outcome": "failed_or_incomplete",
+      "package_sha256": "c4530d94be3b2996f8d6c8948db88a51868566047d68558eefde7967f270a861",
+      "pins_sha256": "2fab48ad440c46a161fedc94ecc226e7d4f34a190c02ded15dc2b8c905a65cd3",
+      "product_source_commit": "9bf03eb45d2cf43274074534e9dfe2de841f4011",
+      "python": "3.14.6",
+      "raw_logs_downloaded": false,
+      "remote_rerun_or_mutation": false,
+      "run_id": 39515362247,
+      "run_url": "https://github.com/jmhjr/HomeCircle/actions/runs/39515362247",
+      "runner_label": "ubuntu-24.04",
+      "source_control_verification": {
+        "Core_constraints_retained": true,
+        "HA_or_provider_imported": false,
+        "actual_setup_uses_verified_helper": true,
+        "driver_sha256": "c98388c57c0ba7bf25d70d78940391f5d78717ae582f0075bd99387ebaf0a5d4",
+        "exact_current_Core_config_source_pin_verified": true,
+        "exact_fixed_exercise_diagnostics_verified": true,
+        "exact_prepared_config_marker_helper_and_call_verified": true,
+        "exact_pure_cache_argv_verified": true,
+        "fixed_catalog_labels": 155,
+        "fixed_exception_types": 14,
+        "fixed_exercise_stages": 25,
+        "fixed_extra_index": "https://wheels.home-assistant.io/musllinux-index/",
+        "fixed_primary_index": "https://pypi.org/simple",
+        "fixed_setup_stages": 11,
+        "full_control_module_imported": false,
+        "metadata_scope": "committed source and pure argv only; not observed installer stdout or actual HTTP-source selection",
+        "package_versions": 45,
+        "schema": 1,
+        "validation_control_commit": "a53322576274bebc29ca77cd07be919890b59cad"
+      },
+      "standalone_contracts_passed": 45,
+      "success_scope_claimed": false,
+      "validation_control_commit": "a53322576274bebc29ca77cd07be919890b59cad",
+      "workflow_sha256": "2448f1c1170a77b2997bd704f02be2a600b7a0cf229cc251f9a808182faaebdd"
+    }
+  ],
+  "consumer_scoped_matrix_totals": {
+    "actual_original_entrypoint_service_starts": 8,
+    "all_owned_cleanup_passed": true,
+    "all_phases_resolved_metadata_counts": {
+      "cache": 45,
+      "system": 0
+    },
+    "linux_fork_case_executions": 28,
+    "linux_skips": 0,
+    "same_linux_fork_cases_per_target": 7,
+    "same_standalone_contracts_per_target": 47,
+    "standalone_contract_executions": 188,
+    "strict_JSON_receipts": 32,
+    "target_cells": 4
+  },
+  "consumer_scoped_success_runs": [
+    {
+      "acceptance_service_starts": 2,
+      "actual_linux_fork_cases_passed": 7,
+      "architecture": "amd64",
+      "archive_crc_and_retained_member_bytes_verified": true,
+      "artifact_bytes": 4616,
+      "artifact_id": 12308785057,
+      "artifact_sha256": "e5e0c728a7a204aa79c61bdf540e5306d46df97cd853d91342d7e5c7ef42e8c4",
+      "cache_child_summary": {
+        "adopted_children_reaped": 0,
+        "descendant_deadline_exceeded": false,
+        "outcome": "passed",
+        "owned_descendants_drained": true,
+        "primary_exit_code": 0,
+        "primary_timed_out": false,
+        "schema": 1,
+        "stage": "cache_install",
+        "subreaper_verified": true
+      },
+      "canonical_source_blobs": 337,
+      "checked_at": "2026-10-20T23:46:49.797Z",
+      "constraints_sha256": "7baa9a8f39ddeb9c5bb60a1036f6d5e33f4b84267f151f53cc2b95ef031a21b5",
+      "core": "2026.10.2",
+      "exact_local_published_fixture_files_verified": 19,
+      "image_configuration_digest": "sha256:7a41708235a75f9408f174f346d573cc209f48c7f110fcba699a2e46e8335a3b",
+      "image_digest": "sha256:33afb0659d786213264c2211f8d91c5fe87461c56eba6a3a546eb05fc71e89f4",
+      "image_repository": "ghcr.io/home-assistant/home-assistant",
+      "installed_files": 113,
+      "linux_skipped": 0,
+      "members": [
+        {
+          "bytes": 245,
+          "crc32_verified": true,
+          "path": "cache-child-summary.json",
+          "sha256": "c65abe0ec36969bfb610dcb5b4ff3690c9a0506e536b10c47c33a89957d34d1a"
+        },
+        {
+          "bytes": 180,
+          "crc32_verified": true,
+          "path": "source-summary.json",
+          "sha256": "e5e68303524ef81c480a7bb618f0904b119ebb2f99f9caa79d9783f1b8a29301"
+        },
+        {
+          "bytes": 973,
+          "crc32_verified": true,
+          "path": "setup-summary.json",
+          "sha256": "d8329c3d390e126c9909375135e73e57713bea09de55eaf922253a8b719f5a93"
+        },
+        {
+          "bytes": 1347,
+          "crc32_verified": true,
+          "path": "first-receipt.json",
+          "sha256": "a3b693c434a753dc08e1e5b6baa2b5efe4d339ab41e54bf1e48a94b261c5580e"
+        },
+        {
+          "bytes": 959,
+          "crc32_verified": true,
+          "path": "first-process.json",
+          "sha256": "a625a574c8c621a6b8732fd2cde2788e1aac77ca1f2c73c8c210bd8a0a55c586"
+        },
+        {
+          "bytes": 961,
+          "crc32_verified": true,
+          "path": "restart-process.json",
+          "sha256": "fc488fcb0f005838a99d19293500b09f0f6318ae32fa85cbd384812668887779"
+        },
+        {
+          "bytes": 1348,
+          "crc32_verified": true,
+          "path": "restart-receipt.json",
+          "sha256": "fa0b1fc6f0159386b1b30d725190ba1bd519e44d681ef113a2610ebab40bc030"
+        },
+        {
+          "bytes": 714,
+          "crc32_verified": true,
+          "path": "host.json",
+          "sha256": "d6d810278bd10edfe9cc0426f62764b8946c8df241deca7602c03f6437a68856"
+        }
+      ],
+      "offline_acceptance": true,
+      "outcome": "passed",
+      "owned_containers_removed": true,
+      "owned_volume_removed": true,
+      "package_sha256": "c4530d94be3b2996f8d6c8948db88a51868566047d68558eefde7967f270a861",
+      "phases": [
+        {
+          "core_process_identity_sha256": "c034d8f1ff665225f8f0969535568afd27500541356efa661843998962058a19",
+          "loaded_files": 113,
+          "original_s6_pid1": "s6-svscan",
+          "phase": "first",
+          "resolved_metadata_counts": {
+            "cache": 45,
+            "system": 0
+          },
+          "served_frontend_sha256": "80b2727d18a0b8edb052c47d2c718850adf19bf5d35c2af6c3eb86c07f1f6cac",
+          "unload_setup_checked": false
+        },
+        {
+          "core_process_identity_sha256": "af8d6015edb6e85646bd8b92cd08741b6ff56d073d6d2e7876ba96a746d62dfb",
+          "loaded_files": 113,
+          "original_s6_pid1": "s6-svscan",
+          "phase": "restart",
+          "resolved_metadata_counts": {
+            "cache": 45,
+            "system": 0
+          },
+          "served_frontend_sha256": "80b2727d18a0b8edb052c47d2c718850adf19bf5d35c2af6c3eb86c07f1f6cac",
+          "unload_setup_checked": true
+        }
+      ],
+      "pins_sha256": "4d8742caf94e3bfcf4ebaa2113a0c5d88037e636413412f1bf5c926943ba02b9",
+      "prepared_config_version_verified": true,
+      "prepared_dependency_packages": 24,
+      "prepared_startup_requirements": 21,
+      "privacy": {
+        "only_eight_narrow_json_receipts": true,
+        "owner_configuration_or_credentials_retained": false,
+        "raw_logs_or_proc_downloaded": false
+      },
+      "private_workspace_removed": true,
+      "product_source_commit": "9bf03eb45d2cf43274074534e9dfe2de841f4011",
+      "python": "3.14.6",
+      "resource_id_persistence_claimed": false,
+      "resource_url_type_preserved": true,
+      "run_id": 39516737435,
+      "run_url": "https://github.com/jmhjr/HomeCircle/actions/runs/39516737435",
+      "runner_label": "ubuntu-24.04",
+      "scope": {
+        "fresh_online_dependency_resolution": false,
+        "full_backend_or_focused_suite_repeated": false,
+        "hacs_delivery": false,
+        "host_network_or_devices": false,
+        "managed_haos": false,
+        "native_apple_worker": false,
+        "prepared_config_cache": true,
+        "provider_accounts": false,
+        "provider_request_counts_measured": false,
+        "release_published": false,
+        "same_version_unreleased_development_preview": true,
+        "standard_unmodified_container_entrypoint": true
+      },
+      "settings_and_source_identity_preserved": true,
+      "source_control_verification": {
+        "Core_constraints_retained": true,
+        "HA_or_provider_imported": false,
+        "actual_setup_uses_verified_helper": true,
+        "driver_sha256": "c98388c57c0ba7bf25d70d78940391f5d78717ae582f0075bd99387ebaf0a5d4",
+        "exact_current_Core_config_source_pin_verified": true,
+        "exact_fixed_exercise_diagnostics_verified": true,
+        "exact_prepared_config_marker_helper_and_call_verified": true,
+        "exact_pure_cache_argv_verified": true,
+        "exact_stored_resource_type_read_verified": true,
+        "fixed_catalog_labels": 155,
+        "fixed_exception_types": 14,
+        "fixed_exercise_stages": 25,
+        "fixed_extra_index": "https://wheels.home-assistant.io/musllinux-index/",
+        "fixed_primary_index": "https://pypi.org/simple",
+        "fixed_setup_stages": 11,
+        "full_control_module_imported": false,
+        "metadata_scope": "committed source and pure argv only; not observed installer stdout or actual HTTP-source selection",
+        "package_versions": 45,
+        "schema": 1,
+        "validation_control_commit": "efd83d36ae3d1b95c6cf5c73913023d34ca21a69"
+      },
+      "standalone_contracts_passed": 47,
+      "validation_control_commit": "efd83d36ae3d1b95c6cf5c73913023d34ca21a69",
+      "verification_method": "Independent SHA-256 and ZIP central/local/CRC/member bytes; exact Git-published frozen controls/workflow/pins; one native job and eight strict receipt projections; no local Core/provider/native imports or runtime.",
+      "workflow_sha256": "f813b0a5b929420b272c39525a3e3ce12c4b2dde85f0b24036f386eaeb368701"
+    },
+    {
+      "acceptance_service_starts": 2,
+      "actual_linux_fork_cases_passed": 7,
+      "architecture": "amd64",
+      "archive_crc_and_retained_member_bytes_verified": true,
+      "artifact_bytes": 4617,
+      "artifact_id": 12308069935,
+      "artifact_sha256": "2040bd4b489789bbe057128cf005f2969e201e60ed6b20cd943c41393329e76b",
+      "cache_child_summary": {
+        "adopted_children_reaped": 0,
+        "descendant_deadline_exceeded": false,
+        "outcome": "passed",
+        "owned_descendants_drained": true,
+        "primary_exit_code": 0,
+        "primary_timed_out": false,
+        "schema": 1,
+        "stage": "cache_install",
+        "subreaper_verified": true
+      },
+      "canonical_source_blobs": 337,
+      "checked_at": "2026-10-20T23:54:07.232Z",
+      "constraints_sha256": "962c9ccaf398e0b92b10ac9f765ac0f17e22238adc4e768deebc051ee8b60651",
+      "core": "2026.9.4",
+      "exact_local_published_fixture_files_verified": 19,
+      "image_configuration_digest": "sha256:cd74b0e02cee84de9f53b0f8fc079c8979796b81a6b02e1ee0cd09f038703afd",
+      "image_digest": "sha256:3e6710a7ab2a61311d9d899b719f6c3657791c63e8f4942cec4ebc42401d6b76",
+      "image_repository": "ghcr.io/home-assistant/home-assistant",
+      "installed_files": 113,
+      "linux_skipped": 0,
+      "members": [
+        {
+          "bytes": 245,
+          "crc32_verified": true,
+          "path": "cache-child-summary.json",
+          "sha256": "c65abe0ec36969bfb610dcb5b4ff3690c9a0506e536b10c47c33a89957d34d1a"
+        },
+        {
+          "bytes": 972,
+          "crc32_verified": true,
+          "path": "setup-summary.json",
+          "sha256": "58b4b1e9820dd1d2bf9e459d528b40753764e5548feae1e56cf2a63fbc2b1e78"
+        },
+        {
+          "bytes": 180,
+          "crc32_verified": true,
+          "path": "source-summary.json",
+          "sha256": "e5e68303524ef81c480a7bb618f0904b119ebb2f99f9caa79d9783f1b8a29301"
+        },
+        {
+          "bytes": 1346,
+          "crc32_verified": true,
+          "path": "first-receipt.json",
+          "sha256": "0215d88ece1c3236134c19a96b19dbe7ef24452d8f4abb80b57f7e9a6de106d0"
+        },
+        {
+          "bytes": 958,
+          "crc32_verified": true,
+          "path": "first-process.json",
+          "sha256": "6f7f33e4b853a2519babfcca7b65e052146b4ae775806f5ca01fb8d533411876"
+        },
+        {
+          "bytes": 960,
+          "crc32_verified": true,
+          "path": "restart-process.json",
+          "sha256": "43e65331aa5d770155b8a77a28189af436810d1e05262288c2cb3f591612466c"
+        },
+        {
+          "bytes": 1347,
+          "crc32_verified": true,
+          "path": "restart-receipt.json",
+          "sha256": "3a0e04f0c2c78154dd3bf2852c46a370be1fbce27e9a4b2f84341622216f4e8c"
+        },
+        {
+          "bytes": 714,
+          "crc32_verified": true,
+          "path": "host.json",
+          "sha256": "dad8bc7927edc12c62779228357371b0f9cb29092e157314fb2eeebd41b3ac48"
+        }
+      ],
+      "offline_acceptance": true,
+      "outcome": "passed",
+      "owned_containers_removed": true,
+      "owned_volume_removed": true,
+      "package_sha256": "c4530d94be3b2996f8d6c8948db88a51868566047d68558eefde7967f270a861",
+      "phases": [
+        {
+          "core_process_identity_sha256": "81ed0026f866ff799d12ced76a337e0e9580ab692290d2729f7330cc44300c78",
+          "loaded_files": 113,
+          "original_s6_pid1": "s6-svscan",
+          "phase": "first",
+          "resolved_metadata_counts": {
+            "cache": 45,
+            "system": 0
+          },
+          "served_frontend_sha256": "80b2727d18a0b8edb052c47d2c718850adf19bf5d35c2af6c3eb86c07f1f6cac",
+          "unload_setup_checked": false
+        },
+        {
+          "core_process_identity_sha256": "2b05a841dd924e243ea938027f7ce860b73cda5a2595cef931db47f53e0288d3",
+          "loaded_files": 113,
+          "original_s6_pid1": "s6-svscan",
+          "phase": "restart",
+          "resolved_metadata_counts": {
+            "cache": 45,
+            "system": 0
+          },
+          "served_frontend_sha256": "80b2727d18a0b8edb052c47d2c718850adf19bf5d35c2af6c3eb86c07f1f6cac",
+          "unload_setup_checked": true
+        }
+      ],
+      "pins_sha256": "18529404631e511fae09832e2199b42ab2a85e2a9eb5e837d0bdafc725875dab",
+      "prepared_config_version_verified": true,
+      "prepared_dependency_packages": 24,
+      "prepared_startup_requirements": 21,
+      "privacy": {
+        "only_eight_narrow_json_receipts": true,
+        "owner_configuration_or_credentials_retained": false,
+        "raw_logs_or_proc_downloaded": false
+      },
+      "private_workspace_removed": true,
+      "product_source_commit": "9bf03eb45d2cf43274074534e9dfe2de841f4011",
+      "python": "3.14.6",
+      "resource_id_persistence_claimed": false,
+      "resource_url_type_preserved": true,
+      "run_id": 39517742934,
+      "run_url": "https://github.com/jmhjr/HomeCircle/actions/runs/39517742934",
+      "runner_label": "ubuntu-24.04",
+      "scope": {
+        "fresh_online_dependency_resolution": false,
+        "full_backend_or_focused_suite_repeated": false,
+        "hacs_delivery": false,
+        "host_network_or_devices": false,
+        "managed_haos": false,
+        "native_apple_worker": false,
+        "prepared_config_cache": true,
+        "provider_accounts": false,
+        "provider_request_counts_measured": false,
+        "release_published": false,
+        "same_version_unreleased_development_preview": true,
+        "standard_unmodified_container_entrypoint": true
+      },
+      "settings_and_source_identity_preserved": true,
+      "source_control_verification": {
+        "Core": "2026.9.4",
+        "Core_constraints_retained": true,
+        "HA_or_provider_imported": false,
+        "actual_setup_uses_verified_helper": true,
+        "driver_sha256": "c98388c57c0ba7bf25d70d78940391f5d78717ae582f0075bd99387ebaf0a5d4",
+        "exact_fixed_exercise_diagnostics_verified": true,
+        "exact_prepared_config_marker_helper_and_call_verified": true,
+        "exact_pure_cache_argv_verified": true,
+        "exact_stored_resource_type_read_verified": true,
+        "exact_target_Core_config_source_pin_verified": true,
+        "fixed_catalog_labels": 155,
+        "fixed_exception_types": 14,
+        "fixed_exercise_stages": 25,
+        "fixed_extra_index": "https://wheels.home-assistant.io/musllinux-index/",
+        "fixed_primary_index": "https://pypi.org/simple",
+        "fixed_setup_stages": 11,
+        "full_control_module_imported": false,
+        "metadata_scope": "committed source and pure argv only; not observed installer stdout or actual HTTP-source selection",
+        "package_versions": 45,
+        "schema": 1,
+        "target": "minimum-amd64",
+        "validation_control_commit": "ff0850d8acd8b6cf0c58ed6df79678e8eeae23c5"
+      },
+      "standalone_contracts_passed": 47,
+      "validation_control_commit": "ff0850d8acd8b6cf0c58ed6df79678e8eeae23c5",
+      "verification_method": "Independent SHA-256 and ZIP central/local/CRC/member bytes; exact Git-published frozen controls/workflow/pins; one of three native matrix jobs and eight strict receipt projections; no local Core/provider/native imports or runtime.",
+      "workflow_sha256": "3945423967ab8db21ec2dd736d19e80b374dc5d4d8dc7eda33b50722b0e5af3d"
+    },
+    {
+      "acceptance_service_starts": 2,
+      "actual_linux_fork_cases_passed": 7,
+      "architecture": "arm64",
+      "archive_crc_and_retained_member_bytes_verified": true,
+      "artifact_bytes": 4612,
+      "artifact_id": 12308407045,
+      "artifact_sha256": "a8556c81116b77818ccbbe8596d98c5d1b017bb9205e12d67e4f9d1b25e6d243",
+      "cache_child_summary": {
+        "adopted_children_reaped": 0,
+        "descendant_deadline_exceeded": false,
+        "outcome": "passed",
+        "owned_descendants_drained": true,
+        "primary_exit_code": 0,
+        "primary_timed_out": false,
+        "schema": 1,
+        "stage": "cache_install",
+        "subreaper_verified": true
+      },
+      "canonical_source_blobs": 337,
+      "checked_at": "2026-10-20T23:54:07.232Z",
+      "constraints_sha256": "962c9ccaf398e0b92b10ac9f765ac0f17e22238adc4e768deebc051ee8b60651",
+      "core": "2026.9.4",
+      "exact_local_published_fixture_files_verified": 19,
+      "image_configuration_digest": "sha256:0ea0ebf2735bfdaff11d3592bd9495d4d1f67a7c62f9998e429de6c7479135d6",
+      "image_digest": "sha256:3e6710a7ab2a61311d9d899b719f6c3657791c63e8f4942cec4ebc42401d6b76",
+      "image_repository": "ghcr.io/home-assistant/home-assistant",
+      "installed_files": 113,
+      "linux_skipped": 0,
+      "members": [
+        {
+          "bytes": 245,
+          "crc32_verified": true,
+          "path": "cache-child-summary.json",
+          "sha256": "c65abe0ec36969bfb610dcb5b4ff3690c9a0506e536b10c47c33a89957d34d1a"
+        },
+        {
+          "bytes": 180,
+          "crc32_verified": true,
+          "path": "source-summary.json",
+          "sha256": "e5e68303524ef81c480a7bb618f0904b119ebb2f99f9caa79d9783f1b8a29301"
+        },
+        {
+          "bytes": 972,
+          "crc32_verified": true,
+          "path": "setup-summary.json",
+          "sha256": "514143b8296fc674143ffd3e91ccb593cb21223d6deceac5ae8ba2227daf2229"
+        },
+        {
+          "bytes": 1346,
+          "crc32_verified": true,
+          "path": "first-receipt.json",
+          "sha256": "0bb8175068d1bce1fb7d19b73c45537eba67a2021849762764459c7705bf3781"
+        },
+        {
+          "bytes": 958,
+          "crc32_verified": true,
+          "path": "first-process.json",
+          "sha256": "558bd1b79223a477be98390052e5cb272d775909b5de27d79e6ab1a55d7d67d6"
+        },
+        {
+          "bytes": 1347,
+          "crc32_verified": true,
+          "path": "restart-receipt.json",
+          "sha256": "24c8f79ced3e0bd4fbf6f617d522c9ca7952b03fad660a5a22edbf53b11b6685"
+        },
+        {
+          "bytes": 960,
+          "crc32_verified": true,
+          "path": "restart-process.json",
+          "sha256": "2f4c19198f5c7940b2b25e869a532afa7459d8ff02b253a2ee132f4724accd11"
+        },
+        {
+          "bytes": 714,
+          "crc32_verified": true,
+          "path": "host.json",
+          "sha256": "6f5875b0de321d93a81a849200ccb469053ac0d0bf18676bc6920e7c4e147935"
+        }
+      ],
+      "offline_acceptance": true,
+      "outcome": "passed",
+      "owned_containers_removed": true,
+      "owned_volume_removed": true,
+      "package_sha256": "c4530d94be3b2996f8d6c8948db88a51868566047d68558eefde7967f270a861",
+      "phases": [
+        {
+          "core_process_identity_sha256": "f8e12f32b3bf1270dd50e24dc01e32129380b4b0683c5e913bdf84e41c3dbadb",
+          "loaded_files": 113,
+          "original_s6_pid1": "s6-svscan",
+          "phase": "first",
+          "resolved_metadata_counts": {
+            "cache": 45,
+            "system": 0
+          },
+          "served_frontend_sha256": "80b2727d18a0b8edb052c47d2c718850adf19bf5d35c2af6c3eb86c07f1f6cac",
+          "unload_setup_checked": false
+        },
+        {
+          "core_process_identity_sha256": "54256990ed9ecef44ef4d130838055133420d754769361d815264281a03d8d3e",
+          "loaded_files": 113,
+          "original_s6_pid1": "s6-svscan",
+          "phase": "restart",
+          "resolved_metadata_counts": {
+            "cache": 45,
+            "system": 0
+          },
+          "served_frontend_sha256": "80b2727d18a0b8edb052c47d2c718850adf19bf5d35c2af6c3eb86c07f1f6cac",
+          "unload_setup_checked": true
+        }
+      ],
+      "pins_sha256": "fef3eaf61b259564f38a0e4aae04ed4209215e17d5e6893914cb136fe2b71dc6",
+      "prepared_config_version_verified": true,
+      "prepared_dependency_packages": 24,
+      "prepared_startup_requirements": 21,
+      "privacy": {
+        "only_eight_narrow_json_receipts": true,
+        "owner_configuration_or_credentials_retained": false,
+        "raw_logs_or_proc_downloaded": false
+      },
+      "private_workspace_removed": true,
+      "product_source_commit": "9bf03eb45d2cf43274074534e9dfe2de841f4011",
+      "python": "3.14.6",
+      "resource_id_persistence_claimed": false,
+      "resource_url_type_preserved": true,
+      "run_id": 39517742934,
+      "run_url": "https://github.com/jmhjr/HomeCircle/actions/runs/39517742934",
+      "runner_label": "ubuntu-24.04-arm",
+      "scope": {
+        "fresh_online_dependency_resolution": false,
+        "full_backend_or_focused_suite_repeated": false,
+        "hacs_delivery": false,
+        "host_network_or_devices": false,
+        "managed_haos": false,
+        "native_apple_worker": false,
+        "prepared_config_cache": true,
+        "provider_accounts": false,
+        "provider_request_counts_measured": false,
+        "release_published": false,
+        "same_version_unreleased_development_preview": true,
+        "standard_unmodified_container_entrypoint": true
+      },
+      "settings_and_source_identity_preserved": true,
+      "source_control_verification": {
+        "Core": "2026.9.4",
+        "Core_constraints_retained": true,
+        "HA_or_provider_imported": false,
+        "actual_setup_uses_verified_helper": true,
+        "driver_sha256": "c98388c57c0ba7bf25d70d78940391f5d78717ae582f0075bd99387ebaf0a5d4",
+        "exact_fixed_exercise_diagnostics_verified": true,
+        "exact_prepared_config_marker_helper_and_call_verified": true,
+        "exact_pure_cache_argv_verified": true,
+        "exact_stored_resource_type_read_verified": true,
+        "exact_target_Core_config_source_pin_verified": true,
+        "fixed_catalog_labels": 155,
+        "fixed_exception_types": 14,
+        "fixed_exercise_stages": 25,
+        "fixed_extra_index": "https://wheels.home-assistant.io/musllinux-index/",
+        "fixed_primary_index": "https://pypi.org/simple",
+        "fixed_setup_stages": 11,
+        "full_control_module_imported": false,
+        "metadata_scope": "committed source and pure argv only; not observed installer stdout or actual HTTP-source selection",
+        "package_versions": 45,
+        "schema": 1,
+        "target": "minimum-arm64",
+        "validation_control_commit": "ff0850d8acd8b6cf0c58ed6df79678e8eeae23c5"
+      },
+      "standalone_contracts_passed": 47,
+      "validation_control_commit": "ff0850d8acd8b6cf0c58ed6df79678e8eeae23c5",
+      "verification_method": "Independent SHA-256 and ZIP central/local/CRC/member bytes; exact Git-published frozen controls/workflow/pins; one of three native matrix jobs and eight strict receipt projections; no local Core/provider/native imports or runtime.",
+      "workflow_sha256": "3945423967ab8db21ec2dd736d19e80b374dc5d4d8dc7eda33b50722b0e5af3d"
+    },
+    {
+      "acceptance_service_starts": 2,
+      "actual_linux_fork_cases_passed": 7,
+      "architecture": "arm64",
+      "archive_crc_and_retained_member_bytes_verified": true,
+      "artifact_bytes": 4612,
+      "artifact_id": 12308169666,
+      "artifact_sha256": "80d5e786a129f4bc77d1786740e743ffdbf16556ad5b52009b110bf5b3530b9d",
+      "cache_child_summary": {
+        "adopted_children_reaped": 0,
+        "descendant_deadline_exceeded": false,
+        "outcome": "passed",
+        "owned_descendants_drained": true,
+        "primary_exit_code": 0,
+        "primary_timed_out": false,
+        "schema": 1,
+        "stage": "cache_install",
+        "subreaper_verified": true
+      },
+      "canonical_source_blobs": 337,
+      "checked_at": "2026-10-20T23:54:07.232Z",
+      "constraints_sha256": "7baa9a8f39ddeb9c5bb60a1036f6d5e33f4b84267f151f53cc2b95ef031a21b5",
+      "core": "2026.10.2",
+      "exact_local_published_fixture_files_verified": 19,
+      "image_configuration_digest": "sha256:e993d746d4b722f844d8791caa28c4bce66507c87dcc11b4d3fa13e61c05ade0",
+      "image_digest": "sha256:33afb0659d786213264c2211f8d91c5fe87461c56eba6a3a546eb05fc71e89f4",
+      "image_repository": "ghcr.io/home-assistant/home-assistant",
+      "installed_files": 113,
+      "linux_skipped": 0,
+      "members": [
+        {
+          "bytes": 245,
+          "crc32_verified": true,
+          "path": "cache-child-summary.json",
+          "sha256": "c65abe0ec36969bfb610dcb5b4ff3690c9a0506e536b10c47c33a89957d34d1a"
+        },
+        {
+          "bytes": 180,
+          "crc32_verified": true,
+          "path": "source-summary.json",
+          "sha256": "e5e68303524ef81c480a7bb618f0904b119ebb2f99f9caa79d9783f1b8a29301"
+        },
+        {
+          "bytes": 973,
+          "crc32_verified": true,
+          "path": "setup-summary.json",
+          "sha256": "44e01d8978182c86103075a855119aca55d125b2849302f8d052fd1994e9b22b"
+        },
+        {
+          "bytes": 1347,
+          "crc32_verified": true,
+          "path": "first-receipt.json",
+          "sha256": "7fbaaaa347cfa5ae35d5549fd815ec300dc1d7b83125629cba99c50bedf04b2a"
+        },
+        {
+          "bytes": 959,
+          "crc32_verified": true,
+          "path": "first-process.json",
+          "sha256": "19b388f013b0c7ca56947dfa6225b35192744ecbde29365d5426a6e321617cc8"
+        },
+        {
+          "bytes": 1348,
+          "crc32_verified": true,
+          "path": "restart-receipt.json",
+          "sha256": "9bac52eeadd1c7d5431ff98858fb7191f85e6680a015b63d4bf5c2b62ef241ee"
+        },
+        {
+          "bytes": 961,
+          "crc32_verified": true,
+          "path": "restart-process.json",
+          "sha256": "4c37d1b28d85dfd7b94eef4826e95c78548ee0379f1053697d5febd9ac2bd5bc"
+        },
+        {
+          "bytes": 714,
+          "crc32_verified": true,
+          "path": "host.json",
+          "sha256": "8dd17a4bde75278cc03a6220e0669e8a6d835403be3a5996123df90a999e7826"
+        }
+      ],
+      "offline_acceptance": true,
+      "outcome": "passed",
+      "owned_containers_removed": true,
+      "owned_volume_removed": true,
+      "package_sha256": "c4530d94be3b2996f8d6c8948db88a51868566047d68558eefde7967f270a861",
+      "phases": [
+        {
+          "core_process_identity_sha256": "17343f9cc4278acb11cfd39f8f51fbe408d3b1c592304ab3e282c1988d130392",
+          "loaded_files": 113,
+          "original_s6_pid1": "s6-svscan",
+          "phase": "first",
+          "resolved_metadata_counts": {
+            "cache": 45,
+            "system": 0
+          },
+          "served_frontend_sha256": "80b2727d18a0b8edb052c47d2c718850adf19bf5d35c2af6c3eb86c07f1f6cac",
+          "unload_setup_checked": false
+        },
+        {
+          "core_process_identity_sha256": "d3990ac0ff343ffd75fdae735dd35f71e8cadb04f4ec10f072b7cd8d816b78a3",
+          "loaded_files": 113,
+          "original_s6_pid1": "s6-svscan",
+          "phase": "restart",
+          "resolved_metadata_counts": {
+            "cache": 45,
+            "system": 0
+          },
+          "served_frontend_sha256": "80b2727d18a0b8edb052c47d2c718850adf19bf5d35c2af6c3eb86c07f1f6cac",
+          "unload_setup_checked": true
+        }
+      ],
+      "pins_sha256": "b202d2457f6e7acd362828303a7aae0b7a71a00edba45c47254931945aa0f45e",
+      "prepared_config_version_verified": true,
+      "prepared_dependency_packages": 24,
+      "prepared_startup_requirements": 21,
+      "privacy": {
+        "only_eight_narrow_json_receipts": true,
+        "owner_configuration_or_credentials_retained": false,
+        "raw_logs_or_proc_downloaded": false
+      },
+      "private_workspace_removed": true,
+      "product_source_commit": "9bf03eb45d2cf43274074534e9dfe2de841f4011",
+      "python": "3.14.6",
+      "resource_id_persistence_claimed": false,
+      "resource_url_type_preserved": true,
+      "run_id": 39517742934,
+      "run_url": "https://github.com/jmhjr/HomeCircle/actions/runs/39517742934",
+      "runner_label": "ubuntu-24.04-arm",
+      "scope": {
+        "fresh_online_dependency_resolution": false,
+        "full_backend_or_focused_suite_repeated": false,
+        "hacs_delivery": false,
+        "host_network_or_devices": false,
+        "managed_haos": false,
+        "native_apple_worker": false,
+        "prepared_config_cache": true,
+        "provider_accounts": false,
+        "provider_request_counts_measured": false,
+        "release_published": false,
+        "same_version_unreleased_development_preview": true,
+        "standard_unmodified_container_entrypoint": true
+      },
+      "settings_and_source_identity_preserved": true,
+      "source_control_verification": {
+        "Core": "2026.10.2",
+        "Core_constraints_retained": true,
+        "HA_or_provider_imported": false,
+        "actual_setup_uses_verified_helper": true,
+        "driver_sha256": "c98388c57c0ba7bf25d70d78940391f5d78717ae582f0075bd99387ebaf0a5d4",
+        "exact_fixed_exercise_diagnostics_verified": true,
+        "exact_prepared_config_marker_helper_and_call_verified": true,
+        "exact_pure_cache_argv_verified": true,
+        "exact_stored_resource_type_read_verified": true,
+        "exact_target_Core_config_source_pin_verified": true,
+        "fixed_catalog_labels": 155,
+        "fixed_exception_types": 14,
+        "fixed_exercise_stages": 25,
+        "fixed_extra_index": "https://wheels.home-assistant.io/musllinux-index/",
+        "fixed_primary_index": "https://pypi.org/simple",
+        "fixed_setup_stages": 11,
+        "full_control_module_imported": false,
+        "metadata_scope": "committed source and pure argv only; not observed installer stdout or actual HTTP-source selection",
+        "package_versions": 45,
+        "schema": 1,
+        "target": "current-arm64",
+        "validation_control_commit": "ff0850d8acd8b6cf0c58ed6df79678e8eeae23c5"
+      },
+      "standalone_contracts_passed": 47,
+      "validation_control_commit": "ff0850d8acd8b6cf0c58ed6df79678e8eeae23c5",
+      "verification_method": "Independent SHA-256 and ZIP central/local/CRC/member bytes; exact Git-published frozen controls/workflow/pins; one of three native matrix jobs and eight strict receipt projections; no local Core/provider/native imports or runtime.",
+      "workflow_sha256": "3945423967ab8db21ec2dd736d19e80b374dc5d4d8dc7eda33b50722b0e5af3d"
+    }
+  ],
+  "draft_evidence_cutoff": {
+    "canonical_document_base": "e918b6e1bbd9ab3d605f8339a43295582938b081",
+    "consumer_negative_runs": 8,
+    "current_ARM_negative_attempts": 6,
+    "cutoff_UTC": "2026-10-21 01:02:29 UTC",
+    "fresh_online_Container_normal_installer_accepted": false,
+    "historical_zero_phase_negative_runs": 7,
+    "latest_completed_Safe_run": 39524048553,
+    "managed_ARM_scoped_successes": 2,
+    "minimum_ARM_negative_attempts": 1,
+    "new_persistent_account_target_UI_ready": false,
+    "new_persistent_target_accounts_or_HACS_accepted": false,
+    "safe_restore_negative_runs": 8
+  },
+  "historical_active_followup_at_0059_UTC": {
+    "CI_95_native_zero_skip_contract_gate_passed": true,
+    "accepted_restore_followup_observed": false,
+    "cutoff_UTC": "2026-10-21 00:59:09 UTC",
+    "final_procedure_qualification_completed": false,
+    "head_sha": "e7c65b2a3f79d81b64bf6085bb5f5fc597615a7c",
+    "phase_results_observed": false,
+    "published_input_blobs_verified": 16,
+    "run_id": 39524048553,
+    "scope": "Root-reported active followup; not a completed procedure artifact.",
+    "status_at_cutoff": "in_progress"
+  },
+  "local_arm_attempts": [
+    {
+      "accepted_phase_receipts": 0,
+      "all_owned_graceful_cleanup_passed": true,
+      "attempt": 1,
+      "failure": {
+        "failure_code": "guest_phase_failed",
+        "failure_stage": "initial",
+        "failure_type": "Refused",
+        "outcome": "failed",
+        "schema": 1
+      },
+      "frozen_prepared_sha256": "867561572f70b142eff868ad9ea5bce79eb061e6e0383311582482ba0d1aff92",
+      "host_controller_sha256": "54bbecd0a77e1f7ecc90ff3bf59ffe1ca8b1e36259aa4a538b30e612bcdf03ac",
+      "managed_core_stop_start_confirmed": false,
+      "original_inventory_and_known_qa_disk_metadata_unchanged": true,
+      "outcome": "failed",
+      "owner_credentials_used": false,
+      "production_configuration_used": false,
+      "receipt_bindings": {
+        "host-failure.json": {
+          "bytes": 140,
+          "sha256": "1bcd799155eec9e16ecf635e2cd079951ce2e63fa1eb124c31aec153d4cc57ca"
+        },
+        "host.json": {
+          "bytes": 8534,
+          "sha256": "fdb92b95a55b97c23ff29235c45c76a830815c7d4f07a518cc096a425b897501"
+        }
+      },
+      "recorded_managed_core_actions": 2,
+      "underlying_cause_confirmed": false,
+      "uninspected_original_snapshot_contents_verified": false
+    },
+    {
+      "accepted_phase_receipts": 0,
+      "all_owned_graceful_cleanup_passed": true,
+      "attempt": 2,
+      "failure": {
+        "failure_code": "host_command_failed",
+        "failure_stage": "continuation_preflight",
+        "failure_type": "Refused",
+        "outcome": "failed",
+        "schema": 1
+      },
+      "frozen_prepared_sha256": "b62bd14935c42f2cd98c84a3aa85429eb3f4ca837e2d4d7157188b0525f795bf",
+      "host_controller_sha256": "0d8db56d785e5f1ab304db571aef569b17bf93fad8ea96edacec98d5e9403b5d",
+      "managed_core_stop_start_confirmed": false,
+      "original_inventory_and_known_qa_disk_metadata_unchanged": true,
+      "outcome": "failed",
+      "owner_credentials_used": false,
+      "production_configuration_used": false,
+      "receipt_bindings": {
+        "host-failure.json": {
+          "bytes": 156,
+          "sha256": "adf304bff6857c96c673092993dca644a93a7b6b7aa253b658b2b7317f6b4212"
+        },
+        "host.json": {
+          "bytes": 3050,
+          "sha256": "b47f7a3e7c3c15ddf773071a1f170485648bf849addc214d081c17c7e729e9d9"
+        }
+      },
+      "recorded_managed_core_actions": 0,
+      "underlying_cause_confirmed": false,
+      "uninspected_original_snapshot_contents_verified": false
+    },
+    {
+      "accepted_phase_receipts": 0,
+      "all_owned_graceful_cleanup_passed": true,
+      "attempt": 3,
+      "failure": {
+        "failure_code": "host_command_failed",
+        "failure_stage": "stopped_exact_candidate_staging",
+        "failure_type": "Refused",
+        "outcome": "failed",
+        "schema": 1
+      },
+      "frozen_prepared_sha256": "ae7560f92d1bc7198d273bec29e0e8230357bd12725d1f590857d767ace1a057",
+      "host_controller_sha256": "f51f88a3b468b890b3adb04bd5831d5625acd5910c96614cc7124028218b5dbd",
+      "managed_core_stop_command_launches": 1,
+      "managed_core_stop_completion_confirmed": false,
+      "managed_core_stop_start_confirmed": false,
+      "original_inventory_and_known_qa_disk_metadata_unchanged": true,
+      "outcome": "failed",
+      "owner_credentials_used": false,
+      "production_configuration_used": false,
+      "readiness": {
+        "VM_mutations": 0,
+        "guest_configuration_mutations": 0,
+        "managed_Core_actions": 0,
+        "outcome": "passed",
+        "positive_read_only_guest_observation": true,
+        "read_only_probe_count": 2
+      },
+      "receipt_bindings": {
+        "09-guest-readiness.json": {
+          "bytes": 3110,
+          "sha256": "0ad3bb782e94e4346d3a9f476a01d077cfd4fee857d96c9f18d921c605913ddf"
+        },
+        "host-failure.json": {
+          "bytes": 165,
+          "sha256": "31cfa387c503f4b3356a72b85059e8d4efdfe1317c6ad72687472752199b3588"
+        },
+        "host.json": {
+          "bytes": 5015,
+          "sha256": "de67f0c012a85a4d00cc705a9abe3fd2e256bd080cf5e4630e4cc58b64bcc4fd"
+        }
+      },
+      "recorded_managed_core_actions": 0,
+      "underlying_cause_confirmed": false,
+      "uninspected_original_snapshot_contents_verified": false
+    },
+    {
+      "accepted_phase_receipts": 0,
+      "actual_unexpected_domain_name_observed": false,
+      "all_owned_graceful_cleanup_passed": true,
+      "attempt": 4,
+      "completed_managed_core_actions": [
+        "stop",
+        "start"
+      ],
+      "confirmed_preparation_gap": "stock default configuration storage was overlaid without the fresh owned configuration reset",
+      "failure": {
+        "failure_code": "guest_phase_failed",
+        "failure_stage": "initial",
+        "failure_type": "Refused",
+        "outcome": "failed",
+        "schema": 1
+      },
+      "forced_cleanup": false,
+      "frozen_prepared_sha256": "5d17200ec653ad4ab746bb2d42a70900ae54b570959966b975c7cf267a759ff9",
+      "gap_causal_relationship_unproven": true,
+      "helper_failure": {
+        "failure_code": "qa_unexpected_entry_domain",
+        "phase": "initial",
+        "source_and_control_binding_verified": true,
+        "stage": "entry_domains"
+      },
+      "host_controller_sha256": "dd28d0c647eaa5caceb2373ee9a90cada803151199ba2e6f387e04c320e546d0",
+      "independent_verification_sha256": "d10d67f4675ac05b8fcbe66b821b334aad9d8037985c9ecd637e19abe0ec9e5f",
+      "managed_core_stop_start_confirmed": true,
+      "original_inventory_and_known_qa_disk_metadata_unchanged": true,
+      "outcome": "failed",
+      "owner_credentials_used": false,
+      "production_configuration_used": false,
+      "readiness_positive_bound": true,
+      "receipt_bindings": {
+        "09-guest-readiness.json": {
+          "bytes": 2112,
+          "sha256": "3f56a18da8072937ddd6b76c28fb54ef5f45baddecb49b2a149d1640ed581958"
+        },
+        "continuation/guest-failure.json": {
+          "bytes": 571,
+          "sha256": "120ac161ea33ec221fc956da7fd5e8868364ce758dd48c7c60f41f0da7bf6ebf"
+        },
+        "continuation/host-failure.json": {
+          "bytes": 140,
+          "sha256": "1bcd799155eec9e16ecf635e2cd079951ce2e63fa1eb124c31aec153d4cc57ca"
+        },
+        "continuation/host.json": {
+          "bytes": 9120,
+          "sha256": "fb6d469e76fe65853c6dbca982d170a420c2d8fafbf2146bc9f74495a124af54"
+        }
+      },
+      "recorded_managed_core_actions": 2,
+      "underlying_cause_confirmed": false,
+      "uninspected_original_snapshot_contents_verified": false
+    },
+    {
+      "accepted_phase_receipts": 0,
+      "actual_unexpected_domain_name_observed": false,
+      "actual_unexpected_entry_disabled_status_observed": false,
+      "all_owned_graceful_cleanup_passed": true,
+      "attempt": 5,
+      "bootstrap_actual_host_action_count": 49,
+      "bootstrap_wait_read_failure_metadata_retained": true,
+      "completed_managed_core_actions": [
+        "stop",
+        "start"
+      ],
+      "continuation_actual_host_action_count": 200,
+      "continuation_read_only_transport_failures": 0,
+      "failure": {
+        "failure_code": "guest_phase_failed",
+        "failure_stage": "initial",
+        "failure_type": "Refused",
+        "outcome": "failed",
+        "schema": 1
+      },
+      "forced_cleanup": false,
+      "fresh_owned_configuration_reset": {
+        "bytes": 335158,
+        "candidate_previously_present": false,
+        "children": 13,
+        "files": 24,
+        "fresh_config_reset": true,
+        "mount_directory_preserved": true,
+        "owner_accounts_found": false
+      },
+      "frozen_prepared_sha256": "ddafc6385101580bab2947604d4eb41681e076d35a53f2b6f7de30434a31c574",
+      "helper_failure": {
+        "control_sha256": "732e3353afbb14fca6d54923156458c3a0f24d5a27f672a0e28dd439a7bc81cf",
+        "entry_counts": {
+          "domains": {
+            "backup": 1,
+            "hassio": 1,
+            "homecircle": 0,
+            "other": 1
+          },
+          "entry_scope_allowed": false,
+          "sources": {
+            "other": 0,
+            "system": 3,
+            "user": 0
+          },
+          "system_entries_ready": false,
+          "total": 3
+        },
+        "failure_code": "qa_unexpected_entry_domain",
+        "helper_source_sha256": "0d1013ae5b37fd9ca683fa1c91152217eb00f1a68e0de2ee62004f2a41737fd4",
+        "phase": "initial",
+        "source_and_control_binding_verified": true,
+        "stage": "entry_domains"
+      },
+      "independent_verification_sha256": "043411aac232f514511eb9e7cc7af9d6bb08a962f9157fea3706ba671df47bf8",
+      "managed_core_stop_start_confirmed": true,
+      "original_inventory_and_known_qa_disk_metadata_unchanged": true,
+      "outcome": "failed",
+      "owner_credentials_used": false,
+      "production_configuration_used": false,
+      "raw_private_bytes_unavailable_after_cleanup": true,
+      "readiness_current_age_not_rechecked_after_completion": true,
+      "readiness_positive_bound": true,
+      "receipt_bindings": {
+        "09-guest-readiness.json": {
+          "bytes": 2116,
+          "sha256": "84361d09b84177a604a9e849be31bd2fb650376507745463988fb7a84244d365"
+        },
+        "continuation/guest-failure.json": {
+          "bytes": 859,
+          "sha256": "e610ebcfcc718670656704d451fbed5e6cc5c4ed29e8ee8d4c2398c5ea7d8736"
+        },
+        "continuation/host-failure.json": {
+          "bytes": 140,
+          "sha256": "1bcd799155eec9e16ecf635e2cd079951ce2e63fa1eb124c31aec153d4cc57ca"
+        },
+        "continuation/host.json": {
+          "bytes": 11472,
+          "sha256": "d358cff34b706d69408a08165cc6bb4f91305b4afd2c28dba647f1b0b13fc7ee"
+        }
+      },
+      "recorded_managed_core_actions": 2,
+      "source_bindings_sha256": "02322f5a454b7deb486487a242a81c5d156c7163395da0af3cfc83c3c83278cb",
+      "underlying_cause_confirmed": false,
+      "uninspected_original_snapshot_contents_verified": false
+    },
+    {
+      "accepted_phase_receipts": 0,
+      "actual_host_calls": 10,
+      "actual_mutations": {
+        "VM_starts": 0,
+        "exports": 0,
+        "guest_commands": 0,
+        "network_changes": 0,
+        "original_VM_actions": 0,
+        "owned_stopped_delete": 1,
+        "owned_stopped_import": 1
+      },
+      "actual_raw_registry_after_cleanup_retained": false,
+      "attempt": 6,
+      "bootstrap_source_sha256": "315463034be7727bbc283c7b13018db84317d56cd349b3b1232a12efb2b4f8d4",
+      "clean_guest_shutdown_witness_applicable": false,
+      "cleanup_recorded": {
+        "clean_guest_shutdown": false,
+        "cleanup_forced": false,
+        "no_owned_process_or_listener": true,
+        "owned_private_files_removed": true,
+        "owned_vm_removed": true,
+        "owned_vm_stopped": true
+      },
+      "continuation_verifier_run": false,
+      "controller_final_registry_output_hash_equals_preparation_original_five": true,
+      "frozen_prepared_sha256": "43df55bdf6de86e9774ca49453b262df3e7412af674c31f3d39268fda3fb1215",
+      "independent_verification_sha256": "dd8402c3aee6d9151c1be9ff415b3fae305a44368d598fefb4ad077b11056d46",
+      "no_guest_or_Core_acceptance": true,
+      "observed_failure": {
+        "bootstrap_stage": "preboot_export",
+        "failure_code": "exact_preboot_export_script_required",
+        "failure_type": "ValueError",
+        "outcome": "failed",
+        "schema": 1
+      },
+      "outcome": "failed_bootstrap_only",
+      "owned_resource_cleanup_passed": true,
+      "private_removal_checked_locally": true,
+      "raw_private_hashes_are_controller_observations": true,
+      "rendered_export_basename": "preboot.utm",
+      "required_export_basename": "preboot-readback.utm",
+      "source_hash_bound_script_path_mismatch_confirmed": true,
+      "source_or_product_runtime_defect_identified": false
+    }
+  ],
+  "local_arm_minimum_attempts": [
+    {
+      "accepted_phase_receipts": 0,
+      "actual_unexpected_domain_name_observed": false,
+      "all_owned_graceful_cleanup_passed": true,
+      "attempt": 1,
+      "completed_managed_core_actions": [
+        "stop",
+        "start",
+        "stop",
+        "start"
+      ],
+      "continuation_host_actions": 317,
+      "core": "2026.9.4",
+      "endpoint": "minimum",
+      "forced_cleanup": false,
+      "frozen_prepared_sha256": "df9acb9331f91e0ff6f916b40ca82448e1887e5111da838a408e58838dd80a68",
+      "helper_failure": {
+        "failure_code": "qa_unexpected_entry_domain",
+        "phase": "initial",
+        "source_and_control_binding_verified": true,
+        "stage": "entry_domains"
+      },
+      "host_controller_sha256": "0816ccbd07e4ed0320ba68c2149e15106d6183856b429193a29f47a9bc9a6702",
+      "independent_verification_sha256": "58a706384a4f91dd8a5179caabc9653689cc01f17e4bea4d799cea6f44ed8f7a",
+      "managed_core_stop_start_confirmed": true,
+      "minimum_core_selection": {
+        "container_core_version_before": "2026.10.2",
+        "container_state_after_selection": "not_created",
+        "core_version_before": "2026.10.2",
+        "fresh_reset": {
+          "bytes": 286006,
+          "candidate_previously_present": false,
+          "children": 13,
+          "files": 24,
+          "fresh_config_reset": true,
+          "mount_directory_preserved": true,
+          "owner_accounts_found": false
+        },
+        "supported_start_actions": 1,
+        "target": "2026.9.4",
+        "version_api_result": "ok",
+        "version_requests": 1
+      },
+      "original_inventory_and_known_qa_disk_metadata_unchanged": true,
+      "outcome": "failed",
+      "owner_credentials_used": false,
+      "production_configuration_used": false,
+      "raw_private_bytes_removed_not_independently_rehashable": true,
+      "readiness_positive_bound": true,
+      "receipt_bindings": {
+        "09-guest-readiness.json": {
+          "bytes": 2115,
+          "sha256": "8d7eba7323a9fd20383d469157f6618c4eaf741e5d10e7595ccb7745c62151fa"
+        },
+        "continuation/guest-failure.json": {
+          "bytes": 571,
+          "sha256": "a522fe0828f25c148693d8e847b855d076e4f714d3aed53b1ac2d3c83c822f77"
+        },
+        "continuation/host-failure.json": {
+          "bytes": 140,
+          "sha256": "1bcd799155eec9e16ecf635e2cd079951ce2e63fa1eb124c31aec153d4cc57ca"
+        },
+        "continuation/host.json": {
+          "bytes": 14789,
+          "sha256": "3d20e2cb56ba005842c34c2443698490643ee979db2aea05fcb19bb502385657"
+        }
+      },
+      "recorded_managed_core_actions": 4,
+      "underlying_cause_confirmed": false,
+      "uninspected_original_snapshot_contents_verified": false
+    }
+  ],
+  "new_persistent_target_progress": {
+    "HACS_ready": false,
+    "UI_onboarding_accepted": false,
+    "cutoff_UTC": "2026-10-21 01:02:29 UTC",
+    "latest_root_Core_boot_observation_UTC": "2026-10-21 00:58 UTC",
+    "loopback_bound_NAT_forward_count": 1,
+    "network_record_coercion_corrected": true,
+    "normal_Core_boot_active": true,
+    "online_start_succeeded": true,
+    "owner_accounts_accepted": false,
+    "stopped_export_readback_passed": true
+  },
+  "prepared_unrun_ARM_profiles_at_checkpoint": {
+    "accepted": false,
+    "current_attempt": 7,
+    "minimum_attempt": 4,
+    "runtime_started": false
+  },
+  "prepared_unrun_ARM_profiles_at_checkpoint_scope": "Historical public e918 checkpoint; both profiles subsequently executed as the separate scoped successes above.",
+  "safe_restore_entry_policy_source_defect": {
+    "Analytics_entry_scope_gate_passed": true,
+    "Analytics_entry_scope_gate_passed_run": 39517488285,
+    "Analytics_policy_followup_accepted": false,
+    "Analytics_system_flow_exact_source_sha256": "829fa02c77069df0ac0573a17734ac23579bb5d8bcd31626d333fdd124edc9f6",
+    "Backup_correction_alone_completed_fixture": false,
+    "corrected_followup_accepted": false,
+    "earlier_actual_OTHER_identity_remains_unobserved": true,
+    "fourth_actual_runtime_other_entry_disabled_status_observed": false,
+    "fourth_actual_runtime_other_entry_identity_observed": false,
+    "normal_bootstrap_Analytics_system_entry_supported_by_both_official_Core_tags": true,
+    "normal_bootstrap_Backup_system_entry_supported_by_both_official_Core_tags": true,
+    "old_actual_runtime_entry_domains_observed": false,
+    "source_policy_correction_is_not_retroactive_runtime_cause_identification": true
+  },
+  "safe_restore_latest_followup": {
+    "accepted_phase_count": 4,
+    "accepted_phases": [
+      "initialize",
+      "initial_restart",
+      "quarantine",
+      "mutate"
+    ],
+    "cutoff_UTC": "2026-10-21 01:02:29 UTC",
+    "full_eight_phase_procedure_accepted": false,
+    "host_failure_code": "guest_command_failed",
+    "host_stage": "host_private_newest_guard",
+    "run_id": 39524048553,
+    "underlying_cause_identified": false,
+    "workflow_conclusion": "failure"
+  },
+  "safe_restore_portrait_fixture_source_defect": {
+    "Core_own_profile_call_lines": [
+      401,
+      409
+    ],
+    "Optional_device_trackers_default_list": true,
+    "actual_runtime_clear_moment_recorded": false,
+    "actual_tagged_update_body_in_tests": true,
+    "confirmed_QA_API_mismatch": true,
+    "correction_runtime_pass": true,
+    "correction_status": "initialization_and_first_managed_restart_prefix_passed_full_procedure_false",
+    "full_validator_not_run_default_list_model_only": true,
+    "negative_execution_sha256": "bcbe74d50a87dfd1ec1aab67442703e8909dd33dddd98db5c5c7253b9e721bad",
+    "negative_verification_sha256": "dae05622948e2eae89d2b3ca3275704f1e689048cedfc30c21ef38ba12ced399",
+    "old_QA_picture_only_payload_omits_defaulted_field": true,
+    "own_profile_picture_update_explicitly_carries_existing_trackers": true,
+    "product_defect_confirmed": false,
+    "proof_sha256": "21c8ab50380a18797be3e6cca2fb2bc4c39fcc78a6788eae6730b144ce204842",
+    "schema": 1,
+    "schema_lines": [
+      190,
+      197
+    ],
+    "source_sha256": "de930932cb411f2ab60bb27919bd50c8b82aecb815b1dae7a004c71ce19277a7",
+    "source_url": "https://raw.githubusercontent.com/home-assistant/core/2026.10.2/homeassistant/components/person/__init__.py",
+    "update_body_lines": [
+      305,
+      314
+    ],
+    "validated_update_overrides_existing_item": true
+  },
+  "safe_restore_procedure_accepted": false,
+  "safe_restore_runs": [
+    {
+      "CI_79_contracts_executed": false,
+      "OVMF_runtime_absence_confirmed": false,
+      "VM_or_restore_witness_started": false,
+      "accept_procedure_applicable": false,
+      "artifact_ZIP_available": false,
+      "artifact_count": 0,
+      "automatic_guard_antirollback": false,
+      "automatic_push_attempt": 1,
+      "cleanup_witness_available": false,
+      "evidence_verification": "passed",
+      "exact_KVM_owner_mode_or_read_vs_write_known": false,
+      "fixture_files": 15,
+      "head_sha": "842af84940899a0cf1927e3ae65253711fa69ac7",
+      "helper_phases_available": 0,
+      "input_gate_passed": true,
+      "job_id": 118932424127,
+      "ordinary_enabled_restore_safety_accepted": false,
+      "provider_request_attempt_counts_measured": false,
+      "published_input_blobs_verified": 16,
+      "raw_setup_log_retained": false,
+      "retained_evidence_sha256": {
+        "PUBLISHED-INPUT-READBACK.json": "0f9f1b6a908958923b9378ea1d7389f097ca16c250db47d7279f33f6079230fa",
+        "SETUP-DIAGNOSIS.json": "55a2e9df6264d64c9a44740ff950ce10f1571cfb61379c2da8f66202feb766e9",
+        "artifacts.json": "bf6638afd0bdbf03a3236bb78ff0fe1a70b76eb9f5ba9b8102624fde8ac48cef",
+        "jobs.json": "9eb42028a82d6c5398cfcfa4df1dd6f05271e03a7f9bae2b2501d2ddd9e9ef18",
+        "run-metadata.json": "e005157d3eca4967e1ca4653a3933d4ddb7e718f597dbbeddd9186dd2b871de4"
+      },
+      "run_id": 39511219817,
+      "safe_restore_procedure_accepted": false,
+      "schema": 1,
+      "setup_classification": "tool_setup_reached_kvm_access_predicate_and_failed",
+      "stable_release_approval": false,
+      "workflow_execution_outcome": "failed_during_runner_setup"
+    },
+    {
+      "CI_79_zero_skip_contract_gate_passed": true,
+      "artifact_API_digest_and_size_match": true,
+      "artifact_bytes": 2662,
+      "artifact_id": 12305713938,
+      "artifact_sha256": "c716852e7e3264025125c6757a3ccea191c72fdc190f1483cfbbeeaa5006cd89",
+      "automatic_guard_antirollback": false,
+      "automatic_push_attempt": 1,
+      "cleanup_failed": false,
+      "evidence_verification": "passed",
+      "head_sha": "a78e9c949c7e0688b16924adfa2059f21101947b",
+      "host_failure_code": "guest_command_failed",
+      "host_failure_type": "Refused",
+      "host_outcome": "failed_or_incomplete",
+      "host_stage": "disposable_configuration",
+      "job_id": 118934649307,
+      "members": {
+        "host.json": {
+          "bytes": 8896,
+          "sha256": "127133086ef6b74621c1c5ce87cb75457159617f64cb9eb27b2bdc8c4265dddf"
+        }
+      },
+      "observed_guard_counts": {},
+      "ordinary_enabled_restore_safety_accepted": false,
+      "phase_names": [],
+      "plain_procedure_gate_accepted": false,
+      "plain_procedure_result": null,
+      "private_workspace_removed": true,
+      "published_input_blobs_verified": 16,
+      "qemu_stopped": true,
+      "request_attempt_counts_measured": false,
+      "retained_metadata_sha256": {
+        "PUBLISHED-INPUT-READBACK.json": "aa630be8d9c8f575b37f521a74feb691a83225e109bb47e1f11e31ca73943484",
+        "artifacts.json": "f8312617bdba1c2115e78546cdb0578027d463aaf11f749727cef4ef612d40e2",
+        "jobs.json": "0bfbddb2aec2176f964dfd44c7a55406edf42823f9b9fb3292759cb0e7dcec45",
+        "run-metadata.json": "56d1156f7e00bd29f25d04e4bee3e0c08c3787342d3c4468a3f54885e2de9321"
+      },
+      "run_id": 39511882430,
+      "schema": 1,
+      "stable_release_approval": false,
+      "workflow_and_procedure_accepted": false,
+      "workflow_conclusion": "failure"
+    },
+    {
+      "CI_80_zero_skip_contract_gate_passed": true,
+      "artifact_API_digest_and_size_match": true,
+      "artifact_bytes": 2915,
+      "artifact_id": 12306930911,
+      "artifact_sha256": "591f0028285f114188106e1943803938a69161a9fe5e189bc16bec53a0e7c689",
+      "automatic_guard_antirollback": false,
+      "automatic_push_attempt": 1,
+      "cleanup_failed": false,
+      "evidence_verification": "passed",
+      "failed_initialize_receipt": {
+        "failure_code": "qa_only_owned_or_system_entries",
+        "failure_type": "Refused",
+        "generation": "before_restore",
+        "outcome": "failed",
+        "phase": "initialize",
+        "schema": 1,
+        "stage": "platform"
+      },
+      "head_sha": "aceb8f21088cfc9ecf97825aa273d8da910edcc7",
+      "host_failure_code": "guest_acceptance_failed",
+      "host_failure_type": "Refused",
+      "host_outcome": "failed_or_incomplete",
+      "host_stage": "initialize",
+      "job_id": 118938978077,
+      "members": {
+        "host.json": {
+          "bytes": 9088,
+          "sha256": "7d3faa31f96ddd807daa0e0e0d32dd86e5324d10583d0d0bfb32e863698ad5d9"
+        },
+        "initialize.json": {
+          "bytes": 176,
+          "sha256": "61c0a603fa49353a2144d14a0670cfa661f127c3cd317571612bf29778b026bf"
+        }
+      },
+      "observed_guard_counts": {
+        "initialize": null
+      },
+      "ordinary_enabled_restore_safety_accepted": false,
+      "phase_names": [
+        "initialize"
+      ],
+      "plain_procedure_gate_accepted": false,
+      "plain_procedure_result": null,
+      "private_workspace_removed": true,
+      "published_input_blobs_verified": 16,
+      "qemu_stopped": true,
+      "request_attempt_counts_measured": false,
+      "retained_metadata_sha256": {
+        "PUBLISHED-INPUT-READBACK.json": "e333b30b22e211e260843492081f77e9bc7f50f6cdb148833ef42ee4c4e8061a",
+        "artifacts.json": "95a14249d92561cf99d17d41d38df37f92c530487bd143f95f46427d7b715e8c",
+        "jobs.json": "c0765fef00efce61d5d4a104a56c9813277a64cc8696b86f712c3f2fb5baeb36",
+        "run-metadata.json": "3355363b48c3d007dc24f99597f773a72617732240ffb924e5b6300c17572d02"
+      },
+      "run_id": 39513194235,
+      "schema": 1,
+      "stable_release_approval": false,
+      "workflow_and_procedure_accepted": false,
+      "workflow_conclusion": "failure"
+    },
+    {
+      "CI_83_zero_skip_contract_gate_passed": true,
+      "artifact_API_digest_and_size_match": true,
+      "artifact_bytes": 3003,
+      "artifact_id": 12307388657,
+      "artifact_sha256": "79e95d91f306fba590f494b6513738666e0ddd6c09794cefc4bbc3a956df6abc",
+      "automatic_guard_antirollback": false,
+      "automatic_push_attempt": 1,
+      "cleanup_failed": false,
+      "entry_scope_counts": {
+        "initialize": {
+          "domains": {
+            "backup": 1,
+            "hassio": 1,
+            "homecircle": 0,
+            "other": 1
+          },
+          "entry_scope_allowed": false,
+          "sources": {
+            "other": 0,
+            "system": 3,
+            "user": 0
+          },
+          "system_entries_ready": false,
+          "total": 3
+        }
+      },
+      "evidence_verification": "passed",
+      "head_sha": "27315a86503700382b8525a1bdd1fa776d81bb98",
+      "host_failure_code": "guest_acceptance_failed",
+      "host_failure_type": "Refused",
+      "host_outcome": "failed_or_incomplete",
+      "host_stage": "initialize",
+      "job_id": 118945629543,
+      "members": {
+        "host.json": {
+          "bytes": 9088,
+          "sha256": "9e4dff33700c5ba84626a352b20f92fd619699393cb59f98c19d0694eef25e1d"
+        },
+        "initialize.json": {
+          "bytes": 372,
+          "sha256": "841d7ea57cbc927fbbb93d31b326be0c0f5ba936098a218195568aebade0366f"
+        }
+      },
+      "observed_guard_counts": {
+        "initialize": null
+      },
+      "ordinary_enabled_restore_safety_accepted": false,
+      "phase_names": [
+        "initialize"
+      ],
+      "phase_outcomes": {
+        "initialize": "failed"
+      },
+      "plain_procedure_gate_accepted": false,
+      "plain_procedure_result": null,
+      "private_workspace_removed": true,
+      "published_input_blobs_verified": 16,
+      "qemu_stopped": true,
+      "request_attempt_counts_measured": false,
+      "retained_metadata_sha256": {
+        "PUBLISHED-INPUT-READBACK.json": "40c5c01e022ce0657d62185261d30b4622ac159d0959601a588b90b55efa4723",
+        "artifacts.json": "3a0588234c04d785963abd05bddebcc1f996843d88cdc9033d867824de7ced83",
+        "jobs.json": "2116dc41e465b7bf63b5afd90d54c81e0795c4a5914b228be6e62b69e1ef1e2a",
+        "run-metadata.json": "8fde5a33ed8c726f51c3cad85b6641ec87e48f2228c155168edfeba8e1cd1084"
+      },
+      "run_id": 39515218270,
+      "schema": 1,
+      "stable_release_approval": false,
+      "workflow_and_procedure_accepted": false,
+      "workflow_conclusion": "failure"
+    },
+    {
+      "CI_85_zero_skip_contract_gate_passed": true,
+      "actual_host_reported_source_provenance_bound": true,
+      "artifact_API_digest_and_size_match": true,
+      "artifact_bytes": 3004,
+      "artifact_id": 12309295933,
+      "artifact_sha256": "0ccc964faf393f923936cb8214d3b45dd26b44f4d6128d29cd953a767c8385a9",
+      "automatic_guard_antirollback": false,
+      "automatic_push_attempt": 1,
+      "cleanup_failed": false,
+      "entry_scope_counts": {
+        "initialize": {
+          "domains": {
+            "analytics": 1,
+            "backup": 1,
+            "hassio": 1,
+            "homecircle": 0,
+            "other": 0
+          },
+          "entry_scope_allowed": true,
+          "sources": {
+            "other": 0,
+            "system": 3,
+            "user": 0
+          },
+          "system_entries_ready": true,
+          "total": 3
+        }
+      },
+      "evidence_verification": "passed",
+      "failed_initialize_receipt": {
+        "entry_scope": {
+          "domains": {
+            "analytics": 1,
+            "backup": 1,
+            "hassio": 1,
+            "homecircle": 0,
+            "other": 0
+          },
+          "entry_scope_allowed": true,
+          "sources": {
+            "other": 0,
+            "system": 3,
+            "user": 0
+          },
+          "system_entries_ready": true,
+          "total": 3
+        },
+        "failure_code": null,
+        "failure_type": "TimeoutError",
+        "generation": "before_restore",
+        "outcome": "failed",
+        "phase": "initialize",
+        "schema": 1,
+        "stage": "persistent_setup"
+      },
+      "head_sha": "9c4b8a5a29b2b51f4980310cb48740e13369018f",
+      "host_failure_code": "guest_acceptance_failed",
+      "host_failure_type": "Refused",
+      "host_outcome": "failed_or_incomplete",
+      "host_stage": "initialize",
+      "job_id": 118953042776,
+      "members": {
+        "host.json": {
+          "bytes": 9088,
+          "sha256": "00c439bb332c3d48b1f88b3a5392636d66b7a0d6c1f22ededcd52c6b0e5e869f"
+        },
+        "initialize.json": {
+          "bytes": 356,
+          "sha256": "cadc9031629cf031829cd5561aadce3f4d23b92cbfb90062228e1846daa4a07f"
+        }
+      },
+      "observed_guard_counts": {
+        "initialize": null
+      },
+      "ordinary_enabled_restore_safety_accepted": false,
+      "phase_names": [
+        "initialize"
+      ],
+      "phase_outcomes": {
+        "initialize": "failed"
+      },
+      "plain_procedure_gate_accepted": false,
+      "plain_procedure_result": null,
+      "private_workspace_removed": true,
+      "published_input_blobs_verified": 16,
+      "qemu_stopped": true,
+      "request_attempt_counts_measured": false,
+      "retained_metadata_sha256": {
+        "PUBLISHED-INPUT-READBACK.json": "d1b5b34fddc8bbca95584e20a8595f40ff4c67da8ead9b9d4a32b0b539458b59",
+        "artifacts.json": "c732a5291a128308cf2e8f496fcdd3d9bb056664bbf7d2c27a840f44704c891b",
+        "jobs.json": "dbf598d422dc1cb4e32432b3e59ee5456b91978c2c83ac4d64bab4999a3d0945",
+        "run-metadata.json": "c69def403fab09c072b90b90d6f7b26fa4f6ecdd6eebce0dca1c73ef35e532bb"
+      },
+      "run_id": 39517488285,
+      "schema": 1,
+      "stable_release_approval": false,
+      "workflow_and_procedure_accepted": false,
+      "workflow_conclusion": "failure"
+    },
+    {
+      "CI_89_zero_skip_contract_gate_passed": true,
+      "actual_failed_setup_steps": {
+        "initialize": "person_sources"
+      },
+      "actual_host_reported_source_provenance_bound": true,
+      "artifact_API_digest_and_size_match": true,
+      "artifact_bytes": 3018,
+      "artifact_id": 12310778757,
+      "artifact_sha256": "e8d2ef147b90e2821ad453a1f70b5a6d6eeae75947ded9220266225b4b81bb01",
+      "automatic_guard_antirollback": false,
+      "automatic_push_attempt": 1,
+      "cleanup_failed": false,
+      "entry_scope_counts": {
+        "initialize": {
+          "domains": {
+            "analytics": 1,
+            "backup": 1,
+            "hassio": 1,
+            "homecircle": 0,
+            "other": 0
+          },
+          "entry_scope_allowed": true,
+          "sources": {
+            "other": 0,
+            "system": 3,
+            "user": 0
+          },
+          "system_entries_ready": true,
+          "total": 3
+        }
+      },
+      "evidence_verification": "passed",
+      "failed_initialize_receipt": {
+        "entry_scope": {
+          "domains": {
+            "analytics": 1,
+            "backup": 1,
+            "hassio": 1,
+            "homecircle": 0,
+            "other": 0
+          },
+          "entry_scope_allowed": true,
+          "sources": {
+            "other": 0,
+            "system": 3,
+            "user": 0
+          },
+          "system_entries_ready": true,
+          "total": 3
+        },
+        "failure_code": null,
+        "failure_type": "TimeoutError",
+        "generation": "before_restore",
+        "outcome": "failed",
+        "phase": "initialize",
+        "schema": 1,
+        "setup_step": "person_sources",
+        "stage": "persistent_setup"
+      },
+      "fixed_setup_catalog_verified": 25,
+      "head_sha": "c186eabb52f395a4b7e37724fd8e0c07ae1d40b8",
+      "host_failure_code": "guest_acceptance_failed",
+      "host_failure_type": "Refused",
+      "host_outcome": "failed_or_incomplete",
+      "host_stage": "initialize",
+      "independent_verification_sha256": "36efa3bab15b8140977466537e738f0d45602a9fbfcdda8f070736f612f62c1f",
+      "job_id": 118962612454,
+      "members": {
+        "host.json": {
+          "bytes": 9088,
+          "sha256": "e4aa83384f7b0e3cd66bd2ce172badd90bf4ba56b0da9e658d54213235807154"
+        },
+        "initialize.json": {
+          "bytes": 386,
+          "sha256": "7eea5a27768f593d708e142ab21a79345dceab034099ae2f6ceb6bcb676f9d5e"
+        }
+      },
+      "observed_guard_counts": {
+        "initialize": null
+      },
+      "ordinary_enabled_restore_safety_accepted": false,
+      "phase_names": [
+        "initialize"
+      ],
+      "phase_outcomes": {
+        "initialize": "failed"
+      },
+      "plain_procedure_gate_accepted": false,
+      "plain_procedure_result": null,
+      "private_workspace_removed": true,
+      "published_input_blobs_verified": 16,
+      "qemu_stopped": true,
+      "request_attempt_counts_measured": false,
+      "retained_metadata_sha256": {
+        "PUBLISHED-INPUT-READBACK.json": "b6cba7f57abcaf37f66fa3f01759520d09b6068aa51e8651c8f3dfbff1f4ce58",
+        "artifacts.json": "ef3e91d358ef85f642465f56a9c7461e8d6cac7ef96e0886a8370e3579218faf",
+        "jobs.json": "4f036068ea9a84d7e00b3b5ed607da1566a3da9534e1c9788458358a8bc118f4",
+        "run-metadata.json": "0b2f928c0bb3a591d00272e57625e7fafce86586124c9bf95334c648df609699"
+      },
+      "run_id": 39520412969,
+      "schema": 1,
+      "stable_release_approval": false,
+      "workflow_and_procedure_accepted": false,
+      "workflow_conclusion": "failure"
+    },
+    {
+      "CI_93_zero_skip_contract_gate_passed": true,
+      "actual_failed_person_source_booleans": {
+        "initialize": {
+          "0": {
+            "configured_link_matches_selected": false,
+            "person_home": false,
+            "person_present": true,
+            "source_matches_selected": false,
+            "tracker_home": true,
+            "tracker_present": true
+          },
+          "1": {
+            "configured_link_matches_selected": true,
+            "person_home": true,
+            "person_present": true,
+            "source_matches_selected": true,
+            "tracker_home": true,
+            "tracker_present": true
+          }
+        }
+      },
+      "actual_failed_setup_steps": {
+        "initialize": "person_sources"
+      },
+      "actual_helper_failures": {
+        "initialize": {
+          "failure_code": null,
+          "failure_type": "TimeoutError",
+          "stage": "persistent_setup"
+        }
+      },
+      "actual_host_reported_source_provenance_bound": true,
+      "artifact_API_digest_and_size_match": true,
+      "artifact_bytes": 3099,
+      "artifact_id": 12311327544,
+      "artifact_sha256": "0d5b69ab7249e88f22a9d25564ea91d561846546a8acceeedb6f145984aacfde",
+      "automatic_guard_antirollback": false,
+      "automatic_push_attempt": 1,
+      "cleanup_failed": false,
+      "entry_scope_counts": {
+        "initialize": {
+          "domains": {
+            "analytics": 1,
+            "backup": 1,
+            "hassio": 1,
+            "homecircle": 0,
+            "other": 0
+          },
+          "entry_scope_allowed": true,
+          "sources": {
+            "other": 0,
+            "system": 3,
+            "user": 0
+          },
+          "system_entries_ready": true,
+          "total": 3
+        }
+      },
+      "evidence_verification": "passed",
+      "failed_initialize_receipt": {
+        "entry_scope": {
+          "domains": {
+            "analytics": 1,
+            "backup": 1,
+            "hassio": 1,
+            "homecircle": 0,
+            "other": 0
+          },
+          "entry_scope_allowed": true,
+          "sources": {
+            "other": 0,
+            "system": 3,
+            "user": 0
+          },
+          "system_entries_ready": true,
+          "total": 3
+        },
+        "failure_code": null,
+        "failure_type": "TimeoutError",
+        "generation": "before_restore",
+        "outcome": "failed",
+        "person_sources": {
+          "0": {
+            "configured_link_matches_selected": false,
+            "person_home": false,
+            "person_present": true,
+            "source_matches_selected": false,
+            "tracker_home": true,
+            "tracker_present": true
+          },
+          "1": {
+            "configured_link_matches_selected": true,
+            "person_home": true,
+            "person_present": true,
+            "source_matches_selected": true,
+            "tracker_home": true,
+            "tracker_present": true
+          }
+        },
+        "phase": "initialize",
+        "schema": 1,
+        "setup_step": "person_sources",
+        "stage": "persistent_setup"
+      },
+      "fixed_person_boolean_projectors_source_equal": true,
+      "fixed_setup_catalog_verified": 25,
+      "head_sha": "8bd123929f6db7964b80616915e2fc88d8b38a0c",
+      "host_failure_code": "guest_acceptance_failed",
+      "host_failure_type": "Refused",
+      "host_outcome": "failed_or_incomplete",
+      "host_stage": "initialize",
+      "independent_verification_sha256": "dae05622948e2eae89d2b3ca3275704f1e689048cedfc30c21ef38ba12ced399",
+      "job_id": 118969583011,
+      "members": {
+        "host.json": {
+          "bytes": 9088,
+          "sha256": "185c033989a1fc5857e002ad81910225c18c8f09efd453583075162a188f8788"
+        },
+        "initialize.json": {
+          "bytes": 730,
+          "sha256": "c0f8cf7df7ddbd27e22f34f7856e97a0ebfcefa24aefb2ab8a34078fbbf193bd"
+        }
+      },
+      "observed_guard_counts": {
+        "initialize": null
+      },
+      "ordinary_enabled_restore_safety_accepted": false,
+      "phase_names": [
+        "initialize"
+      ],
+      "phase_outcomes": {
+        "initialize": "failed"
+      },
+      "plain_procedure_gate_accepted": false,
+      "plain_procedure_result": null,
+      "private_workspace_removed": true,
+      "published_input_blobs_verified": 16,
+      "qemu_stopped": true,
+      "request_attempt_counts_measured": false,
+      "retained_metadata_sha256": {
+        "PUBLISHED-INPUT-READBACK.json": "e409106f1f0c114f8089e7e626ec811efac1d1d9752c0eae32e6c9d53feb5a52",
+        "artifacts.json": "b7d5e83f897399e276ae70f7d2e34bceb723dcbe8540e46a366a6a89066d0ab5",
+        "jobs.json": "7f0151a10b1df624eae5073942726cb84ccd876870f30a0fa44e6f7092fd80dc",
+        "run-metadata.json": "737a0730473d67459d1802844e66976d1f8ce7f786d29ecddd9e6c0708e3810e"
+      },
+      "run_id": 39522551863,
+      "schema": 1,
+      "source_bound_failure_projection_verified": true,
+      "stable_release_approval": false,
+      "workflow_and_procedure_accepted": false,
+      "workflow_conclusion": "failure"
+    },
+    {
+      "CI_95_zero_skip_contract_gate_passed": true,
+      "actual_failed_person_source_booleans": {},
+      "actual_failed_setup_steps": {},
+      "actual_four_public_passes_independently_verified": true,
+      "actual_helper_failures": {},
+      "actual_host_reported_source_provenance_bound": true,
+      "artifact_API_digest_and_size_match": true,
+      "artifact_bytes": 8120,
+      "artifact_id": 12311619277,
+      "artifact_sha256": "65935637f4e2b3d453f5ece7c6a51535a45abf247fca2dd5695cd3479b46c96a",
+      "automatic_guard_antirollback": false,
+      "automatic_push_attempt": 1,
+      "cleanup_failed": false,
+      "disabled_entry_database_partial_backup_created_and_inspected": true,
+      "entry_scope_counts": {
+        "initial_restart": {
+          "domains": {
+            "analytics": 1,
+            "backup": 1,
+            "hassio": 1,
+            "homecircle": 1,
+            "other": 0
+          },
+          "entry_scope_allowed": true,
+          "sources": {
+            "other": 0,
+            "system": 3,
+            "user": 1
+          },
+          "system_entries_ready": true,
+          "total": 4
+        },
+        "initialize": {
+          "domains": {
+            "analytics": 1,
+            "backup": 1,
+            "hassio": 1,
+            "homecircle": 0,
+            "other": 0
+          },
+          "entry_scope_allowed": true,
+          "sources": {
+            "other": 0,
+            "system": 3,
+            "user": 0
+          },
+          "system_entries_ready": true,
+          "total": 3
+        },
+        "mutate": {
+          "domains": {
+            "analytics": 1,
+            "backup": 1,
+            "hassio": 1,
+            "homecircle": 1,
+            "other": 0
+          },
+          "entry_scope_allowed": true,
+          "sources": {
+            "other": 0,
+            "system": 3,
+            "user": 1
+          },
+          "system_entries_ready": true,
+          "total": 4
+        },
+        "quarantine": {
+          "domains": {
+            "analytics": 1,
+            "backup": 1,
+            "hassio": 1,
+            "homecircle": 1,
+            "other": 0
+          },
+          "entry_scope_allowed": true,
+          "sources": {
+            "other": 0,
+            "system": 3,
+            "user": 1
+          },
+          "system_entries_ready": true,
+          "total": 4
+        }
+      },
+      "evidence_verification": "passed",
+      "fixed_person_boolean_projectors_source_equal": true,
+      "fixed_setup_catalog_verified": 25,
+      "head_sha": "e7c65b2a3f79d81b64bf6085bb5f5fc597615a7c",
+      "host_failure_code": "guest_command_failed",
+      "host_failure_type": "Refused",
+      "host_outcome": "failed_or_incomplete",
+      "host_stage": "host_private_newest_guard",
+      "independent_verification_sha256": "243666ad68ec615358935f2a6c29b8daaf2bbd095ec03286b93dd3e1ab1c0851",
+      "job_id": 118974430117,
+      "members": {
+        "host.json": {
+          "bytes": 10433,
+          "sha256": "d0f14bb5eae9a737dc9e5c3e4bfc4cd56bbb33da11c4e6683bcc5235795631f7"
+        },
+        "initial_restart.json": {
+          "bytes": 6385,
+          "sha256": "e01778094275529a18c29473dc166665f4fdee978a2e079cf697b064ac4176f7"
+        },
+        "initialize.json": {
+          "bytes": 6380,
+          "sha256": "50e94f59583c0306a49e4a48950c3055516746bb84289fb3c8f5f53d94041bb5"
+        },
+        "mutate.json": {
+          "bytes": 1387,
+          "sha256": "351767fb34e8133c513ec0a9a3a92a4597e06015ec5ba8eb0b8f82ee8caf61c6"
+        },
+        "quarantine.json": {
+          "bytes": 1516,
+          "sha256": "792771fd77bbae3ecc013e475aaa64fd218033dc588164ef2eedf65b8cab9deb"
+        }
+      },
+      "normal_dependency_projector_replayed_for": [
+        "initialize",
+        "initial_restart"
+      ],
+      "observed_guard_counts": {
+        "initial_restart": 2,
+        "initialize": 2,
+        "mutate": 3,
+        "quarantine": 2
+      },
+      "ordinary_enabled_restore_safety_accepted": false,
+      "phase_names": [
+        "initialize",
+        "initial_restart",
+        "quarantine",
+        "mutate"
+      ],
+      "phase_outcomes": {
+        "initial_restart": "passed",
+        "initialize": "passed",
+        "mutate": "passed",
+        "quarantine": "passed"
+      },
+      "plain_procedure_gate_accepted": false,
+      "plain_procedure_result": null,
+      "private_workspace_removed": true,
+      "published_input_blobs_verified": 16,
+      "qemu_stopped": true,
+      "request_attempt_counts_measured": false,
+      "retained_metadata_sha256": {
+        "PUBLISHED-INPUT-READBACK.json": "15fe43d8911c1902f40a1d8c6d0646bb38a4d8eb1a0a5bbfaa14bc00e54c9055",
+        "artifacts.json": "8185607ac1a9e3b98bbff81b4de82238544eb79162a71e81aaa18804ffd3e87c",
+        "jobs.json": "7812bdd2f3c656bd3c7e415eca95abcfed77a32268e78a9ebe45192b7febf59c",
+        "run-metadata.json": "4154d2d9753040a57d85a03d9b8cc128d6a32d4db51f7d22620687da3cb816ca"
+      },
+      "run_id": 39524048553,
+      "schema": 1,
+      "source_bound_failure_projection_verified": true,
+      "stable_release_approval": false,
+      "workflow_and_procedure_accepted": false,
+      "workflow_conclusion": "failure"
+    }
+  ],
+  "schema": 1,
+  "stable_release_approval": false,
+  "tested_product_source_commit": "9bf03eb45d2cf43274074534e9dfe2de841f4011"
+}

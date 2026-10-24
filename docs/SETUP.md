@@ -1,6 +1,6 @@
 # Set up HomeCircle
 
-Use a test Home Assistant instance. Beta 19 is an experimental prerelease, validated with disposable Core 2026.9.4 tests and live Find My checks on an HA OS Raspberry Pi/aarch64 running Core 2026.10.2. Broader installation compatibility has not been established. New people and pets use the Person-first screens below; existing tracker-only members remain supported. HomeCircle can use existing HA trackers or optionally connect to Life360 and Apple Find My directly.
+Use a test Home Assistant instance. Beta 20 is an experimental hardening prerelease derived from the reviewed Linux/HAOS candidate. See [beta 20 validation](BETA20-VALIDATION.md) for exact platform and recovery scope. Historical owner-account proof belongs to beta 19; beta 20 production, field and stable-release acceptance remain open. New people and pets use the Person-first screens below; existing tracker-only members remain supported. HomeCircle can use existing HA trackers or optionally connect to Life360 and Apple Find My directly.
 
 ## 1. Get a working source into Home Assistant
 
@@ -38,7 +38,7 @@ A member at an additional residence can count Home while being outside the Home 
 
 1. With HACS already configured on the test instance, open its custom repositories menu.
 2. Add `https://github.com/jmhjr/HomeCircle` with type **Integration**. See [HACS custom repositories](https://www.hacs.dev/docs/faq/custom_repositories/).
-3. Once beta 19 is published, open HomeCircle in HACS. In Download or Redownload, open **Need a different version?**, choose **Release**, select **v0.1.0-beta.19**, and download it. If HACS already offers beta 19 in the dialog, confirm that version before downloading. A branch commit is not the versioned release. Every HomeCircle release is currently a prerelease, so HACS can show the branch commit as its available version while beta updates are off. For future beta update checks, enable and turn on HACS's **HomeCircle pre-release** switch in Home Assistant's Entities settings; it is disabled by default. [HACS explains this switch](https://www.hacs.dev/docs/use/entities/switch/).
+3. Open HomeCircle in HACS. In Download or Redownload, open **Need a different version?**, choose **Release**, select **v0.1.0-beta.20**, and download it. If HACS already offers beta 20 in the dialog, confirm that version before downloading. A branch commit is not the versioned release. Every HomeCircle release is currently a prerelease, so HACS can show the branch commit as its available version while beta updates are off. For future beta update checks, enable and turn on HACS's **HomeCircle pre-release** switch in Home Assistant's Entities settings; it is disabled by default. [HACS explains this switch](https://www.hacs.dev/docs/use/entities/switch/).
 4. Restart Home Assistant.
 5. Open Settings → Devices & services → Add integration → HomeCircle.
 

@@ -23,6 +23,36 @@ from custom_components.homecircle import frontend
 from custom_components.homecircle.selection import tracker_suggestions
 
 
+@pytest.mark.parametrize("acknowledgement", [None, False, "true", 1])
+async def test_life360_requires_explicit_acknowledgement_before_validation(acknowledgement):
+    from custom_components.homecircle.config_flow import checked_life360_account
+
+    submitted = {"method": "token", "secret": "fictional-token"}
+    if acknowledgement is not None:
+        submitted["acknowledge_unofficial"] = acknowledgement
+    with patch(
+        "custom_components.homecircle.config_flow.validate_account", new_callable=AsyncMock
+    ) as validate:
+        account, error = await checked_life360_account(submitted)
+    assert account is None and error == "provider_acknowledgement_required"
+    validate.assert_not_awaited()
+
+
+async def test_life360_acknowledgement_is_not_an_account_credential():
+    from custom_components.homecircle.config_flow import checked_life360_account
+
+    with patch(
+        "custom_components.homecircle.config_flow.validate_account",
+        new_callable=AsyncMock, return_value="example-identity-hash",
+    ) as validate:
+        account, error = await checked_life360_account({
+            "method": "token", "secret": "fictional-token", "acknowledge_unofficial": True,
+        })
+    assert error is None
+    assert set(account) == {"method", "username", "secret", "account_id_hash"}
+    assert "acknowledge_unofficial" not in validate.await_args.args[0]
+
+
 async def start(hass, household):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -358,6 +388,185 @@ async def start_options(manager, entry, next_step="household"):
     result = await manager.async_init(entry.entry_id)
     assert result["type"] == FlowResultType.MENU
     return await manager.async_configure(result["flow_id"], {"next_step_id": next_step})
+
+
+async def test_connections_pause_preserves_account_selection_and_stale_options(hass, household):
+    from custom_components.homecircle.provider_controls import ProviderControls, async_get_controls
+
+    entry = await create(hass, household)
+    saved = {**entry.data, "life360_account": {"method": "token", "secret": "fictional"}}
+    hass.config_entries.async_update_entry(entry, data=saved)
+    original = deepcopy(dict(entry.data))
+    manager = hass.config_entries.options
+    old_draft = await start_options(manager, entry, "city_lookup")
+    control_flow = await start_options(manager, entry, "connections")
+    assert control_flow["step_id"] == "connections"
+    with patch("custom_components.homecircle.life360_direct.DirectLife360") as constructor:
+        result = await manager.async_configure(control_flow["flow_id"], {
+            "provider": "life360", "action": "pause",
+        })
+        assert result["reason"] == "provider_control_saved"
+        controls = await async_get_controls(hass, entry.entry_id)
+        assert controls.paused("life360")
+        await manager.async_configure(old_draft["flow_id"], {"city_lookup_enabled": False})
+        await hass.async_block_till_done()
+    constructor.assert_not_called()
+    assert entry.data["life360_account"] == original["life360_account"]
+    assert entry.options["people"] == original["people"]
+    assert entry.options["members"] == original["members"]
+    restored = ProviderControls(hass, entry.entry_id)
+    await restored.async_load()
+    assert restored.paused("life360")
+
+
+@pytest.mark.parametrize(
+    ("provider_id", "account_id", "external_only"),
+    [
+        ("life360", None, True),
+        ("life360", None, False),
+        ("findmy", "example-orphan-account", False),
+    ],
+)
+async def test_paused_unsaved_provider_can_resume_without_auth_or_options_save(
+    hass, household, provider_id, account_id, external_only
+):
+    from custom_components.homecircle.provider_controls import ProviderControls, async_get_controls
+
+    entry = await create(hass, household)
+    baseline = deepcopy(dict(entry.data))
+    if external_only:
+        external = MockConfigEntry(domain="life360", options={
+            "accounts": {"Example external connection": {
+                "enabled": True, "authorization": "Bearer fictional-token",
+            }},
+        })
+        external.add_to_hass(hass)
+    else:
+        saved = (
+            {"life360_account": {"method": "token", "secret": "fictional"}}
+            if provider_id == "life360"
+            else {"findmy_accounts": {account_id: {"items": {}}}}
+        )
+        hass.config_entries.async_update_entry(entry, data={**baseline, **saved})
+    controls = await async_get_controls(hass, entry.entry_id)
+    with patch.object(hass.config_entries, "async_reload", new=AsyncMock()):
+        await controls.async_pause_denied(provider_id, account_id)
+        await hass.async_block_till_done()
+    if not external_only:
+        # The local stop must remain visible after deliberately removing the
+        # saved account; it must not permanently block a future connection.
+        hass.config_entries.async_update_entry(entry, data=baseline)
+    original_data = deepcopy(dict(entry.data))
+    original_options = deepcopy(dict(entry.options))
+    manager = hass.config_entries.options
+    with (
+        patch.object(hass.config_entries, "async_reload", new=AsyncMock()),
+        patch("custom_components.homecircle.config_flow.validate_account", new=AsyncMock()) as validate,
+        patch("custom_components.homecircle.life360_direct.DirectLife360") as life360_client,
+        patch("custom_components.homecircle.findmy_flow.FindMySetup.create") as findmy_setup,
+        patch("custom_components.homecircle.findmy_recovery_guard.RecoveryGuard.reset", new=AsyncMock()) as reset,
+    ):
+        menu = await manager.async_init(entry.entry_id)
+        assert "connections" in menu["menu_options"]
+        flow = await manager.async_configure(menu["flow_id"], {"next_step_id": "connections"})
+        provider_selector = next(iter(flow["data_schema"].schema.values()))
+        assert [choice["value"] for choice in provider_selector.config["options"]] == [provider_id]
+        assert "no saved HomeCircle account" in flow["description_placeholders"]["connection_status"]
+        if account_id:
+            assert "partially paused" in flow["description_placeholders"]["connection_status"]
+        result = await manager.async_configure(flow["flow_id"], {
+            "provider": provider_id, "action": "resume",
+        })
+        assert result["reason"] == "provider_control_saved"
+        assert not controls.paused(provider_id, account_id)
+        assert controls.summary(provider_id)["paused_accounts"] == 0
+        assert dict(entry.data) == original_data
+        assert dict(entry.options) == original_options
+        menu = await manager.async_init(entry.entry_id)
+        assert "connections" not in menu["menu_options"]
+        manager.async_abort(menu["flow_id"])
+        validate.assert_not_awaited()
+        life360_client.assert_not_called()
+        findmy_setup.assert_not_called()
+        reset.assert_not_awaited()
+    restored = ProviderControls(hass, entry.entry_id)
+    await restored.async_load()
+    assert not restored.paused(provider_id, account_id)
+    assert restored.summary(provider_id)["paused_accounts"] == 0
+
+
+@pytest.mark.parametrize("explicitly_selected", [False, True])
+async def test_external_provider_control_requires_exact_selected_registry_platform(
+    hass, household, explicitly_selected
+):
+    from custom_components.homecircle.provider_controls import async_get_controls
+
+    entry = await create(hass, household)
+    external = MockConfigEntry(domain="life360")
+    external.add_to_hass(hass)
+    record = er.async_get(hass).async_get_or_create(
+        "device_tracker", "life360", "example-external-controls",
+        config_entry=external, suggested_object_id="example_external_controls",
+    )
+    if explicitly_selected:
+        saved = deepcopy(dict(entry.data))
+        member_id = saved["people"][0]
+        saved["members"][member_id]["trackers"] = [record.entity_id]
+        hass.config_entries.async_update_entry(entry, data=saved)
+    before_data = deepcopy(dict(entry.data))
+    before_options = deepcopy(dict(entry.options))
+    manager = hass.config_entries.options
+    menu = await manager.async_init(entry.entry_id)
+    assert ("connections" in menu["menu_options"]) is explicitly_selected
+    if not explicitly_selected:
+        manager.async_abort(menu["flow_id"])
+        return
+    with (
+        patch.object(hass.config_entries, "async_reload", new=AsyncMock()),
+        patch("custom_components.homecircle.config_flow.validate_account", new=AsyncMock()) as validate,
+        patch("custom_components.homecircle.life360_direct.DirectLife360") as client,
+    ):
+        controls = await async_get_controls(hass, entry.entry_id)
+        for action in ("pause", "resume"):
+            flow = await manager.async_configure(menu["flow_id"], {"next_step_id": "connections"})
+            provider_selector = next(iter(flow["data_schema"].schema.values()))
+            assert [choice["value"] for choice in provider_selector.config["options"]] == ["life360"]
+            assert "no saved HomeCircle account" in flow["description_placeholders"]["connection_status"]
+            result = await manager.async_configure(flow["flow_id"], {"provider": "life360", "action": action})
+            assert result["reason"] == "provider_control_saved"
+            assert controls.paused("life360") is (action == "pause")
+            menu = await manager.async_init(entry.entry_id)
+            assert "connections" in menu["menu_options"]
+        manager.async_abort(menu["flow_id"])
+        validate.assert_not_awaited()
+        client.assert_not_called()
+    assert dict(entry.data) == before_data
+    assert dict(entry.options) == before_options
+
+
+async def test_paused_life360_replacement_and_reauth_make_no_validation_call(hass, household):
+    from custom_components.homecircle.provider_controls import async_get_controls
+
+    entry = await create(hass, household)
+    hass.config_entries.async_update_entry(entry, data={
+        **entry.data, "life360_account": {"method": "token", "secret": "fictional"},
+    })
+    controls = await async_get_controls(hass, entry.entry_id)
+    with patch.object(hass.config_entries, "async_reload", new=AsyncMock()):
+        await controls.async_set_paused("life360", True)
+    with patch("custom_components.homecircle.config_flow.validate_account", new_callable=AsyncMock) as validate:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_REAUTH, "entry_id": entry.entry_id},
+            data={"_homecircle_reauth_provider": "life360"},
+        )
+        assert result["reason"] == "provider_paused"
+        flow = await start_options(hass.config_entries.options, entry)
+        result = await hass.config_entries.options.async_configure(flow["flow_id"], {
+            "people": [], "primary_home": household["primary_home"],
+            "life360_direct": True, "replace_life360_login": True,
+        })
+        assert result["reason"] == "provider_paused"
+    validate.assert_not_awaited()
 
 
 async def test_options_battery_task_shows_only_member_then_sensors(hass, household):
@@ -891,7 +1100,7 @@ async def test_direct_life360_account_and_tracker_person_setup(hass, household):
     ) as verify:
         flow = await hass.config_entries.flow.async_configure(
             flow["flow_id"],
-            {"method": "token", "secret": "example-token"},
+            {"method": "token", "secret": "example-token", "acknowledge_unofficial": True},
         )
     verify.assert_awaited_once()
     assert flow["step_id"] == "confirm"
@@ -970,7 +1179,7 @@ async def test_direct_life360_account_and_tracker_person_setup(hass, household):
         return_value="same-account-fingerprint",
     ):
         flow = await options.async_configure(
-            flow["flow_id"], {"method": "token", "secret": "replacement-example"}
+            flow["flow_id"], {"method": "token", "secret": "replacement-example", "acknowledge_unofficial": True}
         )
     assert flow["step_id"] == "member"
     flow = await configure_empty(options, flow)
@@ -1053,7 +1262,7 @@ async def test_disabled_direct_tracker_does_not_interrupt_other_members(
         ),
     ):
         flow = await hass.config_entries.flow.async_configure(
-            flow["flow_id"], {"method": "token", "secret": "example-token"}
+            flow["flow_id"], {"method": "token", "secret": "example-token", "acknowledge_unofficial": True}
         )
         flow = await configure_empty(hass.config_entries.flow, flow)
         await hass.async_block_till_done()
@@ -1089,7 +1298,7 @@ async def test_failed_tracker_platform_setup_can_retry_cleanly(hass, household):
         ),
     ):
         flow = await hass.config_entries.flow.async_configure(
-            flow["flow_id"], {"method": "token", "secret": "example-token"}
+            flow["flow_id"], {"method": "token", "secret": "example-token", "acknowledge_unofficial": True}
         )
         flow = await configure_empty(hass.config_entries.flow, flow)
         await hass.async_block_till_done()
@@ -1156,7 +1365,7 @@ async def test_saved_direct_tracker_is_unavailable_during_offline_reload(
         ),
     ):
         flow = await hass.config_entries.flow.async_configure(
-            flow["flow_id"], {"method": "token", "secret": "example-token"}
+            flow["flow_id"], {"method": "token", "secret": "example-token", "acknowledge_unofficial": True}
         )
         flow = await configure_empty(hass.config_entries.flow, flow)
         await hass.async_block_till_done()
@@ -1210,7 +1419,7 @@ async def test_life360_reauth_replaces_secret_and_preserves_household(hass, hous
         ),
     ):
         flow = await hass.config_entries.flow.async_configure(
-            flow["flow_id"], {"method": "token", "secret": "old-example-secret"}
+            flow["flow_id"], {"method": "token", "secret": "old-example-secret", "acknowledge_unofficial": True}
         )
         flow = await configure_empty(hass.config_entries.flow, flow)
         await hass.async_block_till_done()
@@ -1224,6 +1433,19 @@ async def test_life360_reauth_replaces_secret_and_preserves_household(hass, hous
         side_effect=Unauthorized("fictional rejection", None),
     ):
         await client.async_refresh()
+        await hass.async_block_till_done()
+    # A denied connection remains stopped until the owner explicitly resumes;
+    # merely opening its repair form cannot bypass that persisted choice.
+    from custom_components.homecircle.provider_controls import async_get_controls
+
+    controls = await async_get_controls(hass, entry.entry_id)
+    assert controls.paused("life360")
+    with patch(
+        "custom_components.homecircle.life360_direct.DirectLife360.async_start",
+        new_callable=AsyncMock,
+    ):
+        await controls.async_set_paused("life360", False)
+        entry.async_start_reauth(hass, data={"_homecircle_reauth_provider": "life360"})
         await hass.async_block_till_done()
     active = hass.config_entries.flow.async_progress_by_handler(
         DOMAIN, match_context={"entry_id": entry.entry_id}
@@ -1244,13 +1466,13 @@ async def test_life360_reauth_replaces_secret_and_preserves_household(hass, hous
     ):
         verify.side_effect = ValueError("fictional changed response")
         failed = await hass.config_entries.flow.async_configure(
-            reauth["flow_id"], {"method": "token", "secret": "new-example-secret"}
+            reauth["flow_id"], {"method": "token", "secret": "new-example-secret", "acknowledge_unofficial": True}
         )
         assert failed["errors"] == {"base": "unexpected_response"}
         assert entry.data["life360_account"]["secret"] == "old-example-secret"
         verify.side_effect = None
         result = await hass.config_entries.flow.async_configure(
-            reauth["flow_id"], {"method": "token", "secret": "new-example-secret"}
+            reauth["flow_id"], {"method": "token", "secret": "new-example-secret", "acknowledge_unofficial": True}
         )
         await hass.async_block_till_done()
     assert result["reason"] == "reauth_successful"
@@ -1278,7 +1500,7 @@ async def test_reconnect_rejects_a_different_life360_account(hass, household):
         ),
     ):
         flow = await hass.config_entries.flow.async_configure(
-            flow["flow_id"], {"method": "token", "secret": "original-token"}
+            flow["flow_id"], {"method": "token", "secret": "original-token", "acknowledge_unofficial": True}
         )
         flow = await configure_empty(hass.config_entries.flow, flow)
         await hass.async_block_till_done()
@@ -1305,7 +1527,7 @@ async def test_reconnect_rejects_a_different_life360_account(hass, household):
         return_value="different-account-fingerprint",
     ):
         rejected = await hass.config_entries.flow.async_configure(
-            active[0]["flow_id"], {"method": "token", "secret": "different-token"}
+            active[0]["flow_id"], {"method": "token", "secret": "different-token", "acknowledge_unofficial": True}
         )
     assert rejected["errors"] == {"base": "different_account"}
     assert entry.data["life360_account"]["secret"] == "original-token"
@@ -1323,7 +1545,7 @@ async def test_reconnect_rejects_a_different_life360_account(hass, household):
         return_value="different-account-fingerprint",
     ):
         rejected = await options.async_configure(
-            flow["flow_id"], {"method": "token", "secret": "different-token"}
+            flow["flow_id"], {"method": "token", "secret": "different-token", "acknowledge_unofficial": True}
         )
     assert rejected["errors"] == {"base": "different_account"}
     assert entry.data["life360_account"]["secret"] == "original-token"
@@ -1348,7 +1570,7 @@ async def test_older_account_replacement_compares_valid_old_sign_in(hass, househ
         ),
     ):
         flow = await hass.config_entries.flow.async_configure(
-            flow["flow_id"], {"method": "token", "secret": "old-fictional-token"}
+            flow["flow_id"], {"method": "token", "secret": "old-fictional-token", "acknowledge_unofficial": True}
         )
         flow = await configure_empty(hass.config_entries.flow, flow)
         await hass.async_block_till_done()
@@ -1383,7 +1605,7 @@ async def test_older_account_replacement_compares_valid_old_sign_in(hass, househ
                 "method": "token",
                 "secret": "different-fictional-token",
                 "confirm_same_account": True,
-            },
+            "acknowledge_unofficial": True},
         )
     assert rejected["errors"] == {"base": "different_account"}
     assert entry.data["life360_account"]["secret"] == "old-fictional-token"
@@ -1400,7 +1622,7 @@ async def test_older_account_replacement_compares_valid_old_sign_in(hass, househ
     ):
         rejected = await options.async_configure(
             flow["flow_id"],
-            {"method": "token", "secret": "replacement-fictional-token"},
+            {"method": "token", "secret": "replacement-fictional-token", "acknowledge_unofficial": True},
         )
     assert rejected["errors"] == {
         "confirm_same_account": "same_account_confirmation_required"
@@ -1420,7 +1642,7 @@ async def test_older_account_replacement_compares_valid_old_sign_in(hass, househ
     ):
         flow = await options.async_configure(
             flow["flow_id"],
-            {"method": "token", "secret": "replacement-fictional-token"},
+            {"method": "token", "secret": "replacement-fictional-token", "acknowledge_unofficial": True},
         )
         assert flow["step_id"] == "confirm"
         await configure_empty(options, flow)
@@ -1449,7 +1671,7 @@ async def test_older_reauth_requires_confirmation_if_old_sign_in_expired(
         ),
     ):
         flow = await hass.config_entries.flow.async_configure(
-            flow["flow_id"], {"method": "token", "secret": "expired-fictional-token"}
+            flow["flow_id"], {"method": "token", "secret": "expired-fictional-token", "acknowledge_unofficial": True}
         )
         flow = await configure_empty(hass.config_entries.flow, flow)
         await hass.async_block_till_done()
@@ -1473,7 +1695,7 @@ async def test_older_reauth_requires_confirmation_if_old_sign_in_expired(
         side_effect=identity,
     ) as verify:
         rejected = await hass.config_entries.flow.async_configure(
-            flow_id, {"method": "token", "secret": "replacement-fictional-token"}
+            flow_id, {"method": "token", "secret": "replacement-fictional-token", "acknowledge_unofficial": True}
         )
     assert [call.args[0]["secret"] for call in verify.await_args_list] == [
         "replacement-fictional-token"
@@ -1500,7 +1722,7 @@ async def test_older_reauth_requires_confirmation_if_old_sign_in_expired(
                 "method": "token",
                 "secret": "replacement-fictional-token",
                 "confirm_same_account": True,
-            },
+            "acknowledge_unofficial": True},
         )
         await hass.async_block_till_done()
     assert [call.args[0]["secret"] for call in verify.await_args_list] == [
@@ -1579,7 +1801,7 @@ async def test_direct_life360_creates_selectable_tracker(hass, household):
         ),
     ):
         flow = await hass.config_entries.flow.async_configure(
-            flow["flow_id"], {"method": "token", "secret": "example-token"}
+            flow["flow_id"], {"method": "token", "secret": "example-token", "acknowledge_unofficial": True}
         )
         flow = await configure_empty(hass.config_entries.flow, flow)
         await hass.async_block_till_done()

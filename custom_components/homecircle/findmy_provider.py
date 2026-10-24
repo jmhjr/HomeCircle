@@ -17,6 +17,7 @@ from homeassistant.util import dt as dt_util
 from .findmy_setup import sdk
 from .findmy_vault import Vault, VaultError
 from .tracker_providers import ProviderHealth
+from .provider_controls import ProviderPaused, async_get_controls
 
 PREFIX = "homecircle_findmy_"
 
@@ -158,14 +159,20 @@ class DirectFindMy:
         self.last_success = None
         self.last_error = None
         self.poll_slots = asyncio.Semaphore(2)
+        self.controls = None
 
     async def async_start(self):
-        sdk()
+        self.controls = await async_get_controls(self.hass, self.entry_id)
+        if self.controls.paused("findmy"):
+            return
+        # The cold SDK import reads installed-package metadata (anisette).
+        await self.hass.async_add_executor_job(sdk)
         from .findmy_reports import AccountClient, account_items
 
         entry = self.hass.config_entries.async_get_entry(self.entry_id)
         registry = er.async_get(self.hass)
         for account_id, metadata in self.accounts.items():
+            blocked = self.controls.paused("findmy", account_id)
             self.states[account_id] = "starting"
             if not isinstance(metadata, dict) or not isinstance(
                 metadata.get("items"), dict
@@ -174,11 +181,19 @@ class DirectFindMy:
                 continue
             previous = {}
             try:
+                if blocked:
+                    raise ProviderPaused()
                 root = await self.hass.async_add_executor_job(
                     account_root, self.hass, metadata
                 )
                 vault = Vault(root)
                 data = await self.hass.async_add_executor_job(vault.load)
+                expected_identity = metadata.get("account_identity")
+                if expected_identity is not None:
+                    from .findmy_identity import authenticated_identity
+
+                    if authenticated_identity(data.get("session")) != expected_identity:
+                        raise VaultError("Stored session belongs to a different account")
                 items = account_items(data)
                 chosen = metadata["items"]
                 if not chosen or any(identifier not in items for identifier in chosen):
@@ -202,6 +217,8 @@ class DirectFindMy:
                     identifier: item.get("report")
                     for identifier, item in data["items"].items()
                 }
+            except ProviderPaused:
+                self.states[account_id] = "paused"
             except Exception:
                 self.states[account_id] = "unexpected_response"
                 self.last_error = dt_util.utcnow()
@@ -241,6 +258,9 @@ class DirectFindMy:
         if self.stopped:
             return
         for account_id in self.clients:
+            if self.controls is not None and self.controls.paused("findmy", account_id):
+                self.states[account_id] = "paused"
+                continue
             if self.states.get(account_id) == "auth_required":
                 continue
             task = self.tasks.get(account_id)
@@ -252,9 +272,19 @@ class DirectFindMy:
                 )
 
     async def poll(self, account_id):
+        if self.controls is None:
+            self.controls = await async_get_controls(self.hass, self.entry_id)
+        try:
+            async with self.controls.operation("findmy", account_id):
+                await self._poll_account(account_id)
+        except ProviderPaused:
+            self.states[account_id] = "paused"
+
+    async def _poll_account(self, account_id):
         from .findmy_reports import ReauthenticationRequired
 
         client = self.clients[account_id]
+        save_attempted = False
         try:
             async with self.poll_slots:
                 if self.stopped:
@@ -262,26 +292,26 @@ class DirectFindMy:
                 reports = await client.poll()
             if self.stopped:
                 return
-            write = self.hass.async_add_executor_job(
-                self.vaults[account_id].save_account,
-                client.account.to_json(),
-                client.items,
-            )
-            try:
-                await asyncio.shield(write)
-            except asyncio.CancelledError:
-                # An executor write cannot be cancelled. Finish it before allowing
-                # reconnect or unload to start a second writer for this account.
-                await write
-                raise
-            self.states[account_id] = "connected"
+            save_attempted = True
+            await self.save_poll_progress(account_id, client)
+            failed_items = getattr(client, "failed_items", set())
+            self.states[account_id] = "partial" if failed_items else "connected"
+            if failed_items:
+                self.last_error = dt_util.utcnow()
             ir.async_delete_issue(
                 self.hass, "homecircle", f"findmy_auth_{self.entry_id}_{account_id}"
             )
             self.last_success = dt_util.utcnow()
             for identifier, tracker in self.trackers[account_id].items():
-                tracker.update(reports.get(identifier))
+                tracker.update(reports.get(identifier), failed=identifier in failed_items)
         except asyncio.CancelledError:
+            # Unload/reconnect waits for this task before replacing a session.
+            # Retain completed batches before releasing that writer ownership.
+            if not save_attempted and getattr(client, "poll_progress", False):
+                try:
+                    await self.save_poll_progress(account_id, client)
+                except Exception:
+                    pass
             raise
         except Exception as error:
             self.states[account_id] = (
@@ -289,6 +319,23 @@ class DirectFindMy:
                 if isinstance(error, ReauthenticationRequired)
                 else "network_error"
             )
+            try:
+                if isinstance(error, ReauthenticationRequired):
+                    try:
+                        await self.controls.async_pause_denied("findmy", account_id)
+                    except Exception:
+                        # The controls object remains blocked on a storage failure.
+                        pass
+            finally:
+                # A durable denial can trigger unload while its callback is
+                # still returning. Preserve completed batches even when that
+                # unload cancels the poll before the normal error path resumes.
+                if not save_attempted and getattr(client, "poll_progress", False):
+                    save_attempted = True
+                    try:
+                        await self.save_poll_progress(account_id, client)
+                    except Exception:
+                        pass
             self.last_error = dt_util.utcnow()
             if self.states[account_id] == "auth_required":
                 ir.async_create_issue(
@@ -304,8 +351,33 @@ class DirectFindMy:
                         )
                     },
                 )
-            for tracker in self.trackers[account_id].values():
-                tracker.update(None, failed=True)
+            for identifier, tracker in self.trackers[account_id].items():
+                tracker.update(client.items.get(identifier, {}).get("report"), failed=True)
+
+    async def save_poll_progress(self, account_id, client):
+        """Drain an atomic vault write before reconnect/unload can replace it."""
+        write = self.hass.async_add_executor_job(
+            self.vaults[account_id].save_account,
+            client.account.to_json(),
+            client.items,
+        )
+        # Never shield a potentially failing executor future directly: on Python
+        # 3.14 a failure after cancellation can be logged before it is consumed.
+        pending = asyncio.gather(write, return_exceptions=True)
+        cancellation = None
+        while not pending.done():
+            try:
+                await asyncio.shield(pending)
+            except asyncio.CancelledError as error:
+                # An executor write cannot be cancelled; repeated cancellation
+                # must not let reconnect begin a second write before it finishes.
+                if cancellation is None:
+                    cancellation = error
+        result = pending.result()[0]
+        if cancellation is not None:
+            raise cancellation
+        if isinstance(result, BaseException):
+            raise result
 
     async def pause_account(self, account_id):
         """Stop this account's poll before replacing its encrypted session."""
@@ -320,16 +392,22 @@ class DirectFindMy:
     def resume_account(self, account_id, client):
         if client is not None and not self.stopped:
             self.clients[account_id] = client
-            self.states[account_id] = "starting"
+            self.states[account_id] = (
+                "paused"
+                if self.controls is not None and self.controls.paused("findmy", account_id)
+                else "starting"
+            )
             self.interval()
 
     def health_snapshot(self):
         values = list(self.states.values())
         state = (
-            "connected"
+            "paused"
+            if values and all(v == "paused" for v in values)
+            else "connected"
             if values and all(v == "connected" for v in values)
             else "partial"
-            if "connected" in values
+            if "connected" in values or "partial" in values
             else "auth_required"
             if "auth_required" in values
             else "network_error"
