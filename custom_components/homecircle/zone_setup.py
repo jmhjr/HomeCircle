@@ -2,7 +2,7 @@
 
 import math
 
-from homeassistant.components.zone import DATA_ZONE_STORAGE_COLLECTION
+from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
 from homeassistant.helpers import entity_registry as er
 
 
@@ -37,7 +37,8 @@ def zone_error(hass, name: str, location: dict) -> str | None:
 
 async def async_create_zone(hass, name: str, location: dict) -> str | None:
     """Return the actual entity ID, including any registry collision suffix."""
-    collection = hass.data.get(DATA_ZONE_STORAGE_COLLECTION)
+    zone_data = hass.data.get(ZONE_DOMAIN)
+    collection = getattr(zone_data, "storage_collection", zone_data)
     if collection is None:
         return None
     item = await collection.async_create_item(

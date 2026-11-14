@@ -2,9 +2,9 @@
 
 Family location and presence for Home Assistant, independent of the tracking provider.
 
-**HomeCircle 1.0.0 is published as the stable release.** Use the [release page](https://github.com/jmhjr/HomeCircle/releases/tag/v1.0.0) and [HACS installation guide](docs/RELEASE-1.0-USER-GUIDE.md), or download the exact [homecircle.zip](https://github.com/jmhjr/HomeCircle/releases/download/v1.0.0/homecircle.zip) and [inventory](https://github.com/jmhjr/HomeCircle/releases/download/v1.0.0/inventory.json). It supports standard Home Assistant People and trackers plus optional, unofficial Apple Find My and Life360 connections. The [publication record](docs/RELEASE-1.0-PUBLICATION.json) verifies the normal merge, stable tag and both anonymously downloaded public assets; the [preparation record](docs/RELEASE-1.0-STABLE-PREPARATION.json) and [approved disposition](docs/RELEASE-1.0-PROPOSED-DISPOSITION.md) retain the exact package and accepted limits. Publication is separate from installing or upgrading an HA instance.
+**HomeCircle 1.0.1 fixes startup and dashboard loading on Home Assistant 2026.11.** Use the [release page](https://github.com/jmhjr/HomeCircle/releases/tag/v1.0.1), [release notes and validation](docs/MAINTENANCE-1.0.1.md), and [HACS installation guide](docs/RELEASE-1.0-USER-GUIDE.md), or download [homecircle.zip](https://github.com/jmhjr/HomeCircle/releases/download/v1.0.1/homecircle.zip) and its [inventory](https://github.com/jmhjr/HomeCircle/releases/download/v1.0.1/inventory.json). It supports standard Home Assistant People and trackers plus optional, unofficial Apple Find My and Life360 connections. This maintenance release changes two compatibility helpers and version labels; existing first-release support and provider limits continue to apply. Publication is separate from installing or upgrading an HA instance.
 
-The first-release support target is **Home Assistant OS on Intel/AMD (amd64) and ARM64**, minimum Core **2026.9.4**, with **2026.10.2** as the current recorded qualification target. Home Assistant Container remains experimental. See the [support scope and exclusions](docs/RELEASE-1.0-SUPPORT-PROPOSAL.md) and [changelog](CHANGELOG.md).
+The first-release support target is **Home Assistant OS on Intel/AMD (amd64) and ARM64**, minimum Core **2026.9.4**, with **2026.10.2** as the original recorded qualification target. Home Assistant Container remains experimental. See the [support scope and exclusions](docs/RELEASE-1.0-SUPPORT-PROPOSAL.md) and [changelog](CHANGELOG.md).
 
 HomeCircle preserves explicit tracker selections, genuine source report times and local household settings. Reports may be stale; uninterrupted provider sessions, fresh GPS reports and emergency monitoring are not promised. The final owner round confirmed the Life360 person and AirTag display correctly and both details open on the phone; it does not establish new physical-position, natural renewal or real-photo persistence results.
 
@@ -14,6 +14,7 @@ The [RC2 acceptance record](docs/RELEASE-1.0-RC2-ACCEPTANCE.json) retains focuse
 
 ## Start here
 
+- [1.0.1 maintenance release](https://github.com/jmhjr/HomeCircle/releases/tag/v1.0.1) and [compatibility validation](docs/MAINTENANCE-1.0.1.md)
 - [1.0.0 release](https://github.com/jmhjr/HomeCircle/releases/tag/v1.0.0), [verified publication](docs/RELEASE-1.0-PUBLICATION.json), [approved disposition](docs/RELEASE-1.0-PROPOSED-DISPOSITION.md), [exact package preparation](docs/RELEASE-1.0-STABLE-PREPARATION.json) and [completed first-release tracker](docs/RELEASE-1.0-FIRST-RELEASE-TRACKER.md)
 - [HAOS support target](docs/RELEASE-1.0-SUPPORT-PROPOSAL.md) and [no-contact distribution decision record](docs/RELEASE-1.0-NO-OUTREACH-DECISION.md)
 - [First-release user guide](docs/RELEASE-1.0-USER-GUIDE.md), [maintenance and recovery](docs/RELEASE-1.0-MAINTENANCE.md), [privacy/support](docs/RELEASE-1.0-PRIVACY-SUPPORT.md) and [troubleshooting](docs/RELEASE-1.0-TROUBLESHOOTING.md)
@@ -37,6 +38,8 @@ The [RC2 acceptance record](docs/RELEASE-1.0-RC2-ACCEPTANCE.json) retains focuse
 - [Historical bootstrap validation](docs/BOOTSTRAP-VALIDATION.md)
 
 ## Release and validation
+
+Version 1.0.1 passed 151 focused Core 2026.10.4 tests, 126 frontend tests, 25 exact-package checks on actual Core 2026.11.1, and a genuine published-1.0.0 upgrade followed by a separate restart in disposable synthetic Core processes. The ZIP and inventory are deterministic; 107 of 112 package members match 1.0.0. The [maintenance record](docs/MAINTENANCE-1.0.1.md) distinguishes this native macOS/synthetic evidence from HAOS, provider-account and HACS delivery qualification.
 
 Maintainer: [@jmhjr](https://github.com/jmhjr). Stable [`v1.0.0`](https://github.com/jmhjr/HomeCircle/releases/tag/v1.0.0) was published on October 24, 2026 at 04:48:06 UTC from normal merge `6984be7c6148c934e7f51e09e27db5b078fc022c`. The published package changes only the manifest, frontend resource and compiled card version labels from RC2; the other 109 packaged files match exactly. Canonical package builds and inventories match, and 126 frontend tests passed. Both public assets match their approved hashes after anonymous download. See [verified publication](docs/RELEASE-1.0-PUBLICATION.json) and [stable preparation](docs/RELEASE-1.0-STABLE-PREPARATION.json), then follow [HACS setup](docs/SETUP.md).
 

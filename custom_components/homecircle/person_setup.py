@@ -22,12 +22,22 @@ def person_name_error(hass, name):
     return None
 
 
-def editable_person_collection(hass, person_id):
-    """Return HA's storage collection only for an editable Person entity."""
+def _person_collection_and_component(hass):
+    """Resolve the legacy tuple or Core 2026.11 PersonData runtime."""
     data = hass.data.get(PERSON_DOMAIN)
     if data is None:
         return None
-    collection, component = data[1], data[2]
+    if hasattr(data, "storage_collection"):
+        return data.storage_collection, data.entity_component
+    return data[1], data[2]
+
+
+def editable_person_collection(hass, person_id):
+    """Return HA's storage collection only for an editable Person entity."""
+    target = _person_collection_and_component(hass)
+    if target is None:
+        return None
+    collection, component = target
     entity = component.get_entity(person_id)
     if entity is None or not entity.editable:
         return None
@@ -36,8 +46,8 @@ def editable_person_collection(hass, person_id):
 
 def has_person_entity(hass, person_id):
     """Distinguish real HA Person entities from synthetic state fixtures."""
-    data = hass.data.get(PERSON_DOMAIN)
-    return data is not None and data[2].get_entity(person_id) is not None
+    target = _person_collection_and_component(hass)
+    return target is not None and target[1].get_entity(person_id) is not None
 
 
 async def async_create_person(hass, name):
@@ -45,10 +55,11 @@ async def async_create_person(hass, name):
     if PERSON_DOMAIN not in hass.data:
         if not await async_setup_component(hass, PERSON_DOMAIN, {}):
             return None
-    data = hass.data.get(PERSON_DOMAIN)
-    if data is None:
+    target = _person_collection_and_component(hass)
+    if target is None:
         return None
-    item = await data[1].async_create_item(
+    collection, _ = target
+    item = await collection.async_create_item(
         {"name": name.strip(), "user_id": None, "device_trackers": []}
     )
     return er.async_get(hass).async_get_entity_id(
