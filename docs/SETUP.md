@@ -1,6 +1,6 @@
 # Set up HomeCircle
 
-Use a test Home Assistant instance. Beta 20 is an experimental hardening prerelease derived from the reviewed Linux/HAOS candidate. See [beta 20 validation](BETA20-VALIDATION.md) for exact platform and recovery scope. Historical owner-account proof belongs to beta 19; beta 20 production, field and stable-release acceptance remain open. New people and pets use the Person-first screens below; existing tracker-only members remain supported. HomeCircle can use existing HA trackers or optionally connect to Life360 and Apple Find My directly.
+Use a test instance for a first setup or a rehearsal. HomeCircle 1.0.1 is the current stable maintenance release; see its [compatibility notes](MAINTENANCE-1.0.1.md) and the [support scope](RELEASE-1.0-SUPPORT-PROPOSAL.md). New people and pets use the Person-first screens below; existing tracker-only members remain supported. HomeCircle can use existing HA trackers or optionally connect to Life360 and Apple Find My directly.
 
 ## 1. Get a working source into Home Assistant
 
@@ -34,15 +34,11 @@ On the household screen, choose **Create a new home or place zone** to set a nam
 
 A member at an additional residence can count Home while being outside the Home button's map focus. Everyone includes all usable positions.
 
-## 3. Install through HACS
+## 3. Install for your Core version
 
-1. With HACS already configured on the test instance, open its custom repositories menu.
-2. Add `https://github.com/jmhjr/HomeCircle` with type **Integration**. See [HACS custom repositories](https://www.hacs.dev/docs/faq/custom_repositories/).
-3. Open HomeCircle in HACS. In Download or Redownload, open **Need a different version?**, choose **Release**, select **v0.1.0-beta.20**, and download it. If HACS already offers beta 20 in the dialog, confirm that version before downloading. A branch commit is not the versioned release. Every HomeCircle release is currently a prerelease, so HACS can show the branch commit as its available version while beta updates are off. For future beta update checks, enable and turn on HACS's **HomeCircle pre-release** switch in Home Assistant's Entities settings; it is disabled by default. [HACS explains this switch](https://www.hacs.dev/docs/use/entities/switch/).
-4. Restart Home Assistant.
-5. Open Settings → Devices & services → Add integration → HomeCircle.
+Follow [Install and upgrade HomeCircle](INSTALLATION.md): use **Settings → Marketplace** on Core **2026.11 and newer**, or **HACS** on supported Core **2026.9.4 through 2026.10.x**. On Core 2026.11, install HomeCircle **1.0.1 or newer**. Existing HACS content migrates to Marketplace; look for HomeCircle there before adding a repository again.
 
-HACS downloads the files; **Add integration** creates the HomeCircle household and selections. Both steps are required. The release ZIP includes the card. There is no separate card download or manual resource entry for the tested storage-mode dashboard setup. GitHub source archives are not the installable release ZIP.
+For a new installation, install the named stable release, restart Home Assistant, then open **Settings → Devices & services → Add integration → HomeCircle**. An existing household is upgraded in place; do not create another entry. The release ZIP includes the card, and storage-mode setup registers it automatically. GitHub source archives are not the installable release ZIP.
 
 ### Pet setup
 
@@ -140,11 +136,11 @@ Check these results:
 - **Missing-source repair notice:** allow sources to finish starting, then use Options to replace removed or renamed entities if necessary.
 - **Card missing after install:** restart HA, refresh the browser, and confirm the integration completed setup. UI-only resource registration was tested with storage-mode dashboards; YAML-managed resources need separate handling.
 
-HACS upgrades require a restart. To uninstall from a test instance, first remove the HomeCircle integration entry in Settings → Devices & services, then uninstall HomeCircle in HACS and restart HA. Removing the entry deletes its saved HomeCircle selections; reinstall requires setup again. Keep a Home Assistant backup before testing removal. Source integrations and their entities are managed separately. The normal removal/reinstall sequence passed in [beta 4 validation](BETA4-VALIDATION.md); other removal orders have not been accepted yet.
+Marketplace and HACS integration upgrades require a restart. Follow the [version-specific upgrade steps](INSTALLATION.md). For a deliberate uninstall from a test instance, first remove the HomeCircle integration entry in Settings → Devices & services, then uninstall HomeCircle from Marketplace on Core 2026.11+ or HACS on older supported Core, and restart HA. Removing the entry deletes its saved HomeCircle selections; reinstall requires setup again. Keep a Home Assistant backup before testing removal. Source integrations and their entities are managed separately. The normal removal/reinstall sequence passed in [beta 4 validation](BETA4-VALIDATION.md); other removal orders have not been accepted yet.
 
 ## Validation scope
 
-See [beta 19 packaging validation](FINDMY-BETA19-PACKAGING-VALIDATION.md) for the tested archive, lifecycle and live Find My scope, and [beta 18 validation](BETA18-VALIDATION.md) for earlier features. Publication and HACS checks are separate release steps. New physical movement, current-position freshness and delivery latency remain unproven for Find My. Full departure/return and unattended provider failure/recovery tests remain open before a stable release.
+See the [1.0.1 maintenance record](MAINTENANCE-1.0.1.md) for its package and compatibility checks. The [first-release acceptance record](RELEASE-1.0-RC2-ACCEPTANCE.json) and historical [beta 19](FINDMY-BETA19-PACKAGING-VALIDATION.md) and [beta 18](BETA18-VALIDATION.md) records retain their original source and test scope. New physical movement, current-position freshness, delivery latency and unattended provider renewal are not established by an installation or upgrade check.
 
 
 ## Optional family location refresh

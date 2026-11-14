@@ -1,6 +1,6 @@
 # HomeCircle 1.0.1
 
-Maintenance release for Home Assistant Core 2026.11 compatibility. Publication readback and installation through HACS remain separate from the engineering checks below.
+Maintenance release for Home Assistant Core 2026.11 compatibility. Publication readback and live store installation remain separate from the engineering checks below.
 
 ## Changes
 
@@ -11,7 +11,7 @@ This release adapts those two helpers to the new containers while preserving the
 ## Install or upgrade
 
 1. Create a Home Assistant backup that includes configuration and the history you need, and protect it as private account/location data.
-2. After publication, install **v1.0.1** through HACS or use the release's `homecircle.zip` for a manual integration update.
+2. Install **v1.0.1** through **Settings → Marketplace** on Core 2026.11+, or HACS on supported Core 2026.9.4–2026.10.x. Follow the [installation and upgrade guide](INSTALLATION.md). The release's `homecircle.zip` is the manual-install alternative.
 3. Restart Home Assistant. Refresh the browser if the old card remains visible.
 4. Confirm the HomeCircle version, household and detail panels. Existing selections and accounts should remain in place. Do not reconnect accounts or start passcode recovery to fix a cached frontend.
 

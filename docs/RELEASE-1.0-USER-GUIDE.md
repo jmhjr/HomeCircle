@@ -1,16 +1,17 @@
-# Install and set up the first-release candidate
+# Install and set up HomeCircle
 
-These instructions describe the proposed first-release UI path. HomeCircle 1.0 is not yet published or approved. Use the exact RC or release named by the maintainer; the currently published beta remains experimental. A branch checkout or GitHub source-code archive is not the installable release ZIP. Read the [support proposal](RELEASE-1.0-SUPPORT-PROPOSAL.md) before choosing a system.
+HomeCircle 1.0.1 is the current stable maintenance release. Use the published [release ZIP](https://github.com/jmhjr/HomeCircle/releases/latest), not a branch checkout or GitHub source-code archive. Read the [support scope](RELEASE-1.0-SUPPORT-PROPOSAL.md) before choosing a system.
 
-## Install through HACS
+## Install with the store for your Core version
 
-1. Make a Home Assistant backup and keep it outside the installation you are changing. Review [upgrade and recovery](RELEASE-1.0-MAINTENANCE.md).
-2. In HACS, add `https://github.com/jmhjr/HomeCircle` as a custom repository of type **Integration** if it is not already present.
-3. Open HomeCircle and choose Download/Redownload. Select the exact named release; an RC may require prereleases to be enabled. Confirm the version before downloading. Do not substitute the repository branch because a release is not yet offered.
-4. Restart Home Assistant. Downloading files alone does not activate them.
-5. Open **Settings → Devices & services → Add integration → HomeCircle**.
+Follow the complete [installation and upgrade guide](INSTALLATION.md):
 
-The named `homecircle.zip` includes the card. In the supported storage-mode path, no separate card download, resource YAML or card YAML is required. Adding the integration creates the household; installing the HACS files alone does not.
+- **Core 2026.11 and newer:** open **Settings → Marketplace**. Find HomeCircle in Installed if it migrated from HACS; for a new repository use **Add from link → `https://github.com/jmhjr/HomeCircle`**. Install HomeCircle **1.0.1 or newer**.
+- **Core 2026.9.4 through 2026.10.x:** use HACS's custom repository type **Integration**, then Download or update the named stable release.
+
+Back up before an upgrade, restart after installing the integration files, and check the loaded version and household. For a new household only, add **HomeCircle** in **Settings → Devices & services**. Keep an existing integration entry during an upgrade.
+
+The named `homecircle.zip` includes the card. Supported storage-mode setup needs no separate card download, resource YAML or card YAML. Installing the files and creating a household are separate steps.
 
 ## Prepare people, trackers and places
 

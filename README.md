@@ -2,7 +2,7 @@
 
 Family location and presence for Home Assistant, independent of the tracking provider.
 
-**HomeCircle 1.0.1 fixes startup and dashboard loading on Home Assistant 2026.11.** Use the [release page](https://github.com/jmhjr/HomeCircle/releases/tag/v1.0.1), [release notes and validation](docs/MAINTENANCE-1.0.1.md), and [HACS installation guide](docs/RELEASE-1.0-USER-GUIDE.md), or download [homecircle.zip](https://github.com/jmhjr/HomeCircle/releases/download/v1.0.1/homecircle.zip) and its [inventory](https://github.com/jmhjr/HomeCircle/releases/download/v1.0.1/inventory.json). It supports standard Home Assistant People and trackers plus optional, unofficial Apple Find My and Life360 connections. This maintenance release changes two compatibility helpers and version labels; existing first-release support and provider limits continue to apply. Publication is separate from installing or upgrading an HA instance.
+**HomeCircle 1.0.1 fixes startup and dashboard loading on Home Assistant 2026.11.** Use the [release page](https://github.com/jmhjr/HomeCircle/releases/tag/v1.0.1), [release notes and validation](docs/MAINTENANCE-1.0.1.md), and [installation and upgrade guide](docs/INSTALLATION.md), or download [homecircle.zip](https://github.com/jmhjr/HomeCircle/releases/download/v1.0.1/homecircle.zip) and its [inventory](https://github.com/jmhjr/HomeCircle/releases/download/v1.0.1/inventory.json). It supports standard Home Assistant People and trackers plus optional, unofficial Apple Find My and Life360 connections. This maintenance release changes two compatibility helpers and version labels; existing first-release support and provider limits continue to apply. Publication is separate from installing or upgrading an HA instance.
 
 The first-release support target is **Home Assistant OS on Intel/AMD (amd64) and ARM64**, minimum Core **2026.9.4**, with **2026.10.2** as the original recorded qualification target. Home Assistant Container remains experimental. See the [support scope and exclusions](docs/RELEASE-1.0-SUPPORT-PROPOSAL.md) and [changelog](CHANGELOG.md).
 
@@ -14,6 +14,7 @@ The [RC2 acceptance record](docs/RELEASE-1.0-RC2-ACCEPTANCE.json) retains focuse
 
 ## Start here
 
+- [Install or upgrade](docs/INSTALLATION.md): **Marketplace on Core 2026.11+**, **HACS on Core 2026.9.4–2026.10.x**. Existing HACS installations migrate to Marketplace. Core 2026.11 needs HomeCircle **1.0.1 or newer**.
 - [1.0.1 maintenance release](https://github.com/jmhjr/HomeCircle/releases/tag/v1.0.1) and [compatibility validation](docs/MAINTENANCE-1.0.1.md)
 - [1.0.0 release](https://github.com/jmhjr/HomeCircle/releases/tag/v1.0.0), [verified publication](docs/RELEASE-1.0-PUBLICATION.json), [approved disposition](docs/RELEASE-1.0-PROPOSED-DISPOSITION.md), [exact package preparation](docs/RELEASE-1.0-STABLE-PREPARATION.json) and [completed first-release tracker](docs/RELEASE-1.0-FIRST-RELEASE-TRACKER.md)
 - [HAOS support target](docs/RELEASE-1.0-SUPPORT-PROPOSAL.md) and [no-contact distribution decision record](docs/RELEASE-1.0-NO-OUTREACH-DECISION.md)
@@ -41,7 +42,7 @@ The [RC2 acceptance record](docs/RELEASE-1.0-RC2-ACCEPTANCE.json) retains focuse
 
 Version 1.0.1 passed 151 focused Core 2026.10.4 tests, 126 frontend tests, 25 exact-package checks on actual Core 2026.11.1, and a genuine published-1.0.0 upgrade followed by a separate restart in disposable synthetic Core processes. The ZIP and inventory are deterministic; 107 of 112 package members match 1.0.0. The [maintenance record](docs/MAINTENANCE-1.0.1.md) distinguishes this native macOS/synthetic evidence from HAOS, provider-account and HACS delivery qualification.
 
-Maintainer: [@jmhjr](https://github.com/jmhjr). Stable [`v1.0.0`](https://github.com/jmhjr/HomeCircle/releases/tag/v1.0.0) was published on October 24, 2026 at 04:48:06 UTC from normal merge `6984be7c6148c934e7f51e09e27db5b078fc022c`. The published package changes only the manifest, frontend resource and compiled card version labels from RC2; the other 109 packaged files match exactly. Canonical package builds and inventories match, and 126 frontend tests passed. Both public assets match their approved hashes after anonymous download. See [verified publication](docs/RELEASE-1.0-PUBLICATION.json) and [stable preparation](docs/RELEASE-1.0-STABLE-PREPARATION.json), then follow [HACS setup](docs/SETUP.md).
+Maintainer: [@jmhjr](https://github.com/jmhjr). Stable [`v1.0.0`](https://github.com/jmhjr/HomeCircle/releases/tag/v1.0.0) was published on October 24, 2026 at 04:48:06 UTC from normal merge `6984be7c6148c934e7f51e09e27db5b078fc022c`. The published package changes only the manifest, frontend resource and compiled card version labels from RC2; the other 109 packaged files match exactly. Canonical package builds and inventories match, and 126 frontend tests passed. Both public assets match their approved hashes after anonymous download. See [verified publication](docs/RELEASE-1.0-PUBLICATION.json) and [stable preparation](docs/RELEASE-1.0-STABLE-PREPARATION.json), then follow [household setup](docs/SETUP.md).
 
 RC2's 51 focused native exact-package cases and ordinary owner cold start keep their original source/package scope. RC1's full current-Core, focused minimum-Core and genuine HACS qualification also remain separately identified; failed and corrected attempts are preserved. No new stable HACS installation, native run or full platform matrix is claimed by publication. Published beta20 remains the historical upgrade baseline. The [release plan](docs/RELEASE-1.0-PLAN.md) records approval separately from verified publication and public-byte readback. The owner test instance remains on RC2; upgrading it or an everyday HA instance is a separate deployment decision, not an unfinished first-release gate.
 
@@ -62,7 +63,7 @@ HomeCircle/
 
 ## V0.1 outcome
 
-Install through HACS; add HomeCircle in HA; select or create an HA Person for each new member, assign a tracker, and choose Home and additional places. First setup creates a dashboard and card if none exists; the visual editor supports additional cards. No manual YAML is required in the validated storage-mode onboarding flow. Optional direct Life360 trackers and older tracker-only members are supported. Follow the [user guide](docs/RELEASE-1.0-USER-GUIDE.md) and [maintenance/restore limits](docs/RELEASE-1.0-MAINTENANCE.md).
+Install through Marketplace on Core 2026.11+ or HACS on older supported Core; add HomeCircle in HA; select or create an HA Person for each new member, assign a tracker, and choose Home and additional places. First setup creates a dashboard and card if none exists; the visual editor supports additional cards. No manual YAML is required in the validated storage-mode onboarding flow. Optional direct Life360 trackers and older tracker-only members are supported. Follow the [user guide](docs/RELEASE-1.0-USER-GUIDE.md) and [maintenance/restore limits](docs/RELEASE-1.0-MAINTENANCE.md).
 
 HomeCircle is MIT licensed. Bundled third-party SDK, emulator and frontend components retain their original licenses and notices. See the [Find My runtime provenance](custom_components/homecircle/_findmy_runtime/PROVENANCE.md).
 
@@ -91,7 +92,7 @@ map, portrait and city services still make the requests described in
 access can be denied and unofficial interfaces can change. Do not rely on
 HomeCircle for emergency response or a person's safety.
 
-The source-based HACS package includes Python/protocol source, public
+The source-based integration package includes Python/protocol source, public
 certificates, generated frontend text assets and retained OSS notices. It does
 not bundle dependency wheels, native executables/libraries, Apple payloads or a
 container image. HA installs declared dependencies separately, and the optional
