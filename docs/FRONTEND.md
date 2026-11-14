@@ -1,6 +1,6 @@
 # Card and frontend interface
 
-The current experimental prerelease is beta 18. Start with the [complete setup guide](SETUP.md). See [ADR-002](adr/ADR-002-map-and-frontend.md) for library, licensing, network and authorization decisions.
+Install using the [store for your Core version](INSTALLATION.md), then follow the [complete setup guide](SETUP.md). See [ADR-002](adr/ADR-002-map-and-frontend.md) for library, licensing, network and authorization decisions.
 
 ## UI-only setup
 
@@ -8,7 +8,7 @@ The current experimental prerelease is beta 18. Start with the [complete setup g
 2. First setup creates a HomeCircle dashboard and card if none exists. Open it from the sidebar. If the card does not appear immediately after resource registration, refresh the browser once.
 3. To add another card, choose Edit dashboard → Add card → HomeCircle. Use the visual editor for title, visible members and map background; save and choose Done. No provider account, map key, resource YAML or card YAML is required for the core path.
 
-The tested automatic resource path is HA's storage mode. Existing YAML resource collections are preserved and are not covered by UI-only onboarding. A YAML-managed resource collection must add the module URL `/homecircle_static/homecircle-card.js?v=0.1.0-beta.18` through its own configuration and update the version after an upgrade. Release ZIPs include the built card; source checkouts require a frontend build.
+The tested automatic resource path is HA's storage mode. Existing YAML resource collections are preserved and are not covered by UI-only onboarding. A YAML-managed resource collection must add the module URL `/homecircle_static/homecircle-card.js?v=1.0.1` (use the version matching your installed release) through its own configuration and update the version after an upgrade. Release ZIPs include the built card; source checkouts require a frontend build.
 
 ## Display and interaction
 
@@ -37,7 +37,7 @@ Beta 16 identifies the active location source by its tracker or HA Person name a
 
 ## Resource ownership
 
-The backend serves a local versioned module and registers it with Lovelace's pinned storage collection API. A small HA storage record remembers the resource ID HomeCircle created. Beta 6 keeps that ID through automatic Options and Reconfigure reloads, including an unchanged Reconfigure save. A plain unload and removal of an unloaded entry clean up the owned resource; failed reload setup also cleans up after the entry lock is released. Unrelated/manual resources and YAML collections are preserved. If you registered the module manually, update its `?v=` URL after an upgrade; HomeCircle does not change user-owned resources. The static code route stays until HA restart after unload, but the data API returns no household while unloaded. HACS uninstall before entry removal still cannot invoke package cleanup. Actual HACS upgrade and normal removal checks are recorded in the beta release validation reports.
+The backend serves a local versioned module and registers it with Lovelace's pinned storage collection API. A small HA storage record remembers the resource ID HomeCircle created. Beta 6 keeps that ID through automatic Options and Reconfigure reloads, including an unchanged Reconfigure save. A plain unload and removal of an unloaded entry clean up the owned resource; failed reload setup also cleans up after the entry lock is released. Unrelated/manual resources and YAML collections are preserved. If you registered the module manually, update its `?v=` URL after an upgrade; HomeCircle does not change user-owned resources. The static code route stays until HA restart after unload, but the data API returns no household while unloaded. Uninstalling integration files before entry removal cannot invoke package cleanup; follow the [current removal procedure](RELEASE-1.0-MAINTENANCE.md#disconnect-or-remove). Actual HACS upgrade and normal removal checks are recorded in the beta release validation reports.
 
 
 ## Import saved Life360 places

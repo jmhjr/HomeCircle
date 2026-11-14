@@ -4,7 +4,8 @@ Use this guide with the exact named candidate/release and the [support proposal]
 
 | What you see | Safe next check |
 | --- | --- |
-| HomeCircle is not listed after HACS download | Restart HA, then use **Settings → Devices & services → Add integration**. HACS installs files; adding the integration creates the household. |
+| HomeCircle is not listed after a store installation | Follow the [Core-version store guide](INSTALLATION.md), restart HA, then add the integration under **Settings → Devices & services** for a new household only. Store installation copies files; adding the integration creates the household. |
+| HACS disappeared after updating Core to 2026.11+ | Open **Settings → Marketplace → Installed → HomeCircle**. HACS content migrates automatically; do not reinstall HACS or remove HomeCircle to restore the sidebar. See the [migration steps](INSTALLATION.md#existing-hacs-installation-after-a-core-upgrade). |
 | Card is missing or a new saved tracker is not visible | Finish saving the household, close Options, allow a normal update and refresh the browser once. Check that the integration loaded and its HA tracker exists. Do not repeat provider recovery to refresh a card. |
 | Settings cog is missing | Exit kiosk view and use an administrator account, or open the integration's Configure/Options page in HA. Kiosk changes presentation, not permissions. |
 | No Person or pet tracker is selectable | Create/select the Person and verify that its actual tracker exists/enabled in HA. Pet type does not install a tracker provider. Entity names do not establish ownership. |
