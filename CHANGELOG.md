@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.1 — November 14, 2026
+
+Maintenance release for Home Assistant 2026.11 compatibility. See the [release notes and validation boundary](docs/MAINTENANCE-1.0.1.md).
+
+- Restore integration startup and dashboard card loading after Core 2026.11 removed the old zone-storage constant.
+- Support Core 2026.11's `ZoneData` and `PersonData` storage containers while retaining the earlier supported runtime shapes.
+- Preserve existing editable-Person checks, tracker ownership, append-only associations, zone creation and entity-ID collision handling. No saved-data migration or provider-authentication change is included.
+- Keep existing household selections, source-report timestamps, account safeguards and history. Installation requires a Home Assistant restart; refresh the browser if it still shows the earlier card.
+
 ## 1.0.0 — October 24, 2026 UTC
 
 Approved for stable publication with both optional, unofficial direct providers and the documented limits. See the [approved release decision](docs/RELEASE-1.0-PROPOSED-DISPOSITION.md), [exact package preparation](docs/RELEASE-1.0-STABLE-PREPARATION.json) and [setup guide](docs/RELEASE-1.0-USER-GUIDE.md). Publication and public-asset readback are recorded separately from approval.
